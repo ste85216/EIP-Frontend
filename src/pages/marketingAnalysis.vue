@@ -1674,7 +1674,7 @@
       v-model="showDownloadDialog"
       max-width="640"
     >
-      <v-card class="rounded-lg px-4 py-4">
+      <v-card class="rounded-lg px-4 pt-5 pb-4">
         <v-card-title class="card-title mb-2">
           批次下載報表
         </v-card-title>
@@ -1731,6 +1731,7 @@
                     value="budget"
                     color="purple-darken-1"
                     hide-details
+                    :disabled="!downloadForm.availableDataTypes.hasBudget"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1741,6 +1742,7 @@
                     value="expense"
                     hide-details
                     color="purple-darken-1"
+                    :disabled="!downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1751,16 +1753,19 @@
                     value="comparison"
                     hide-details
                     color="purple-darken-1"
+                    :disabled="!downloadForm.availableDataTypes.hasBudget || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
                 <v-col cols="6">
                   <v-checkbox
                     v-model="downloadForm.selectedReports"
+                    v-tooltip:start="'要選擇月份及線別'"
                     label="行銷各線實際支出表"
                     density="compact"
                     value="lineExpense"
                     hide-details
                     color="purple-darken-1"
+                    :disabled="!downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1771,16 +1776,18 @@
                     value="lineExpenseTotal"
                     hide-details
                     color="purple-darken-1"
+                    :disabled="!downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
                 <v-col cols="6">
                   <v-checkbox
                     v-model="downloadForm.selectedReports"
-                    label="行銷各線實際支出圖表"
+                    label="行銷各線實際支出統計圖表"
                     density="compact"
                     value="charts"
                     hide-details
                     color="purple-darken-1"
+                    :disabled="!downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
               </v-row>
@@ -1887,7 +1894,7 @@
                 v-if="downloadForm.selectedReports.includes('charts')"
                 class="text-caption text-grey mt-2"
               >
-                圖表僅支援 PDF 格式
+                統計圖表僅支援 PDF 格式
               </div>
             </v-col>
           </v-row>
@@ -4051,7 +4058,11 @@ const downloadForm = ref({
   selectedMonths: [],
   selectedLines: [],
   selectAllMonths: false,
-  fileFormats: ['pdf']
+  fileFormats: ['pdf'],
+  availableDataTypes: {
+    hasBudget: false,
+    hasExpense: false
+  }
 })
 
 const downloadThemeError = ref('')
@@ -4082,6 +4093,15 @@ const updateDownloadYearOptions = async (themeId) => {
       downloadForm.value.year = null
     }
 
+    // 更新資料類型狀態
+    downloadForm.value.availableDataTypes = {
+      hasBudget: budgetYears.length > 0,
+      hasExpense: expenseYears.length > 0
+    }
+
+    // 清空已選擇的報表
+    downloadForm.value.selectedReports = []
+
     // 檢查是否有年份資料
     if (downloadYearOptions.value.length === 0) {
       createSnackbar({
@@ -4089,7 +4109,7 @@ const updateDownloadYearOptions = async (themeId) => {
         snackbarProps: { color: 'warning' }
       })
     } else {
-      // 可選擇顯示有哪些類型的資料
+      // 顯示有哪些類型的資料
       const hasBudget = budgetYears.length > 0
       const hasExpense = expenseYears.length > 0
       const message = []
@@ -4105,6 +4125,10 @@ const updateDownloadYearOptions = async (themeId) => {
     handleError(error)
     downloadYearOptions.value = []
     downloadForm.value.year = null
+    downloadForm.value.availableDataTypes = {
+      hasBudget: false,
+      hasExpense: false
+    }
   }
 }
 
@@ -4219,7 +4243,7 @@ const handleDownloadReports = async () => {
       // 依序處理每個選擇的報表
       for (const reportType of downloadForm.value.selectedReports) {
         if (reportType === 'charts') {
-          progressMessage.value = '正在生成圖表報表...'
+          progressMessage.value = '正在生成統計圖表...'
           
           tempSearchForm.reportType = 'lineExpenseTotal'
           searchForm.value = { ...tempSearchForm }
@@ -4379,7 +4403,11 @@ const openDownloadDialog = () => {
     selectedMonths: [],
     selectedLines: [],
     selectAllMonths: false,
-    fileFormats: ['pdf']
+    fileFormats: ['pdf'],
+    availableDataTypes: {
+      hasBudget: false,
+      hasExpense: false
+    }
   }
   
   // 清空錯誤訊息
@@ -4676,6 +4704,28 @@ const handleExportExcel = async () => {
 const showProgressOverlay = ref(false)
 const downloadProgress = ref(0)
 const progressMessage = ref('')
+
+// 監聽資料類型變化，自動移除不可用的報表選項
+watch(() => downloadForm.value.availableDataTypes, (newTypes) => {
+  if (!newTypes) return
+  
+  // 移除不可用的報表選項
+  downloadForm.value.selectedReports = downloadForm.value.selectedReports.filter(report => {
+    switch (report) {
+      case 'budget':
+        return newTypes.hasBudget
+      case 'expense':
+      case 'lineExpense':
+      case 'lineExpenseTotal':
+      case 'charts':
+        return newTypes.hasExpense
+      case 'comparison':
+        return newTypes.hasBudget && newTypes.hasExpense
+      default:
+        return false
+    }
+  })
+}, { deep: true })
 
 </script>
 
