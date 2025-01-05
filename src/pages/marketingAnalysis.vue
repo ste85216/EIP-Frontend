@@ -48,18 +48,6 @@
                 <v-row>
                   <!-- 第一行搜尋條件 -->
                   <v-col>
-                    <v-select
-                      v-model="searchForm.reportType"
-                      :items="reportTypeOptions"
-                      label="報表類型"
-                      variant="outlined"
-                      density="compact"
-                      :error-messages="reportTypeError"
-                      clearable
-                      @update:model-value="handleReportTypeChange"
-                    />
-                  </v-col>
-                  <v-col>
                     <v-autocomplete
                       v-model="searchForm.theme"
                       :items="themeOptions"
@@ -81,8 +69,22 @@
                       variant="outlined"
                       density="compact"
                       :error-messages="yearError"
+                      :disabled="!searchForm.theme || yearOptions.length === 0"
                       clearable
                       @update:model-value="handleYearChange"
+                    />
+                  </v-col>
+                  <v-col>
+                    <v-select
+                      v-model="searchForm.reportType"
+                      :items="reportTypeOptions"
+                      label="報表類型"
+                      variant="outlined"
+                      density="compact"
+                      :error-messages="reportTypeError"
+                      :disabled="!searchForm.theme || (!searchForm.availableDataTypes.hasBudget && !searchForm.availableDataTypes.hasExpense)"
+                      clearable
+                      @update:model-value="handleReportTypeChange"
                     />
                   </v-col>
                   <v-col
@@ -1963,11 +1965,15 @@ const showReport = ref(false)
 
 // ===== 搜尋表單相關 =====
 const searchForm = ref({
-  year: null,
-  theme: null,
   reportType: null,
+  theme: null,
+  year: null,
   line: [],
-  month: null
+  month: null,
+  availableDataTypes: {
+    hasBudget: false,
+    hasExpense: false
+  }
 })
 
 const yearError = ref('')
@@ -2022,100 +2028,115 @@ const loadOptions = async () => {
   }
 }
 
-// 監聽主題和報表類型的變化
-watch([
-  () => searchForm.value.theme,
-  () => searchForm.value.reportType
-], async ([newTheme, newReportType]) => {
-  try {
-    isLoading.value = true
-    // 當主題或報表類型為空時，清空年度選項
-    if (!newTheme || !newReportType) {
-      yearOptions.value = []
-      // 確保年度選擇也被清空
-      searchForm.value.year = null
-      return
-    }
-
-    // 據報表類型要查詢不同的 API
-    let endpoint
-    switch (newReportType) {
-      case 'budget':
-        endpoint = `/marketing/budgets/years/${newTheme}`
-        break
-      case 'expense':
-        endpoint = `/marketing/expenses/years/${newTheme}`
-        break
-      case 'comparison':
-        try {
-          const [budgetYears, expenseYears] = await Promise.all([
-            apiAuth.get(`/marketing/budgets/years/${newTheme}`),
-            apiAuth.get(`/marketing/expenses/years/${newTheme}`)
-          ])
-          if (budgetYears.data.success && expenseYears.data.success) {
-            const commonYears = budgetYears.data.result.filter(year => 
-              expenseYears.data.result.includes(year)
-            )
-            yearOptions.value = commonYears
-            if (!commonYears.includes(searchForm.value.year)) {
-              searchForm.value.year = null
-            }
-            // 檢查是否有共同年份
-            if (commonYears.length === 0) {
-              createSnackbar({
-                text: `「${getThemeName(newTheme)}」尚無預算與支出的對應資料`,
-                snackbarProps: { color: 'warning' }
-              })
-            }
-          }
-        } catch (error) {
-          handleError(error)
-        }
-        return
-      default:
-        endpoint = `/marketing/expenses/years/${newTheme}`
-    }
-
-    if (endpoint) {
-      const { data } = await apiAuth.get(endpoint)
-      if (data.success) {
-        yearOptions.value = data.result
-        // 如果當前選擇的年度不在新的選項中，清空年度選擇
-        if (!data.result.includes(searchForm.value.year)) {
-          searchForm.value.year = null
-        }
-        // 檢查是否有年份資料
-        if (data.result.length === 0) {
-          const reportTypeName = reportTypeOptions.value.find(option => 
-            option.value === newReportType
-          )?.title || ''
-          createSnackbar({
-            text: `「${getThemeName(newTheme)}」尚無「${reportTypeName}」相關資料`,
-            snackbarProps: { color: 'warning' }
-          })
-        }
-      }
-    }
-  } catch (error) {
-    handleError(error)
-  } finally {
-    isLoading.value = false
-  }
-}, { immediate: true })
-
 // 處理搜尋條件變更
 const handleYearChange = () => {
   yearError.value = ''
   showReport.value = false
 }
 
-const handleThemeChange = () => {
+const handleThemeChange = async () => {
   themeError.value = ''
   showReport.value = false
-  // 當主題變更時，清除年度選擇
   searchForm.value.year = null
   yearError.value = ''
+  searchForm.value.reportType = null
+  reportTypeError.value = ''
+
+  // 清空線別和月份的選擇
+  searchForm.value.line = []
+  searchForm.value.month = null
+  lineError.value = ''
+  monthError.value = ''
+
+  if (!searchForm.value.theme) {
+    searchForm.value.availableDataTypes = {
+      hasBudget: false,
+      hasExpense: false
+    }
+    yearOptions.value = []
+    return
+  }
+
+  try {
+    isLoading.value = true
+    const [budgetRes, expenseRes] = await Promise.all([
+      apiAuth.get(`/marketing/budgets/years/${searchForm.value.theme}`),
+      apiAuth.get(`/marketing/expenses/years/${searchForm.value.theme}`)
+    ])
+
+    // 更新資料類型狀態
+    searchForm.value.availableDataTypes = {
+      hasBudget: budgetRes.data.success && budgetRes.data.result.length > 0,
+      hasExpense: expenseRes.data.success && expenseRes.data.result.length > 0
+    }
+
+    // 合併兩個來源的年度並去重
+    const budgetYears = budgetRes.data.success ? budgetRes.data.result : []
+    const expenseYears = expenseRes.data.success ? expenseRes.data.result : []
+    const allYears = [...new Set([...budgetYears, ...expenseYears])]
+    
+    // 排序年度
+    yearOptions.value = allYears.sort((a, b) => a - b)
+
+    // 檢查是否有年份資料
+    if (!searchForm.value.availableDataTypes.hasBudget && !searchForm.value.availableDataTypes.hasExpense) {
+      createSnackbar({
+        text: `「${getThemeName(searchForm.value.theme)}」尚無任何預算或實際支出資料`,
+        snackbarProps: { color: 'warning' }
+      })
+    } else {
+      // 顯示有哪些類型的資料
+      const message = []
+      if (searchForm.value.availableDataTypes.hasBudget) message.push('預算')
+      if (searchForm.value.availableDataTypes.hasExpense) message.push('實際支出')
+      
+      createSnackbar({
+        text: `「${getThemeName(searchForm.value.theme)}」有${message.join('及')}資料`,
+        snackbarProps: { color: 'light-blue-darken-1' }
+      })
+    }
+  } catch (error) {
+    handleError(error)
+    searchForm.value.availableDataTypes = {
+      hasBudget: false,
+      hasExpense: false
+    }
+    yearOptions.value = []
+  } finally {
+    isLoading.value = false
+  }
 }
+
+// 監聽年度變化，更新可選的報表類型
+watch(() => searchForm.value.year, (newYear) => {
+  if (!newYear || !searchForm.value.theme) {
+    searchForm.value.reportType = null
+    return
+  }
+
+  // 根據選擇的年度過濾報表類型
+  const availableTypes = searchForm.value.availableDataTypes
+  const hasBudgetInYear = availableTypes.hasBudget && yearOptions.value.includes(newYear)
+  const hasExpenseInYear = availableTypes.hasExpense && yearOptions.value.includes(newYear)
+
+  reportTypeOptions.value = [
+    ...(hasBudgetInYear ? [{ title: '行銷廣告預算表', value: 'budget' }] : []),
+    ...(hasExpenseInYear ? [
+      { title: '行銷實際支出表', value: 'expense' },
+      { title: '行銷各線實際支出表', value: 'lineExpense' },
+      { title: '行銷各線實際支出總表', value: 'lineExpenseTotal' }
+    ] : []),
+    ...(hasBudgetInYear && hasExpenseInYear ? [
+      { title: '行銷預算與實際支出比較表', value: 'comparison' }
+    ] : [])
+  ]
+
+  // 如果目前選擇的報表類型不在新的選項中，清空選擇
+  if (!reportTypeOptions.value.find(option => option.value === searchForm.value.reportType)) {
+    searchForm.value.reportType = null
+  }
+})
+
 const handleReportTypeChange = () => {
   reportTypeError.value = ''
   showReport.value = false
@@ -2126,6 +2147,12 @@ const handleReportTypeChange = () => {
     searchForm.value.month = null
     lineError.value = ''
     monthError.value = ''
+  } else {
+    // 當選擇行銷各線實際支出表時，提醒使用者選擇月份和線別
+    createSnackbar({
+      text: '請記得選擇月份和線別',
+      snackbarProps: { color: 'info' }
+    })
   }
 }
 
