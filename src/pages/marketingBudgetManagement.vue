@@ -1173,18 +1173,18 @@ const submit = handleSubmit(async (values) => {
         channel: channel.channelId,
         platform: platform.platformId,
         monthlyBudget: {
-          JAN: platform.budget.JAN === '' ? '' : Number(platform.budget.JAN),
-          FEB: platform.budget.FEB === '' ? '' : Number(platform.budget.FEB),
-          MAR: platform.budget.MAR === '' ? '' : Number(platform.budget.MAR),
-          APR: platform.budget.APR === '' ? '' : Number(platform.budget.APR),
-          MAY: platform.budget.MAY === '' ? '' : Number(platform.budget.MAY),
-          JUN: platform.budget.JUN === '' ? '' : Number(platform.budget.JUN),
-          JUL: platform.budget.JUL === '' ? '' : Number(platform.budget.JUL),
-          AUG: platform.budget.AUG === '' ? '' : Number(platform.budget.AUG),
-          SEP: platform.budget.SEP === '' ? '' : Number(platform.budget.SEP),
-          OCT: platform.budget.OCT === '' ? '' : Number(platform.budget.OCT),
-          NOV: platform.budget.NOV === '' ? '' : Number(platform.budget.NOV),
-          DEC: platform.budget.DEC === '' ? '' : Number(platform.budget.DEC)
+          JAN: platform.budget.JAN === '' ? 0 : Number(platform.budget.JAN),
+          FEB: platform.budget.FEB === '' ? 0 : Number(platform.budget.FEB),
+          MAR: platform.budget.MAR === '' ? 0 : Number(platform.budget.MAR),
+          APR: platform.budget.APR === '' ? 0 : Number(platform.budget.APR),
+          MAY: platform.budget.MAY === '' ? 0 : Number(platform.budget.MAY),
+          JUN: platform.budget.JUN === '' ? 0 : Number(platform.budget.JUN),
+          JUL: platform.budget.JUL === '' ? 0 : Number(platform.budget.JUL),
+          AUG: platform.budget.AUG === '' ? 0 : Number(platform.budget.AUG),
+          SEP: platform.budget.SEP === '' ? 0 : Number(platform.budget.SEP),
+          OCT: platform.budget.OCT === '' ? 0 : Number(platform.budget.OCT),
+          NOV: platform.budget.NOV === '' ? 0 : Number(platform.budget.NOV),
+          DEC: platform.budget.DEC === '' ? 0 : Number(platform.budget.DEC)
         }
       }))
     )

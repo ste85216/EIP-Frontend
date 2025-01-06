@@ -284,7 +284,8 @@
   <!-- 詳細資料 Dialog -->
   <v-dialog
     v-model="detailDialog"
-    width="600"
+    :class="{ 'budget-detail': selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除' }"
+    :width="selectedItem?.targetModel === 'marketingBudgets' ? (selectedItem?.action === '修改' ? undefined : 1200) : 600"
   >
     <v-card class="pa-4">
       <div class="ps-6 pt-4 pb-1 pb-sm-3 card-title">
@@ -344,7 +345,16 @@
                   異動內容
                 </div>
                 <div
-                  v-if="formatChanges(selectedItem).length > 0"
+                  v-if="selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除'"
+                  class="list-content budget-content"
+                >
+                  <marketing-budget-change-table
+                    :action="selectedItem.action"
+                    :changes="selectedItem.changes"
+                  />
+                </div>
+                <div
+                  v-else-if="formatChanges(selectedItem).length > 0"
                   class="list-content"
                 >
                   <ul class="change-list">
@@ -387,6 +397,7 @@ import { useApi } from '@/composables/axios'
 import { debounce } from 'lodash'
 import { definePage } from 'vue-router/auto'
 import { useSnackbar } from 'vuetify-use-dialog'
+import MarketingBudgetChangeTable from '@/components/MarketingBudgetChangeTable.vue'
 
 definePage({
   meta: {
@@ -445,7 +456,8 @@ const modelOptions = [
   { title: '表單', value: 'forms' },
   { title: '表單模板', value: 'formTemplates' },
   { title: '行銷分類', value: 'marketingCategories' },
-  { title: '行銷花費', value: 'marketingExpenses' }
+  { title: '行銷預算', value: 'marketingBudgets' },
+  { title: '行銷實際支出', value: 'marketingExpenses' }
 ]
 
 // 表格標頭
@@ -492,7 +504,7 @@ const fieldTranslations = {
   note: '備註',
   isActive: '啟用狀態',
   employmentStatus: '任職狀態',
-  marketingExpenses: '實際支出',
+  marketingExpenses: '行銷實際支出',
   marketingBudgets: '行銷預算',
   expense: '花費金額',
   invoiceDate: '發票日期',
@@ -537,7 +549,7 @@ const getModelDisplay = (model) => {
     forms: '表單',
     formTemplates: '表單模板',
     marketingCategories: '行銷分類',
-    marketingExpenses: '行銷花費',
+    marketingExpenses: '行銷實際支出',
     marketingBudgets: '行銷預算'
   }
   return modelMap[model] || model
@@ -553,15 +565,20 @@ const formatOperator = (item) => {
 }
 
 const formatTarget = (item) => {
-  if (!item?.targetInfo) return '-'
-  const { name, userId, formNumber, invoiceDate, theme } = item.targetInfo
+  if (!item?.targetInfo && !item?.changes?.before) return '-'
+  const { name, userId, formNumber, invoiceDate } = item?.targetInfo || {}
+  
   if (formNumber) return `${formNumber}`
   if (item.targetModel === 'marketingCategories') {
     return name || '-'
   }
   if (item.targetModel === 'marketingExpenses') {
     const date = formatDateTime(invoiceDate).split(' ')[0] // 只取日期部分
-    return `${date} - ${theme}`
+    return `${date} - ${name}`
+  }
+  if (item.targetModel === 'marketingBudgets') {
+    const { year, theme } = item.targetInfo || {}
+    return `${year}年度-${theme || '-'}`
   }
   return `${name}${userId ? ` (${userId})` : ''}`
 }
@@ -576,7 +593,45 @@ const formatBoolean = (value) => {
 
 const formatChanges = (item) => {
   if (!item?.changes) return []
+  
+  // 如果是刪除操作，顯示資料已刪除
+  if (item.action === '刪除') {
+    return ['資料已刪除']
+  }
+
   const changes = []
+
+  // 處理行銷預算的特殊顯示
+  if (item.targetModel === 'marketingBudgets') {
+    const { changedFields = [], before = {}, after = {} } = item.changes
+
+    // 檢查是否有修改年度
+    if (changedFields.includes('year')) {
+      changes.push(`年度: ${before.year || '(無)'} → ${after.year || '(無)'}`)
+    }
+
+    // 檢查是否有修改主題
+    if (changedFields.includes('theme')) {
+      const oldTheme = item.targetInfo?.beforeTheme || '(無)'
+      const newTheme = item.targetInfo?.theme || '(無)'
+      changes.push(`行銷主題: ${oldTheme} → ${newTheme}`)
+    }
+
+    // 檢查是否有修改備註
+    if (changedFields.includes('note')) {
+      const oldNote = before.note || '(無)'
+      const newNote = after.note || '(無)'
+      changes.push(`備註: ${oldNote} → ${newNote}`)
+    }
+
+    // 如果只有這些基本欄位的修改，就直接顯示
+    if (changes.length > 0) {
+      return changes
+    }
+
+    // 如果有修改預算項目，則顯示查看詳細
+    return ['請查看詳細異動內容']
+  }
 
   // 處理創建操作
   if (item.action === '創建') {
@@ -607,7 +662,7 @@ const formatChanges = (item) => {
     return changes
   }
 
-  // 處理修改和刪除操作
+  // 處理修改操作
   const { before = {}, after = {}, changedFields = [] } = item.changes
   
   changedFields.forEach(key => {
@@ -965,5 +1020,43 @@ watch(
 .list-content {
   font-size: 14px;
   line-height: 1.4;
+  
+  &.budget-content {
+    min-width: 80%;
+    margin: 0 -24px;
+    padding: 16px 12px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+  }
+}
+
+// 添加行銷預算相關樣式
+.budget-dialog {
+  max-width: 1920px;
+  margin: 0 auto;
+  
+  :deep(.v-card) {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+// 修改對話框樣式
+:deep(.v-dialog) {
+  &.budget-detail {
+    max-width: 1920px !important;
+    width: 92% !important;
+    margin: 24px auto !important;
+    
+    .v-card {
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+    }
+  }
+  
+  // 當不是修改操作時，使用較窄的寬度
+  &:not(.budget-detail) {
+    max-width: 1200px !important;
+  }
 }
 </style>
