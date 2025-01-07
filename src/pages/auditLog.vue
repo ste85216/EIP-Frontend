@@ -284,8 +284,9 @@
   <!-- 詳細資料 Dialog -->
   <v-dialog
     v-model="detailDialog"
-    :class="{ 'budget-detail': selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除' }"
-    :width="selectedItem?.targetModel === 'marketingBudgets' ? (selectedItem?.action === '修改' ? undefined : 1200) : 600"
+    :class="{ 'budget-detail': selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除' && hasBudgetItemsChanged(selectedItem) }"
+    :width="selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action === '創建' ? 1200 : (selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除' && hasBudgetItemsChanged(selectedItem) ? undefined : 600)"
+    :data-action="selectedItem?.action"
   >
     <v-card class="pa-4">
       <div class="ps-6 pt-4 pb-1 pb-sm-3 card-title">
@@ -345,7 +346,7 @@
                   異動內容
                 </div>
                 <div
-                  v-if="selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除'"
+                  v-if="selectedItem?.targetModel === 'marketingBudgets' && shouldShowBudgetTable && hasBudgetItemsChanged(selectedItem)"
                   class="list-content budget-content"
                 >
                   <marketing-budget-change-table
@@ -566,6 +567,16 @@ const formatOperator = (item) => {
 
 const formatTarget = (item) => {
   if (!item?.targetInfo && !item?.changes?.before) return '-'
+  
+  // 如果是刪除操作，從 changes.before 中獲取資料
+  if (item.action === '刪除' && item.changes?.before) {
+    if (item.targetModel === 'marketingBudgets') {
+      const { year } = item.changes.before
+      const theme = item.targetInfo?.theme || '(無)'
+      return `${year}年度-${theme}`
+    }
+  }
+  
   const { name, userId, formNumber, invoiceDate } = item?.targetInfo || {}
   
   if (formNumber) return `${formNumber}`
@@ -578,7 +589,7 @@ const formatTarget = (item) => {
   }
   if (item.targetModel === 'marketingBudgets') {
     const { year, theme } = item.targetInfo || {}
-    return `${year}年度-${theme || '-'}`
+    return `${year}年度-${theme || '(無)'}`
   }
   return `${name}${userId ? ` (${userId})` : ''}`
 }
@@ -589,6 +600,19 @@ const formatBoolean = (value) => {
     return value ? '是' : '否'
   }
   return value
+}
+
+const hasBudgetItemsChanged = (item) => {
+  if (!item?.changes) return false
+  
+  // 如果是創建操作，檢查是否有 items
+  if (item.action === '創建') {
+    return item.changes?.after?.items?.length > 0
+  }
+  
+  // 檢查是否有修改預算項目
+  if (!item?.changes?.changedFields) return false
+  return item.changes.changedFields.some(field => field.startsWith('items'))
 }
 
 const formatChanges = (item) => {
@@ -604,6 +628,11 @@ const formatChanges = (item) => {
   // 處理行銷預算的特殊顯示
   if (item.targetModel === 'marketingBudgets') {
     const { changedFields = [], before = {}, after = {} } = item.changes
+
+    // 如果是創建操作或有修改預算項目，則顯示查看詳細
+    if (item.action === '創建' || changedFields.some(field => field.startsWith('items'))) {
+      return ['( 請查看詳細異動內容 )']
+    }
 
     // 檢查是否有修改年度
     if (changedFields.includes('year')) {
@@ -624,13 +653,7 @@ const formatChanges = (item) => {
       changes.push(`備註: ${oldNote} → ${newNote}`)
     }
 
-    // 如果只有這些基本欄位的修改，就直接顯示
-    if (changes.length > 0) {
-      return changes
-    }
-
-    // 如果有修改預算項目，則顯示查看詳細
-    return ['請查看詳細異動內容']
+    return changes
   }
 
   // 處理創建操作
@@ -707,7 +730,7 @@ const handleOperatorSearch = debounce(async (text) => {
     console.error('搜尋操作人員失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '搜尋操作人員失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
     operatorSuggestions.value = []
   } finally {
@@ -791,7 +814,7 @@ const handleTargetSearch = debounce(async (text) => {
     })
     createSnackbar({
       text: error?.response?.data?.message || '搜尋操作對象失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
     targetSuggestions.value = []
   } finally {
@@ -885,7 +908,7 @@ const performSearch = async () => {
     })
     createSnackbar({
       text: error?.response?.data?.message || '搜尋失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
     tableItems.value = []
     tableItemsLength.value = 0
@@ -904,9 +927,35 @@ const handleTableOptionsChange = async (options) => {
 }
 
 const showDetail = (item) => {
+  // 如果資料已被刪除（不是刪除操作本身），且不是創建操作，顯示提示訊息
+  if (item.isTargetDeleted && item.action !== '創建' && item.action !== '刪除') {
+    createSnackbar({
+      text: '此資料已被刪除，無法查看詳細內容',
+      snackbarProps: { color: 'warning' }
+    })
+    return
+  }
+  
   selectedItem.value = item
   detailDialog.value = true
 }
+
+// 修改 shouldShowBudgetTable 計算屬性
+const shouldShowBudgetTable = computed(() => {
+  if (!selectedItem.value) return false
+  if (selectedItem.value.targetModel !== 'marketingBudgets') return false
+  if (selectedItem.value.action === '刪除') return false
+  
+  // 如果是創建操作，檢查是否有 changes.after.items
+  if (selectedItem.value.action === '創建') {
+    return selectedItem.value.changes?.after?.items?.length > 0
+  }
+  
+  // 如果是修改操作，且資料已被刪除，則不顯示
+  if (selectedItem.value.isTargetDeleted) return false
+  
+  return hasBudgetItemsChanged(selectedItem.value)
+})
 
 // 初始載入
 onMounted(async () => {
@@ -1024,7 +1073,7 @@ watch(
   &.budget-content {
     min-width: 80%;
     margin: 0 -24px;
-    padding: 16px 12px;
+    padding: 16px 24px;
     background-color: #f5f5f5;
     border-radius: 8px;
   }
@@ -1054,9 +1103,9 @@ watch(
     }
   }
   
-  // 當不是修改操作時，使用較窄的寬度
+  // 當不是修改預算表格時，使用較窄的寬度
   &:not(.budget-detail) {
-    max-width: 1200px !important;
+    max-width: 600px !important;
   }
 }
 </style>

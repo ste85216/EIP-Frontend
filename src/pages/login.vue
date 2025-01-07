@@ -111,22 +111,26 @@
             <GoogleLogin
               :callback="googleLoginCallback"
               :client-id="googleClientId"
-              prompt
+              :auto-login="false"
+              :ux_mode="'popup'"
               class="w-100"
             >
-              <v-btn
-                block
-                elevation="2"
-                color="pink-lighten-1"
-                :loading="isSubmitting"
-                :disabled="isSubmitting"
-              >
-                <v-icon
-                  icon="mdi-google-plus"
-                  size="24"
-                  class="me-2"
-                />Google 登入
-              </v-btn>
+              <template #default="{ signIn }">
+                <v-btn
+                  block
+                  elevation="2"
+                  color="pink-lighten-1"
+                  :loading="isSubmitting"
+                  :disabled="isSubmitting"
+                  @click="signIn"
+                >
+                  <v-icon
+                    icon="mdi-google-plus"
+                    size="24"
+                    class="me-2"
+                  />Google 登入
+                </v-btn>
+              </template>
             </GoogleLogin>
           </v-col>
         </v-row>

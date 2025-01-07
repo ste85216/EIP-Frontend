@@ -1,6 +1,6 @@
 <template>
   <v-container
-    min-width="2160"
+    min-width="1600"
   >
     <!-- 添加進度遮罩 -->
     <v-overlay
@@ -90,33 +90,6 @@
                   <v-col
                     v-if="searchForm.reportType === 'lineExpense'"
                   >
-                    <v-autocomplete
-                      v-model="searchForm.line"
-                      :items="lineOptions"
-                      label="線別"
-                      item-title="name"
-                      item-value="_id"
-                      variant="outlined"
-                      density="compact"
-                      :error-messages="lineError"
-                      clearable
-                      multiple
-                      select-all
-                      @update:model-value="handleLineChange"
-                    >
-                      <template #prepend-item>
-                        <v-list-item
-                          title="全選"
-                          color="purple-lighten-1"
-                          prepend-icon="mdi-checkbox-multiple-marked"
-                          :active="searchForm.line.length === lineOptions.length"
-                          @click="selectAllLines"
-                        />
-                        <v-divider class="mt-2" />
-                      </template>
-                    </v-autocomplete>
-                  </v-col>
-                  <v-col v-if="searchForm.reportType === 'lineExpense'">
                     <v-select
                       v-model="searchForm.month"
                       :items="monthOptions"
@@ -150,6 +123,40 @@
                     >
                       批次下載報表
                     </v-btn>
+                  </v-col>
+                  <v-col cols="12">
+                    <v-row>
+                      <v-col
+                        v-if="searchForm.reportType === 'lineExpense'"
+                        cols="12"
+                      >
+                        <v-autocomplete
+                          v-model="searchForm.line"
+                          :items="lineOptions"
+                          label="線別"
+                          item-title="name"
+                          item-value="_id"
+                          variant="outlined"
+                          density="compact"
+                          :error-messages="lineError"
+                          clearable
+                          multiple
+                          select-all
+                          @update:model-value="handleLineChange"
+                        >
+                          <template #prepend-item>
+                            <v-list-item
+                              title="全選"
+                              color="purple-lighten-1"
+                              prepend-icon="mdi-checkbox-multiple-marked"
+                              :active="searchForm.line.length === lineOptions.length"
+                              @click="selectAllLines"
+                            />
+                            <v-divider class="mt-2" />
+                          </template>
+                        </v-autocomplete>
+                      </v-col>
+                    </v-row>
                   </v-col>
                 </v-row>
               </v-col>
@@ -189,6 +196,38 @@
 
         <!-- 行銷預算與實際支出比較表，因要滑動時，標題會被蓋住，所以需要獨立出來 -->
         <div
+          v-if="searchForm.reportType === 'budget'" 
+          class="budget-table-title "
+        >
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          {{ reportTypeOptions.find(option => option.value === searchForm.reportType)?.title || '' }}
+        </div>
+        <div
+          v-if="searchForm.reportType === 'expense'"
+          class="budget-table-title "
+        >
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          {{ reportTypeOptions.find(option => option.value === 'expense')?.title || '' }}
+        </div>
+        <div
+          v-if="searchForm.reportType === 'lineExpense'"
+          class="budget-table-title"
+        >
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          行銷各線實際支出表 <span class="text-light-blue-darken-2">({{ searchForm.month ? `${searchForm.month}月` : '( 請先選擇月份 )' }})</span>
+        </div>
+        <div
+          v-if="searchForm.reportType === 'lineExpenseTotal'"
+          class="budget-table-title"
+        >
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          行銷各線實際支出總表
+        </div>
+        <div
           v-if="searchForm.reportType === 'comparison'"
           class="budget-table-title"
         >
@@ -199,15 +238,6 @@
 
         <div class="table-container">
           <!-- 年度行銷預算表 -->
-          <div
-            v-if="searchForm.reportType === 'budget'" 
-            class="budget-table-title "
-          >
-            <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-            <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
-            {{ reportTypeOptions.find(option => option.value === searchForm.reportType)?.title || '' }}
-          </div>
-
           <table
             v-if="searchForm.reportType === 'budget'"
             class="budget-table"
@@ -420,14 +450,7 @@
           </table>
 
           <!-- 行銷實際支出表 -->
-          <div
-            v-if="searchForm.reportType === 'expense'"
-            class="budget-table-title "
-          >
-            <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-            <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
-            {{ reportTypeOptions.find(option => option.value === 'expense')?.title || '' }}
-          </div>
+          
 
           <table
             v-if="searchForm.reportType === 'expense'"
@@ -1326,15 +1349,6 @@
         </div>
 
         <!-- 行銷各線實際支出表 -->
-        <div
-          v-if="searchForm.reportType === 'lineExpense'"
-          class="budget-table-title"
-        >
-          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
-          行銷各線實際支出表 <span class="text-light-blue-darken-2">({{ searchForm.month ? `${searchForm.month}月` : '( 請先選擇月份 )' }})</span>
-        </div>
-
         <div class="table-container">
           <table
             v-if="searchForm.reportType === 'lineExpense'"
@@ -1421,15 +1435,8 @@
           </table>
         </div>
 
-        <div
-          v-if="searchForm.reportType === 'lineExpenseTotal'"
-          class="budget-table-title"
-        >
-          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
-          行銷各線實際支出總表
-        </div>
-
+        
+        <!-- 行銷各線實際支出總表 -->
         <div class="table-container">
           <table
             v-if="searchForm.reportType === 'lineExpenseTotal'"
@@ -4958,30 +4965,30 @@ watch(() => downloadForm.value.availableDataTypes, (newTypes) => {
     :deep(thead) {
       .header-row {
         .header-cell {
-          min-width: 80px !important;
-          width: 80px !important;
+          min-width: 100px !important;
+          width: 100px !important;
 
           &:first-child {
-            width: 180px !important;
-            min-width: 180px !important;
+            width: 150px !important;
+            min-width: 150px !important;
           }
         }
 
         .header-cell-quarter {
-          min-width: 80px !important;
-          width: 80px !important;
+          min-width: 120px !important;
+          width: 120px !important;
         }
       }
     }
 
     :deep(tbody) {
       td {
-        min-width: 80px !important;
-        width: 80px !important;
+        min-width: 100px !important;
+        width: 100px !important;
 
         &:first-child {
-          width: 180px !important;
-          min-width: 180px !important;
+          width: 150px !important;
+          min-width: 150px !important;
         }
 
         &.month-col {
@@ -4990,13 +4997,13 @@ watch(() => downloadForm.value.availableDataTypes, (newTypes) => {
         }
 
         &.quarter-col {
-          min-width: 80px !important;
-          width: 80px !important;
+          min-width: 120px !important;
+          width: 120px !important;
         }
 
         &.total-col {
-          min-width: 80px !important;
-          width: 80px !important;
+          min-width: 120px !important;
+          width: 120px !important;
         }
       }
     }
@@ -5226,6 +5233,18 @@ watch(() => downloadForm.value.availableDataTypes, (newTypes) => {
   :deep(.echarts) {
     width: 100% !important;
     height: 100% !important;
+  }
+
+  @media screen and (min-width: 2321px) {
+    .chart-box {
+      min-height: 800px;
+    }
+  }
+
+  @media screen and (max-width: 2320px) {
+    .chart-box {
+      min-height: 580px;
+    }
   }
 }
 

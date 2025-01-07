@@ -428,7 +428,7 @@
                                 />
                               </div>
                               <div class="detail-field">
-                                <v-text-field
+                                <amount-input
                                   v-model="detail.amount"
                                   :error-messages="details.errorMessage?.value?.[index]?.amount"
                                   label="*費用"
@@ -501,7 +501,7 @@
                 class="ms-1"
                 :size="buttonSize"
                 :loading="isSubmitting"
-                :disabled="(dialog.id && !hasChanges) || isSubmitting"
+                :disabled="isSubmitting"
               >
                 送出
               </v-btn>
@@ -522,7 +522,7 @@
           輸入總金額
         </div>
         <v-card-text class="px-6 pb-0">
-          <v-text-field
+          <amount-input
             v-model="amountDialog.amount"
             label="總金額"
             variant="outlined"
@@ -651,6 +651,7 @@ import * as yup from 'yup'
 import { debounce } from 'lodash'
 import { formatNumber } from '@/utils/format'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
+import AmountInput from '../components/AmountInput.vue'
 
 // 自定義日期格式化函數
 const formatDate = (dateString) => {
@@ -817,30 +818,6 @@ const performSearch = async () => {
     handleError(error)
   }
 }
-
-// ===== 計算屬性 =====
-const hasChanges = computed(() => {
-  if (!dialog.value.id) return true
-  if (!originalData.value) return false
-  return JSON.stringify({
-    invoiceDate: invoiceDate.value.value,
-    theme: theme.value.value,
-    channel: channel.value.value,
-    platform: platform.value.value,
-    details: detailsList.value,
-    note: note.value.value
-  }) !== JSON.stringify({
-    invoiceDate: originalData.value.invoiceDate,
-    theme: originalData.value.theme._id,
-    channel: originalData.value.channel._id,
-    platform: originalData.value.platform._id,
-    details: originalData.value.details.map(d => ({
-      detail: d.detail._id,
-      amount: d.amount
-    })),
-    note: originalData.value.note
-  })
-})
 
 // ===== 監聽器 =====
 watch(searchText, () => {

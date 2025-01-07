@@ -24,7 +24,7 @@
                   >
                     <v-select
                       v-model="searchCriteria.year"
-                      :items="yearOptions"
+                      :items="searchYearOptions"
                       label="年度"
                       variant="outlined"
                       density="compact"
@@ -180,7 +180,7 @@
     <v-dialog
       v-model="dialog.open"
       persistent
-      :width="dialogWidth"
+      max-width="2200"
       :fullscreen="!smAndUp"
     >
       <v-form
@@ -276,7 +276,7 @@
                           v-tooltip="'新增廣告渠道'"
                           icon
                           size="24"
-                          class="add-button ms-4"
+                          class="ms-2"
                           @click="addChannel"
                         >
                           <v-icon
@@ -288,6 +288,8 @@
                           </v-icon>
                         </v-btn>
                       </th>
+                      <th class="sort-buttons-col" />
+                      <th class="add-platform-col" />
                       <th class="delete-button-col" />
                       <th class="platform-col">
                         平台
@@ -337,7 +339,7 @@
                               </v-btn>
                             </td>
                             <td
-                              class="channel-col"
+                              class="channel-col pe-1"
                               :rowspan="channel.platforms.length"
                             >
                               <div class="d-flex align-center">
@@ -351,43 +353,48 @@
                                   hide-details
                                   class="channel-select"
                                 />
-                                <!-- 渠道排序按鈕 -->
-                                <div class="sort-buttons-wrapper">
-                                  <div class="d-flex flex-column align-center">
-                                    <v-btn
-                                      v-tooltip="'上移'"
-                                      icon="mdi-chevron-up"
-                                      size="24"
-                                      density="compact"
-                                      variant="text"
-                                      :disabled="channelIndex === 0"
-                                      @click="moveChannel(channelIndex, 'up')"
-                                    />
-                                    <v-btn
-                                      v-tooltip="'下移'"
-                                      icon="mdi-chevron-down"
-                                      size="24"
-                                      density="compact"
-                                      variant="text"
-                                      :disabled="channelIndex === budgetData.length - 1"
-                                      @click="moveChannel(channelIndex, 'down')"
-                                    />
-                                  </div>
-                                </div>
-                                <!-- 新增平台按鈕 -->
-                                <v-btn
-                                  v-tooltip="'新增平台'"
-                                  icon
-                                  size="24"
-                                  color="purple-darken-4"
-                                  class="ms-4"
-                                  @click="addPlatform(channelIndex)"
-                                >
-                                  <v-icon size="14">
-                                    mdi-plus
-                                  </v-icon>
-                                </v-btn>
                               </div>
+                            </td>
+                            <td
+                              class="sort-buttons-col"
+                              :rowspan="channel.platforms.length"
+                            >
+                              <div class="d-flex flex-column align-center">
+                                <v-btn
+                                  v-tooltip="'上移'"
+                                  icon="mdi-chevron-up"
+                                  size="24"
+                                  density="compact"
+                                  variant="text"
+                                  :disabled="channelIndex === 0"
+                                  @click="moveChannel(channelIndex, 'up')"
+                                />
+                                <v-btn
+                                  v-tooltip="'下移'"
+                                  icon="mdi-chevron-down"
+                                  size="24"
+                                  density="compact"
+                                  variant="text"
+                                  :disabled="channelIndex === budgetData.length - 1"
+                                  @click="moveChannel(channelIndex, 'down')"
+                                />
+                              </div>
+                            </td>
+                            <td
+                              class="add-platform-col"
+                              :rowspan="channel.platforms.length"
+                            >
+                              <v-btn
+                                v-tooltip="'新增平台'"
+                                icon
+                                size="24"
+                                color="purple-darken-4"
+                                @click="addPlatform(channelIndex)"
+                              >
+                                <v-icon size="14">
+                                  mdi-plus
+                                </v-icon>
+                              </v-btn>
                             </td>
                           </template>
 
@@ -477,7 +484,7 @@
                             :key="monthKey"
                             class="month-col"
                           >
-                            <v-text-field
+                            <amount-input
                               v-model="platform.budget[monthKey]"
                               variant="outlined"
                               density="compact"
@@ -579,14 +586,14 @@
             <div class="text-grey mb-4">
               輸入金額將填入該平台的所有月份
             </div>
-            <v-text-field
+            <amount-input
               v-model="quickFillDialog.amount"
               label="請輸入金額"
               variant="outlined"
               density="compact"
               :error-messages="quickFillDialog.error"
+              @update:model-value="quickFillDialog.error = ''"
               @keyup.enter="validateAndApplyQuickFill"
-              @input="quickFillDialog.error = ''"
             />
           </v-card-text>
           <v-card-actions class="px-0 pt-0">
@@ -628,6 +635,7 @@ import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWi
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 import { debounce } from 'lodash'
 import { formatNumber } from '@/utils/format'
+import AmountInput from '../components/AmountInput.vue'
 
 
 // ===== 頁面設定 =====
@@ -647,7 +655,6 @@ const user = useUserStore()
 // ===== 響應式設定與螢幕斷點 =====
 const { smAndUp } = useDisplay()
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
-const dialogWidth = computed(() => smAndUp.value ? '92%' : '100%')
 
 // ===== 基礎狀態管理 =====
 const confirmDeleteDialog = ref(false)
@@ -675,7 +682,6 @@ const { handleSubmit, resetForm } = useForm({
 const year = useField('year')
 const theme = useField('theme')
 const note = useField('note')
-const budgetItems = useField('budgetItems')
 
 // ===== 對話框設定 =====
 const dialog = ref({
@@ -731,22 +737,7 @@ const monthList = {
 // ===== 計算屬性 =====
 const hasChanges = computed(() => {
   if (!dialog.value.id) return true
-  if (!originalData.value) return false
-  return JSON.stringify({
-    year: year.value.value,
-    theme: theme.value.value,
-    note: note.value.value,
-    budgetItems: budgetItems.value.value
-  }) !== JSON.stringify({
-    year: originalData.value.year,
-    theme: originalData.value.theme._id,
-    note: originalData.value.note,
-    budgetItems: originalData.value.items.map(item => ({
-      channel: item.channel._id,
-      platform: item.platform._id,
-      monthlyBudget: item.monthlyBudget
-    }))
-  })
+  return true
 })
 
 // ===== 預算表資料 =====
@@ -970,8 +961,25 @@ const loadData = async () => {
   }
 }
 
+// 新增搜尋用的年度選項
+const searchYearOptions = ref([])
+
 const loadOptions = async () => {
   try {
+    // 先獲取所有預算資料來提取實際存在的年度
+    const { data: budgetData } = await apiAuth.get('/marketing/budgets/all', { 
+      params: { 
+        page: 1,
+        itemsPerPage: 9999 // 獲取所有資料以確保不遺漏任何年度
+      } 
+    })
+
+    // 從預算資料中提取實際的年度（只用於搜尋條件）
+    if (budgetData.success) {
+      const uniqueYears = [...new Set(budgetData.result.data.map(item => item.year))]
+      searchYearOptions.value = uniqueYears.sort((a, b) => b - a)
+    }
+
     const [
       { data: yearData },
       { data: themeData },
@@ -1428,8 +1436,7 @@ const clearAllMonths = (channelIndex, platformIndex) => {
 <style lang="scss" scoped>
 .budget-table {
   overflow-x: auto;
-  margin: 0 -16px;
-  padding: 0 16px;
+  width: 100%;
 }
 
 .budget-table-title {
@@ -1444,6 +1451,8 @@ const clearAllMonths = (channelIndex, platformIndex) => {
   border-bottom: none;
   border-radius: 8px;
   border-spacing: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .budget-header {
@@ -1471,12 +1480,11 @@ tbody {
     vertical-align: middle;
     border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   }
-
-  .channel-col {
+  .quick-fill-col {
     border-right: 1px solid #e0e0e0;
   }
 
-  .quick-fill-col {
+  .add-platform-col {
     border-right: 1px solid #e0e0e0;
   }
 }
@@ -1506,23 +1514,20 @@ tbody {
 }
 
 .channel-col {
-  width: 200px;
+  max-width: 160px;
+  min-width: 160px;
   .channel-select {
     width: 180px;
-  }
-  .sort-buttons-col {
-    margin-left: 8px;
-    border-bottom: none;
   }
 }
 
 .platform-col {
   padding-right: 4px !important;
-  width: 200px;
+  min-width: 160px;
 }
 
 .month-col {
-  min-width: 100px;
+  min-width: 106px;
   padding: 8px !important;
 }
 
@@ -1564,21 +1569,16 @@ tbody {
   }
 }
 
-.sort-buttons-wrapper {
-  display: inline-flex;
-  align-items: center;
-  padding-left: 12px;
-  .v-btn {
-    margin: 2px 0;
-    opacity: 0.7;
-    
-    &:hover {
-      opacity: 1;
-    }
-    
-    &:disabled {
-      opacity: 0.3;
-    }
+.add-platform-col {
+  width: 32px;
+  padding: 0 16px 0 8px !important;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .budget-table {
+    margin: 0;
+    padding: 0;
   }
 }
 </style>

@@ -717,7 +717,7 @@ const updateUserStatus = async (user, newStatus) => {
     console.error('更新用戶狀態失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '更新失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
     // 恢復原狀態
     const index = tableItems.value.findIndex(u => u._id === user._id)

@@ -6,6 +6,9 @@
     >
       <thead>
         <tr>
+          <th v-if="orderNumbers">
+            #
+          </th>
           <th>廣告渠道</th>
           <th>平台</th>
           <th
@@ -27,6 +30,18 @@
             :key="`${item.channel._id}-${item.platform._id}`"
           >
             <tr>
+              <td
+                v-if="orderNumbers"
+                class="text-center order-number"
+                :class="{ 'order-changed': hasOrderChanged(item) }"
+              >
+                {{ index + 1 }}
+                <template v-if="hasOrderChanged(item)">
+                  <div class="order-change-indicator">
+                    {{ getOrderChangeText(item) }}
+                  </div>
+                </template>
+              </td>
               <td
                 v-if="index === 0"
                 :rowspan="channelGroup.length"
@@ -68,6 +83,14 @@ const props = defineProps({
   changedFields: {
     type: Array,
     default: () => []
+  },
+  orderNumbers: {
+    type: Boolean,
+    default: false
+  },
+  orderChanges: {
+    type: Object,
+    default: () => ({})
   },
   isMini: {
     type: Boolean,
@@ -128,6 +151,25 @@ const isFieldChanged = (item, monthKey) => {
   const fieldPath = `items.${channelId}.${platformId}.monthlyBudget.${monthKey}`
   return props.changedFields.includes(fieldPath)
 }
+
+const hasOrderChanged = (item) => {
+  if (!props.orderChanges) return false
+  
+  const channelId = item.channel._id || item.channel.$oid || item.channel
+  const platformId = item.platform._id || item.platform.$oid || item.platform
+  return props.orderChanges[`${channelId}-${platformId}`] !== undefined
+}
+
+const getOrderChangeText = (item) => {
+  if (!hasOrderChanged(item)) return ''
+  
+  const channelId = item.channel._id || item.channel.$oid || item.channel
+  const platformId = item.platform._id || item.platform.$oid || item.platform
+  const change = props.orderChanges[`${channelId}-${platformId}`]
+  
+  if (!change) return ''
+  return `← ${change.oldIndex}`
+}
 </script>
 
 <style lang="scss" scoped>
@@ -147,7 +189,7 @@ const isFieldChanged = (item, monthKey) => {
 :deep(.v-table) {
   thead {
     tr th {
-      font-size: 12px !important;
+      font-size: 11px !important;
       font-weight: 600;
       white-space: nowrap;
       background: #455A64;
@@ -159,7 +201,7 @@ const isFieldChanged = (item, monthKey) => {
   
   tbody {
     tr {
-      font-size: 12px !important;
+      font-size: 11px !important;
     }
 
     template:nth-child(odd) {
@@ -187,9 +229,29 @@ const isFieldChanged = (item, monthKey) => {
   }
 }
 
+.order-number {
+  position: relative;
+  font-weight: 500;
+  
+  &.order-changed {
+    color: #d32f2f;
+    background-color: #ffebee;
+  }
+}
+
+.order-change-indicator {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: 10px;
+  color: #d32f2f;
+  white-space: nowrap;
+}
+
 :deep(.changed-field) {
-  color: #d32f2f !important;
-  font-weight: 600 !important;
-  background-color: #ffebee !important;
+  color: #ff5252;
+  font-weight: 600;
+  background-color: #ffebee;
 }
 </style> 

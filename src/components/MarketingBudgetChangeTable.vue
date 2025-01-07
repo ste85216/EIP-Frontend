@@ -13,37 +13,54 @@
     </template>
 
     <template v-else-if="action === '修改'">
-      <div class="tables-container">
-        <div class="table-wrapper">
-          <div class="table-title mb-2">
-            修改前
-          </div>
-          <budget-table
-            :data="changes.before"
-            :is-mini="true"
-          />
-        </div>
-        
-        <div class="arrow-wrapper">
-          <v-icon
-            size="40"
-            color="primary"
-          >
-            mdi-arrow-right-bold
-          </v-icon>
-        </div>
+      <!-- 只修改基本資料時，不顯示表格 -->
+      <template v-if="isBasicInfoChangeOnly">
+        <ul class="change-list">
+          <li v-if="hasYearChanged">
+            年度：{{ changes.before.year }} → {{ changes.after.year }}
+          </li>
+          <li v-if="hasThemeChanged">
+            行銷主題：{{ changes.before.theme?.name || '(無)' }} → {{ changes.after.theme?.name || '(無)' }}
+          </li>
+          <li v-if="hasNoteChanged">
+            備註：{{ changes.before.note || '(無)' }} → {{ changes.after.note || '(無)' }}
+          </li>
+        </ul>
+      </template>
 
-        <div class="table-wrapper">
-          <div class="table-title mb-2">
-            修改後
+      <!-- 修改預算項目時才顯示表格 -->
+      <template v-else>
+        <div class="tables-container">
+          <div class="table-wrapper">
+            <div class="table-title mb-2">
+              修改前
+            </div>
+            <budget-table
+              :data="changes.before"
+              :is-mini="true"
+            />
           </div>
-          <budget-table
-            :data="changes.after"
-            :changed-fields="changedFields"
-            :is-mini="true"
-          />
+          
+          <div class="arrow-wrapper">
+            <v-icon
+              size="40"
+              color="light-blue-lighten-1"
+            >
+              mdi-arrow-right-bold
+            </v-icon>
+          </div>
+
+          <div class="table-wrapper">
+            <div class="table-title mb-2">
+              修改後
+            </div>
+            <budget-table
+              :data="changes.after"
+              :is-mini="true"
+            />
+          </div>
         </div>
-      </div>
+      </template>
     </template>
   </div>
 </template>
@@ -63,64 +80,31 @@ const props = defineProps({
   }
 })
 
-const changedFields = computed(() => {
-  if (!props.changes?.before?.items || !props.changes?.after?.items) return []
-  
-  const fields = []
-  const beforeItems = props.changes.before.items
-  const afterItems = props.changes.after.items
-  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+// 判斷是否只修改基本資料
+const isBasicInfoChangeOnly = computed(() => {
+  if (!props.changes?.changedFields) return false
+  return !props.changes.changedFields.some(field => field.startsWith('items'))
+})
 
-  afterItems.forEach(afterItem => {
-    const afterChannelId = afterItem.channel.$oid || afterItem.channel._id || afterItem.channel
-    const afterPlatformId = afterItem.platform.$oid || afterItem.platform._id || afterItem.platform
+// 檢查各基本欄位是否有變更
+const hasYearChanged = computed(() => {
+  return props.changes?.before?.year !== props.changes?.after?.year
+})
 
-    // 尋找相同位置的項目（基於陣列索引）
-    const afterIndex = afterItems.indexOf(afterItem)
-    const beforeItemAtSameIndex = beforeItems[afterIndex]
+const hasThemeChanged = computed(() => {
+  const beforeTheme = props.changes?.before?.theme?.$oid || props.changes?.before?.theme
+  const afterTheme = props.changes?.after?.theme?.$oid || props.changes?.after?.theme
+  return beforeTheme !== afterTheme
+})
 
-    if (beforeItemAtSameIndex) {
-      // 檢查渠道是否變更
-      const beforeChannelId = beforeItemAtSameIndex.channel.$oid || beforeItemAtSameIndex.channel._id || beforeItemAtSameIndex.channel
-      if (beforeChannelId !== afterChannelId) {
-        fields.push(`items.${afterChannelId}.${afterPlatformId}.channel`)
-      }
-
-      // 檢查平台是否變更
-      const beforePlatformId = beforeItemAtSameIndex.platform.$oid || beforeItemAtSameIndex.platform._id || beforeItemAtSameIndex.platform
-      if (beforePlatformId !== afterPlatformId) {
-        fields.push(`items.${afterChannelId}.${afterPlatformId}.platform`)
-      }
-
-      // 檢查預算值是否變更
-      months.forEach(month => {
-        const beforeValue = Number(beforeItemAtSameIndex.monthlyBudget[month])
-        const afterValue = Number(afterItem.monthlyBudget[month])
-        if (beforeValue !== afterValue) {
-          fields.push(`items.${afterChannelId}.${afterPlatformId}.monthlyBudget.${month}`)
-        }
-      })
-    } else {
-      // 如果是新增的項目，標記所有欄位
-      fields.push(`items.${afterChannelId}.${afterPlatformId}.channel`)
-      fields.push(`items.${afterChannelId}.${afterPlatformId}.platform`)
-      months.forEach(month => {
-        if (afterItem.monthlyBudget[month] !== 0) {
-          fields.push(`items.${afterChannelId}.${afterPlatformId}.monthlyBudget.${month}`)
-        }
-      })
-    }
-  })
-
-  console.log('Generated Changed Fields:', fields)
-  return fields
+const hasNoteChanged = computed(() => {
+  return props.changes?.before?.note !== props.changes?.after?.note
 })
 </script>
 
 <style lang="scss" scoped>
 .budget-change-table {
   width: 100%;
-  padding: 16px;
 }
 
 .single-table {
@@ -144,7 +128,6 @@ const changedFields = computed(() => {
   align-items: center;
   justify-content: center;
   margin-top: 20px;
-  padding: 8px;
   flex-shrink: 0;
 }
 
@@ -154,8 +137,16 @@ const changedFields = computed(() => {
   color: #666;
 }
 
-:deep(.changed-field) {
-  color: #ff5252;
-  font-weight: 600;
+.change-list {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0;
+  
+  li {
+    padding: 4px 0;
+    color: #d32f2f;
+    font-weight: 500;
+    line-height: 1.5;
+  }
 }
 </style>
