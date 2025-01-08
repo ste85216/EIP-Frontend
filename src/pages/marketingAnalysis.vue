@@ -4006,10 +4006,14 @@ const exportChartsToPDF = async () => {
 
     // 創建新的 ECharts 實例
     const newPieChart = echarts.init(pieContainer, null, { 
-      renderer: 'canvas'
+      renderer: 'canvas',
+      devicePixelRatio: 4  // 增加這個設定
+
     })
     const newBarChart = echarts.init(barContainer, null, { 
-      renderer: 'canvas'
+      renderer: 'canvas',
+      devicePixelRatio: 4  // 增加這個設定
+
     })
 
     // 為匯出 PDF 創建特殊的圖表配置
@@ -4120,6 +4124,7 @@ const exportChartsToPDF = async () => {
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
+        letterRendering: true,
         onclone: function(clonedDoc) {
           const clonedContainer = clonedDoc.querySelector('div')
           if (clonedContainer) {
@@ -4140,6 +4145,7 @@ const exportChartsToPDF = async () => {
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
+        letterRendering: true,
         onclone: function(clonedDoc) {
           const clonedContainer = clonedDoc.querySelector('div')
           if (clonedContainer) {
