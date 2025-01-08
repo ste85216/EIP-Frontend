@@ -35,7 +35,7 @@
                     class="ps-lg-5"
                   >
                     <v-icon
-                      v-tooltip:start="'可搜尋管理者編號、姓名、Email'"
+                      v-tooltip:start="'可搜尋管理者編號、姓名、Email、備註'"
                       icon="mdi-information"
                       size="small"
                       color="deep-purple-darken-4"

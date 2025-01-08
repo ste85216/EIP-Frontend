@@ -108,7 +108,7 @@ const hasNoteChanged = computed(() => {
 }
 
 .single-table {
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
 }
 

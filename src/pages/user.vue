@@ -35,7 +35,7 @@
                     class="ps-lg-5"
                   >
                     <v-icon
-                      v-tooltip:start="'可搜尋使用者編號、姓名、Email'"
+                      v-tooltip:start="'可搜尋使用者編號、姓名、Email、備註'"
                       icon="mdi-information"
                       size="small"
                       color="deep-purple-darken-4"
@@ -710,7 +710,7 @@ const updateUserStatus = async (user, newStatus) => {
       
       createSnackbar({
         text: `帳號已${newStatus ? '啟用' : '停用'}`,
-        snackbarProps: { color: newStatus ? 'teal-lighten-1' : 'red-lighten-1' }
+        snackbarProps: { color: newStatus ? 'teal-lighten-1' : 'warning' }
       })
     }
   } catch (error) {

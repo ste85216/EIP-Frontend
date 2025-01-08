@@ -114,14 +114,55 @@ const monthList = {
 }
 
 const groupedItems = computed(() => {
-  if (!props.data?.items) return {}
+  // 檢查是否為異動紀錄資料
+  const isAuditLog = props.data?.changes !== undefined
   
-  return props.data.items.reduce((acc, item) => {
-    const channelId = item.channel._id || item.channel.$oid || item.channel
+  // 根據不同情況選擇資料來源
+  let sourceData = null
+  if (isAuditLog) {
+    // 如果是異動紀錄，根據操作類型選擇資料
+    if (props.data.action === '創建') {
+      sourceData = props.data.changes.after
+    } else if (props.data.action === '刪除') {
+      sourceData = props.data.changes.before
+    } else {
+      sourceData = props.data.changes.after || props.data.changes.before
+    }
+  } else {
+    // 如果是直接的預算資料
+    sourceData = props.data
+  }
+
+  // 如果沒有資料，返回空物件
+  if (!sourceData?.items) return {}
+
+  return sourceData.items.reduce((acc, item) => {
+    // 確保 channel 和 platform 物件存在
+    const channel = item?.channel || {}
+    const platform = item?.platform || {}
+    
+    // 使用 name 作為主要識別符，如果沒有則使用 _id
+    const channelId = channel.name || 
+                     (channel._id?.$oid ? channel._id.$oid : channel._id) || 
+                     '未知渠道'
+    
     if (!acc[channelId]) {
       acc[channelId] = []
     }
-    acc[channelId].push(item)
+    
+    // 保持原始資料結構，但確保所有必要的屬性都存在
+    acc[channelId].push({
+      channel: {
+        _id: channel._id?.$oid || channel._id || channelId,
+        name: channel.name || channelId
+      },
+      platform: {
+        _id: platform._id?.$oid || platform._id || '未知平台',
+        name: platform.name || '未知平台'
+      },
+      monthlyBudget: item?.monthlyBudget || {}
+    })
+    
     return acc
   }, {})
 })
@@ -134,40 +175,78 @@ const formatNumber = (value) => {
 const isFieldChanged = (item, monthKey) => {
   if (!props.changedFields?.length) return false
   
-  const channelId = item.channel._id || item.channel.$oid || item.channel
-  const platformId = item.platform._id || item.platform.$oid || item.platform
-  
-  // 如果是檢查渠道名稱欄位
-  if (monthKey === 'channel') {
-    return props.changedFields.includes(`items.${channelId}.${platformId}.channel`)
+  // 檢查是否為異動紀錄資料
+  const isAuditLog = props.data?.changes !== undefined
+  if (!isAuditLog) return false
+
+  // 如果 changedFields 包含 "items"，表示整個 items 陣列都有變更
+  if (props.changedFields.includes('items')) {
+    // 檢查 before 和 after 的值是否不同
+    const beforeItem = findItemInChanges(props.data.changes.before?.items, item)
+    const afterItem = findItemInChanges(props.data.changes.after?.items, item)
+
+    if (monthKey === 'channel' || monthKey === 'platform') {
+      return false // 因為渠道和平台沒有變更，只有預算變更
+    }
+
+    // 檢查特定月份的預算是否有變更
+    const beforeValue = beforeItem?.monthlyBudget?.[monthKey]
+    const afterValue = afterItem?.monthlyBudget?.[monthKey]
+    return beforeValue !== afterValue
   }
+
+  return false
+}
+
+// 新增一個輔助函數來在 changes 中找到對應的項目
+const findItemInChanges = (items = [], targetItem) => {
+  if (!items?.length) return null
   
-  // 如果是檢查平台名稱欄位
-  if (monthKey === 'platform') {
-    return props.changedFields.includes(`items.${channelId}.${platformId}.platform`)
-  }
-  
-  // 檢查月份預算變更
-  const fieldPath = `items.${channelId}.${platformId}.monthlyBudget.${monthKey}`
-  return props.changedFields.includes(fieldPath)
+  return items.find(item => {
+    const sourceChannel = item?.channel || {}
+    const targetChannel = targetItem?.channel || {}
+    const sourcePlatform = item?.platform || {}
+    const targetPlatform = targetItem?.platform || {}
+    
+    const sourceChannelId = sourceChannel._id?.$oid || sourceChannel._id
+    const targetChannelId = targetChannel._id?.$oid || targetChannel._id
+    const sourcePlatformId = sourcePlatform._id?.$oid || sourcePlatform._id
+    const targetPlatformId = targetPlatform._id?.$oid || targetPlatform._id
+    
+    return sourceChannelId === targetChannelId && sourcePlatformId === targetPlatformId
+  })
 }
 
 const hasOrderChanged = (item) => {
   if (!props.orderChanges) return false
   
-  const channelId = item.channel._id || item.channel.$oid || item.channel
-  const platformId = item.platform._id || item.platform.$oid || item.platform
-  return props.orderChanges[`${channelId}-${platformId}`] !== undefined
+  // 檢查是否為異動紀錄資料
+  const isAuditLog = props.data?.changes !== undefined
+  if (!isAuditLog) return false
+
+  // 確保 channel 和 platform 物件存在
+  const channelName = item?.channel?.name || '未知渠道'
+  const platformName = item?.platform?.name || '未知平台'
+  const key = `${channelName}-${platformName}`
+  
+  return props.orderChanges[key] !== undefined
 }
 
 const getOrderChangeText = (item) => {
   if (!hasOrderChanged(item)) return ''
   
-  const channelId = item.channel._id || item.channel.$oid || item.channel
-  const platformId = item.platform._id || item.platform.$oid || item.platform
-  const change = props.orderChanges[`${channelId}-${platformId}`]
+  // 檢查是否為異動紀錄資料
+  const isAuditLog = props.data?.changes !== undefined
+  if (!isAuditLog) return ''
+
+  // 確保 channel 和 platform 物件存在
+  const channelName = item?.channel?.name || '未知渠道'
+  const platformName = item?.platform?.name || '未知平台'
+  const key = `${channelName}-${platformName}`
   
+  const change = props.orderChanges[key]
   if (!change) return ''
+  
   return `← ${change.oldIndex}`
 }
 </script>

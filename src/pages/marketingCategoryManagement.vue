@@ -20,7 +20,7 @@
           class="ms-auto d-flex align-center"
         >
           <v-icon
-            v-tooltip:start="'可搜尋分類名稱'"
+            v-tooltip:start="'可搜尋各分類名稱'"
             icon="mdi-information"
             size="small"
             color="deep-purple-darken-4"
@@ -359,41 +359,80 @@
         @submit.prevent="submit"
       >
         <v-card class="rounded-lg px-4 pt-7 pb-6">
-          <div class="card-title px-4 pb-2">
-            {{ dialog.id ? '編輯分類' : getDialogTitle }}
+          <div class="card-title px-4 pb-2 d-flex align-center justify-space-between">
+            <span>{{ dialog.id ? '編輯分類' : getDialogTitle }}</span>
+            <v-btn
+              v-if="!dialog.id"
+              v-tooltip:start="'新增一列'"
+              icon="mdi-plus"
+              variant="text"
+              color="light-blue-darken-1"
+              size="small"
+              class="ms-2"
+              @click="addNewItem"
+            />
           </div>
-
           <v-card-text class="mt-3 pa-3">
             <v-row>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="name.value.value"
-                  :error-messages="name.errorMessage.value"
-                  label="*名稱"
-                  type="text"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-              <v-col 
-                v-if="dialog.id"
-                cols="12"
-              >
-                <v-text-field
-                  v-model="order.value.value"
-                  :error-messages="order.errorMessage.value"
-                  label="*排序"
-                  variant="outlined"
-                  density="compact"
-                  hint="輸入想要的順序位置，其他項目會自動調整"
-                  persistent-hint
-                />
-              </v-col>
+              <template v-if="!dialog.id">
+                <!-- 新增模式：支援多個項目 -->
+                <v-col 
+                  v-for="(item, index) in newItems"
+                  :key="index"
+                  cols="12"
+                  class="d-flex align-center gap-2"
+                >
+                  <v-text-field
+                    v-model="item.name"
+                    :error-messages="item.error"
+                    label="*名稱"
+                    type="text"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                    class="flex-grow-1"
+                    hide-details="auto"
+                  />
+                  <v-btn
+                    v-if="newItems.length > 1"
+                    icon="mdi-delete"
+                    variant="text"
+                    color="red-lighten-1"
+                    size="small"
+                    class="ms-2"
+                    @click="removeItem(index)"
+                  />
+                </v-col>
+              </template>
+              <template v-else>
+                <!-- 編輯模式：單個項目 -->
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="nameValue"
+                    :error-messages="nameError"
+                    label="*名稱"
+                    type="text"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="orderValue"
+                    :error-messages="orderError"
+                    label="*排序"
+                    variant="outlined"
+                    density="compact"
+                    hint="輸入想要的順序位置，其他項目會自動調整"
+                    persistent-hint
+                  />
+                </v-col>
+              </template>
             </v-row>
           </v-card-text>
 
-          <v-card-actions class="px-3">
+          <v-card-actions class="px-3 pt-4">
             <v-hover>
               <template #default="{ isHovering, props }">
                 <v-btn
@@ -484,22 +523,42 @@ const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
 const confirmDeleteDialog = ref(false)
 const originalData = ref(null)
 const isSubmitting = ref(false)
+const newItems = ref([{ name: '', error: '' }])
+const form = ref(null)
 
 // ===== 表單驗證架構 =====
-const schema = yup.object({
+const editSchema = yup.object({
   name: yup.string().required('請輸入名稱'),
-  order: yup.string().required('請輸入排序').min(1, '排序必須大於0')
+  order: yup.string()
+    .required('請輸入排序')
+    .test('is-number', '排序必須大於0', value => {
+      if (!value) return true // 如果是空值，讓 required 去處理錯誤訊息
+      const num = Number(value)
+      return !isNaN(num) && num >= 1
+    })
 })
 
 // ===== 表單初始化 =====
-const { handleSubmit, resetForm } = useForm({
-  validationSchema: schema,
-  validateOnMount: false
+const { handleSubmit: handleEditSubmit } = useForm({
+  validationSchema: editSchema
 })
 
 // ===== 表單欄位 =====
-const name = useField('name')
-const order = useField('order')
+const { value: nameValue, errorMessage: nameError } = useField('name')
+const { value: orderValue, errorMessage: orderError } = useField('order')
+
+// 驗證新增項目
+const validateNewItems = () => {
+  let hasError = false
+  newItems.value.forEach(item => {
+    item.error = ''
+    if (!item.name.trim()) {
+      item.error = '請輸入名稱'
+      hasError = true
+    }
+  })
+  return !hasError
+}
 
 // ===== 對話框設定 =====
 const dialog = ref({
@@ -527,8 +586,8 @@ const getDialogTitle = computed(() => {
 const hasChanges = computed(() => {
   if (!dialog.value.id) return true
   if (!originalData.value) return false
-  return originalData.value.name !== name.value.value ||
-         originalData.value.order !== parseInt(order.value.value)
+  return originalData.value.name !== nameValue.value ||
+         originalData.value.order !== parseInt(orderValue.value)
 })
 
 // ===== 搜尋相關設定 =====
@@ -631,17 +690,14 @@ const openDialog = async (type) => {
       id: '',
       type
     }
-    resetForm()
-
-    // 新增時自動取得最大順序值
-    if (!dialog.value.id) {
-      const { data } = await apiAuth.get('/marketing/categories/maxOrder', {
-        params: { type }
-      })
-      if (data.success) {
-        order.value.value = data.result
-      }
+    // 重置表單
+    if (form.value) {
+      form.value.reset()
     }
+    nameValue.value = ''
+    orderValue.value = ''
+    // 重置新增項目列表
+    newItems.value = [{ name: '', error: '' }]
   } catch (error) {
     handleError(error)
   }
@@ -649,14 +705,13 @@ const openDialog = async (type) => {
 
 const editItem = (item) => {
   try {
-    console.log('編輯項目:', item)
     if (!item || !item._id) {
       console.error('無效的項目:', item)
       return
     }
     
-    name.value.value = item.name || ''
-    order.value.value = item.order || 1
+    nameValue.value = item.name || ''
+    orderValue.value = item.order || 1
     originalData.value = { ...item }
     
     dialog.value = {
@@ -679,50 +734,91 @@ const closeDialog = () => {
       type: currentType
     }
     originalData.value = null
-    resetForm()
+    // 重置表單
+    if (form.value) {
+      form.value.reset()
+    }
+    nameValue.value = ''
+    orderValue.value = ''
+    // 重置新增項目列表
+    newItems.value = [{ name: '', error: '' }]
   } catch (error) {
     console.error('關閉對話框時發生錯誤:', error)
   }
 }
 
-const submit = handleSubmit(async (values) => {
+const submit = async (e) => {
+  e.preventDefault()
   if (isSubmitting.value) return
   
   try {
     isSubmitting.value = true
-    const submitData = {
-      name: values.name,
-      type: dialog.value.type
-    }
-
-    // 如果是編輯模式，加入排序值
-    if (dialog.value.id && values.order) {
-      submitData.order = parseInt(values.order)
-    }
 
     if (dialog.value.id) {
-      await apiAuth.patch(`/marketing/categories/${dialog.value.id}`, submitData)
-      createSnackbar({
-        text: '分類更新成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
+      // 編輯模式使用 yup 驗證
+      await handleEditSubmit(async (values) => {
+        const submitData = {
+          name: values.name,
+          type: dialog.value.type,
+          order: parseInt(values.order)
+        }
+
+        const { data } = await apiAuth.patch(`/marketing/categories/${dialog.value.id}`, submitData)
+        if (!data.success) {
+          throw new Error(data.message || '更新失敗')
+        }
+
+        createSnackbar({
+          text: '分類更新成功',
+          snackbarProps: { color: 'teal-lighten-1' }
+        })
+
+        closeDialog()
+        loadData(dialog.value.type)
+      })()
     } else {
-      await apiAuth.post('/marketing/categories', submitData)
+      // 新增模式：批量新增
+      // 驗證所有項目
+      if (!validateNewItems()) {
+        isSubmitting.value = false
+        return // 直接返回，因為欄位已經顯示錯誤訊息
+      }
+
+      // 過濾掉空白項目
+      const validItems = newItems.value.filter(item => item.name.trim())
+      
+      if (validItems.length === 0) {
+        isSubmitting.value = false
+        return // 如果沒有有效項目，直接返回
+      }
+
+      // 批量新增
+      const { data } = await apiAuth.post('/marketing/categories/batch', {
+        items: validItems.map(item => ({
+          name: item.name.trim(),
+          type: dialog.value.type
+        }))
+      })
+
+      if (!data.success) {
+        throw new Error(data.message || '新增失敗')
+      }
+
       createSnackbar({
         text: '分類新增成功',
         snackbarProps: { color: 'teal-lighten-1' }
       })
-    }
 
-    closeDialog()
-    // 只重新加載被修改的類型
-    loadData(dialog.value.type)
+      closeDialog()
+      loadData(dialog.value.type)
+    }
   } catch (error) {
+    console.error('提交時發生錯誤:', error)
     handleError(error)
   } finally {
     isSubmitting.value = false
   }
-})
+}
 
 const deleteCategory = async () => {
   if (!dialog.value.id) return
@@ -787,6 +883,25 @@ const handlePageChange = (type, newPage) => {
   pages.value[type] = newPage
   loadData(type)
 }
+
+// 新增項目
+const addNewItem = () => {
+  newItems.value.push({ name: '', error: '' })
+}
+
+// 移除項目
+const removeItem = (index) => {
+  newItems.value.splice(index, 1)
+}
+
+// 新增即時驗證
+watch(newItems, (items) => {
+  items.forEach(item => {
+    if (item.name.trim()) {
+      item.error = ''
+    }
+  })
+}, { deep: true })
 </script>
 
 <style lang="scss" scoped>

@@ -220,13 +220,18 @@
                 <v-col
                   cols="3"
                 >
-                  <v-select
+                  <v-text-field
                     v-model="year.value.value"
                     :error-messages="year.errorMessage.value"
-                    :items="yearOptions"
                     label="*年度"
                     variant="outlined"
                     density="compact"
+                    type="number"
+                    min="1911"
+                    max="9999"
+                    hide-details
+                    class="mb-6"
+                    @input="validateYear"
                   />
                 </v-col>
                 <v-col
@@ -1430,6 +1435,34 @@ const clearAllMonths = (channelIndex, platformIndex) => {
     text: '已清空所有月份金額',
     snackbarProps: { color: 'teal-lighten-1' }
   })
+}
+
+// 在 script setup 中添加年度驗證方法
+const validateYear = (event) => {
+  const yearValue = event.target.value
+  
+  // 檢查是否為空
+  if (!yearValue) {
+    year.value.value = ''
+    year.errorMessage.value = '請輸入年度'
+    return
+  }
+
+  // 轉換為數字並檢查範圍
+  const numYear = parseInt(yearValue)
+  if (isNaN(numYear)) {
+    year.errorMessage.value = '請輸入有效的年度'
+    return
+  }
+
+  if (numYear < 1911 || numYear > 9999) {
+    year.errorMessage.value = '年度必須在 1911 到 9999 之間'
+    return
+  }
+
+  // 清除錯誤訊息
+  year.errorMessage.value = ''
+  year.value.value = numYear.toString()
 }
 </script>
 

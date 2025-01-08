@@ -42,6 +42,7 @@
                       clearable
                       @update:search="handleOperatorSearch"
                       @click:clear="clearOperatorSearch"
+                      @click:input="loadAllUsers"
                     >
                       <template #selection="{ item }">
                         {{ formatUserDisplay(item.raw) }}
@@ -83,7 +84,7 @@
                       clearable
                     />
                   </v-col>
-                  <v-col
+                  <!-- <v-col
                     cols="12"
                     sm="6"
                     lg="12"
@@ -130,7 +131,7 @@
                         </v-tooltip>
                       </template>
                     </v-autocomplete>
-                  </v-col>
+                  </v-col> -->
                   <v-col
                     cols="12"
                     sm="6"
@@ -285,7 +286,7 @@
   <v-dialog
     v-model="detailDialog"
     :class="{ 'budget-detail': selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除' && hasBudgetItemsChanged(selectedItem) }"
-    :width="selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action === '創建' ? 1200 : (selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除' && hasBudgetItemsChanged(selectedItem) ? undefined : 600)"
+    :width="selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action === '創建' ? 1300 : (selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除' && hasBudgetItemsChanged(selectedItem) ? undefined : 600)"
     :data-action="selectedItem?.action"
   >
     <v-card class="pa-4">
@@ -420,7 +421,7 @@ const operatorLoading = ref(false)
 const operatorSearchInput = ref('')
 
 const targetSuggestions = ref([])
-const targetLoading = ref(false)
+// const targetLoading = ref(false)
 const targetSearchInput = ref('')
 
 // 表格相關
@@ -526,12 +527,20 @@ const marketingCategoryTypes = {
   3: '線別'
 }
 
-// 格式化函數
+// 格式化日期函數
 const formatDateTime = (date) => {
   if (!date) return '-'
   const d = new Date(date)
   const pad = (n) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+// 只格式化日期部分
+const formatDate = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())}`
 }
 
 // 角色轉換
@@ -572,24 +581,29 @@ const formatTarget = (item) => {
   if (item.action === '刪除' && item.changes?.before) {
     if (item.targetModel === 'marketingBudgets') {
       const { year } = item.changes.before
-      const theme = item.targetInfo?.theme || '(無)'
-      return `${year}年度-${theme}`
+      const theme = item.changes.before.theme?.name || '(無)'
+      return `${year}年度 - ${theme}`
     }
   }
   
-  const { name, userId, formNumber, invoiceDate } = item?.targetInfo || {}
+  if (item.targetModel === 'marketingBudgets') {
+    const { year, theme } = item.targetInfo || {}
+    return `${year}年度 - ${theme}`
+  }
+  
+  if (item.targetModel === 'marketingExpenses') {
+    const { invoiceDate, theme } = item.targetInfo || {}
+    if (invoiceDate) {
+      return `${formatDate(invoiceDate)} - ${theme || '(無)'}`
+    }
+    return '-'
+  }
+  
+  const { name, userId, formNumber } = item?.targetInfo || {}
   
   if (formNumber) return `${formNumber}`
   if (item.targetModel === 'marketingCategories') {
     return name || '-'
-  }
-  if (item.targetModel === 'marketingExpenses') {
-    const date = formatDateTime(invoiceDate).split(' ')[0] // 只取日期部分
-    return `${date} - ${name}`
-  }
-  if (item.targetModel === 'marketingBudgets') {
-    const { year, theme } = item.targetInfo || {}
-    return `${year}年度-${theme || '(無)'}`
   }
   return `${name}${userId ? ` (${userId})` : ''}`
 }
@@ -629,59 +643,147 @@ const formatChanges = (item) => {
   if (item.targetModel === 'marketingBudgets') {
     const { changedFields = [], before = {}, after = {} } = item.changes
 
-    // 如果是創建操作或有修改預算項目，則顯示查看詳細
-    if (item.action === '創建' || changedFields.some(field => field.startsWith('items'))) {
+    // 查是否有修改預算項目
+    const hasItemsChanged = changedFields.some(field => field.startsWith('items'))
+
+    // 如果是創建操作且有項目，直接顯示查看詳細
+    if (item.action === '創建' && after.items?.length > 0) {
       return ['( 請查看詳細異動內容 )']
     }
 
-    // 檢查是否有修改年度
+    // 檢查基本資料的修改
     if (changedFields.includes('year')) {
       changes.push(`年度: ${before.year || '(無)'} → ${after.year || '(無)'}`)
     }
 
-    // 檢查是否有修改主題
     if (changedFields.includes('theme')) {
-      const oldTheme = item.targetInfo?.beforeTheme || '(無)'
-      const newTheme = item.targetInfo?.theme || '(無)'
+      const oldTheme = before.theme?.name || '(無)'
+      const newTheme = after.theme?.name || '(無)'
       changes.push(`行銷主題: ${oldTheme} → ${newTheme}`)
     }
 
-    // 檢查是否有修改備註
     if (changedFields.includes('note')) {
       const oldNote = before.note || '(無)'
       const newNote = after.note || '(無)'
       changes.push(`備註: ${oldNote} → ${newNote}`)
     }
 
+    // 如果有修改預算項目，在基本資料後添加提示
+    if (hasItemsChanged) {
+      changes.push('( 表格異動請查看詳細異動內容 )')
+    }
+
     return changes
+  }
+
+  // 處理行銷實際支出的特殊顯示
+  if (item.targetModel === 'marketingExpenses') {
+    // 如果是創建操作
+    if (item.action === '創建') {
+      const data = item.changes.after
+
+      // 基本資訊
+      changes.push(`發票日期: ${formatDate(data.invoiceDate)}`)
+      changes.push(`行銷主題: ${data.theme?.name || '(無)'}`)
+      changes.push(`廣告渠道: ${data.channel?.name || '(無)'}`)
+      changes.push(`平台: ${data.platform?.name || '(無)'}`)
+      changes.push(`總金額: ${data.totalExpense?.toLocaleString() || 0}`)
+      if (data.note) changes.push(`備註: ${data.note}`)
+
+      // 線別資訊
+      if (data.details && data.details.length > 0) {
+        changes.push('線別資訊:')
+        data.details.forEach(detail => {
+          changes.push(` - ${detail.detail.name} : ${detail.amount?.toLocaleString() || 0}`)
+        })
+      }
+
+      return changes
+    }
+    // 如果是修改操作
+    else if (item.action === '修改') {
+      const { before, after, changedFields } = item.changes
+      
+      // 建立線別對照表
+      const beforeDetails = {}
+      const afterDetails = {}
+      
+      if (before.details) {
+        before.details.forEach(d => {
+          beforeDetails[d.detail.name] = d.amount
+        })
+      }
+      if (after.details) {
+        after.details.forEach(d => {
+          afterDetails[d.detail.name] = d.amount
+        })
+      }
+
+      changedFields.forEach(field => {
+        switch (field) {
+          case 'invoiceDate':
+            changes.push(`發票日期: ${formatDate(before.invoiceDate)} → ${formatDate(after.invoiceDate)}`)
+            break
+          case 'theme':
+            changes.push(`行銷主題: ${before.theme?.name || '(無)'} → ${after.theme?.name || '(無)'}`)
+            break
+          case 'channel':
+            changes.push(`廣告渠道: ${before.channel?.name || '(無)'} → ${after.channel?.name || '(無)'}`)
+            break
+          case 'platform':
+            changes.push(`平台: ${before.platform?.name || '(無)'} → ${after.platform?.name || '(無)'}`)
+            break
+          case 'totalExpense':
+            changes.push(`總金額: ${before.totalExpense?.toLocaleString() || 0} → ${after.totalExpense?.toLocaleString() || 0}`)
+            break
+          case 'note':
+            changes.push(`備註: ${before.note || '(無)'} → ${after.note || '(無)'}`)
+            break
+          case 'details': {
+            // 只顯示有變更的線別
+            const changedLines = []
+            Object.keys(beforeDetails).forEach(line => {
+              if (beforeDetails[line] !== afterDetails[line]) {
+                changedLines.push(`- ${line}: ${beforeDetails[line]?.toLocaleString() || 0} → ${afterDetails[line]?.toLocaleString() || 0}`)
+              }
+            })
+            // 檢查新增的線別
+            Object.keys(afterDetails).forEach(line => {
+              if (!beforeDetails[line]) {
+                changedLines.push(`-${line}: 0 → ${afterDetails[line]?.toLocaleString() || 0}`)
+              }
+            })
+            if (changedLines.length > 0) {
+              changes.push('線別資訊:')
+              changes.push(...changedLines)
+            }
+            break
+          }
+        }
+      })
+
+      return changes
+    }
   }
 
   // 處理創建操作
   if (item.action === '創建') {
     const after = item.changes.after || {}
+    // 過濾掉不需要顯示的欄位
+    const excludeFields = ['_id', 'createdAt', 'updatedAt', 'password', 'tokens', '__v']
     Object.entries(after).forEach(([key, value]) => {
-      if (fieldTranslations[key]) {
-        // 特殊處理 role 欄位
+      if (!excludeFields.includes(key) && fieldTranslations[key]) {
         if (key === 'role') {
           changes.push(`${fieldTranslations[key]}: ${formatRole(value)}`)
-        } 
-        // 特殊處理布林值
-        else if (typeof value === 'boolean') {
+        } else if (typeof value === 'boolean') {
           changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
-        }
-        // 特殊處理行銷分類的類型
-        else if (key === 'type' && item.targetModel === 'marketingCategories') {
+        } else if (key === 'type' && item.targetModel === 'marketingCategories') {
           changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[value] || '(無)'}`)
-        }
-        // 處理其他欄位
-        else {
+        } else {
           changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
         }
       }
     })
-    if (changes.length === 0) {
-      changes.push(`新增${getModelDisplay(item.targetModel)}`)
-    }
     return changes
   }
 
@@ -693,20 +795,13 @@ const formatChanges = (item) => {
       const oldValue = before[key]
       const newValue = after[key]
       
-      // 特殊處理 role 欄位
       if (key === 'role') {
         changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)} → ${formatRole(newValue)}`)
-      }
-      // 特殊處理布林值
-      else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+      } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
         changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
-      }
-      // 特殊處理行銷分類的類型
-      else if (key === 'type' && item.targetModel === 'marketingCategories') {
+      } else if (key === 'type' && item.targetModel === 'marketingCategories') {
         changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[oldValue] || '(無)'} → ${marketingCategoryTypes[newValue] || '(無)'}`)
-      }
-      // 處理其他欄位
-      else {
+      } else {
         changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
       }
     }
@@ -715,9 +810,34 @@ const formatChanges = (item) => {
   return changes
 }
 
-// 尋相關函數
+// 添加載入所有使用者的函數
+const loadAllUsers = async () => {
+  operatorLoading.value = true
+  try {
+    const { data } = await apiAuth.get('/user/suggestions', {
+      params: { search: '' }
+    })
+    if (data.success) {
+      operatorSuggestions.value = data.result
+    }
+  } catch (error) {
+    console.error('載入使用者失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '載入使用者失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    operatorSuggestions.value = []
+  } finally {
+    operatorLoading.value = false
+  }
+}
+
+// 修改 handleOperatorSearch 函數
 const handleOperatorSearch = debounce(async (text) => {
-  if (!text) return
+  if (!text) {
+    await loadAllUsers()
+    return
+  }
   operatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/user/suggestions', {
@@ -740,87 +860,87 @@ const handleOperatorSearch = debounce(async (text) => {
 
 const clearOperatorSearch = () => {
   operatorSearchInput.value = ''
-  operatorSuggestions.value = []
+  loadAllUsers()
   searchCriteria.value.operatorId = null
 }
 
-// 添加 targetType 計算屬性
-const targetType = computed(() => searchCriteria.value.targetModel)
+// // 添加 targetType 計算屬性
+// const targetType = computed(() => searchCriteria.value.targetModel)
 
 // 修改 handleTargetSearch 函數
-const handleTargetSearch = debounce(async (text) => {
-  console.log('搜尋開始，輸入文字:', text)
-  console.log('目前選擇的 targetType:', targetType.value)
+// const handleTargetSearch = debounce(async (text) => {
+//   console.log('搜尋開始，輸入文字:', text)
+//   console.log('目前選擇的 targetType:', targetType.value)
   
-  if (!text || !targetType.value) return
-  targetLoading.value = true
-  try {
-    let endpoint = ''
-    let params = {}
+//   if (!text || !targetType.value) return
+//   targetLoading.value = true
+//   try {
+//     let endpoint = ''
+//     let params = {}
 
-    switch (targetType.value) {
-      case 'users':
-        endpoint = '/user/suggestions'
-        params = { search: text }
-        break
-      case 'forms':
-        endpoint = '/forms/suggestions'
-        params = { search: text }
-        break
-      case 'formTemplates':
-        endpoint = '/formTemplates/suggestions'
-        params = { search: text }
-        break
-      case 'marketingCategories':
-        endpoint = '/marketing/categories/all'
-        params = { quickSearch: text }
-        break
-      default:
-        return
-    }
+//     switch (targetType.value) {
+//       case 'users':
+//         endpoint = '/user/suggestions'
+//         params = { search: text }
+//         break
+//       case 'forms':
+//         endpoint = '/forms/suggestions'
+//         params = { search: text }
+//         break
+//       case 'formTemplates':
+//         endpoint = '/formTemplates/suggestions'
+//         params = { search: text }
+//         break
+//       case 'marketingCategories':
+//         endpoint = '/marketing/categories/all'
+//         params = { quickSearch: text }
+//         break
+//       default:
+//         return
+//     }
 
-    console.log('準備發送請求到:', endpoint, '參數:', params)
-    const { data } = await apiAuth.get(endpoint, { params })
-    console.log('API 回應:', data)
+//     console.log('準備發送請求到:', endpoint, '參數:', params)
+//     const { data } = await apiAuth.get(endpoint, { params })
+//     console.log('API 回應:', data)
     
-    if (data.success) {
-      if (targetType.value === 'marketingCategories') {
-        // 合併所有類型的行銷分類數據
-        const allCategories = [
-          ...data.result.marketingThemes.data,
-          ...data.result.advertisingChannels.data,
-          ...data.result.platforms.data,
-          ...data.result.details.data
-        ]
-        targetSuggestions.value = allCategories.map(item => ({
-          _id: item._id,
-          name: item.name,
-          type: item.type
-        }))
-      } else if (targetType.value === 'formTemplates') {
-        targetSuggestions.value = data.result.map(item => ({
-          _id: item._id,
-          name: item.name
-        }))
-      } else {
-        targetSuggestions.value = data.result
-      }
-    }
-  } catch (error) {
-    console.error('搜尋操作對象失敗:', error)
-    console.error('錯誤詳情:', {
-      message: error?.message,
-      response: error?.response?.data
-    })
-    createSnackbar({
-      text: error?.response?.data?.message || '搜尋操作對象失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-    targetSuggestions.value = []
-  } finally {
-    targetLoading.value = false
-  }
-}, 300)
+//     if (data.success) {
+//       if (targetType.value === 'marketingCategories') {
+//         // 合併所有類型的行銷分類數據
+//         const allCategories = [
+//           ...data.result.marketingThemes.data,
+//           ...data.result.advertisingChannels.data,
+//           ...data.result.platforms.data,
+//           ...data.result.details.data
+//         ]
+//         targetSuggestions.value = allCategories.map(item => ({
+//           _id: item._id,
+//           name: item.name,
+//           type: item.type
+//         }))
+//       } else if (targetType.value === 'formTemplates') {
+//         targetSuggestions.value = data.result.map(item => ({
+//           _id: item._id,
+//           name: item.name
+//         }))
+//       } else {
+//         targetSuggestions.value = data.result
+//       }
+//     }
+//   } catch (error) {
+//     console.error('搜尋操作對象失敗:', error)
+//     console.error('錯誤詳情:', {
+//       message: error?.message,
+//       response: error?.response?.data
+//     })
+//     createSnackbar({
+//       text: error?.response?.data?.message || '搜尋操作對象失敗',
+//       snackbarProps: { color: 'red-lighten-1' }
+//     })
+//     targetSuggestions.value = []
+//   } finally {
+//     targetLoading.value = false
+//   }
+// }, 300)
 
 const clearTargetSearch = () => {
   targetSearchInput.value = ''
@@ -927,10 +1047,10 @@ const handleTableOptionsChange = async (options) => {
 }
 
 const showDetail = (item) => {
-  // 如果資料已被刪除（不是刪除操作本身），且不是創建操作，顯示提示訊息
+  // 如果資料已被刪除（不是刪除操作本身），且不是創建操作，顯顯顯顯顯顯顯顯示提示訊息
   if (item.isTargetDeleted && item.action !== '創建' && item.action !== '刪除') {
     createSnackbar({
-      text: '此資料已被刪除，無法查看詳細內容',
+      text: '此資資料已被刪除，無法查看詳細內容',
       snackbarProps: { color: 'warning' }
     })
     return
@@ -959,7 +1079,10 @@ const shouldShowBudgetTable = computed(() => {
 
 // 初始載入
 onMounted(async () => {
-  await performSearch()
+  await Promise.all([
+    performSearch(),
+    loadAllUsers()
+  ])
 })
 
 // 修改 formatUserDisplay 函數
@@ -972,30 +1095,30 @@ const formatUserDisplay = (user) => {
 }
 
 // 修改 formatTargetDisplay 函數
-const formatTargetDisplay = (item) => {
-  if (!item) return ''
+// const formatTargetDisplay = (item) => {
+//   if (!item) return ''
   
-  let date
+//   let date
   
-  switch (targetType.value) {
-    case 'users':
-      if (item.adminId) {
-        return `${item.name} (${item.adminId})`
-      }
-      return `${item.name}${item.userId ? ` (${item.userId})` : ''}`
-    case 'forms':
-      return `${item.formNumber}${item.clientName ? ` - ${item.clientName}` : ''}`
-    case 'formTemplates':
-      return item.name || ''
-    case 'marketingCategories':
-      return `${item.name} (${marketingCategoryTypes[item.type]})`
-    case 'marketingExpenses':
-      date = formatDateTime(item.invoiceDate).split(' ')[0] // 只取日期部分
-      return `${date} - ${item.theme?.name || ''}`
-    default:
-      return ''
-  }
-}
+//   switch (targetType.value) {
+//     case 'users':
+//       if (item.adminId) {
+//         return `${item.name} (${item.adminId})`
+//       }
+//       return `${item.name}${item.userId ? ` (${item.userId})` : ''}`
+//     case 'forms':
+//       return `${item.formNumber}${item.clientName ? ` - ${item.clientName}` : ''}`
+//     case 'formTemplates':
+//       return item.name || ''
+//     case 'marketingCategories':
+//       return `${item.name} (${marketingCategoryTypes[item.type]})`
+//     case 'marketingExpenses':
+//       date = formatDateTime(item.invoiceDate).split(' ')[0] // 只取日期部分
+//       return `${date} - ${item.theme?.name || ''}`
+//     default:
+//       return ''
+//   }
+// }
 
 // 監聽資料類型變更
 watch(() => searchCriteria.value.targetModel, () => {
@@ -1094,7 +1217,7 @@ watch(
 :deep(.v-dialog) {
   &.budget-detail {
     max-width: 1920px !important;
-    width: 92% !important;
+    width: 90% !important;
     margin: 24px auto !important;
     
     .v-card {
