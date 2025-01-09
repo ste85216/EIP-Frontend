@@ -1159,8 +1159,18 @@ const searchHistory = async () => {
     if (historySearch.value.formTemplate) {
       params.formTemplate = historySearch.value.formTemplate
     }
+
+    // 處理日期範圍
     if (historySearch.value.date?.length) {
-      params.date = historySearch.value.date
+      const startDate = new Date(historySearch.value.date[0])
+      startDate.setHours(0, 0, 0, 0)
+      params.startDate = startDate.toISOString()
+
+      const endDate = historySearch.value.date.length > 1
+        ? new Date(historySearch.value.date[historySearch.value.date.length - 1])
+        : new Date(historySearch.value.date[0])
+      endDate.setHours(23, 59, 59, 999)
+      params.endDate = endDate.toISOString()
     }
 
     const { data } = await apiAuth.get('/forms', { params })
