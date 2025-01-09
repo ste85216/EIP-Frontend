@@ -486,7 +486,7 @@
               </v-hover>
               <v-spacer />
               <v-btn
-                color="red-lighten-1"
+                color="grey-darken-1"
                 variant="outlined"
                 :size="buttonSize"
                 :loading="isSubmitting"
@@ -536,7 +536,7 @@
         <v-card-actions class="px-6 pt-2 pb-6 pt-4">
           <v-spacer />
           <v-btn
-            color="grey"
+            color="grey-darken-1"
             variant="outlined"
             size="small"
             @click="amountDialog.open = false"
@@ -595,7 +595,7 @@
         <v-card-actions class="px-6 pt-4 pb-6">
           <v-spacer />
           <v-btn
-            color="grey"
+            color="grey-darken-1"
             variant="outlined"
             size="small"
             @click="addDetailsDialog.open = false"

@@ -272,6 +272,7 @@
                   density="compact"
                   class="mb-1"
                   clearable
+                  maxlength="3"
                   @update:model-value="v => updateField('validityDays', v)"
                 />
               </v-col>
@@ -287,6 +288,7 @@
                   density="compact"
                   class="mb-1"
                   clearable
+                  maxlength="3"
                   @update:model-value="v => updateField('delayDays', v)"
                 />
               </v-col>

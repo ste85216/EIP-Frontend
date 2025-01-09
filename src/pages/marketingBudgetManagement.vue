@@ -275,13 +275,12 @@
                     <tr>
                       <th class="delete-button-col" />
                       <th class="channel-col">
-                        廣告渠道
+                        <span class="ms-10 me-3">廣告渠道</span>
                         <!-- 渠道新增按鈕 -->
                         <v-btn
                           v-tooltip="'新增廣告渠道'"
                           icon
                           size="24"
-                          class="ms-2"
                           @click="addChannel"
                         >
                           <v-icon
@@ -524,7 +523,7 @@
             </v-hover>
             <v-spacer />
             <v-btn
-              color="red-lighten-1"
+              color="grey-darken-1"
               variant="outlined"
               :size="buttonSize"
               :loading="isSubmitting"
@@ -562,7 +561,7 @@
     <ConfirmDeleteDialog
       v-model="confirmDeleteChannelDialog.show"
       title="確認刪除廣告渠道"
-      :message="`確定要刪除「<span class='text-pink-lighten-1' style='font-weight: 800;'> ${getChannelName(confirmDeleteChannelDialog.channelId)} </span>」廣告渠道嗎？會連同底下平台及金額一同刪除。`"
+      :message="`確定要刪除「<span class='text-pink-lighten-1' style='font-weight: 800;'> ${getChannelName(confirmDeleteChannelDialog.channelId)} </span>」廣告渠道嗎？會連同底下平台及金額一併刪除。`"
       @confirm="confirmDeleteChannel"
     />
 
@@ -570,7 +569,7 @@
     <ConfirmDeleteDialog
       v-model="confirmDeletePlatformDialog.show"
       title="確認刪除平台"
-      :message="`確定要刪除「<span class='text-teal-darken-1' style='font-weight: 800;'> ${getPlatformName(confirmDeletePlatformDialog.platformId)} </span>」平台嗎？`"
+      :message="`確定要刪除「<span class='text-teal-darken-1' style='font-weight: 800;'> ${getPlatformName(confirmDeletePlatformDialog.platformId)} </span>」平台嗎？ 會連同底下金額一併刪除。`"
       @confirm="confirmDeletePlatform"
     />
 
@@ -604,7 +603,7 @@
           <v-card-actions class="px-0 pt-0">
             <v-spacer />
             <v-btn
-              color="grey"
+              color="grey-darken-1"
               size="small"
               variant="outlined"
               @click="quickFillDialog.show = false"
@@ -1578,13 +1577,13 @@ tbody {
 }
 
 .quick-fill-col {
-  width: 48px;
+  min-width: 48px;
   padding: 0 8px 0 0 !important;
   text-align: center;
 }
 
 .sort-buttons-col {
-  width: 32px;
+  min-width: 32px;
   padding: 0 !important;
   text-align: center;
   

@@ -1,5 +1,6 @@
 <template>
   <v-container
+    fluid
     min-width="1600"
   >
     <!-- 添加進度遮罩 -->
@@ -124,10 +125,12 @@
                       批次下載報表
                     </v-btn>
                   </v-col>
-                  <v-col cols="12">
+                  <v-col
+                    v-if="searchForm.reportType === 'lineExpense'"
+                    cols="12"
+                  >
                     <v-row>
                       <v-col
-                        v-if="searchForm.reportType === 'lineExpense'"
                         cols="12"
                       >
                         <v-autocomplete
@@ -4711,10 +4714,12 @@ const generateChartsPDF = async () => {
 
     // 創建新的 ECharts 實例
     const newPieChart = echarts.init(pieContainer, null, { 
-      renderer: 'canvas'
+      renderer: 'canvas',
+      devicePixelRatio: 4
     })
     const newBarChart = echarts.init(barContainer, null, { 
-      renderer: 'canvas'
+      renderer: 'canvas',
+      devicePixelRatio: 4
     })
 
     // 為匯出 PDF 創建特殊的圖表配置

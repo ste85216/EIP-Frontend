@@ -29,19 +29,15 @@
                 xl="2"
               >
                 <v-row class="d-flex align-center">
-                  <v-col
-                    v-if="mdAndUp"
-                    cols="2"
-                    class="ps-lg-5"
-                  >
+                  <v-col class="d-flex align-center">
                     <v-icon
+                      v-if="mdAndUp"
                       v-tooltip:start="'可搜尋管理者編號、姓名、Email、備註'"
                       icon="mdi-information"
                       size="small"
                       color="deep-purple-darken-4"
+                      class="me-4"
                     />
-                  </v-col>
-                  <v-col>
                     <v-text-field
                       v-model="quickSearchText"
                       label="搜尋"
@@ -242,7 +238,7 @@
             </v-hover>
             <v-spacer />
             <v-btn
-              color="red-lighten-1"
+              color="grey-darken-1"
               variant="outlined"
               :size="buttonSize"
               :loading="isSubmitting"

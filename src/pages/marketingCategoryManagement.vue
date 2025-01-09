@@ -363,14 +363,19 @@
             <span>{{ dialog.id ? '編輯分類' : getDialogTitle }}</span>
             <v-btn
               v-if="!dialog.id"
-              v-tooltip:start="'新增一列'"
-              icon="mdi-plus"
-              variant="text"
-              color="light-blue-darken-1"
-              size="small"
+              v-tooltip:start="'新增項目'"
+              icon
+              color="grey-darken-1"
+              size="22"
               class="ms-2"
               @click="addNewItem"
-            />
+            >
+              <v-icon 
+                size="14"
+              >
+                mdi-plus
+              </v-icon>
+            </v-btn>
           </div>
           <v-card-text class="mt-3 pa-3">
             <v-row>
@@ -380,28 +385,29 @@
                   v-for="(item, index) in newItems"
                   :key="index"
                   cols="12"
-                  class="d-flex align-center gap-2"
                 >
-                  <v-text-field
-                    v-model="item.name"
-                    :error-messages="item.error"
-                    label="*名稱"
-                    type="text"
-                    variant="outlined"
-                    density="compact"
-                    clearable
-                    class="flex-grow-1"
-                    hide-details="auto"
-                  />
-                  <v-btn
-                    v-if="newItems.length > 1"
-                    icon="mdi-delete"
-                    variant="text"
-                    color="red-lighten-1"
-                    size="small"
-                    class="ms-2"
-                    @click="removeItem(index)"
-                  />
+                  <div class="d-flex align-center gap-2 item-container">
+                    <v-text-field
+                      v-model="item.name"
+                      :error-messages="item.error"
+                      label="*名稱"
+                      type="text"
+                      variant="outlined"
+                      density="compact"
+                      clearable
+                      class="flex-grow-1"
+                      hide-details="auto"
+                    />
+                    <v-btn
+                      v-if="newItems.length > 1"
+                      icon="mdi-delete"
+                      variant="text"
+                      color="red-lighten-1"
+                      size="small"
+                      class="ms-2"
+                      @click="removeItem(index)"
+                    />
+                  </div>
                 </v-col>
               </template>
               <template v-else>
@@ -450,7 +456,7 @@
             </v-hover>
             <v-spacer />
             <v-btn
-              color="red-lighten-1"
+              color="grey-darken-1"
               variant="outlined"
               :size="buttonSize"
               :loading="isSubmitting"
@@ -945,5 +951,11 @@ watch(newItems, (items) => {
     font-size: 10px;
     margin-right: 8px;
   }
+}
+
+.item-container {
+  background: #f6f6f6;
+  padding: 8px;
+  border-radius: 4px;
 }
 </style>

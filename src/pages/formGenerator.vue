@@ -195,7 +195,7 @@
                 color="pink-darken-2"
                 :disabled="!previewReady || isDownloading"
                 :loading="isDownloading"
-                @click="downloadPDF"
+                @click="openConfirmDownloadDialog"
               >
                 匯出 PDF
               </v-btn>
@@ -221,7 +221,7 @@
                       size="32"
                     />
                     <div class="mt-4">
-                      載入表單中...
+                      載入表單預覽畫面中...
                     </div>
                   </div>
                 </template>
@@ -469,7 +469,7 @@
             <v-card-actions class="pa-0 mt-4">
               <v-spacer />
               <v-btn
-                color="red-lighten-1"
+                color="grey"
                 variant="outlined"
                 @click="closeEditTemplateDialog"
               >
@@ -753,10 +753,10 @@
         <v-card-text class="ps-3 pb-2 ">
           確定要下載 「{{ confirmDownloadDialog.templateName }} {{ confirmDownloadDialog.formNumber }}」 的 PDF 檔嗎？
         </v-card-text>
-        <v-card-actions class="pa-3">
+        <v-card-actions class="pt-4 pb-3">
           <v-spacer />
           <v-btn
-            color="red-lighten-1"
+            color="grey-darken-1"
             variant="outlined"
             size="small"
             @click="confirmDownloadDialog.open = false"
@@ -770,6 +770,42 @@
             class="ms-2"
             size="small"
             @click="confirmDownloadPDF"
+          >
+            確認
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 新增：匯出新表單 PDF 確認對話框 -->
+    <v-dialog
+      v-model="exportPdfDialog.open"
+      max-width="320"
+    >
+      <v-card class="rounded-lg pa-4">
+        <div class="card-title ps-3 py-3">
+          確認匯出 PDF
+        </div>
+        <v-card-text class="px-3 pb-2">
+          請確認所有資料皆已填寫完成且正確
+        </v-card-text>
+        <v-card-actions class="pt-4 pb-3">
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            variant="outlined"
+            size="small"
+            @click="exportPdfDialog.open = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            :loading="isDownloading"
+            class="ms-2"
+            size="small"
+            @click="handleExportPDF"
           >
             確認
           </v-btn>
@@ -819,6 +855,7 @@ const templateOptions = ref([])
 const templateRef = ref(null)
 const formFieldsRef = ref(null)
 const deletingFormId = ref('')
+const exportPdfDialog = ref({ open: false })
 
 // 模板相關
 const currentTemplate = shallowRef(null)
@@ -1970,7 +2007,6 @@ const confirmDownloadDialog = ref({
 // 確認匯出 PDF
 const confirmDownloadPDF = async () => {
   try {
-    // 如果是歷史記錄的 PDF 下載
     if (confirmDownloadDialog.value.url) {
       window.open(confirmDownloadDialog.value.url, '_blank')
       createSnackbar({
@@ -1980,9 +2016,6 @@ const confirmDownloadPDF = async () => {
           timeout: 2000
         }
       })
-    } else {
-      // 如果是新生成的 PDF 下載
-      await downloadPDF()
     }
   } catch (error) {
     console.error('PDF 下載失敗:', error)
@@ -1992,6 +2025,39 @@ const confirmDownloadPDF = async () => {
     })
   } finally {
     confirmDownloadDialog.value.open = false
+  }
+}
+
+const openConfirmDownloadDialog = () => {
+  // 確保啟用驗證
+  enableValidation.value = true
+  nextTick(async () => {
+    // 進行表單驗證
+    const isValid = await formFieldsRef.value?.validate()
+    if (!isValid) {
+      createSnackbar({
+        text: '請填寫必填欄位',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+      return
+    }
+
+    // 開啟匯出確認對話框
+    exportPdfDialog.value.open = true
+  })
+}
+
+const handleExportPDF = async () => {
+  try {
+    await downloadPDF()
+  } catch (error) {
+    console.error('PDF 匯出失敗:', error)
+    createSnackbar({
+      text: 'PDF 匯出失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    exportPdfDialog.value.open = false
   }
 }
 </script>
