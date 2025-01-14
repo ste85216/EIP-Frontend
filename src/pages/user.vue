@@ -452,7 +452,8 @@ const dialogWidth = computed(() => {
 // ===== 角色選項 =====
 const roles = ref([
   { value: UserRole.USER, title: roleNames[UserRole.USER] },    // 一般使用者
-  { value: UserRole.MANAGER, title: roleNames[UserRole.MANAGER] }  // 經理
+  { value: UserRole.MANAGER, title: roleNames[UserRole.MANAGER] },  // 經理
+  { value: UserRole.IT, title: roleNames[UserRole.IT] }  // IT人員
 ])
 
 // ===== 響應式表格抬頭設定 =====

@@ -21,6 +21,7 @@ export const useUserStore = defineStore('user', () => {
   const isUser = computed(() => role.value === UserRole.USER)
   const isManager = computed(() => role.value === UserRole.MANAGER)
   const isAdmin = computed(() => role.value === UserRole.ADMIN)
+  const isIT = computed(() => role.value === UserRole.IT)
 
   // 登入
   const login = async (values) => {
@@ -186,6 +187,7 @@ export const useUserStore = defineStore('user', () => {
     isUser,
     isManager,
     isAdmin,
+    isIT,
 
     // 方法
     login,

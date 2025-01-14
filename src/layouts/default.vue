@@ -188,6 +188,7 @@
             </v-list-item>
           </template>
           <v-divider
+            v-if="!user.isIT"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -547,11 +548,13 @@ const userItems = [
     to: '/formGenerator',
     text: '表單產生器',
     icon: 'mdi-list-box-outline',
+    roles: ['ADMIN', 'MANAGER', 'USER']
   },
   {
     to: '/marketingAnalysis',
     text: '行銷費用分析',
     icon: 'mdi-chart-multiple',
+    roles: ['ADMIN', 'MANAGER', 'USER']
   },
 
 ]
@@ -596,7 +599,7 @@ const adminItems = [
     to: '/hardwareMaintenanceRecord',
     text: '硬體維修記錄',
     icon: 'mdi-wrench',
-    roles: ['ADMIN']
+    roles: ['ADMIN', 'IT']
   },
   {
     to: '/admin',

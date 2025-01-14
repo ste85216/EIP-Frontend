@@ -30,13 +30,29 @@
               <v-card
                 class="rounded-lg border"
                 elevation="0"
+                min-height="80"
               >
                 <v-card-text class="text-center pb-3 px-2">
                   <div class="sub-title mb-2">
                     {{ category.name }}
                   </div>
-                  <div class="sub-title text-red-darken-3">
+                  <div
+                    v-if="!statsLoading"
+                    class="sub-title text-red-darken-3"
+                  >
                     {{ getCategoryCount(category._id) }}
+                  </div>
+                  <div
+                    v-else
+                    class="d-flex justify-center align-center"
+                    style="min-height: 21.38px"
+                  >
+                    <v-progress-circular
+                      indeterminate
+                      size="20"
+                      width="2"
+                      color="purple-darken-2"
+                    />
                   </div>
                 </v-card-text>
               </v-card>
@@ -112,19 +128,21 @@
                     class="d-flex align-center"
                   >
                     <v-btn
-                      color="cyan-darken-2"
-                      :size="buttonSize"
-                      class="me-4"
-                      @click="handleSearch"
-                    >
-                      搜尋
-                    </v-btn>
-                    <v-btn
                       color="grey-darken-1"
                       :size="buttonSize"
+                      :loading="isSearching"
+                      class="me-4"
                       @click="handleReset"
                     >
                       <v-icon>mdi-refresh</v-icon>
+                    </v-btn>
+                    <v-btn
+                      color="cyan-darken-2"
+                      :size="buttonSize"
+                      :loading="isSearching"
+                      @click="handleSearch"
+                    >
+                      搜尋
                     </v-btn>
                   </v-col>
                 </v-row>
@@ -148,12 +166,14 @@
                   v-model="quickSearchText"
                   label="快速搜尋"
                   append-inner-icon="mdi-magnify"
+                  :loading="isSearching"
                   base-color="#666"
                   color="blue-grey-darken-3"
                   variant="outlined"
                   density="compact"
                   hide-details
                   clearable
+                  @update:model-value="handleQuickSearch"
                 />
               </v-col>
             </v-row>
@@ -574,7 +594,7 @@ definePage({
   meta: {
     title: '硬體維修記錄 | GInternational',
     login: true,
-    roles: [UserRole.ADMIN]
+    roles: [UserRole.ADMIN, UserRole.IT]
   }
 })
 
@@ -708,7 +728,10 @@ const editCategoryErrors = ref({
 const isSubmitting = ref(false)
 
 // ===== 資料載入與更新方法 =====
+const statsLoading = ref(true)
+
 const loadStats = async () => {
+  statsLoading.value = true
   try {
     const params = {}
 
@@ -743,6 +766,8 @@ const loadStats = async () => {
       text: '載入統計資料失敗',
       snackbarProps: { color: 'red-lighten-1' }
     })
+  } finally {
+    statsLoading.value = false
   }
 }
 
@@ -801,10 +826,17 @@ const tableLoadItems = async (loading = true) => {
 }
 
 const refreshData = async () => {
-  await Promise.all([
-    tableLoadItems(),
-    loadStats()
-  ])
+  try {
+    isSearching.value = true
+    await Promise.all([
+      tableLoadItems(true),
+      loadStats()
+    ])
+  } catch (error) {
+    console.error('刷新資料失敗:', error)
+  } finally {
+    isSearching.value = false
+  }
 }
 
 // ===== 硬體類型管理方法 =====
@@ -1071,12 +1103,31 @@ const deleteCategory = async () => {
 }
 
 // ===== 監聽器 =====
-const debouncedSearch = debounce(() => {
-  refreshData()
+const debouncedSearch = debounce(async () => {
+  try {
+    isSearching.value = true
+    tablePage.value = 1
+    await refreshData()
+  } catch (error) {
+    console.error('快速搜尋失敗:', error)
+    createSnackbar({
+      text: '搜尋失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isSearching.value = false
+  }
 }, 300)
 
-watch(quickSearchText, () => {
+// 新增快速搜尋處理方法
+const handleQuickSearch = () => {
+  isSearching.value = true
   debouncedSearch()
+}
+
+// 修改 watch
+watch(quickSearchText, () => {
+  handleQuickSearch()
 })
 
 // 監聽表單值的變化
@@ -1104,9 +1155,15 @@ watch(categoryForm, (newVal) => {
 
 // ===== 生命週期鉤子 =====
 onMounted(async () => {
-  await loadCategories()
-  await loadStats()
-  await refreshData()
+  try {
+    await loadCategories()
+    await Promise.all([
+      loadStats(),
+      tableLoadItems(true)
+    ])
+  } catch (error) {
+    console.error('初始化資料載入失敗:', error)
+  }
 })
 
 // ===== 工具方法 =====
@@ -1266,16 +1323,41 @@ const onUpdatePage = (page) => {
 const maintenanceFormRef = ref(null)
 
 // 添加搜尋和重置方法
-const handleSearch = () => {
-  refreshData()
+const handleSearch = async () => {
+  try {
+    isSearching.value = true
+    await refreshData()
+  } catch (error) {
+    console.error('搜尋時發生錯誤:', error)
+    createSnackbar({
+      text: '搜尋失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isSearching.value = false
+  }
 }
 
-const handleReset = () => {
+const handleReset = async () => {
   filters.value.maintenanceDateRange = []
   filters.value.hardwareCategory = null
   quickSearchText.value = ''
-  refreshData()
+  try {
+    isSearching.value = true
+    await refreshData()
+  } catch (error) {
+    console.error('重置搜尋失敗:', error)
+    createSnackbar({
+      text: '重置搜尋失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isSearching.value = false
+  }
 }
+
+// 在 script setup 區塊中新增 isSearching 狀態
+const isSearching = ref(false)
 </script>
 
 <style lang="scss" scoped>

@@ -459,7 +459,9 @@ const modelOptions = [
   { title: '表單模板', value: 'formTemplates' },
   { title: '行銷分類', value: 'marketingCategories' },
   { title: '行銷預算', value: 'marketingBudgets' },
-  { title: '行銷實際支出', value: 'marketingExpenses' }
+  { title: '行銷實際支出', value: 'marketingExpenses' },
+  { title: '硬體維修記錄', value: 'hardwareMaintenanceRecords' },
+  { title: '硬體類型', value: 'hardwareCategories' }
 ]
 
 // 表格標頭
@@ -564,7 +566,9 @@ const getModelDisplay = (model) => {
     formTemplates: '表單模板',
     marketingCategories: '行銷分類',
     marketingExpenses: '行銷實際支出',
-    marketingBudgets: '行銷預算'
+    marketingBudgets: '行銷預算',
+    hardwareMaintenanceRecords: '硬體維修記錄',
+    hardwareCategories: '硬體類型'
   }
   return modelMap[model] || model
 }
@@ -783,6 +787,8 @@ const formatChanges = (item) => {
           changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
         } else if (key === 'type' && item.targetModel === 'marketingCategories') {
           changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[value] || '(無)'}`)
+        } else if (key === 'maintenanceDate') {
+          changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
         } else {
           changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
         }
@@ -805,6 +811,8 @@ const formatChanges = (item) => {
         changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
       } else if (key === 'type' && item.targetModel === 'marketingCategories') {
         changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[oldValue] || '(無)'} → ${marketingCategoryTypes[newValue] || '(無)'}`)
+      } else if (key === 'maintenanceDate') {
+        changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
       } else {
         changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
       }
@@ -1051,7 +1059,7 @@ const handleTableOptionsChange = async (options) => {
 }
 
 const showDetail = (item) => {
-  // 如果資料已被刪除（不是刪除操作本身），且不是創建操作，顯顯顯顯顯顯顯顯示提示訊息
+  // 如果資料已被刪除（不是刪除操作本身），且不是創建操作，顯示提示訊息
   if (item.isTargetDeleted && item.action !== '創建' && item.action !== '刪除') {
     createSnackbar({
       text: '此資資料已被刪除，無法查看詳細內容',
