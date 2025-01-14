@@ -231,7 +231,7 @@
                     max="9999"
                     hide-details
                     class="mb-6"
-                    @input="validateYear"
+                    @blur="validateYear"
                   />
                 </v-col>
                 <v-col
@@ -1442,26 +1442,32 @@ const validateYear = (event) => {
   
   // 檢查是否為空
   if (!yearValue) {
-    year.value.value = ''
-    year.errorMessage.value = '請輸入年度'
+    year.setValue('')
     return
   }
 
   // 轉換為數字並檢查範圍
   const numYear = parseInt(yearValue)
   if (isNaN(numYear)) {
-    year.errorMessage.value = '請輸入有效的年度'
+    createSnackbar({
+      text: '請輸入有效的年度',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    year.setValue('')
     return
   }
 
   if (numYear < 1911 || numYear > 9999) {
-    year.errorMessage.value = '年度必須在 1911 到 9999 之間'
+    createSnackbar({
+      text: '年度必須在 1911 到 9999 之間',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    year.setValue('')
     return
   }
 
-  // 清除錯誤訊息
-  year.errorMessage.value = ''
-  year.value.value = numYear.toString()
+  // 使用 setValue 方法更新值
+  year.setValue(numYear.toString())
 }
 </script>
 

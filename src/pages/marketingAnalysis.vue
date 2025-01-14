@@ -1706,6 +1706,7 @@
                 density="compact"
                 :error-messages="downloadThemeError"
                 clearable
+                @update:model-value="handleDownloadThemeChange"
               />
             </v-col>
             <v-col
@@ -1726,7 +1727,6 @@
           </v-row>
 
           <v-divider class="my-4" />
-
           <v-row>
             <v-col
               cols="12"
@@ -1744,7 +1744,7 @@
                     value="budget"
                     color="purple-darken-1"
                     hide-details
-                    :disabled="!downloadForm.availableDataTypes.hasBudget"
+                    :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasBudget"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1755,7 +1755,7 @@
                     value="expense"
                     hide-details
                     color="purple-darken-1"
-                    :disabled="!downloadForm.availableDataTypes.hasExpense"
+                    :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1766,7 +1766,7 @@
                     value="comparison"
                     hide-details
                     color="purple-darken-1"
-                    :disabled="!downloadForm.availableDataTypes.hasBudget || !downloadForm.availableDataTypes.hasExpense"
+                    :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasBudget || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1778,7 +1778,7 @@
                     value="lineExpense"
                     hide-details
                     color="purple-darken-1"
-                    :disabled="!downloadForm.availableDataTypes.hasExpense"
+                    :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1789,7 +1789,7 @@
                     value="lineExpenseTotal"
                     hide-details
                     color="purple-darken-1"
-                    :disabled="!downloadForm.availableDataTypes.hasExpense"
+                    :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1800,7 +1800,7 @@
                     value="charts"
                     hide-details
                     color="purple-darken-1"
-                    :disabled="!downloadForm.availableDataTypes.hasExpense"
+                    :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
               </v-row>
@@ -2138,7 +2138,7 @@ const handleYearChange = async () => {
         { title: '行銷廣告預算表', value: 'budget' }
       ]
       createSnackbar({
-        text: `${getThemeName(searchForm.value.theme)}${searchForm.value.year}年度只有「預算」資料`,
+        text: `「${getThemeName(searchForm.value.theme)}」「${searchForm.value.year}」年度只有「預算」資料`,
         snackbarProps: { color: 'info' }
       })
     } else if (!budgetExists && expenseExists) {
@@ -2148,7 +2148,7 @@ const handleYearChange = async () => {
         { title: '行銷各線實際支出總表', value: 'lineExpenseTotal' }
       ]
       createSnackbar({
-        text: `${getThemeName(searchForm.value.theme)}${searchForm.value.year}年度只有「實際支出」資料`,
+        text: `「${getThemeName(searchForm.value.theme)}」「${searchForm.value.year}」年度只有「實際支出」資料`,
         snackbarProps: { color: 'info' }
       })
     } else if (budgetExists && expenseExists) {
@@ -2163,7 +2163,7 @@ const handleYearChange = async () => {
       // 當兩個資料都不存在時
       newReportTypeOptions = []
       createSnackbar({
-        text: `${getThemeName(searchForm.value.theme)}${searchForm.value.year}年度尚未有任何資料`,
+        text: `「${getThemeName(searchForm.value.theme)}」「${searchForm.value.year}」年度尚未有任何資料`,
         snackbarProps: { color: 'warning' }
       })
     }
@@ -4953,6 +4953,11 @@ watch(() => downloadForm.value.availableDataTypes, (newTypes) => {
     }
   })
 }, { deep: true })
+
+const handleDownloadThemeChange = (newTheme) => {
+  downloadThemeError.value = ''
+  downloadForm.value.theme = newTheme
+}
 
 </script>
 

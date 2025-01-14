@@ -593,6 +593,12 @@ const cogItems = [
 
 const adminItems = [
   {
+    to: '/hardwareMaintenanceRecord',
+    text: '硬體維修記錄',
+    icon: 'mdi-wrench',
+    roles: ['ADMIN']
+  },
+  {
     to: '/admin',
     text: '管理者管理',
     icon: 'mdi-database-cog',

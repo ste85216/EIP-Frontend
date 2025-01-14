@@ -516,7 +516,11 @@ const fieldTranslations = {
   detail: '線別',
   relatedBudget: '關聯預算表',
   year: '年度',
-  order: '排序'
+  order: '排序',
+  maintenanceDate: '維修日期',
+  maintenanceContent: '維修內容',
+  maintenanceResult: '維修結果',
+  reportUser: '報修人'
 }
 
 // 行銷分類類型對應
