@@ -917,11 +917,11 @@ const loadData = async () => {
       params.invoiceDateEnd = endDate.toISOString()
     }
 
-    console.log('搜尋參數:', params)
+    // console.log('搜尋參數:', params)
 
     const { data } = await apiAuth.get('/marketing/expenses/all', { params })
     if (data.success) {
-      console.log('原始資料:', data.result.data) // 調試用
+      // console.log('原始資料:', data.result.data) // 調試用
 
       items.value = data.result.data.map(item => {
         // 檢查並確保每個關聯欄位都有正確的資料
@@ -943,7 +943,7 @@ const loadData = async () => {
             : []
         }
 
-        console.log('處理後的項目:', processedItem) // 調試用
+        // console.log('處理後的項目:', processedItem) // 調試用
         return processedItem
       })
 

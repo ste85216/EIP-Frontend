@@ -634,6 +634,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import UserRole from '@/enums/UserRole'
 import * as yup from 'yup'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
@@ -647,7 +648,7 @@ definePage({
   meta: {
     title: '行銷預算管理 | GInternational',
     login: true,
-    admin: true
+    roles: [ UserRole.ADMIN, UserRole.MANAGER, UserRole.USER ]
   }
 })
 
@@ -951,7 +952,7 @@ const loadData = async () => {
       params.createdDateEnd = endDate.toISOString()
     }
 
-    console.log('搜尋參數:', params)
+    // console.log('搜尋參數:', params)
 
     const { data } = await apiAuth.get('/marketing/budgets/all', { params })
     if (data.success) {
@@ -1059,7 +1060,7 @@ const openDialog = () => {
 const editItem = async (item) => {
   try {
     if (!item || !item._id) {
-      console.error('無效的項目:', item)
+      // console.error('無效的項目:', item)
       return
     }
 
@@ -1218,12 +1219,12 @@ const submit = handleSubmit(async (values) => {
       items
     }
 
-    console.log('提交的資料:', submitData) // 用於調試
+    // console.log('提交的資料:', submitData) // 用於調試
 
     try {
       if (dialog.value.id) {
         const { data } = await apiAuth.patch(`/marketing/budgets/${dialog.value.id}`, submitData)
-        console.log('更新回應:', data) // 用於調試
+        // console.log('更新回應:', data) // 用於調試
         if (data.success) {
           createSnackbar({
             text: '預算表更新成功',
@@ -1234,7 +1235,7 @@ const submit = handleSubmit(async (values) => {
         }
       } else {
         const { data } = await apiAuth.post('/marketing/budgets', submitData)
-        console.log('新增回應:', data) // 用於調試
+        // console.log('新增回應:', data) // 用於調試
         if (data.success) {
           createSnackbar({
             text: '預算表新增成功',

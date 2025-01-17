@@ -116,7 +116,7 @@
               <v-col cols="12">
                 <!-- 報價單表單 -->
                 <v-card elevation="0">
-                  <v-card-text>
+                  <v-card-text class="px-0 pt-0 pb-2">
                     <RayHuangQuotationFormFields
                       ref="formFieldsRef"
                       v-model="formData"
@@ -833,6 +833,8 @@ import { quotationSchema as ystravelQuotationSchema } from '@/components/templat
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 import { debounce } from 'lodash'
+import { jsPDF } from 'jspdf'
+import html2canvas from 'html2canvas'
 
 definePage({
   meta: {
@@ -898,7 +900,7 @@ const resetFormData = (templateType) => {
         customerAddress: '',
         customerTaxId: '',
         customerContact: '',
-        department: '',
+        customerDepartment: '',
         customerPhone: '',
         customerEmail: '',
         customerMobile: '',
@@ -908,6 +910,8 @@ const resetFormData = (templateType) => {
         specialNote: '',
         validityDays: '',
         delayDays: '',
+        includeContract: false,
+        currentPage: 'quotation',
         items: [
           {
             name: '',
@@ -917,7 +921,75 @@ const resetFormData = (templateType) => {
             unit: '份',
             price: ''
           }
-        ]
+        ],
+        contract: {
+          page1: {
+            partyA: '',
+            partyB: '鋭皇國際股份有限公司',
+            projectName: '',
+            totalAmount: '',
+            estimatedWorkDays: 'X',
+            contractYear: '',
+            contractMonth: '',
+            contractDay: '',
+            depositAmount: '',
+            paymentMethod: {
+              singlePayment: false,
+              singlePaymentDate: {
+                year: '',
+                month: '',
+                day: ''
+              },
+              deposit: false,
+              depositAmount: '',
+              depositDate: {
+                year: '',
+                month: '',
+                day: ''
+              },
+              finalPaymentAmount: '',
+              finalPaymentDate: {
+                year: '',
+                month: '',
+                day: ''
+              }
+            },
+            paymentType: {
+              cash: false,
+              transfer: false,
+              check: false,
+              checkDate: {
+                year: '',
+                month: '',
+                day: ''
+              }
+            }
+          },
+          page2: {
+            designProposalCount: '',
+            responseDay: '',
+            designRevisionCount: '',
+            printRevisionCount: '',
+            providedItems: ''
+          },
+          page3: {
+            otherAgreements: '',
+            partyA: {
+              companyName: '',
+              representative: '',
+              address: '',
+              phone: '',
+              taxId: ''
+            },
+            partyB: {
+              companyName: '鋭皇國際股份有限公司',
+              representative: '陳淑貞',
+              address: '10467 台北市中山區松江路 220 號 4 樓之 5',
+              phone: '02-25623385',
+              taxId: '83213438'
+            }
+          }
+        }
       }
       break
     
@@ -956,12 +1028,21 @@ const resetFormData = (templateType) => {
         
         // 備註
         cancellationPolicy: '',
-        validityPeriod: 7
+        validityPeriod: 7,
+
+        // 重置合約相關欄位
+        includeContract: false,
+        currentPage: 'quotation',
+        contract: null
       }
       break
     
     default:
-      formData.value = {}
+      formData.value = {
+        includeContract: false,
+        currentPage: 'quotation',
+        contract: null
+      }
   }
 }
 
@@ -1022,7 +1103,7 @@ const handleTemplateChange = async (templateId) => {
   if (!templateId) {
     currentTemplate.value = null
     previewReady.value = false
-    formData.value = {}
+    resetFormData()
     return
   }
 
@@ -1033,13 +1114,12 @@ const handleTemplateChange = async (templateId) => {
     previewReady.value = false
     currentTemplate.value = null
     enableValidation.value = false
-    formData.value = {}
     
     // 獲取模板資訊
     const { data } = await apiAuth.get(`/formTemplates/${templateId}`)
     if (data.success) {
       const template = data.result
-      console.log('選擇的模板:', template)
+      // console.log('選擇的模板:', template)
       const components = templateComponents[template.componentName]
       if (components) {
         try {
@@ -1069,9 +1149,12 @@ const handleTemplateChange = async (templateId) => {
             throw new Error('無法取得單號')
           }
 
-          // 單號取得成功後，再設置表單資料
+          // 先重置表單數據
+          resetFormData(template.componentName)
+          
+          // 然後設置新的單號
           formData.value = { 
-            ...components.schema,
+            ...formData.value,
             quotationNumber 
           }
 
@@ -1104,7 +1187,7 @@ const handleTemplateChange = async (templateId) => {
     console.error('載入失敗:', error)
     // 統一的錯誤處理
     currentTemplate.value = null
-    formData.value = {}
+    resetFormData()
     previewReady.value = false
     createSnackbar({
       text: error.message || '載入失敗',
@@ -1298,7 +1381,37 @@ const downloadPDF = async () => {
                 quantity: item.quantity,
                 unit: item.unit,
                 price: item.price
-              }))
+              })),
+
+              // 合約相關
+              includeContract: formData.value.includeContract,
+              contract: formData.value.contract ? {
+                page1: {
+                  partyA: formData.value.contract.page1.partyA,
+                  partyB: formData.value.contract.page1.partyB,
+                  projectName: formData.value.contract.page1.projectName,
+                  totalAmount: formData.value.contract.page1.totalAmount,
+                  estimatedWorkDays: formData.value.contract.page1.estimatedWorkDays,
+                  contractYear: formData.value.contract.page1.contractYear,
+                  contractMonth: formData.value.contract.page1.contractMonth,
+                  contractDay: formData.value.contract.page1.contractDay,
+                  depositAmount: formData.value.contract.page1.depositAmount,
+                  paymentMethod: formData.value.contract.page1.paymentMethod,
+                  paymentType: formData.value.contract.page1.paymentType
+                },
+                page2: {
+                  designProposalCount: formData.value.contract.page2.designProposalCount,
+                  responseDay: formData.value.contract.page2.responseDay,
+                  designRevisionCount: formData.value.contract.page2.designRevisionCount,
+                  printRevisionCount: formData.value.contract.page2.printRevisionCount,
+                  providedItems: formData.value.contract.page2.providedItems
+                },
+                page3: {
+                  otherAgreements: formData.value.contract.page3.otherAgreements,
+                  partyA: formData.value.contract.page3.partyA,
+                  partyB: formData.value.contract.page3.partyB
+                }
+              } : null
             }
             break
           
@@ -1781,7 +1894,7 @@ onMounted(async () => {
   await loadTemplates()
 })
 
-// 添加 generatePDF 函數
+// 修改 generatePDF 函數
 const generatePDF = async (element, templateName) => {
   const style = document.createElement('style')
   style.textContent = `
@@ -1797,7 +1910,7 @@ const generatePDF = async (element, templateName) => {
     filename: `${templateName}_${formData.value.quotationNumber}.pdf`,
     image: { type: 'jpeg', quality: 1.0 },
     html2canvas: {
-      scale: 6,
+      scale: 4,
       useCORS: true,
       letterRendering: true,
       width: 795,
@@ -1814,9 +1927,51 @@ const generatePDF = async (element, templateName) => {
   }
 
   try {
-    // 使用 html2pdf 生成 PDF 並返回 Blob
-    const pdf = await html2pdf().set(opt).from(element).output('blob')
-    return pdf
+    // 如果包含合約書，需要生成多頁PDF
+    if (formData.value.includeContract) {
+      const pages = ['quotation', 'contract1', 'contract2', 'contract3']
+      const doc = new jsPDF(opt.jsPDF)
+      
+      // 保存原始頁面
+      const originalPage = formData.value.currentPage
+
+      for (let i = 0; i < pages.length; i++) {
+        // 切換到目標頁面
+        formData.value.currentPage = pages[i]
+        await nextTick()
+        
+        // 等待頁面渲染完成
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+        // 生成當前頁面的canvas
+        const canvas = await html2canvas(element, {
+          ...opt.html2canvas,
+          logging: false,
+          backgroundColor: '#ffffff'
+        })
+
+        // 轉換canvas為圖片
+        const imgData = canvas.toDataURL('image/jpeg', 1.0)
+
+        // 如果不是第一頁，添加新頁面
+        if (i > 0) {
+          doc.addPage()
+        }
+
+        // 添加圖片到PDF
+        doc.addImage(imgData, 'JPEG', 0, 0, 210, 297)
+      }
+
+      // 恢復原始頁面
+      formData.value.currentPage = originalPage
+      await nextTick()
+
+      // 返回PDF blob
+      return doc.output('blob')
+    } else {
+      // 如果只有報價單，使用原來的方式
+      return await html2pdf().set(opt).from(element).output('blob')
+    }
   } catch (error) {
     console.error('PDF 生成失敗:', error)
     throw error

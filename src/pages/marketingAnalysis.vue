@@ -1997,15 +1997,119 @@ const reportTypeOptions = ref([
   { title: '行銷實際支出表', value: 'expense' },
   { title: '行銷預算與實際支出比較表', value: 'comparison' },
   { title: '行銷各線實際支出表', value: 'lineExpense' },
-  { title: '行銷各線實際支出總表', value: 'lineExpenseTotal' },
+  { title: '行銷各線實際支出總表', value: 'lineExpenseTotal' }
 ])
 const lineOptions = ref([])
-const monthOptions = ref([])
+const monthOptions = ref(Array.from({ length: 12 }, (_, i) => ({
+  name: `${i + 1}月`,
+  value: i + 1
+})))
 
 // ===== 報表資料 =====
 const reportData = ref([])
 
 // ===== 方法 =====
+// 載入主題選項
+const loadThemeOptions = async () => {
+  try {
+    const { data } = await apiAuth.get('/marketing/categories/options', { params: { type: 0 } })
+    if (data.success) {
+      themeOptions.value = data.result
+    }
+  } catch (error) {
+    handleError(error)
+  }
+}
+
+// 載入年度選項
+const loadYearOptions = async (theme) => {
+  if (!theme) return
+  
+  try {
+    isLoading.value = true
+    const [budgetYears, expenseYears] = await Promise.all([
+      apiAuth.get(`/marketing/budgets/years/${theme}`),
+      apiAuth.get(`/marketing/expenses/years/${theme}`)
+    ])
+
+    const budgetYearsSet = new Set(budgetYears.data.success ? budgetYears.data.result : [])
+    const expenseYearsSet = new Set(expenseYears.data.success ? expenseYears.data.result : [])
+    const allYears = [...new Set([...budgetYearsSet, ...expenseYearsSet])].sort((a, b) => b - a)
+
+    if (allYears.length === 0) {
+      yearOptions.value = []
+      createSnackbar({
+        text: `「${getThemeName(theme)}」尚未有任何「預算」或是「實際支出」資料`,
+        snackbarProps: { color: 'warning' }
+      })
+      return
+    }
+
+    yearOptions.value = allYears
+  } catch (error) {
+    handleError(error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 載入線別選項
+const loadLineOptions = async () => {
+  try {
+    isLoading.value = true
+    const { data } = await apiAuth.get('/marketing/categories/options', { params: { type: 3 } })
+    if (data.success) {
+      lineOptions.value = data.result
+    }
+  } catch (error) {
+    handleError(error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 處理主題變更
+const handleThemeChange = async () => {
+  searchForm.value.year = null
+  searchForm.value.reportType = null
+  yearError.value = ''
+  themeError.value = ''
+  reportTypeError.value = ''
+  showReport.value = false
+
+  if (searchForm.value.theme) {
+    await loadYearOptions(searchForm.value.theme)
+  } else {
+    yearOptions.value = []
+  }
+}
+
+// 處理報表類型變更
+const handleReportTypeChange = async () => {
+  reportTypeError.value = ''
+  showReport.value = false
+  
+  if (searchForm.value.reportType === 'lineExpense') {
+    if (lineOptions.value.length === 0) {
+      await loadLineOptions()
+    }
+    createSnackbar({
+      text: '請記得選擇「線別」及「月份」',
+      snackbarProps: { color: 'info' }
+    })
+  } else {
+    searchForm.value.line = []
+    searchForm.value.month = null
+    lineError.value = ''
+    monthError.value = ''
+  }
+}
+
+// 生命週期鉤子
+onMounted(async () => {
+  await loadThemeOptions()
+})
+
 // 載入選項資料
 const loadOptions = async () => {
   try {
@@ -2183,73 +2287,6 @@ const handleYearChange = async () => {
     handleError(error)
   } finally {
     isLoading.value = false
-  }
-}
-
-const handleThemeChange = async () => {
-  try {
-    // 清空年度和報表類型
-    searchForm.value.year = null
-    searchForm.value.reportType = null
-    yearError.value = ''
-    themeError.value = ''
-    reportTypeError.value = ''
-    showReport.value = false
-
-    if (!searchForm.value.theme) {
-      yearOptions.value = []
-      return
-    }
-
-    isLoading.value = true
-
-    // 檢查是否有預算或實際支出資料
-    const [budgetYears, expenseYears] = await Promise.all([
-      apiAuth.get(`/marketing/budgets/years/${searchForm.value.theme}`),
-      apiAuth.get(`/marketing/expenses/years/${searchForm.value.theme}`)
-    ])
-
-    const budgetYearsSet = new Set(budgetYears.data.success ? budgetYears.data.result : [])
-    const expenseYearsSet = new Set(expenseYears.data.success ? expenseYears.data.result : [])
-
-    // 合併年度並排序
-    const allYears = [...new Set([...budgetYearsSet, ...expenseYearsSet])].sort((a, b) => b - a)
-    
-    if (allYears.length === 0) {
-      yearOptions.value = []  // 清空年度選項
-      createSnackbar({
-        text: `「${getThemeName(searchForm.value.theme)}」尚未有任何「預算」或是「實際支出」資料`,
-        snackbarProps: { color: 'warning' }
-      })
-      return  // 提前結束函數
-    }
-
-    yearOptions.value = allYears
-  } catch (error) {
-    handleError(error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const handleReportTypeChange = () => {
-  reportTypeError.value = ''
-  showReport.value = false
-  
-  // 如果選擇行銷各線實際支出表，顯示提示訊息
-  if (searchForm.value.reportType === 'lineExpense') {
-    createSnackbar({
-      text: '請記得選擇「線別」及「月份」',
-      snackbarProps: { color: 'info' }
-    })
-  }
-  
-  // 如果不是行銷各線實際支出表，清空線別和月份的選擇
-  if (searchForm.value.reportType !== 'lineExpense') {
-    searchForm.value.line = []
-    searchForm.value.month = null
-    lineError.value = ''
-    monthError.value = ''
   }
 }
 

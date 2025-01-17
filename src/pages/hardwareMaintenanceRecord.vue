@@ -38,7 +38,10 @@
                   </div>
                   <div
                     v-if="!statsLoading"
-                    class="sub-title text-red-darken-3"
+                    :class="[
+                      'sub-title',
+                      getCategoryCount(category._id) > 0 ? 'text-red-darken-3' : 'text-grey'
+                    ]"
                   >
                     {{ getCategoryCount(category._id) }}
                   </div>
@@ -156,7 +159,7 @@
               >
                 <v-icon
                   v-if="mdAndUp"
-                  v-tooltip:start="'可搜尋問題內容、處理結果、報修人、備註'"
+                  v-tooltip:top="'可搜尋問題內容、處理結果、報修人、備註'"
                   icon="mdi-information"
                   size="small"
                   color="deep-purple-darken-4"
@@ -533,7 +536,7 @@
             <v-text-field
               v-model="editCategoryDialog.order"
               :error-messages="editCategoryErrors.order"
-              label="排序順序*"
+              label="排序*"
               type="number"
               required
               variant="outlined"
@@ -1004,7 +1007,7 @@ const submitEditCategory = async () => {
   }
 
   if (!editCategoryDialog.value.name) errors.name = '請輸入類型名稱'
-  if (!editCategoryDialog.value.order) errors.order = '請輸入排序順序'
+  if (!editCategoryDialog.value.order) errors.order = '請輸入排序'
 
   // 如果有任何錯誤
   if (Object.values(errors).some(error => error)) {

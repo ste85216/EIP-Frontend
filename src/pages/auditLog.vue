@@ -398,6 +398,7 @@ import { useDisplay } from 'vuetify'
 import { useApi } from '@/composables/axios'
 import { debounce } from 'lodash'
 import { definePage } from 'vue-router/auto'
+import UserRole from '@/enums/UserRole'
 import { useSnackbar } from 'vuetify-use-dialog'
 import MarketingBudgetChangeTable from '@/components/MarketingBudgetChangeTable.vue'
 
@@ -405,7 +406,7 @@ definePage({
   meta: {
     title: '異動紀錄 | GInternational',
     login: true,
-    admin: true
+    roles: [UserRole.ADMIN]
   }
 })
 
@@ -876,84 +877,6 @@ const clearOperatorSearch = () => {
   searchCriteria.value.operatorId = null
 }
 
-// // 添加 targetType 計算屬性
-// const targetType = computed(() => searchCriteria.value.targetModel)
-
-// 修改 handleTargetSearch 函數
-// const handleTargetSearch = debounce(async (text) => {
-//   console.log('搜尋開始，輸入文字:', text)
-//   console.log('目前選擇的 targetType:', targetType.value)
-  
-//   if (!text || !targetType.value) return
-//   targetLoading.value = true
-//   try {
-//     let endpoint = ''
-//     let params = {}
-
-//     switch (targetType.value) {
-//       case 'users':
-//         endpoint = '/user/suggestions'
-//         params = { search: text }
-//         break
-//       case 'forms':
-//         endpoint = '/forms/suggestions'
-//         params = { search: text }
-//         break
-//       case 'formTemplates':
-//         endpoint = '/formTemplates/suggestions'
-//         params = { search: text }
-//         break
-//       case 'marketingCategories':
-//         endpoint = '/marketing/categories/all'
-//         params = { quickSearch: text }
-//         break
-//       default:
-//         return
-//     }
-
-//     console.log('準備發送請求到:', endpoint, '參數:', params)
-//     const { data } = await apiAuth.get(endpoint, { params })
-//     console.log('API 回應:', data)
-    
-//     if (data.success) {
-//       if (targetType.value === 'marketingCategories') {
-//         // 合併所有類型的行銷分類數據
-//         const allCategories = [
-//           ...data.result.marketingThemes.data,
-//           ...data.result.advertisingChannels.data,
-//           ...data.result.platforms.data,
-//           ...data.result.details.data
-//         ]
-//         targetSuggestions.value = allCategories.map(item => ({
-//           _id: item._id,
-//           name: item.name,
-//           type: item.type
-//         }))
-//       } else if (targetType.value === 'formTemplates') {
-//         targetSuggestions.value = data.result.map(item => ({
-//           _id: item._id,
-//           name: item.name
-//         }))
-//       } else {
-//         targetSuggestions.value = data.result
-//       }
-//     }
-//   } catch (error) {
-//     console.error('搜尋操作對象失敗:', error)
-//     console.error('錯誤詳情:', {
-//       message: error?.message,
-//       response: error?.response?.data
-//     })
-//     createSnackbar({
-//       text: error?.response?.data?.message || '搜尋操作對象失敗',
-//       snackbarProps: { color: 'red-lighten-1' }
-//     })
-//     targetSuggestions.value = []
-//   } finally {
-//     targetLoading.value = false
-//   }
-// }, 300)
-
 const clearTargetSearch = () => {
   targetSearchInput.value = ''
   targetSuggestions.value = []
@@ -974,7 +897,7 @@ const resetSearch = () => {
 }
 
 const performSearch = async () => {
-  console.log('開始執行搜尋，搜尋條件:', searchCriteria.value)
+  // console.log('開始執行搜尋，搜尋條件:', searchCriteria.value)
   tableLoading.value = true
   try {
     const params = {
@@ -1015,7 +938,7 @@ const performSearch = async () => {
 
     // 處理操作對象
     if (searchCriteria.value.targetId) {
-      console.log('處理操作對象:', searchCriteria.value.targetId)
+      // console.log('處理操作對象:', searchCriteria.value.targetId)
       if (searchCriteria.value.targetModel === 'formTemplates') {
         // 如果是表單模板，使用 _id
         params.targetId = searchCriteria.value.targetId._id
@@ -1024,9 +947,9 @@ const performSearch = async () => {
       }
     }
 
-    console.log('發送搜尋請求，參數:', params)
+    // console.log('發送搜尋請求，參數:', params)
     const { data } = await apiAuth.get('/auditLogs', { params })
-    console.log('搜尋回應:', data)
+    // console.log('搜尋回應:', data)
     
     if (data.success) {
       tableItems.value = data.result.data

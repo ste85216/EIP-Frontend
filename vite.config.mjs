@@ -1,7 +1,7 @@
 // Plugins
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
-import Fonts from 'unplugin-fonts/vite'
+// import Fonts from 'unplugin-fonts/vite'
 import Layouts from 'vite-plugin-vue-layouts'
 import Vue from '@vitejs/plugin-vue'
 import VueRouter from 'unplugin-vue-router/vite'
@@ -13,8 +13,8 @@ import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  // base: '/GInternational/',
-  base: './',
+  base: '/GInternational/',
+  // base: './',
   plugins: [
     VueRouter(),
     Layouts(),
@@ -29,14 +29,14 @@ export default defineConfig({
       },
     }),
     Components(),
-    Fonts({
-      google: {
-        families: [{
-          name: 'Roboto',
-          styles: 'wght@100;300;400;500;700;900',
-        }],
-      },
-    }),
+    // Fonts({
+    //   google: {
+    //     families: [{
+    //       name: 'Roboto',
+    //       styles: 'wght@100;300;400;500;700;900',
+    //     }],
+    //   },
+    // }),
     AutoImport({
       imports: [
         'vue',
