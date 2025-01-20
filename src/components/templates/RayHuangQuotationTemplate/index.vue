@@ -549,10 +549,13 @@
                 <div class="me-4">
                   6.
                 </div>
-                <div class="d-flex">
-                  本專案結案驗收依報價單項目為準，乙方應於本專案結案後提供甲方<div class="provided-items-input">
-                    {{ formData.contract?.page2?.providedItems }}
-                  </div>。
+                <div class="d-flex flex-column">
+                  本專案結案驗收依報價單項目為準，乙方應於本專案結案後提供甲方 :
+                  <div class="d-flex">
+                    <div class="provided-items-input">
+                      {{ formData.contract?.page2?.providedItems }}
+                    </div>。
+                  </div>
                 </div>
               </div>
             </div>
@@ -1303,10 +1306,10 @@ const totalAmount = computed(() => {
 }
 
 .provided-items-input {
-  min-width: 174px;
+  min-width: 250px;
   height: 26px;
-  margin: 0 2px;
-  padding: 0 4px;
+  margin: 0 4px;
+  padding: 0 12px;
   font-weight: 600;
   border-bottom: 1px solid #000;
   display: inline-block;

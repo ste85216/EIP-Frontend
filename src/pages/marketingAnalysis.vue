@@ -2146,14 +2146,13 @@ watch([
 ], async ([newTheme, newReportType]) => {
   try {
     isLoading.value = true
-    // 當主題為空時，清空年度選項
     if (!newTheme) {
       yearOptions.value = []
       searchForm.value.year = null
       return
     }
 
-    // 先獲取所有可用的年度
+    // 載入年度選項
     const [budgetYears, expenseYears] = await Promise.all([
       apiAuth.get(`/marketing/budgets/years/${newTheme}`),
       apiAuth.get(`/marketing/expenses/years/${newTheme}`)
@@ -2161,47 +2160,46 @@ watch([
 
     const budgetYearsSet = new Set(budgetYears.data.success ? budgetYears.data.result : [])
     const expenseYearsSet = new Set(expenseYears.data.success ? expenseYears.data.result : [])
+    const allYears = [...new Set([...budgetYearsSet, ...expenseYearsSet])].sort((a, b) => b - a)
 
-    // 根據報表類型過濾年度
-    let filteredYears
-    if (!newReportType) {
-      // 如果沒有選擇報表類型，顯示所有年度
-      filteredYears = [...new Set([...budgetYearsSet, ...expenseYearsSet])]
-    } else {
+    if (allYears.length === 0) {
+      yearOptions.value = []
+      createSnackbar({
+        text: `「${getThemeName(newTheme)}」尚未有任何「預算」或是「實際支出」資料`,
+        snackbarProps: { color: 'warning' }
+      })
+      return
+    }
+
+    yearOptions.value = allYears
+
+    // 檢查報表類型的資料可用性
+    if (newReportType && searchForm.value.year) {
+      let hasData = true
       switch (newReportType) {
         case 'budget':
-          filteredYears = [...budgetYearsSet]
+          hasData = budgetYearsSet.has(searchForm.value.year)
           break
         case 'expense':
         case 'lineExpense':
         case 'lineExpenseTotal':
-          filteredYears = [...expenseYearsSet]
+          hasData = expenseYearsSet.has(searchForm.value.year)
           break
         case 'comparison':
-          filteredYears = [...budgetYearsSet].filter(year => expenseYearsSet.has(year))
+          hasData = budgetYearsSet.has(searchForm.value.year) && expenseYearsSet.has(searchForm.value.year)
           break
-        default:
-          filteredYears = [...new Set([...budgetYearsSet, ...expenseYearsSet])]
       }
 
-      // 只在選擇報表類型且沒有對應資料時顯示提示
-      if (filteredYears.length === 0) {
+      if (!hasData) {
         const reportTypeName = reportTypeOptions.value.find(option => 
           option.value === newReportType
         )?.title || ''
         createSnackbar({
-          text: `「${getThemeName(newTheme)}」尚無「${reportTypeName}」相關資料`,
+          text: `「${getThemeName(newTheme)}」${searchForm.value.year}年度尚無「${reportTypeName}」相關資料`,
           snackbarProps: { color: 'warning' }
         })
+        searchForm.value.reportType = null
       }
-    }
-
-    // 排序年度
-    yearOptions.value = filteredYears.sort((a, b) => b - a)
-
-    // 如果當前選擇的年度不在新的選項中，清空年度選擇
-    if (searchForm.value.year && !yearOptions.value.includes(searchForm.value.year)) {
-      searchForm.value.year = null
     }
   } catch (error) {
     handleError(error)

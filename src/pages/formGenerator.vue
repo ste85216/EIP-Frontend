@@ -816,25 +816,65 @@
 </template>
 
 <script setup>
-import { ref, shallowRef, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, shallowRef, computed, watch, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useApi } from '@/composables/axios'
-import html2pdf from 'html2pdf.js'
 import UserRole from '@/enums/UserRole'
 import { definePage } from 'vue-router/auto'
 import { useUserStore } from '@/stores/user'
 import { useDisplay } from 'vuetify'
-import RayHuangQuotationTemplate from '@/components/templates/RayHuangQuotationTemplate/index.vue'
-import RayHuangQuotationFormFields from '@/components/templates/RayHuangQuotationTemplate/RayHuangQuotationFormFields.vue'
-import { quotationSchema as rayHuangQuotationSchema } from '@/components/templates/RayHuangQuotationTemplate/schema'
-import YstravelQuotationTemplate from '@/components/templates/YstravelQuotationTemplate/index.vue'
-import YstravelQuotationFormFields from '@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue'
-import { quotationSchema as ystravelQuotationSchema } from '@/components/templates/YstravelQuotationTemplate/schema'
+import { debounce } from 'lodash'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
-import { debounce } from 'lodash'
-import { jsPDF } from 'jspdf'
-import html2canvas from 'html2canvas'
+
+// 動態引入重量級組件
+const RayHuangQuotationTemplate = defineAsyncComponent(() => 
+  import('@/components/templates/RayHuangQuotationTemplate/index.vue')
+)
+const RayHuangQuotationFormFields = defineAsyncComponent(() => 
+  import('@/components/templates/RayHuangQuotationTemplate/RayHuangQuotationFormFields.vue')
+)
+const YstravelQuotationTemplate = defineAsyncComponent(() => 
+  import('@/components/templates/YstravelQuotationTemplate/index.vue')
+)
+const YstravelQuotationFormFields = defineAsyncComponent(() => 
+  import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue')
+)
+
+// 動態引入 schema
+const rayHuangQuotationSchema = ref(null)
+const ystravelQuotationSchema = ref(null)
+
+// 動態引入 PDF 相關庫
+const html2pdf = ref(null)
+const jsPDF = ref(null)
+const html2canvas = ref(null)
+
+// 初始化函數
+const initDependencies = async () => {
+  try {
+    // 載入 schema
+    const rayHuangSchema = await import('@/components/templates/RayHuangQuotationTemplate/schema')
+    const ystravelSchema = await import('@/components/templates/YstravelQuotationTemplate/schema')
+    rayHuangQuotationSchema.value = rayHuangSchema.quotationSchema
+    ystravelQuotationSchema.value = ystravelSchema.quotationSchema
+
+    // 載入 PDF 相關庫
+    const html2pdfModule = await import('html2pdf.js')
+    const jsPDFModule = await import('jspdf')
+    const html2canvasModule = await import('html2canvas')
+    
+    html2pdf.value = html2pdfModule.default
+    jsPDF.value = jsPDFModule.jsPDF
+    html2canvas.value = html2canvasModule.default
+  } catch (error) {
+    console.error('載入相依套件失敗:', error)
+    createSnackbar({
+      text: '載入相依套件失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
 
 definePage({
   meta: {
@@ -1825,6 +1865,8 @@ const loadDialogTemplates = async () => {
 // 監聽選擇的模板變化
 watch(selectedTemplate, async (newVal) => {
   if (newVal) {
+    // 當選擇模板時才載入相依套件
+    await initDependencies()
     const template = formTemplates.value.find(t => t._id === newVal)
     if (template) {
       resetFormData(template.componentName)
@@ -1892,10 +1934,19 @@ watch(templateForm, (newVal) => {
 // 生命週期鉤子
 onMounted(async () => {
   await loadTemplates()
+  // 當用戶實際需要時才載入相依套件
+  if (selectedTemplate.value) {
+    await initDependencies()
+  }
 })
 
 // 修改 generatePDF 函數
 const generatePDF = async (element, templateName) => {
+  // 確保所有必要的庫都已載入
+  if (!html2pdf.value || !jsPDF.value || !html2canvas.value) {
+    await initDependencies()
+  }
+
   const style = document.createElement('style')
   style.textContent = `
     @page {
@@ -1930,7 +1981,7 @@ const generatePDF = async (element, templateName) => {
     // 如果包含合約書，需要生成多頁PDF
     if (formData.value.includeContract) {
       const pages = ['quotation', 'contract1', 'contract2', 'contract3']
-      const doc = new jsPDF(opt.jsPDF)
+      const doc = new jsPDF.value(opt.jsPDF)
       
       // 保存原始頁面
       const originalPage = formData.value.currentPage
@@ -1944,7 +1995,7 @@ const generatePDF = async (element, templateName) => {
         await new Promise(resolve => setTimeout(resolve, 100))
 
         // 生成當前頁面的canvas
-        const canvas = await html2canvas(element, {
+        const canvas = await html2canvas.value(element, {
           ...opt.html2canvas,
           logging: false,
           backgroundColor: '#ffffff'
@@ -1970,7 +2021,7 @@ const generatePDF = async (element, templateName) => {
       return doc.output('blob')
     } else {
       // 如果只有報價單，使用原來的方式
-      return await html2pdf().set(opt).from(element).output('blob')
+      return await html2pdf.value().set(opt).from(element).output('blob')
     }
   } catch (error) {
     console.error('PDF 生成失敗:', error)
