@@ -46,8 +46,8 @@
           >
             <v-row>
               <v-col cols="12">
-                <div class="sub-title text-blue-grey-darken-2 d-flex justify-space-between align-center">
-                  基本資訊
+                <div class="d-flex justify-space-between align-center">
+                  <span class="sub-title text-blue-grey-darken-2">基本資訊</span>
                   <v-checkbox
                     :model-value="modelValue.includeContract"
                     label="&nbsp;合約書"
@@ -79,12 +79,13 @@
                 class="pb-0"
               >
                 <v-date-input
-                  :model-value="modelValue.date"
+                  :model-value="new Date(modelValue.date)"
                   label="報價日期"
                   variant="outlined"
                   density="compact"
                   prepend-icon
                   clearable
+                  :disabled="isViewing"
                   @update:model-value="v => updateField('date', v)"
                 />
               </v-col>
@@ -349,6 +350,7 @@
                         variant="outlined"
                         prepend-icon="mdi-plus"
                         size="small"
+                        :disabled="isViewing"
                         @click="addItem"
                       >
                         新增項目
@@ -1101,6 +1103,10 @@ const props = defineProps({
   modelValue: {
     type: Object,
     required: true
+  },
+  isViewing: {
+    type: Boolean,
+    default: false
   }
 })
 

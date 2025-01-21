@@ -1,6 +1,7 @@
 <template>
   <v-container
     max-width="1920"
+    min-width="1600"
     height="100%"
     class="overflow-x-scroll"
   >
@@ -54,6 +55,16 @@
                   <v-btn
                     color="deep-purple-darken-4"
                     variant="outlined"
+                    prepend-icon="mdi-plus"
+                    :size="buttonSize"
+                    class="ms-2"
+                    @click="startNewForm"
+                  >
+                    新增表單
+                  </v-btn>
+                  <v-btn
+                    color="deep-purple-darken-4"
+                    variant="outlined"
                     prepend-icon="mdi-history"
                     :size="buttonSize"
                     class="ms-2"
@@ -78,6 +89,7 @@
                         density="compact"
                         clearable
                         hide-details
+                        :disabled="!isAdding"
                         @update:model-value="loadFormTemplateOptions"
                       />
                     </v-col>
@@ -95,7 +107,7 @@
                         density="compact"
                         clearable
                         hide-details
-                        :disabled="!selectedType"
+                        :disabled="!isAdding || !selectedType"
                         :hint="templateOptions.length === 0 ? '無可用的表單模板' : ''"
                         persistent-hint
                         @update:model-value="handleTemplateChange"
@@ -121,6 +133,8 @@
                       ref="formFieldsRef"
                       v-model="formData"
                       :validate="enableValidation"
+                      :is-viewing="isViewing"
+                      :disabled="isViewing"
                     />
                   </v-card-text>
                 </v-card>
@@ -141,6 +155,7 @@
                       ref="formFieldsRef"
                       v-model="formData"
                       :validate="enableValidation"
+                      :is-viewing="isViewing"
                     />
                   </v-card-text>
                 </v-card>
@@ -191,14 +206,26 @@
           <v-col cols="12">
             <div class="card-title px-6 pt-6 text-grey-darken-3 d-flex justify-space-between">
               《 預覽及下載 》
-              <v-btn
-                color="pink-darken-2"
-                :disabled="!previewReady || isDownloading"
-                :loading="isDownloading"
-                @click="openConfirmDownloadDialog"
-              >
-                匯出 PDF
-              </v-btn>
+              <div>
+                <v-btn
+                  v-if="!isViewing"
+                  class="me-4"
+                  color="teal-darken-1"
+                  :disabled="!previewReady"
+                  :loading="isSaving"
+                  @click="isEditing ? updateForm() : submitForm()"
+                >
+                  {{ isEditing ? '儲存' : '新增' }}
+                </v-btn>
+                <v-btn
+                  color="pink-darken-2"
+                  :disabled="!previewReady"
+                  :loading="isExportingPDF"
+                  @click="downloadPDF"
+                >
+                  匯出 PDF
+                </v-btn>
+              </div>
             </div>
             <v-divider class="mt-8 mx-6" />
             <v-card
@@ -679,13 +706,29 @@
                 <td>{{ history?.creator?.name || '未知' }} {{ history?.creator?.role === 2 ? `(${history?.creator?.adminId})` : `(${history?.creator?.userId})` }}</td>
                 <td class="text-center">
                   <v-btn
+                    v-if="(() => {
+                      const currentId = user.isAdmin ? user.adminId : user.userId
+                      const creatorId = history.creator?.role === 2 ? history.creator?.adminId : history.creator?.userId
+                      return creatorId === currentId
+                    })()"
+                    v-tooltip="'編輯表單'"
+                    icon
+                    variant="plain"
+                    color="light-blue-darken-2"
+                    :loading="isEditingLoading"
+                    @click="editHistory(history)"
+                  >
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-tooltip="'查閱表單'"
                     icon
                     variant="plain"
                     color="teal-lighten-1"
-                    class="me-2"
-                    @click="downloadHistoryPDF(history)"
+                    :loading="isViewingLoading"
+                    @click="viewForm(history)"
                   >
-                    <v-icon>mdi-file-pdf-box</v-icon>
+                    <v-icon>mdi-book-open-variant-outline</v-icon>
                   </v-btn>
                   <template
                     v-if="(() => {
@@ -741,77 +784,79 @@
       @confirm="confirmDelete"
     />
 
-    <!-- 表單歷史紀錄確認匯出 PDF 檔對話框 -->
-    <v-dialog
-      v-model="confirmDownloadDialog.open"
-      max-width="340"
-    >
-      <v-card class="rounded-lg pa-4">
-        <div class="card-title ps-3 py-3">
-          確認下載
-        </div>
-        <v-card-text class="ps-3 pb-2 ">
-          確定要下載 「{{ confirmDownloadDialog.templateName }} {{ confirmDownloadDialog.formNumber }}」 的 PDF 檔嗎？
-        </v-card-text>
-        <v-card-actions class="pt-4 pb-3">
-          <v-spacer />
+    <!-- 在表單底部添加更新和取消按鈕 -->
+    <template v-if="isEditing">
+      <v-row class="mt-4">
+        <v-col
+          cols="12"
+          class="d-flex justify-end"
+        >
           <v-btn
             color="grey-darken-1"
             variant="outlined"
-            size="small"
-            @click="confirmDownloadDialog.open = false"
+            class="me-4"
+            @click="cancelEdit"
           >
-            取消
+            取消編輯
           </v-btn>
           <v-btn
             color="teal-darken-1"
             variant="outlined"
-            :loading="isDownloading"
-            class="ms-2"
-            size="small"
-            @click="confirmDownloadPDF"
+            class="me-4"
+            @click="updateForm"
           >
-            確認
+            儲存
           </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          <v-btn
+            color="light-blue-darken-1"
+            variant="outlined"
+            @click="downloadPDF"
+          >
+            下載 PDF
+          </v-btn>
+        </v-col>
+      </v-row>
+    </template>
 
-    <!-- 新增：匯出新表單 PDF 確認對話框 -->
-    <v-dialog
-      v-model="exportPdfDialog.open"
-      max-width="320"
+    <ConfirmDeleteDialog
+      v-model="confirmDialogOpen"
+      :dialog-width="'310'"
+      :title="confirmDialogTitle"
+      :message="confirmDialogMessage"
+      :confirm-button-text="confirmDialogConfirmText"
+      :cancel-button-text="confirmDialogCancelText"
+      :confirm-button-color="'teal-lighten-1'"
+      @confirm="handleConfirm"
+    />
+
+    <v-overlay
+      v-model="showProgressOverlay"
+      class="align-center justify-center"
+      persistent
+      opacity="1"
+      scrim="#fff"
     >
-      <v-card class="rounded-lg pa-4">
-        <div class="card-title ps-3 py-3">
-          確認匯出 PDF
+      <v-card
+        color="white"
+        width="300"
+        class="px-6 py-8"
+        elevation="0"
+      >
+        <div class="text-center mb-6">
+          <v-progress-circular
+            :model-value="downloadProgress"
+            color="purple-darken-2"
+            size="120"
+            width="14"
+          >
+            {{ Math.round(downloadProgress) }} %
+          </v-progress-circular>
         </div>
-        <v-card-text class="px-3 pb-2">
-          請確認所有資料皆已填寫完成且正確
-        </v-card-text>
-        <v-card-actions class="pt-4 pb-3">
-          <v-spacer />
-          <v-btn
-            color="grey-darken-1"
-            variant="outlined"
-            size="small"
-            @click="exportPdfDialog.open = false"
-          >
-            取消
-          </v-btn>
-          <v-btn
-            color="teal-darken-1"
-            variant="outlined"
-            :loading="isDownloading"
-            class="ms-2"
-            size="small"
-            @click="handleExportPDF"
-          >
-            確認
-          </v-btn>
-        </v-card-actions>
+        <div class="text-center sub-title font-weight-medium mt-6">
+          正在匯出 PDF...
+        </div>
       </v-card>
-    </v-dialog>
+    </v-overlay>
   </v-container>
 </template>
 
@@ -897,7 +942,6 @@ const templateOptions = ref([])
 const templateRef = ref(null)
 const formFieldsRef = ref(null)
 const deletingFormId = ref('')
-const exportPdfDialog = ref({ open: false })
 
 // 模板相關
 const currentTemplate = shallowRef(null)
@@ -1241,7 +1285,6 @@ const handleTemplateChange = async (templateId) => {
 
 // 添加新的狀態
 const isSearching = ref(false)
-const isDownloading = ref(false)
 
 // 添加分頁相關的響應式變數
 const currentPage = ref(1)
@@ -1337,208 +1380,124 @@ const resetHistorySearch = async () => {
   await searchHistory()
 }
 
-// 修改 downloadPDF 方法
-const downloadPDF = async () => {
-  if (isDownloading.value) return
+// 添加加載狀態的響應式變數
+const isSaving = ref(false);
+const isExportingPDF = ref(false);
 
-  // 確保啟用驗證
-  enableValidation.value = true
-  await nextTick()
+// 修改 updateForm 方法，添加加載狀態
+const updateForm = async () => {
+  try {
+    isSaving.value = true;
+    // 確保啟用驗證
+    enableValidation.value = true
+    
+    // 進行表單驗證
+    const isValid = await formFieldsRef.value?.validate()
+    if (!isValid) {
+      createSnackbar({
+        text: '請填寫必填欄位',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+      return
+    }
 
-  // 進行表單驗證
-  const isValid = await formFieldsRef.value?.validate()
-  if (!isValid) {
+    // 發送更新請求
+    const { data } = await apiAuth.patch(`/forms/${editingFormId.value}`, {
+      formData: formData.value
+    })
+
+    if (!data.success) {
+      throw new Error(data.message || '更新表單失敗')
+    }
+
+    // 重新載入歷史記錄
+    await loadHistory()
+
     createSnackbar({
-      text: '請填寫必填欄位',
+      text: '表單更新成功',
+      snackbarProps: {
+        color: 'teal-lighten-1',
+      }
+    })
+  } catch (error) {
+    console.error('更新表單失敗:', error)
+    const errorMessage = error.response?.data?.message || '更新表單失敗';
+    createSnackbar({
+      text: errorMessage,
       snackbarProps: { color: 'red-lighten-1' }
     })
-    return
-  }
-
-  isDownloading.value = true
-  try {
-    const element = templateRef.value?.$el
-    if (!element) return
-
-    // 獲取當前選擇的表單模板名稱
-    const currentTemplate = formTemplates.value.find(t => t._id === selectedTemplate.value)
-    if (!currentTemplate) {
-      throw new Error('找不到表單模板')
-    }
-    const templateName = currentTemplate.name
-
-    // 1. 生成 PDF
-    console.log('開始生成 PDF')
-    const pdfBlob = await generatePDF(element, templateName)
-    console.log('PDF 生成成功:', pdfBlob)
-
-    // 2. 上傳 PDF
-    const formDataForUpload = new FormData()
-    const pdfFileName = `${templateName}_${formData.value.quotationNumber}.pdf`
-    formDataForUpload.append('pdf', new File([pdfBlob], pdfFileName, { type: 'application/pdf' }))
-    const { data: uploadData } = await apiAuth.post('/forms/upload/pdf', formDataForUpload)
-
-    // 3. 儲存到資料庫
-    try {
-      let formDataToSave = {
-        formNumber: formData.value.quotationNumber,
-        formTemplate: selectedTemplate.value,
-        pdfUrl: uploadData.result.url,
-        formData: {}
-      }
-
-      // 根據不同的表單類型，使用對應的資料結構
-      const template = formTemplates.value.find(t => t._id === selectedTemplate.value)
-      if (template) {
-        switch (template.componentName) {
-          case 'RayHuangQuotationTemplate':
-            formDataToSave.formData = {
-              // 基本資訊
-              date: formData.value.date,
-              // 客戶資訊
-              customerName: formData.value.customerName,
-              customerAddress: formData.value.customerAddress,
-              customerTaxId: formData.value.customerTaxId,
-              customerContact: formData.value.customerContact,
-              customerDepartment: formData.value.customerDepartment,
-              customerPhone: formData.value.customerPhone,
-              customerEmail: formData.value.customerEmail,
-              customerMobile: formData.value.customerMobile,
-              
-              // 專案資訊
-              projectType: formData.value.projectType,
-              projectName: formData.value.projectName,
-              workDays: formData.value.workDays,
-              specialNote: formData.value.specialNote,
-              validityDays: formData.value.validityDays,
-              delayDays: formData.value.delayDays,
-              
-              // 報價項目
-              items: formData.value.items.map(item => ({
-                name: item.name,
-                description: item.description,
-                workDays: item.workDays,
-                quantity: item.quantity,
-                unit: item.unit,
-                price: item.price
-              })),
-
-              // 合約相關
-              includeContract: formData.value.includeContract,
-              contract: formData.value.contract ? {
-                page1: {
-                  partyA: formData.value.contract.page1.partyA,
-                  partyB: formData.value.contract.page1.partyB,
-                  projectName: formData.value.contract.page1.projectName,
-                  totalAmount: formData.value.contract.page1.totalAmount,
-                  estimatedWorkDays: formData.value.contract.page1.estimatedWorkDays,
-                  contractYear: formData.value.contract.page1.contractYear,
-                  contractMonth: formData.value.contract.page1.contractMonth,
-                  contractDay: formData.value.contract.page1.contractDay,
-                  depositAmount: formData.value.contract.page1.depositAmount,
-                  paymentMethod: formData.value.contract.page1.paymentMethod,
-                  paymentType: formData.value.contract.page1.paymentType
-                },
-                page2: {
-                  designProposalCount: formData.value.contract.page2.designProposalCount,
-                  responseDay: formData.value.contract.page2.responseDay,
-                  designRevisionCount: formData.value.contract.page2.designRevisionCount,
-                  printRevisionCount: formData.value.contract.page2.printRevisionCount,
-                  providedItems: formData.value.contract.page2.providedItems
-                },
-                page3: {
-                  otherAgreements: formData.value.contract.page3.otherAgreements,
-                  partyA: formData.value.contract.page3.partyA,
-                  partyB: formData.value.contract.page3.partyB
-                }
-              } : null
-            }
-            break
-          
-          case 'YstravelQuotationTemplate':
-            formDataToSave.formData = {
-              // 基本資訊
-              date: formData.value.date,
-              
-              // 客戶資訊
-              customerName: formData.value.customerName,
-              customerAddress: formData.value.customerAddress,
-              customerTaxId: formData.value.customerTaxId,
-              contactPerson: formData.value.contactPerson,
-              position: formData.value.position,
-              officePhone: formData.value.officePhone,
-              fax: formData.value.fax,
-              mobile: formData.value.mobile,
-              
-              // 旅遊資訊
-              projectName: formData.value.projectName,
-              destination: formData.value.destination,
-              departureDate: formData.value.departureDate,
-              returnDate: formData.value.returnDate,
-              
-              // 報價明細
-              items: formData.value.items.map(item => ({
-                category: item.category,
-                description: item.description,
-                unitPrice: item.unitPrice,
-                quantity: item.quantity,
-                unit: item.unit,
-                remark: item.remark
-              })),
-              
-              // 備註
-              cancellationPolicy: formData.value.cancellationPolicy,
-              validityPeriod: formData.value.validityPeriod
-            }
-            break
-            
-          default:
-            console.error('未知的模板類型:', template.componentName)
-            throw new Error('未知的模板類型')
-        }
-      }
-
-      const { data } = await apiAuth.post('/forms', formDataToSave)
-
-      if (data.success) {
-        createSnackbar({
-          text: 'PDF 下載並儲存成功',
-          snackbarProps: {
-            color: 'teal-lighten-1'
-          }
-        })
-
-        // 4. 匯出 PDF
-        const link = document.createElement('a')
-        link.href = URL.createObjectURL(pdfBlob)
-        link.download = `${templateName}_${formData.value.quotationNumber}.pdf`
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      }
-    } catch (error) {
-      if (error.response?.status === 409) {
-        createSnackbar({
-          text: '單號重複，請重新取得單號',
-          snackbarProps: { color: 'red-lighten-1' }
-        })
-      } else {
-        throw error
-      }
-    }
-  } catch (error) {
-    console.error('PDF 處理失敗，詳細錯誤:', error)
-    console.error('錯誤回應:', error.response?.data)
-    createSnackbar({
-      text: error.response?.data?.message || 'PDF 處理失敗',
-      snackbarProps: {
-        color: 'red-lighten-1'
-      }
-    })
   } finally {
-    isDownloading.value = false
+    isSaving.value = false;
   }
 }
+
+// 修改 downloadPDF 方法，添加加載狀態
+const downloadPDF = async () => {
+  if (isExportingPDF.value) return;
+
+  try {
+    isExportingPDF.value = true;
+    showProgressOverlay.value = true; // 顯示進度遮罩
+    downloadProgress.value = 0; // 初始化進度
+    // 確保啟用驗證
+    enableValidation.value = true;
+    await nextTick();
+
+    // 進行表單驗證
+    const isValid = await formFieldsRef.value?.validate();
+    if (!isValid) {
+      createSnackbar({
+        text: '請填寫必填欄位',
+        snackbarProps: { color: 'red-lighten-1' }
+      });
+      return;
+    }
+
+    // 獲取當前選擇的表單模板名稱
+    const currentTemplate = formTemplates.value.find(t => t._id === selectedTemplate.value);
+    if (!currentTemplate) {
+      throw new Error('找不到表單模板');
+    }
+    const templateName = currentTemplate.name;
+
+    // 生成 PDF
+    const element = templateRef.value?.$el;
+    if (!element) {
+      throw new Error('找不到要轉換的元素');
+    }
+
+    console.log('開始生成 PDF');
+    const pdfBlob = await generatePDF(element, templateName, (progress) => {
+      downloadProgress.value = progress;
+    });
+    console.log('PDF 生成成功');
+
+    // 直接下載 PDF
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(pdfBlob);
+    link.download = `${templateName}_${formData.value.quotationNumber}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    createSnackbar({
+      text: 'PDF 下載成功',
+      snackbarProps: {
+        color: 'teal-lighten-1',
+      }
+    });
+  } catch (error) {
+    console.error('PDF 下載失敗:', error);
+    createSnackbar({
+      text: error.message || 'PDF 下載失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    });
+  } finally {
+    isExportingPDF.value = false;
+    showProgressOverlay.value = false; // 隱藏進度遮罩
+  }
+};
 
 // API 相關方法
 const loadTemplates = async () => {
@@ -1938,98 +1897,9 @@ onMounted(async () => {
   if (selectedTemplate.value) {
     await initDependencies()
   }
+  // 頁面加載時預設為新增模式
+  isAdding.value = true;
 })
-
-// 修改 generatePDF 函數
-const generatePDF = async (element, templateName) => {
-  // 確保所有必要的庫都已載入
-  if (!html2pdf.value || !jsPDF.value || !html2canvas.value) {
-    await initDependencies()
-  }
-
-  const style = document.createElement('style')
-  style.textContent = `
-    @page {
-      size: A4;
-      margin: 0;
-    }
-  `
-  document.head.appendChild(style)
-
-  const opt = {
-    margin: 0,
-    filename: `${templateName}_${formData.value.quotationNumber}.pdf`,
-    image: { type: 'jpeg', quality: 1.0 },
-    html2canvas: {
-      scale: 4,
-      useCORS: true,
-      letterRendering: true,
-      width: 795,
-      height: 1123,
-      windowWidth: 795,
-      windowHeight: 1123
-    },
-    jsPDF: {
-      unit: 'mm',
-      format: 'a4',
-      orientation: 'portrait',
-      compress: true
-    }
-  }
-
-  try {
-    // 如果包含合約書，需要生成多頁PDF
-    if (formData.value.includeContract) {
-      const pages = ['quotation', 'contract1', 'contract2', 'contract3']
-      const doc = new jsPDF.value(opt.jsPDF)
-      
-      // 保存原始頁面
-      const originalPage = formData.value.currentPage
-
-      for (let i = 0; i < pages.length; i++) {
-        // 切換到目標頁面
-        formData.value.currentPage = pages[i]
-        await nextTick()
-        
-        // 等待頁面渲染完成
-        await new Promise(resolve => setTimeout(resolve, 100))
-
-        // 生成當前頁面的canvas
-        const canvas = await html2canvas.value(element, {
-          ...opt.html2canvas,
-          logging: false,
-          backgroundColor: '#ffffff'
-        })
-
-        // 轉換canvas為圖片
-        const imgData = canvas.toDataURL('image/jpeg', 1.0)
-
-        // 如果不是第一頁，添加新頁面
-        if (i > 0) {
-          doc.addPage()
-        }
-
-        // 添加圖片到PDF
-        doc.addImage(imgData, 'JPEG', 0, 0, 210, 297)
-      }
-
-      // 恢復原始頁面
-      formData.value.currentPage = originalPage
-      await nextTick()
-
-      // 返回PDF blob
-      return doc.output('blob')
-    } else {
-      // 如果只有報價單，使用原來的方式
-      return await html2pdf.value().set(opt).from(element).output('blob')
-    }
-  } catch (error) {
-    console.error('PDF 生成失敗:', error)
-    throw error
-  } finally {
-    document.head.removeChild(style)
-  }
-}
 
 // 歷史紀錄相關
 const historyDialog = ref({
@@ -2187,67 +2057,244 @@ watch(selectedType, (newVal) => {
 })
 
 // 添加下載歷史 PDF 的方法
-const downloadHistoryPDF = async (history) => {
+// const downloadHistoryPDF = async (history) => {
+//   try {
+//     if (!history.pdfUrl) {
+//       createSnackbar({
+//         text: '找不到 PDF 檔案',
+//         snackbarProps: { color: 'red-lighten-1' }
+//       })
+//       return
+//     }
+
+//     // 直接開啟 PDF
+//     window.open(history.pdfUrl, '_blank')
+//     createSnackbar({
+//       text: 'PDF 開啟成功',
+//       snackbarProps: {
+//         color: 'teal-lighten-1',
+//         timeout: 2000
+//       }
+//     })
+//   } catch (error) {
+//     console.error('PDF 開啟失敗:', error)
+//     createSnackbar({
+//       text: 'PDF 開啟失敗',
+//       snackbarProps: { color: 'red-lighten-1' }
+//     })
+//   }
+// }
+
+// 添加編輯歷史記錄的方法
+const isEditingLoading = ref(false);
+const isViewingLoading = ref(false);
+
+// 修改 editHistory 方法，添加加載狀態
+const editHistory = async (history) => {
   try {
-    if (!history.pdfUrl) {
-      createSnackbar({
-        text: '找不到 PDF 檔案',
-        snackbarProps: { color: 'red-lighten-1' }
-      })
-      return
+    isEditingLoading.value = true;
+    console.log('1. 開始編輯歷史記錄:', history)
+    if (!history) {
+      throw new Error('歷史記錄資料不存在')
     }
 
-    // 開啟確認對話框
-    confirmDownloadDialog.value = {
-      open: true,
-      templateName: history.formTemplate?.name || '未知模板',
-      formNumber: history.formNumber || '',
-      url: history.pdfUrl
+    // 設置編輯狀態
+    isEditing.value = true;
+    isViewing.value = false; // 重置查閱狀態
+    isAdding.value = false; // 重置新增狀態
+    editingFormId.value = history._id;
+
+    // 先獲取完整的表單資料
+    const { data } = await apiAuth.get(`/forms/${history._id}`);
+    if (!data.success) {
+      throw new Error(data.message || '獲取表單資料失敗');
     }
-  } catch (error) {
-    console.error('匯出 PDF 失敗:', error)
-    createSnackbar({
-      text: '匯出 PDF 失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  }
-}
 
-// 確認下載對話框的狀態
-const confirmDownloadDialog = ref({
-  open: false,
-  templateName: '',
-  formNumber: ''
-})
+    // 使用完整的表單資料
+    const completeHistory = data.result;
+    console.log('2. 獲取到的完整資料:', completeHistory);
 
-// 確認匯出 PDF
-const confirmDownloadPDF = async () => {
-  try {
-    if (confirmDownloadDialog.value.url) {
-      window.open(confirmDownloadDialog.value.url, '_blank')
-      createSnackbar({
-        text: 'PDF 開啟成功',
-        snackbarProps: {
-          color: 'teal-lighten-1',
-          timeout: 2000
+    // 設置表單類型
+    selectedType.value = completeHistory.formTemplate?.type;
+    console.log('3. 設置表單類型:', selectedType.value);
+
+    // 等待表單類型設置完成
+    await nextTick();
+
+    // 載入表單模板選項
+    await loadFormTemplateOptions();
+    console.log('4. 載入表單模板選項完成');
+
+    // 設置選擇的模板
+    selectedTemplate.value = completeHistory.formTemplate?._id;
+    console.log('5. 設置選擇的模板:', selectedTemplate.value);
+
+    // 等待模板選擇完成
+    await nextTick();
+
+    // 根據不同的模板類型，設置對應的資料結構
+    const template = formTemplates.value.find(t => t._id === completeHistory.formTemplate?._id);
+    if (!template) {
+      throw new Error('找不到對應的模板');
+    }
+
+    console.log('6. 選擇的模板:', template);
+    console.log('7. 歷史資料:', completeHistory.formData);
+
+    // 先關閉歷史記錄對話框
+    console.log('8. 關閉歷史記錄對話框');
+
+    // 使用 Promise 來確保資料設置完成
+    await new Promise((resolve) => {
+      setTimeout(async () => {
+        console.log('9. 開始設置表單資料');
+        switch (template.componentName) {
+          case 'RayHuangQuotationTemplate': {
+            console.log('10. 設置銳皇報價單資料');
+            // 直接設置表單資料，不需要先重置
+            formData.value = {
+              quotationNumber: completeHistory.formNumber,
+              date: completeHistory.formData?.date ? new Date(completeHistory.formData.date) : new Date(completeHistory.createdAt),
+              
+              // 客戶資訊
+              customerName: completeHistory.formData?.customerName || '',
+              customerAddress: completeHistory.formData?.customerAddress || '',
+              customerTaxId: completeHistory.formData?.customerTaxId || '',
+              customerContact: completeHistory.formData?.customerContact || '',
+              customerDepartment: completeHistory.formData?.customerDepartment || '',
+              customerPhone: completeHistory.formData?.customerPhone || '',
+              customerEmail: completeHistory.formData?.customerEmail || '',
+              customerMobile: completeHistory.formData?.customerMobile || '',
+              
+              // 專案資訊
+              projectType: completeHistory.formData?.projectType || '',
+              projectName: completeHistory.formData?.projectName || '',
+              workDays: completeHistory.formData?.workDays || '',
+              specialNote: completeHistory.formData?.specialNote || '',
+              validityDays: completeHistory.formData?.validityDays || '',
+              delayDays: completeHistory.formData?.delayDays || '',
+              
+              // 報價項目
+              items: Array.isArray(completeHistory.formData?.items) && completeHistory.formData.items.length > 0
+                ? completeHistory.formData.items.map(item => ({
+                    name: item?.name || '',
+                    description: item?.description || '',
+                    workDays: item?.workDays || '',
+                    quantity: item?.quantity || 1,
+                    unit: item?.unit || '份',
+                    price: item?.price || ''
+                  }))
+                : [{
+                    name: '',
+                    description: '',
+                    workDays: '',
+                    quantity: 1,
+                    unit: '份',
+                    price: ''
+                  }],
+
+              // 合約相關
+              includeContract: completeHistory.formData?.includeContract || false,
+              contract: completeHistory.formData?.contract ? {
+                page1: completeHistory.formData.contract.page1 || {},
+                page2: completeHistory.formData.contract.page2 || {},
+                page3: completeHistory.formData.contract.page3 || {}
+              } : {
+                page1: {},
+                page2: {},
+                page3: {}
+              }
+            };
+
+            // 輸出更多除錯資訊
+            console.log('11. 歷史記錄中的 items:', completeHistory.formData?.items);
+            console.log('12. 載入後的 items:', formData.value.items);
+            console.log('13. 載入後的完整表單資料:', formData.value);
+            break;
+          }
+          
+          case 'YstravelQuotationTemplate': {
+            console.log('10. 設置永信旅遊報價單資料');
+            // ... YstravelQuotationTemplate 的程式碼 ...
+            break;
+          }
         }
-      })
-    }
-  } catch (error) {
-    console.error('PDF 下載失敗:', error)
+
+        await nextTick();
+        console.log('14. 完成資料設置');
+        resolve();
+      }, 500); // 增加延遲時間到 500ms
+
+    });
+
     createSnackbar({
-      text: 'PDF 下載失敗',
+      text: '已載入表單歷史資料',
+      snackbarProps: {
+        color: 'teal-lighten-1',
+      }
+    });
+    
+    closeHistoryDialog();
+  } catch (error) {
+    console.error('載入歷史資料失敗:', error);
+    createSnackbar({
+      text: error.message || '載入歷史資料失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    });
+  } finally {
+    isEditingLoading.value = false;
+  }
+};
+
+// 添加載入狀態
+const loading = ref(false)
+
+// 添加更新表單的狀態
+const isEditing = ref(false)
+const editingFormId = ref(null)
+
+// 添加載入歷史記錄的方法
+const loadHistory = async () => {
+  try {
+    loading.value = true
+    const params = {
+      page: currentPage.value,
+      itemsPerPage: itemsPerPage.value,
+      quickSearch: historyQuickSearch.value
+    }
+
+    const { data } = await apiAuth.get('/forms', { params })
+    if (!data.success) {
+      throw new Error(data.message || '載入歷史記錄失敗')
+    }
+
+    histories.value = data.result.data
+    totalItems.value = data.result.totalItems
+    totalPages.value = data.result.totalPages
+  } catch (error) {
+    console.error('載入歷史記錄失敗:', error)
+    createSnackbar({
+      text: error.message || '載入歷史記錄失敗',
       snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
-    confirmDownloadDialog.value.open = false
+    loading.value = false
   }
 }
 
-const openConfirmDownloadDialog = () => {
-  // 確保啟用驗證
-  enableValidation.value = true
-  nextTick(async () => {
+// 添加取消編輯的方法
+const cancelEdit = () => {
+  isEditing.value = false
+  editingFormId.value = null
+  resetFormData()
+}
+
+// 新增表單提交方法
+const submitForm = async () => {
+  try {
+    // 確保啟用驗證
+    enableValidation.value = true
+    
     // 進行表單驗證
     const isValid = await formFieldsRef.value?.validate()
     if (!isValid) {
@@ -2258,24 +2305,252 @@ const openConfirmDownloadDialog = () => {
       return
     }
 
-    // 開啟匯出確認對話框
-    exportPdfDialog.value.open = true
-  })
-}
-
-const handleExportPDF = async () => {
-  try {
-    await downloadPDF()
+    // 彈出確認對話框
+    confirmDialogOpen.value = true;
   } catch (error) {
-    console.error('PDF 匯出失敗:', error)
+    console.error('新增表單失敗:', error)
     createSnackbar({
-      text: 'PDF 匯出失敗',
+      text: error.message || '新增表單失敗',
       snackbarProps: { color: 'red-lighten-1' }
     })
-  } finally {
-    exportPdfDialog.value.open = false
   }
 }
+
+// 修改 generatePDF 函數，添加進度回調
+const generatePDF = async (element, templateName, onProgress) => {
+  // 確保所有必要的庫都已載入
+  if (!html2pdf.value || !jsPDF.value || !html2canvas.value) {
+    await initDependencies();
+  }
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @page {
+      size: A4;
+      margin: 0;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const opt = {
+    margin: 0,
+    filename: `${templateName}_${formData.value.quotationNumber}.pdf`,
+    image: { type: 'jpeg', quality: 1.0 },
+    html2canvas: {
+      scale: 4,
+      useCORS: true,
+      letterRendering: true,
+      width: 795,
+      height: 1123,
+      windowWidth: 795,
+      windowHeight: 1123
+    },
+    jsPDF: {
+      unit: 'mm',
+      format: 'a4',
+      orientation: 'portrait',
+      compress: true
+    }
+  };
+
+  try {
+    // 如果包含合約書，需要生成多頁PDF
+    if (formData.value.includeContract) {
+      const pages = ['quotation', 'contract1', 'contract2', 'contract3'];
+      const doc = new jsPDF.value(opt.jsPDF);
+      
+      // 保存原始頁面
+      const originalPage = formData.value.currentPage;
+
+      for (let i = 0; i < pages.length; i++) {
+        // 切換到目標頁面
+        formData.value.currentPage = pages[i];
+        await nextTick();
+        
+        // 等待頁面渲染完成
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        // 生成當前頁面的canvas
+        const canvas = await html2canvas.value(element, {
+          ...opt.html2canvas,
+          logging: false,
+          backgroundColor: '#ffffff'
+        });
+
+        // 轉換canvas為圖片
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+        // 如果不是第一頁，添加新頁面
+        if (i > 0) {
+          doc.addPage();
+        }
+
+        // 添加圖片到PDF
+        doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
+
+        // 更新進度
+        if (onProgress) {
+          onProgress(((i + 1) / pages.length) * 100);
+        }
+      }
+
+      // 恢復原始頁面
+      formData.value.currentPage = originalPage;
+      await nextTick();
+
+      // 返回PDF blob
+      return doc.output('blob');
+    } else {
+      // 如果只有報價單，使用原來的方式
+      return await html2pdf.value().set(opt).from(element).output('blob');
+    }
+  } catch (error) {
+    console.error('PDF 生成失敗:', error);
+    throw error;
+  } finally {
+    document.head.removeChild(style);
+  }
+};
+
+const startNewForm = () => {
+  isAdding.value = true;
+  isEditing.value = false;
+  isViewing.value = false; // 重置查閱狀態
+  editingFormId.value = null;
+  resetFormData();
+  selectedType.value = null;
+  selectedTemplate.value = null;
+};
+
+const isAdding = ref(false);
+
+// 添加查閱表單的方法
+const viewForm = async (history) => {
+  try {
+    isViewingLoading.value = true;
+    console.log('開始查閱表單:', history)
+    if (!history) {
+      throw new Error('表單資料不存在')
+    }
+
+    // 設置查閱狀態
+    isViewing.value = true;
+    isEditing.value = false; // 重置編輯狀態
+    isAdding.value = false; // 重置新增狀態
+    editingFormId.value = history._id;
+
+    // 獲取完整的表單資料
+    const { data } = await apiAuth.get(`/forms/${history._id}`);
+    if (!data.success) {
+      throw new Error(data.message || '獲取表單資料失敗');
+    }
+
+    // 使用完整的表單資料
+    const completeHistory = data.result;
+    console.log('獲取到的完整資料:', completeHistory);
+
+    // 設置表單類型
+    selectedType.value = completeHistory.formTemplate?.type;
+    await nextTick();
+
+    // 載入表單模板選項
+    await loadFormTemplateOptions();
+
+    // 設置選擇的模板
+    selectedTemplate.value = completeHistory.formTemplate?._id;
+    await nextTick();
+
+    // 根據不同的模板類型，設置對應的資料結構
+    const template = formTemplates.value.find(t => t._id === completeHistory.formTemplate?._id);
+    if (!template) {
+      throw new Error('找不到對應的模板');
+    }
+
+    // 使用 Promise 來確保資料設置完成
+    await new Promise((resolve) => {
+      setTimeout(async () => {
+        switch (template.componentName) {
+          case 'RayHuangQuotationTemplate': {
+            formData.value = {
+              ...completeHistory.formData,
+              quotationNumber: completeHistory.formNumber
+            };
+            break;
+          }
+          case 'YstravelQuotationTemplate': {
+            formData.value = {
+              ...completeHistory.formData,
+              quotationNumber: completeHistory.formNumber
+            };
+            break;
+          }
+        }
+        await nextTick();
+        resolve();
+      }, 500);
+    });
+
+    createSnackbar({
+      text: '已載入表單資料',
+      snackbarProps: {
+        color: 'teal-lighten-1',
+        timeout: 3000
+      }
+    });
+
+    closeHistoryDialog();
+  } catch (error) {
+    console.error('載入表單資料失敗:', error);
+    createSnackbar({
+      text: error.message || '載入表單資料失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    });
+  } finally {
+    isViewingLoading.value = false;
+  }
+};
+
+// 添加查閱狀態
+const isViewing = ref(false);
+
+const confirmDialogOpen = ref(false);
+const confirmDialogTitle = ref('確認新增表單');
+const confirmDialogMessage = ref('是否確定資料皆已填寫完成且正確?');
+const confirmDialogConfirmText = ref('確認');
+const confirmDialogCancelText = ref('取消');
+
+const handleConfirm = async () => {
+  // 發送新增請求
+  const { data } = await apiAuth.post('/forms', {
+    formTemplate: selectedTemplate.value,
+    formData: formData.value,
+    formNumber: formData.value.quotationNumber
+  });
+
+  if (!data.success) {
+    throw new Error(data.message || '新增表單失敗');
+  }
+
+  createSnackbar({
+    text: '表單新增成功',
+    snackbarProps: {
+      color: 'teal-lighten-1',
+      timeout: 3000
+    }
+  });
+
+  // 切換到編輯模式
+  isEditing.value = true;
+  editingFormId.value = data.result._id; // 假設後端返回新創建表單的 ID
+
+  // 不重置表單，保留當前資料
+  // resetFormData();
+  // selectedTemplate.value = null;
+  // selectedType.value = null;
+};
+
+const showProgressOverlay = ref(false);
+const downloadProgress = ref(0);
 </script>
 <style lang="scss" scoped>
 .v-table  {

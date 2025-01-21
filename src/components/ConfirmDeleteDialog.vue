@@ -2,14 +2,14 @@
 <template>
   <v-dialog
     v-model="isOpen"
-    max-width="360"
+    :max-width="dialogWidth"
     persistent
   >
     <v-card class="rounded-lg">
       <v-card-title class="font-weight-bold mt-4 ms-2">
         {{ title }}
       </v-card-title>
-      <v-card-text class="ms-1">
+      <v-card-text>
         <div v-html="message" />
       </v-card-text>
       <v-card-actions class="me-4 mb-2">
@@ -39,6 +39,10 @@
 import { ref, watch } from 'vue'
 
 const props = defineProps({
+  dialogWidth: {
+    type: String,
+    default: '360'
+  },
   title: {
     type: String,
     default: '確認刪除'
