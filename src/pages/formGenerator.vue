@@ -1,7 +1,7 @@
 <template>
   <v-container
     max-width="1920"
-    min-width="1600"
+    min-width="1700"
     height="100%"
     class="overflow-x-scroll"
   >
@@ -53,14 +53,15 @@
                     模板管理
                   </v-btn>
                   <v-btn
-                    color="deep-purple-darken-4"
+                    color="pink-darken-1"
                     variant="outlined"
-                    prepend-icon="mdi-plus"
+                    prepend-icon="mdi-swap-horizontal"
                     :size="buttonSize"
                     class="ms-2"
+                    :disabled="isAdding"
                     @click="startNewForm"
                   >
-                    新增表單
+                    新增模式
                   </v-btn>
                   <v-btn
                     color="deep-purple-darken-4"
@@ -89,7 +90,7 @@
                         density="compact"
                         clearable
                         hide-details
-                        :disabled="!isAdding"
+                        :disabled="!isAdding || isEditing"
                         @update:model-value="loadFormTemplateOptions"
                       />
                     </v-col>
@@ -107,7 +108,7 @@
                         density="compact"
                         clearable
                         hide-details
-                        :disabled="!isAdding || !selectedType"
+                        :disabled="!isAdding || !selectedType || isEditing"
                         :hint="templateOptions.length === 0 ? '無可用的表單模板' : ''"
                         persistent-hint
                         @update:model-value="handleTemplateChange"
@@ -205,7 +206,16 @@
         >
           <v-col cols="12">
             <div class="card-title px-6 pt-6 text-grey-darken-3 d-flex justify-space-between">
-              《 預覽及下載 》
+              <div>
+                《 預覽及下載 》
+                <span class="text-grey">
+                  ( {{ 
+                    isViewing ? '查閱模式' : 
+                    isEditing ? '編輯模式' : 
+                    '新增模式' 
+                  }} )
+                </span>
+              </div>
               <div>
                 <v-btn
                   v-if="!isViewing"
@@ -221,7 +231,7 @@
                   color="pink-darken-2"
                   :disabled="!previewReady"
                   :loading="isExportingPDF"
-                  @click="downloadPDF"
+                  @click="handleExportPDF"
                 >
                   匯出 PDF
                 </v-btn>
@@ -709,7 +719,7 @@
                     v-if="(() => {
                       const currentId = user.isAdmin ? user.adminId : user.userId
                       const creatorId = history.creator?.role === 2 ? history.creator?.adminId : history.creator?.userId
-                      return creatorId === currentId
+                      return creatorId === currentId || user.role === 1 || user.role === 2
                     })()"
                     v-tooltip="'編輯表單'"
                     icon
@@ -734,7 +744,7 @@
                     v-if="(() => {
                       const currentId = user.isAdmin ? user.adminId : user.userId
                       const creatorId = history.creator?.role === 2 ? history.creator?.adminId : history.creator?.userId
-                      return creatorId === currentId
+                      return creatorId === currentId || user.role === 1 || user.role === 2
                     })()"
                   >
                     <v-btn
@@ -784,40 +794,6 @@
       @confirm="confirmDelete"
     />
 
-    <!-- 在表單底部添加更新和取消按鈕 -->
-    <template v-if="isEditing">
-      <v-row class="mt-4">
-        <v-col
-          cols="12"
-          class="d-flex justify-end"
-        >
-          <v-btn
-            color="grey-darken-1"
-            variant="outlined"
-            class="me-4"
-            @click="cancelEdit"
-          >
-            取消編輯
-          </v-btn>
-          <v-btn
-            color="teal-darken-1"
-            variant="outlined"
-            class="me-4"
-            @click="updateForm"
-          >
-            儲存
-          </v-btn>
-          <v-btn
-            color="light-blue-darken-1"
-            variant="outlined"
-            @click="downloadPDF"
-          >
-            下載 PDF
-          </v-btn>
-        </v-col>
-      </v-row>
-    </template>
-
     <ConfirmDeleteDialog
       v-model="confirmDialogOpen"
       :dialog-width="'310'"
@@ -857,6 +833,55 @@
         </div>
       </v-card>
     </v-overlay>
+
+    <v-dialog
+      v-model="exportOptionsDialogOpen"
+      max-width="300"
+    >
+      <v-card class="px-2 py-4">
+        <v-card-title class="card-title">
+          選擇匯出內容
+        </v-card-title>
+        <v-card-text class="pb-0 px-3">
+          <v-radio-group v-model="exportOption">
+            <v-radio
+              label="報價單"
+              value="quotation"
+            />
+            <v-radio
+              label="合約書"
+              value="contract"
+            />
+            <v-radio
+              label="報價單 + 合約書"
+              value="both"
+              hide-details
+            />
+          </v-radio-group>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            text
+            variant="outlined"
+            size="small"
+            @click="exportOptionsDialogOpen = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            text
+            variant="outlined"
+            size="small"
+            @click="confirmExportPDF"
+          >
+            確認
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -1431,8 +1456,24 @@ const updateForm = async () => {
   }
 }
 
-// 修改 downloadPDF 方法，添加加載狀態
-const downloadPDF = async () => {
+const exportOptionsDialogOpen = ref(false);
+const exportOption = ref('quotation');
+
+const handleExportPDF = async () => {
+  if (formData.value.includeContract) {
+    exportOptionsDialogOpen.value = true;
+  } else {
+    await downloadPDF('quotation');
+  }
+};
+
+const confirmExportPDF = async () => {
+  await downloadPDF(exportOption.value);
+  exportOptionsDialogOpen.value = false;
+};
+
+// 修改 downloadPDF 方法
+const downloadPDF = async (option) => {
   if (isExportingPDF.value) return;
 
   try {
@@ -1466,11 +1507,11 @@ const downloadPDF = async () => {
       throw new Error('找不到要轉換的元素');
     }
 
-    console.log('開始生成 PDF');
-    const pdfBlob = await generatePDF(element, templateName, (progress) => {
+    // console.log('開始生成 PDF');
+    const pdfBlob = await generatePDF(element, templateName, option, (progress) => {
       downloadProgress.value = progress;
     });
-    console.log('PDF 生成成功');
+    // console.log('PDF 生成成功');
 
     // 直接下載 PDF
     const link = document.createElement('a');
@@ -1918,10 +1959,10 @@ const historyTemplateOptions = ref([])
 
 const loadTemplateOptions = async () => {
   try {
-    console.log('開始載入模板選項')
-    console.log('當前搜尋條件:', {
-      type: historySearch.value.type
-    })
+    // console.log('開始載入模板選項')
+    // console.log('當前搜尋條件:', {
+    //   type: historySearch.value.type
+    // })
 
     // 清空現有選項
     historyTemplateOptions.value = []
@@ -1933,16 +1974,16 @@ const loadTemplateOptions = async () => {
         type: historySearch.value.type
       }
 
-      console.log('準備發送請求，參數:', params)
+      // console.log('準備發送請求，參數:', params)
       const { data } = await apiAuth.get('/formTemplates/search', { params })
-      console.log('收到回應:', data)
+      // console.log('收到回應:', data)
 
       if (data.success) {
         historyTemplateOptions.value = data.result.map(template => ({
           title: template.name,
           value: template._id
         }))
-        console.log('處理後的選項:', historyTemplateOptions.value)
+        // console.log('處理後的選項:', historyTemplateOptions.value)
       }
     }
   } catch (error) {
@@ -2093,7 +2134,7 @@ const isViewingLoading = ref(false);
 const editHistory = async (history) => {
   try {
     isEditingLoading.value = true;
-    console.log('1. 開始編輯歷史記錄:', history)
+    // console.log('1. 開始編輯歷史記錄:', history)
     if (!history) {
       throw new Error('歷史記錄資料不存在')
     }
@@ -2101,7 +2142,7 @@ const editHistory = async (history) => {
     // 設置編輯狀態
     isEditing.value = true;
     isViewing.value = false; // 重置查閱狀態
-    isAdding.value = false; // 重置新增狀態
+    // isAdding.value = false; // 不再重置新增狀態，保持按鈕可用
     editingFormId.value = history._id;
 
     // 先獲取完整的表單資料
@@ -2112,22 +2153,22 @@ const editHistory = async (history) => {
 
     // 使用完整的表單資料
     const completeHistory = data.result;
-    console.log('2. 獲取到的完整資料:', completeHistory);
+    // console.log('2. 獲取到的完整資料:', completeHistory);
 
     // 設置表單類型
     selectedType.value = completeHistory.formTemplate?.type;
-    console.log('3. 設置表單類型:', selectedType.value);
+    // console.log('3. 設置表單類型:', selectedType.value);
 
     // 等待表單類型設置完成
     await nextTick();
 
     // 載入表單模板選項
     await loadFormTemplateOptions();
-    console.log('4. 載入表單模板選項完成');
+    // console.log('4. 載入表單模板選項完成');
 
     // 設置選擇的模板
     selectedTemplate.value = completeHistory.formTemplate?._id;
-    console.log('5. 設置選擇的模板:', selectedTemplate.value);
+    // console.log('5. 設置選擇的模板:', selectedTemplate.value);
 
     // 等待模板選擇完成
     await nextTick();
@@ -2138,19 +2179,19 @@ const editHistory = async (history) => {
       throw new Error('找不到對應的模板');
     }
 
-    console.log('6. 選擇的模板:', template);
-    console.log('7. 歷史資料:', completeHistory.formData);
+    // console.log('6. 選擇的模板:', template);
+    // console.log('7. 歷史資料:', completeHistory.formData);
 
     // 先關閉歷史記錄對話框
-    console.log('8. 關閉歷史記錄對話框');
+    // console.log('8. 關閉歷史記錄對話框');
 
     // 使用 Promise 來確保資料設置完成
     await new Promise((resolve) => {
       setTimeout(async () => {
-        console.log('9. 開始設置表單資料');
+        // console.log('9. 開始設置表單資料');
         switch (template.componentName) {
           case 'RayHuangQuotationTemplate': {
-            console.log('10. 設置銳皇報價單資料');
+            // console.log('10. 設置銳皇報價單資料');
             // 直接設置表單資料，不需要先重置
             formData.value = {
               quotationNumber: completeHistory.formNumber,
@@ -2207,21 +2248,21 @@ const editHistory = async (history) => {
             };
 
             // 輸出更多除錯資訊
-            console.log('11. 歷史記錄中的 items:', completeHistory.formData?.items);
-            console.log('12. 載入後的 items:', formData.value.items);
-            console.log('13. 載入後的完整表單資料:', formData.value);
+            // console.log('11. 歷史記錄中的 items:', completeHistory.formData?.items);
+            // console.log('12. 載入後的 items:', formData.value.items);
+            // console.log('13. 載入後的完整表單資料:', formData.value);
             break;
           }
           
           case 'YstravelQuotationTemplate': {
-            console.log('10. 設置永信旅遊報價單資料');
+            // console.log('10. 設置永信旅遊報價單資料');
             // ... YstravelQuotationTemplate 的程式碼 ...
             break;
           }
         }
 
         await nextTick();
-        console.log('14. 完成資料設置');
+        // console.log('14. 完成資料設置');
         resolve();
       }, 500); // 增加延遲時間到 500ms
 
@@ -2282,13 +2323,6 @@ const loadHistory = async () => {
   }
 }
 
-// 添加取消編輯的方法
-const cancelEdit = () => {
-  isEditing.value = false
-  editingFormId.value = null
-  resetFormData()
-}
-
 // 新增表單提交方法
 const submitForm = async () => {
   try {
@@ -2317,7 +2351,7 @@ const submitForm = async () => {
 }
 
 // 修改 generatePDF 函數，添加進度回調
-const generatePDF = async (element, templateName, onProgress) => {
+const generatePDF = async (element, templateName, option, onProgress) => {
   // 確保所有必要的庫都已載入
   if (!html2pdf.value || !jsPDF.value || !html2canvas.value) {
     await initDependencies();
@@ -2354,56 +2388,45 @@ const generatePDF = async (element, templateName, onProgress) => {
   };
 
   try {
-    // 如果包含合約書，需要生成多頁PDF
-    if (formData.value.includeContract) {
-      const pages = ['quotation', 'contract1', 'contract2', 'contract3'];
-      const doc = new jsPDF.value(opt.jsPDF);
-      
-      // 保存原始頁面
-      const originalPage = formData.value.currentPage;
+    const pages = [];
+    if (option === 'quotation' || option === 'both') {
+      pages.push('quotation');
+    }
+    if (option === 'contract' || option === 'both') {
+      pages.push('contract1', 'contract2', 'contract3');
+    }
 
-      for (let i = 0; i < pages.length; i++) {
-        // 切換到目標頁面
-        formData.value.currentPage = pages[i];
-        await nextTick();
-        
-        // 等待頁面渲染完成
-        await new Promise(resolve => setTimeout(resolve, 100));
+    const doc = new jsPDF.value(opt.jsPDF);
+    const originalPage = formData.value.currentPage;
 
-        // 生成當前頁面的canvas
-        const canvas = await html2canvas.value(element, {
-          ...opt.html2canvas,
-          logging: false,
-          backgroundColor: '#ffffff'
-        });
+    for (let i = 0; i < pages.length; i++) {
+      formData.value.currentPage = pages[i];
+      await nextTick();
+      await new Promise(resolve => setTimeout(resolve, 100));
 
-        // 轉換canvas為圖片
-        const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const canvas = await html2canvas.value(element, {
+        ...opt.html2canvas,
+        logging: false,
+        backgroundColor: '#ffffff'
+      });
 
-        // 如果不是第一頁，添加新頁面
-        if (i > 0) {
-          doc.addPage();
-        }
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
 
-        // 添加圖片到PDF
-        doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
-
-        // 更新進度
-        if (onProgress) {
-          onProgress(((i + 1) / pages.length) * 100);
-        }
+      if (i > 0) {
+        doc.addPage();
       }
 
-      // 恢復原始頁面
-      formData.value.currentPage = originalPage;
-      await nextTick();
+      doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
 
-      // 返回PDF blob
-      return doc.output('blob');
-    } else {
-      // 如果只有報價單，使用原來的方式
-      return await html2pdf.value().set(opt).from(element).output('blob');
+      if (onProgress) {
+        onProgress(((i + 1) / pages.length) * 100);
+      }
     }
+
+    formData.value.currentPage = originalPage;
+    await nextTick();
+
+    return doc.output('blob');
   } catch (error) {
     console.error('PDF 生成失敗:', error);
     throw error;
@@ -2428,7 +2451,7 @@ const isAdding = ref(false);
 const viewForm = async (history) => {
   try {
     isViewingLoading.value = true;
-    console.log('開始查閱表單:', history)
+    // console.log('開始查閱表單:', history)
     if (!history) {
       throw new Error('表單資料不存在')
     }
@@ -2447,7 +2470,7 @@ const viewForm = async (history) => {
 
     // 使用完整的表單資料
     const completeHistory = data.result;
-    console.log('獲取到的完整資料:', completeHistory);
+    // console.log('獲取到的完整資料:', completeHistory);
 
     // 設置表單類型
     selectedType.value = completeHistory.formTemplate?.type;
@@ -2542,6 +2565,9 @@ const handleConfirm = async () => {
   // 切換到編輯模式
   isEditing.value = true;
   editingFormId.value = data.result._id; // 假設後端返回新創建表單的 ID
+
+  // 確保新增模式按鈕可用
+  isAdding.value = false;
 
   // 不重置表單，保留當前資料
   // resetFormData();

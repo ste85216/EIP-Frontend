@@ -220,7 +220,34 @@
             cols="12"
             class="ps-4 pb-sm-6"
           >
-            <h3>異動紀錄</h3>
+            <v-row>
+              <v-col>
+                <h3>異動紀錄</h3>
+              </v-col>
+              <v-col
+                cols="3"
+                class="ms-auto d-flex align-center"
+              >
+                <v-icon
+                  v-tooltip:start="'可搜尋操作對象'"
+                  icon="mdi-information"
+                  size="small"
+                  color="blue-grey-darken-2"
+                  class="me-2"
+                />
+                <v-text-field
+                  v-model="quickSearchText"
+                  label="快速搜尋"
+                  append-inner-icon="mdi-magnify"
+                  :loading="isLoading"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                  @input="debouncedSearch"
+                />
+              </v-col>
+            </v-row>
           </v-col>
           <v-col cols="12">
             <v-data-table-server
@@ -291,7 +318,7 @@
   >
     <v-card class="pa-4">
       <div class="ps-6 pt-4 pb-1 pb-sm-3 card-title">
-        異動詳細資料
+        詳細異動內容
       </div>
       <v-card-text>
         <v-row>
@@ -354,6 +381,19 @@
                     :action="selectedItem.action"
                     :changes="selectedItem.changes"
                   />
+                </div>
+                <div
+                  v-else-if="selectedItem?.targetModel === 'forms'"
+                  class="list-content"
+                >
+                  <ul class="change-list">
+                    <li
+                      v-for="(value, key) in selectedItem?.changes?.after?.formData"
+                      :key="key"
+                    >
+                      {{ key }}: {{ typeof value === 'object' ? JSON.stringify(value) : value }}
+                    </li>
+                  </ul>
                 </div>
                 <div
                   v-else-if="formatChanges(selectedItem).length > 0"
@@ -523,7 +563,7 @@ const fieldTranslations = {
   maintenanceDate: '維修日期',
   maintenanceContent: '維修內容',
   maintenanceResult: '維修結果',
-  reportUser: '報修人'
+  reportUser: '報修人',
 }
 
 // 行銷分類類型對應
@@ -820,6 +860,13 @@ const formatChanges = (item) => {
     }
   })
 
+  // Update formatChanges function to handle 'forms' type for v-data-table
+  if (item.targetModel === 'forms') {
+    if (item.action === '創建' || item.action === '修改') {
+      return ['( 請查看詳細異動內容 )'];
+    }
+  }
+
   return changes
 }
 
@@ -896,6 +943,23 @@ const resetSearch = () => {
   performSearch()
 }
 
+// 新增 quickSearchText 和 isLoading
+const quickSearchText = ref('')
+const isLoading = ref(false)
+
+// 使用 lodash 的 debounce 來優化搜尋
+const debouncedSearch = debounce(() => {
+  performSearch()
+}, 300)
+
+// 監聽 quickSearchText 的變化
+watch(quickSearchText, () => {
+  isLoading.value = true
+  // 重置表格分頁到第一頁
+  tablePage.value = 1
+  debouncedSearch()
+})
+
 const performSearch = async () => {
   // console.log('開始執行搜尋，搜尋條件:', searchCriteria.value)
   tableLoading.value = true
@@ -936,6 +1000,11 @@ const performSearch = async () => {
       params.endDate = endDate.toISOString()
     }
 
+    // 處理快速搜尋
+    if (quickSearchText.value) {
+      params.quickSearch = quickSearchText.value
+    }
+
     // 處理操作對象
     if (searchCriteria.value.targetId) {
       // console.log('處理操作對象:', searchCriteria.value.targetId)
@@ -969,6 +1038,7 @@ const performSearch = async () => {
     tableItemsLength.value = 0
   } finally {
     tableLoading.value = false
+    isLoading.value = false
   }
 }
 

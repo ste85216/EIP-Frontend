@@ -154,6 +154,24 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+    // 添加更新頭像的方法
+    const updateAvatar = async (formData) => {
+      try {
+        const { data } = await apiAuth.patch('/user/avatar', formData)
+        if (!data.success) {
+          throw new Error(data.message || '頭像更新失敗')
+        }
+        avatar.value = `${data.result}?t=${new Date().getTime()}`
+        return {
+          success: true,
+          message: '頭像更新成功'
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || '頭像更新失敗'
+        throw new Error(errorMessage)
+      }
+    }
+
   // 登出
   const logout = async () => {
     try {
@@ -196,7 +214,8 @@ export const useUserStore = defineStore('user', () => {
     googleLogin,
     changePassword,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    updateAvatar
   }
 }, {
   persist: {

@@ -5,7 +5,7 @@
         v-if="isLgmUp"
         md="3"
       >
-        <v-row class="elevation-4 rounded-lg pt-12 pb-3 px-1 px-sm-10 mt-2 mt-sm-6 mx-10 bg-white">
+        <v-row class="elevation-4 rounded-lg pt-12 pb-11 px-1 px-sm-10 mt-2 mt-sm-6 mx-10 bg-white">
           <v-card
             width="100%"
             elevation="0"
@@ -38,10 +38,11 @@
                 </div>
                 <div
                   style="font-size: 15px; font-weight: 600;"
-                  class="opacity-90 mb-12"
+                  class="opacity-90 mb-10"
                 >
                   {{ getRoleTitle(user.role) }}
                 </div>
+                <FileUploadButton />
               </v-col>
             </v-row>
           </v-card>
@@ -347,6 +348,7 @@ import { useUserStore } from '@/stores/user'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
+import FileUploadButton from '@/components/FileUploadButton.vue'
 
 const { mdAndUp, width } = useDisplay()
 const isLgmUp = computed(() => width.value >= 1500)

@@ -380,6 +380,7 @@
                                 color="red-darken-1"
                                 size="small"
                                 variant="plain"
+                                :disabled="isViewing"
                                 @click="removeItem(index)"
                               />
                             </div>
@@ -552,8 +553,19 @@
               density="compact"
               class="mb-1"
               clearable
+              @click:append-inner="fillTotalAmount"
               @update:model-value="v => updateContractField('page1.totalAmount', v)"
-            />
+            >
+              <template #append-inner>
+                <v-icon
+                  v-tooltip="'帶入報價單總計'"
+                  color="grey-darken-4"
+                  @click="fillTotalAmount"
+                >
+                  mdi-currency-usd
+                </v-icon>
+              </template>
+            </v-text-field>
           </v-col>
           <v-col
             cols="12"
@@ -1151,6 +1163,52 @@ watch(() => props.modelValue.includeContract, (newVal) => {
     currentPage.value = 'quotation'
     const newValue = { ...props.modelValue }
     newValue.currentPage = 'quotation'
+    // Reset contract data to default values
+    newValue.contract = {
+      page1: {
+        partyA: '',
+        partyB: '',
+        projectName: '',
+        totalAmount: '',
+        estimatedWorkDays: '',
+        contractYear: '',
+        contractMonth: '',
+        contractDay: '',
+        depositAmount: '',
+        paymentMethod: {
+          singlePayment: false,
+          singlePaymentDate: { year: '', month: '', day: '' },
+          deposit: false,
+          depositAmount: '',
+          depositDate: { year: '', month: '', day: '' },
+          finalPaymentAmount: '',
+          finalPaymentDate: { year: '', month: '', day: '' }
+        },
+        paymentType: {
+          cash: false,
+          transfer: false,
+          check: false,
+          checkDate: { year: '', month: '', day: '' }
+        }
+      },
+      page2: {
+        designProposalCount: '',
+        responseDay: '',
+        designRevisionCount: '',
+        printRevisionCount: '',
+        providedItems: ''
+      },
+      page3: {
+        otherAgreements: '',
+        partyA: {
+          companyName: '',
+          representative: '',
+          address: '',
+          phone: '',
+          taxId: ''
+        }
+      }
+    }
     emit('update:modelValue', newValue)
   }
 })
@@ -1264,6 +1322,15 @@ const updateItemField = (index, field, value) => {
   newValue.items[index][field] = value
   emit('update:modelValue', newValue)
 }
+
+const fillTotalAmount = () => {
+  const totalAmount = Math.round(props.modelValue.items.reduce((total, item) => {
+    const quantity = Number(item?.quantity) || 0;
+    const price = Number(item?.price) || 0;
+    return total + (quantity * price);
+  }, 0) * 1.05);
+  updateContractField('page1.totalAmount', totalAmount);
+};
 
 defineExpose({
   validate
