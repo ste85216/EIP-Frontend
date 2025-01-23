@@ -50,7 +50,8 @@ apiAuth.interceptors.response.use(res => {
         error.config.headers.Authorization = 'Bearer ' + user.token
         // 重新傳送一次原本的請求
         return axios(error.config)
-      } catch (_) {
+      } catch (error) {
+        console.log(error)
         // 舊換新錯誤，登出
         user.logout()
       }

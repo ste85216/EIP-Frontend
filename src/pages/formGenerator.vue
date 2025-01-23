@@ -540,7 +540,7 @@
     <!-- 表單歷史紀錄對話框 -->
     <v-dialog
       v-model="historyDialog.open"
-      max-width="1320"
+      max-width="1500"
     >
       <v-card
         class="rounded-lg pa-4 "
@@ -602,7 +602,7 @@
                   >
                     <v-date-input
                       v-model="historySearch.date"
-                      label="日期區間"
+                      label="創建日期區間"
                       variant="outlined"
                       density="compact"
                       prepend-icon
@@ -695,6 +695,9 @@
                 <th style="height: 36px;">
                   創建者
                 </th>
+                <th style="height: 36px;">
+                  最後編輯者
+                </th>
                 <th
                   class="text-center"
                   style="height: 36px;"
@@ -714,6 +717,7 @@
                 <td>{{ history?.projectName || '-' }}</td>
                 <td>{{ formatDate(history?.createdAt) }}</td>
                 <td>{{ history?.creator?.name || '未知' }} {{ history?.creator?.role === 2 ? `(${history?.creator?.adminId})` : `(${history?.creator?.userId})` }}</td>
+                <td>{{ history?.lastEditor?.name || '未知' }} {{ history?.lastEditor?.role === 2 ? `(${history?.lastEditor?.adminId})` : `(${history?.lastEditor?.userId})` }}</td>
                 <td class="text-center">
                   <v-btn
                     v-if="(() => {
@@ -789,6 +793,7 @@
     <!-- 表單歷史紀錄確認刪除對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmDeleteDialog.open"
+      :dialog-width="'320'"
       title="確認刪除表單"
       :message="`確定要刪除表單「${confirmDeleteDialog.templateName} ${confirmDeleteDialog.formNumber}」嗎？此操作無法恢復。`"
       @confirm="confirmDelete"
@@ -1003,7 +1008,6 @@ const resetFormData = (templateType) => {
   switch (templateType) {
     case 'RayHuangQuotationTemplate':
       formData.value = {
-        quotationNumber: '0',
         date: new Date(),
         customerName: '',
         customerAddress: '',
@@ -1104,7 +1108,7 @@ const resetFormData = (templateType) => {
     
     case 'YstravelQuotationTemplate':
       formData.value = {
-        quotationNumber: '0',
+        formNumber: '', // 使用上層的 formNumber
         date: new Date(),
         
         // 客戶資訊
@@ -1233,20 +1237,20 @@ const handleTemplateChange = async (templateId) => {
       if (components) {
         try {
           // 先獲取單號，確保有單號才繼續
-          let quotationNumber = null
+          let formNumber = null
           
           switch (template.componentName) {
             case 'RayHuangQuotationTemplate': {
               const response = await apiAuth.get('/forms/ray-huang-quotation/next-number', {params: {templateId}})
               if (response.data.success) {
-                quotationNumber = response.data.result
+                formNumber = response.data.result
               }
               break
             }
             case 'YstravelQuotationTemplate': {
               const response = await apiAuth.get('/forms/ystravel-quotation/next-number', {params: {templateId}})
               if (response.data.success) {
-                quotationNumber = response.data.result
+                formNumber = response.data.result
               }
               break
             }
@@ -1254,7 +1258,7 @@ const handleTemplateChange = async (templateId) => {
               throw new Error('未知的模板類型')
           }
 
-          if (!quotationNumber) {
+          if (!formNumber) {
             throw new Error('無法取得單號')
           }
 
@@ -1264,7 +1268,7 @@ const handleTemplateChange = async (templateId) => {
           // 然後設置新的單號
           formData.value = { 
             ...formData.value,
-            quotationNumber 
+            formNumber 
           }
 
           // 等待資料設置完成
@@ -1428,7 +1432,9 @@ const updateForm = async () => {
 
     // 發送更新請求
     const { data } = await apiAuth.patch(`/forms/${editingFormId.value}`, {
-      formData: formData.value
+      formNumber: formData.value.formNumber, // 獨立傳遞 formNumber
+      formData: { ...formData.value, formNumber: undefined }, // 移除 formData 中的 formNumber
+      lastEditor: user.userId
     })
 
     if (!data.success) {
@@ -1516,7 +1522,7 @@ const downloadPDF = async (option) => {
     // 直接下載 PDF
     const link = document.createElement('a');
     link.href = URL.createObjectURL(pdfBlob);
-    link.download = `${templateName}_${formData.value.quotationNumber}.pdf`;
+    link.download = `${templateName}_${formData.value.formNumber}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -2142,7 +2148,7 @@ const editHistory = async (history) => {
     // 設置編輯狀態
     isEditing.value = true;
     isViewing.value = false; // 重置查閱狀態
-    // isAdding.value = false; // 不再重置新增狀態，保持按鈕可用
+    isAdding.value = false; // 不再重置新增狀態，保持按鈕可用
     editingFormId.value = history._id;
 
     // 先獲取完整的表單資料
@@ -2194,7 +2200,7 @@ const editHistory = async (history) => {
             // console.log('10. 設置銳皇報價單資料');
             // 直接設置表單資料，不需要先重置
             formData.value = {
-              quotationNumber: completeHistory.formNumber,
+              formNumber: completeHistory.formNumber,
               date: completeHistory.formData?.date ? new Date(completeHistory.formData.date) : new Date(completeHistory.createdAt),
               
               // 客戶資訊
@@ -2368,7 +2374,7 @@ const generatePDF = async (element, templateName, option, onProgress) => {
 
   const opt = {
     margin: 0,
-    filename: `${templateName}_${formData.value.quotationNumber}.pdf`,
+    filename: `${templateName}_${formData.value.formNumber}.pdf`,
     image: { type: 'jpeg', quality: 1.0 },
     html2canvas: {
       scale: 4,
@@ -2496,14 +2502,14 @@ const viewForm = async (history) => {
           case 'RayHuangQuotationTemplate': {
             formData.value = {
               ...completeHistory.formData,
-              quotationNumber: completeHistory.formNumber
+              formNumber: completeHistory.formNumber
             };
             break;
           }
           case 'YstravelQuotationTemplate': {
             formData.value = {
               ...completeHistory.formData,
-              quotationNumber: completeHistory.formNumber
+              formNumber: completeHistory.formNumber
             };
             break;
           }
@@ -2543,36 +2549,37 @@ const confirmDialogConfirmText = ref('確認');
 const confirmDialogCancelText = ref('取消');
 
 const handleConfirm = async () => {
-  // 發送新增請求
-  const { data } = await apiAuth.post('/forms', {
-    formTemplate: selectedTemplate.value,
-    formData: formData.value,
-    formNumber: formData.value.quotationNumber
-  });
+  try {
+    // 發送新增請求
+    const { data } = await apiAuth.post('/forms', {
+      formTemplate: selectedTemplate.value,
+      formNumber: formData.value.formNumber,
+      formData: formData.value,
+      lastEditor: user.userId
+    });
 
-  if (!data.success) {
-    throw new Error(data.message || '新增表單失敗');
-  }
-
-  createSnackbar({
-    text: '表單新增成功',
-    snackbarProps: {
-      color: 'teal-lighten-1',
-      timeout: 3000
+    if (!data.success) {
+      throw new Error(data.message || '新增表單失敗');
     }
-  });
 
-  // 切換到編輯模式
-  isEditing.value = true;
-  editingFormId.value = data.result._id; // 假設後端返回新創建表單的 ID
+    // 切換到編輯模式
+    isEditing.value = true;
+    editingFormId.value = data.result._id; // 假設後端返回新創建表單的 ID
+    // 確保新增模式按鈕可用
+    isAdding.value = false;
 
-  // 確保新增模式按鈕可用
-  isAdding.value = false;
-
-  // 不重置表單，保留當前資料
-  // resetFormData();
-  // selectedTemplate.value = null;
-  // selectedType.value = null;
+    createSnackbar({
+      text: '表單新增成功',
+      snackbarProps: { color: 'teal-lighten-1' }
+    });
+  } catch (error) {
+    console.error('新增表單失敗:', error);
+    const errorMessage = error.response?.data?.message || '新增表單失敗';
+    createSnackbar({
+      text: errorMessage,
+      snackbarProps: { color: 'red-lighten-1' }
+    });
+  }
 };
 
 const showProgressOverlay = ref(false);

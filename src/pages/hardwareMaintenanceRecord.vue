@@ -371,6 +371,7 @@
     <!-- 確認刪除對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmDeleteDialog.open"
+      :dialog-width="'320'"
       title="確認刪除維修記錄"
       :message="'確定要刪除此維修記錄嗎？此操作無法復原。'"
       @confirm="deleteRecord"

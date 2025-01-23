@@ -1,5 +1,4 @@
 export const quotationSchema = {
-  quotationNumber: '',
   date: new Date(),
   
   // 客戶資訊

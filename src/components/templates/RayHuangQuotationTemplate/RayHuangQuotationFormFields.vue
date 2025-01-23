@@ -64,13 +64,13 @@
                 class="pb-0"
               >
                 <v-text-field
-                  :model-value="modelValue.quotationNumber"
+                  :model-value="modelValue.formNumber"
                   label="單號"
                   variant="outlined"
                   density="compact"
                   clearable
                   :rules="[v => !!v || '請輸入單號']"
-                  @update:model-value="v => updateField('quotationNumber', v)"
+                  @update:model-value="v => updateField('formNumber', v)"
                 />
               </v-col>
               <v-col

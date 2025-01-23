@@ -3,7 +3,8 @@
   <v-dialog
     v-model="isOpen"
     :max-width="dialogWidth"
-    persistent
+    @click:outside="() => emit('update:modelValue', false)"
+    @keydown.esc="() => emit('update:modelValue', false)"
   >
     <v-card class="rounded-lg">
       <v-card-title class="font-weight-bold mt-4 ms-2">
@@ -97,18 +98,5 @@ const confirm = () => {
 </script>
 
 <style lang="scss" scoped>
-:deep(.v-card-text) {
-  .text-red {
-    color: #ef5350 !important;
-  }
-  .text-pink-lighten-1 {
-    color: #ec407a !important;
-  }
-  .text-orange-darken-2 {
-    color: #f57c00 !important;
-  }
-  .text-pink-darken-1 {
-    color: #d81b60 !important;
-  }
-}
+
 </style>

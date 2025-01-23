@@ -383,10 +383,43 @@
                   />
                 </div>
                 <div
-                  v-else-if="selectedItem?.targetModel === 'forms'"
+                  v-else-if="selectedItem?.targetModel === 'forms' && selectedItem?.action === '創建'"
                   class="list-content"
                 >
                   <ul class="change-list">
+                    <li>
+                      {{ selectedItem?.changes?.after?.formNumber }}
+                    </li>
+                    <li
+                      v-for="(value, key) in selectedItem?.changes?.after?.formData"
+                      :key="key"
+                    >
+                      {{ key }}: {{ typeof value === 'object' ? JSON.stringify(value) : value }}
+                    </li>
+                  </ul>
+                </div>
+                <div
+                  v-else-if="selectedItem?.targetModel === 'forms' && selectedItem?.action === '修改'"
+                  class="list-content"
+                >
+                  <span class="text-grey-darken-2">( 修改前 )</span>
+                  <ul class="change-list">
+                    <li>
+                      {{ selectedItem?.changes?.before?.formNumber }}
+                    </li>
+                    <li
+                      v-for="(value, key) in selectedItem?.changes?.before?.formData"
+                      :key="key"
+                    >
+                      {{ key }}: {{ typeof value === 'object' ? JSON.stringify(value) : value }}
+                    </li>
+                  </ul>
+                  <v-divider class="my-2" />
+                  <span class="text-grey-darken-2">( 修改後 )</span>
+                  <ul class="change-list">
+                    <li>
+                      {{ selectedItem?.changes?.after?.formNumber }}
+                    </li>
                     <li
                       v-for="(value, key) in selectedItem?.changes?.after?.formData"
                       :key="key"
