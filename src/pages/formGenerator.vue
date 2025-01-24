@@ -208,12 +208,12 @@
             <div class="card-title px-6 pt-6 text-grey-darken-3 d-flex justify-space-between">
               <div>
                 《 預覽及下載 》
-                <span class="text-grey">
-                  ( {{ 
+                <span class="text-grey font-weight-medium">
+                  (&nbsp; {{ 
                     isViewing ? '查閱模式' : 
                     isEditing ? '編輯模式' : 
                     '新增模式' 
-                  }} )
+                  }}&nbsp; )
                 </span>
               </div>
               <div>
@@ -1108,7 +1108,6 @@ const resetFormData = (templateType) => {
     
     case 'YstravelQuotationTemplate':
       formData.value = {
-        formNumber: '', // 使用上層的 formNumber
         date: new Date(),
         
         // 客戶資訊

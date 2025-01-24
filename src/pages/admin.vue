@@ -17,7 +17,7 @@
                 <v-btn
                   prepend-icon="mdi-account-plus"
                   variant="outlined"
-                  color="deep-purple-darken-4"
+                  color="blue-grey-darken-2"
                   @click="openDialog(null)"
                 >
                   新增管理者
@@ -35,7 +35,7 @@
                       v-tooltip:start="'可搜尋管理者編號、姓名、Email、備註'"
                       icon="mdi-information"
                       size="small"
-                      color="deep-purple-darken-4"
+                      color="blue-grey-darken-2"
                       class="me-4"
                     />
                     <v-text-field
@@ -604,12 +604,12 @@ const showConfirmPassword = ref(false)
 
 <style lang="scss" scoped>
 .v-data-table :deep(thead) {
-  background-color: #4c0079;
+  background-color: #455A64;
   color: white;
 }
 
 .odd-row {
-  background-color: #fff7fa;
+  background-color: #fcfbf8;
 }
 
 .even-row {

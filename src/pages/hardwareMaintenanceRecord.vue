@@ -73,7 +73,7 @@
             <v-row>
               <v-col>
                 <v-btn
-                  color="deep-purple-darken-4"
+                  color="blue-grey-darken-2"
                   variant="outlined"
                   prepend-icon="mdi-cog"
                   class="me-4"
@@ -86,7 +86,7 @@
                 <v-btn
                   prepend-icon="mdi-plus"
                   variant="outlined"
-                  color="deep-purple-darken-4"
+                  color="blue-grey-darken-2"
                   @click="openDialog(null)"
                 >
                   新增維修記錄
@@ -162,7 +162,7 @@
                   v-tooltip:top="'可搜尋問題內容、處理結果、報修人、備註'"
                   icon="mdi-information"
                   size="small"
-                  color="deep-purple-darken-4"
+                  color="blue-grey-darken-2"
                   class="me-4"
                 />
                 <v-text-field

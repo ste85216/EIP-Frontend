@@ -65,9 +65,20 @@
             </h3>
             <div>
               <v-row>
-                <v-col>
+                <v-col
+                  v-if="mdAndUp"
+                >
+                  <v-btn 
+                    class="me-4"
+                    color="blue-grey-darken-4"
+                    prepend-icon="mdi-account"
+                    variant="outlined"
+                    height="36"
+                    @click="showUserListDialog = true"
+                  >
+                    使用者清單
+                  </v-btn>
                   <v-btn
-                    v-if="mdAndUp"
                     color="purple-darken-4"
                     prepend-icon="mdi-pencil"
                     variant="outlined"
@@ -339,6 +350,44 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <v-dialog
+    v-model="showUserListDialog"
+    max-width="600"
+  >
+    <v-card class="px-6 py-5">
+      <div class="card-title">
+        用戶列表
+      </div>
+      <v-card-text class="px-0 pb-2">
+        <v-list>
+          <v-list-item
+            v-for="users in userList"
+            :key="users.id"
+            class="mb-2 py-2 border rounded-lg"
+          >
+            <template #prepend>
+              <v-avatar size="40">
+                <v-img :src="users.avatar" />
+              </v-avatar>
+            </template>
+            <v-list-item-title>{{ users.name }}</v-list-item-title>
+            <v-list-item-subtitle>{{ users.email }}</v-list-item-subtitle>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          color="grey-darken-1"
+          variant="outlined"
+          @click="showUserListDialog = false"
+        >
+          關閉
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
@@ -349,6 +398,9 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
 import FileUploadButton from '@/components/FileUploadButton.vue'
+import { useApi } from '@/composables/axios'
+
+const { apiAuth } = useApi()
 
 const { mdAndUp, width } = useDisplay()
 const isLgmUp = computed(() => width.value >= 1500)
@@ -369,6 +421,9 @@ const showCurrentPassword = ref(false)
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
 
+const showUserListDialog = ref(false)
+const userList = ref([])
+
 const passwordForm = ref({
   currentPassword: '',
   newPassword: '',
@@ -385,6 +440,23 @@ const createSnackbar = useSnackbar()
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
 }
+
+const fetchUserList = async () => {
+    try {
+      const { data } = await apiAuth.get('/user/public/all')
+      userList.value = data.result.data
+    } catch (error) {
+      console.error('Failed to fetch user list:', error)
+      createSnackbar({
+        text: '獲取用戶列表失敗',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+    }
+  }
+
+  watch(showUserListDialog, (newVal) => {
+    if (newVal) fetchUserList()
+  })
 
 const validatePasswordForm = () => {
   let isValid = true
