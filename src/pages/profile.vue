@@ -70,7 +70,7 @@
                 >
                   <v-btn 
                     class="me-4"
-                    color="blue-grey-darken-4"
+                    color="purple-darken-4"
                     prepend-icon="mdi-account"
                     variant="outlined"
                     height="36"
@@ -353,14 +353,25 @@
 
   <v-dialog
     v-model="showUserListDialog"
-    max-width="600"
+    max-width="400"
   >
     <v-card class="px-6 py-5">
       <div class="card-title">
         用戶列表
       </div>
       <v-card-text class="px-0 pb-2">
-        <v-list>
+        <div
+          v-if="isLoadingUsers"
+          class="d-flex justify-center align-center py-8"
+        >
+          <v-progress-circular
+            indeterminate
+            color="purple-darken-2"
+            :size="60"
+            :width="5"
+          />
+        </div>
+        <v-list v-else>
           <v-list-item
             v-for="users in userList"
             :key="users.id"
@@ -371,7 +382,7 @@
                 <v-img :src="users.avatar" />
               </v-avatar>
             </template>
-            <v-list-item-title>{{ users.name }}</v-list-item-title>
+            <v-list-item-title>{{ users.name }} <span class="subtitle text-grey">( {{ getRoleTitle(users.role) }} )</span></v-list-item-title>
             <v-list-item-subtitle>{{ users.email }}</v-list-item-subtitle>
           </v-list-item>
         </v-list>
@@ -423,6 +434,7 @@ const showConfirmPassword = ref(false)
 
 const showUserListDialog = ref(false)
 const userList = ref([])
+const isLoadingUsers = ref(false)
 
 const passwordForm = ref({
   currentPassword: '',
@@ -443,14 +455,28 @@ const getRoleTitle = (roleValue) => {
 
 const fetchUserList = async () => {
     try {
+      isLoadingUsers.value = true
       const { data } = await apiAuth.get('/user/public/all')
-      userList.value = data.result.data
+      // 定義角色優先順序
+      const roleOrder = {
+        2: 0, // ADMIN
+        1: 1, // MANAGER
+        3: 2, // IT
+        0: 3  // USER
+      }
+      
+      // 根據角色排序
+      userList.value = data.result.data.sort((a, b) => {
+        return roleOrder[a.role] - roleOrder[b.role]
+      })
     } catch (error) {
       console.error('Failed to fetch user list:', error)
       createSnackbar({
         text: '獲取用戶列表失敗',
         snackbarProps: { color: 'red-lighten-1' }
       })
+    } finally {
+      isLoadingUsers.value = false
     }
   }
 
