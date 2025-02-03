@@ -60,7 +60,7 @@
                 v-if="mdAndUp"
                 class="text-subtitle-2 opacity-80 font-weight-regular"
               >
-                <span class="text-red-darken-2">* </span>若有需要修改 請聯絡管理員 ( 密碼可自行修改 )
+                <span class="text-red-darken-2">* </span>若有需要修改 請聯絡管理者 ( 密碼可自行修改 )
               </span>
             </h3>
             <div>
