@@ -368,7 +368,7 @@
             indeterminate
             color="purple-darken-2"
             :size="60"
-            :width="5"
+            :width="6"
           />
         </div>
         <v-list v-else>
