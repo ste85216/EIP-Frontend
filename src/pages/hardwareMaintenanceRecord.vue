@@ -159,7 +159,7 @@
               >
                 <v-icon
                   v-if="mdAndUp"
-                  v-tooltip:top="'可搜尋問題內容、處理結果、報修人、備註'"
+                  v-tooltip:top="'可搜尋維修單號、問題內容、處理結果、報修人、備註'"
                   icon="mdi-information"
                   size="small"
                   color="blue-grey-darken-2"
@@ -200,6 +200,7 @@
             >
               <template #item="{ item }">
                 <tr>
+                  <td>{{ item.maintenanceRecordId }}</td>
                   <td>{{ formatDate(item.maintenanceDate) }}</td>
                   <td>{{ getCategoryName(item.hardwareCategory) }}</td>
                   <td>{{ item.maintenanceContent }}</td>
@@ -657,6 +658,7 @@ const note = useField('note')
 
 // ===== 表格相關設定 =====
 const tableHeaders = [
+  { title: '維修單號', align: 'start', sortable: true, key: 'maintenanceRecordId' },
   { title: '維修日期', align: 'start', sortable: true, key: 'maintenanceDate' },
   { title: '硬體類型', align: 'start', sortable: true, key: 'hardwareCategory' },
   { title: '問題內容', align: 'start', sortable: true, width: '300', key: 'maintenanceContent' },

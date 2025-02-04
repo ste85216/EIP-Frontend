@@ -380,11 +380,23 @@
                             size="small"
                             prepend-icon="mdi-plus"
                             variant="outlined"
+                            color="blue-darken-4"
+                            class="ms-2"
+                            @click="addAllDetails"
+                          >
+                            新增所有線別
+                          </v-btn>
+
+                          <v-btn 
+                            size="small"
+                            prepend-icon="mdi-plus"
+                            variant="outlined"
                             class="ms-2"
                             @click="openAddDetailsDialog"
                           >
                             批量新增線別
                           </v-btn>
+                          
                           <v-btn
                             v-tooltip="'新增線別'"
                             icon
@@ -692,7 +704,7 @@ const router = useRouter()
 // ===== 響應式設定與螢幕斷點 =====
 const { smAndUp } = useDisplay()
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
-const dialogWidth = computed(() => smAndUp.value ? '1320' : '100%')
+const dialogWidth = computed(() => smAndUp.value ? '1400' : '100%')
 
 // ===== 基礎狀態管理 =====
 const confirmDeleteDialog = ref(false)
@@ -1298,6 +1310,55 @@ const confirmAddDetails = () => {
 // 新增線別明細
 const addDetail = () => {
   detailsList.value.push({ detail: '', amount: '' })
+}
+
+// 新增所有線別
+const addAllDetails = () => {
+  // 檢查是否有可用的線別選項
+  if (!detailOptions.value || detailOptions.value.length === 0) {
+    createSnackbar({
+      text: '目前沒有可用的線別',
+      snackbarProps: { color: 'warning' }
+    })
+    return
+  }
+
+  // 獲取目前已經使用的線別 ID（排除空值的情況）
+  const usedDetailIds = new Set(detailsList.value.map(item => item.detail).filter(Boolean))
+
+  // 過濾出未使用的線別
+  const unusedDetails = detailOptions.value.filter(detail => !usedDetailIds.has(detail._id))
+
+  if (unusedDetails.length === 0) {
+    createSnackbar({
+      text: '所有線別已經被新增',
+      snackbarProps: { color: 'warning' }
+    })
+    return
+  }
+
+  // 記錄要新增的總數量
+  const totalToAdd = unusedDetails.length
+
+  // 如果第一項是空的，先設定第一項
+  if (!detailsList.value[0].detail) {
+    detailsList.value[0].detail = unusedDetails[0]._id
+    // 移除已使用的第一項
+    unusedDetails.shift()
+  }
+
+  // 為剩餘未使用的線別新增資料
+  unusedDetails.forEach(detail => {
+    detailsList.value.push({
+      detail: detail._id,
+      amount: ''
+    })
+  })
+
+  createSnackbar({
+    text: `已新增 ${totalToAdd} 個線別`,
+    snackbarProps: { color: 'teal-lighten-1' }
+  })
 }
 
 // ===== 生命週期鉤子 =====

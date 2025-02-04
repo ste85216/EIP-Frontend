@@ -2038,16 +2038,14 @@ const loadYearOptions = async (theme) => {
 
     if (allYears.length === 0) {
       yearOptions.value = []
-      createSnackbar({
-        text: `「${getThemeName(theme)}」尚未有任何「預算」或是「實際支出」資料`,
-        snackbarProps: { color: 'warning' }
-      })
-      return
+      return false
     }
 
     yearOptions.value = allYears
+    return true
   } catch (error) {
     handleError(error)
+    return false
   } finally {
     isLoading.value = false
   }
@@ -2069,7 +2067,7 @@ const loadLineOptions = async () => {
 }
 
 // 處理主題變更
-const handleThemeChange = async () => {
+const handleThemeChange = () => {
   searchForm.value.year = null
   searchForm.value.reportType = null
   yearError.value = ''
@@ -2077,9 +2075,7 @@ const handleThemeChange = async () => {
   reportTypeError.value = ''
   showReport.value = false
 
-  if (searchForm.value.theme) {
-    await loadYearOptions(searchForm.value.theme)
-  } else {
+  if (!searchForm.value.theme) {
     yearOptions.value = []
   }
 }
@@ -2153,17 +2149,8 @@ watch([
     }
 
     // 載入年度選項
-    const [budgetYears, expenseYears] = await Promise.all([
-      apiAuth.get(`/marketing/budgets/years/${newTheme}`),
-      apiAuth.get(`/marketing/expenses/years/${newTheme}`)
-    ])
-
-    const budgetYearsSet = new Set(budgetYears.data.success ? budgetYears.data.result : [])
-    const expenseYearsSet = new Set(expenseYears.data.success ? expenseYears.data.result : [])
-    const allYears = [...new Set([...budgetYearsSet, ...expenseYearsSet])].sort((a, b) => b - a)
-
-    if (allYears.length === 0) {
-      yearOptions.value = []
+    const hasYears = await loadYearOptions(newTheme)
+    if (!hasYears) {
       createSnackbar({
         text: `「${getThemeName(newTheme)}」尚未有任何「預算」或是「實際支出」資料`,
         snackbarProps: { color: 'warning' }
@@ -2171,10 +2158,17 @@ watch([
       return
     }
 
-    yearOptions.value = allYears
-
     // 檢查報表類型的資料可用性
     if (newReportType && searchForm.value.year) {
+      // 重新獲取年度資料以檢查報表類型
+      const [budgetYears, expenseYears] = await Promise.all([
+        apiAuth.get(`/marketing/budgets/years/${newTheme}`),
+        apiAuth.get(`/marketing/expenses/years/${newTheme}`)
+      ])
+
+      const budgetYearsSet = new Set(budgetYears.data.success ? budgetYears.data.result : [])
+      const expenseYearsSet = new Set(expenseYears.data.success ? expenseYears.data.result : [])
+
       let hasData = true
       switch (newReportType) {
         case 'budget':
