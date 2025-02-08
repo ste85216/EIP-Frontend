@@ -227,7 +227,10 @@
                     :key="item._id"
                   >
                     <template #prepend>
-                      <div class="channel-name">
+                      <div 
+                        class="channel-name"
+                        :style="getChannelTypeStyle(item.parentId?.name)"
+                      >
                         {{ item.parentId?.name || '無' }}
                       </div>
                       <div class="order-number">
@@ -1417,6 +1420,37 @@ const handleBatchAdd = () => {
 
   // 關閉批量新增對話框
   closeBatchDialog()
+}
+
+// 在 script setup 部分添加顏色陣列
+const channelColors = [
+  '#009688', // 青色
+  '#FF5722', // 橙色
+  '#607D8B', // 藍灰色
+  '#E91E63', // 粉紅色
+  '#F9A825', // 黃色
+  '#00695C', // 淺綠色
+  '#795548', // 棕色
+  '#2196F3', // 藍色
+  '#388E3C', // 綠色
+  '#0097A7', // 藍綠色
+  '#283593', // 深藍色
+]
+
+// 儲存廣告渠道名稱與顏色的映射
+const channelColorMap = ref(new Map())
+
+// 修改 getChannelTypeStyle 函數
+const getChannelTypeStyle = (channelName) => {
+  if (!channelName) return { backgroundColor: '#757575' }
+  
+  // 如果這個渠道還沒有對應的顏色，分配一個新的顏色
+  if (!channelColorMap.value.has(channelName)) {
+    const index = channelColorMap.value.size % channelColors.length
+    channelColorMap.value.set(channelName, channelColors[index])
+  }
+  
+  return { backgroundColor: channelColorMap.value.get(channelName) }
 }
 </script>
 
