@@ -45,10 +45,11 @@
                       hide-details
                       clearable
                       class="mb-6"
+                      @update:model-value="handleChannelChange"
                     />
                     <v-autocomplete
                       v-model="searchCriteria.platform"
-                      :items="platformOptions"
+                      :items="getFilteredPlatformOptions(searchCriteria.channel)"
                       label="平台"
                       item-title="name"
                       item-value="_id"
@@ -311,6 +312,7 @@
                         variant="outlined"
                         density="compact"
                         clearable
+                        @update:model-value="handleDialogChannelChange"
                       />
                     </v-col>
 
@@ -318,7 +320,7 @@
                       <v-autocomplete
                         v-model="platform.value.value"
                         :error-messages="platform.errorMessage.value"
-                        :items="platformOptions"
+                        :items="getFilteredPlatformOptions(channel.value.value)"
                         item-title="name"
                         item-value="_id"
                         label="*平台"
@@ -1434,6 +1436,25 @@ const copyItem = async (item) => {
   } finally {
     isLoadingEdit.value = false
   }
+}
+
+// ===== 平台選擇相關方法 =====
+// 根據廣告渠道過濾平台選項
+const getFilteredPlatformOptions = (channelId) => {
+  if (!channelId) return []
+  return platformOptions.value.filter(platform => platform.parentId?._id === channelId)
+}
+
+// 處理搜尋區域的廣告渠道變更
+const handleChannelChange = () => {
+  // 當廣告渠道變更時，清空平台選擇
+  searchCriteria.value.platform = null
+}
+
+// 處理對話框中的廣告渠道變更
+const handleDialogChannelChange = () => {
+  // 當廣告渠道變更時，清空平台選擇
+  platform.value.value = ''
 }
 
 // ===== 生命週期鉤子 =====

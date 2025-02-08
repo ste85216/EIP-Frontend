@@ -183,7 +183,7 @@
     <v-dialog
       v-model="dialog.open"
       persistent
-      max-width="2200"
+      max-width="2600"
       :fullscreen="!smAndUp"
     >
       <v-form
@@ -389,6 +389,7 @@
                                   density="compact"
                                   hide-details
                                   class="channel-select"
+                                  @update:model-value="(val) => handleChannelChange(val, channelIndex)"
                                 />
                               </div>
                             </td>
@@ -454,7 +455,7 @@
                           <td class="platform-col">
                             <v-autocomplete
                               v-model="platform.platformId"
-                              :items="platformOptions"
+                              :items="getFilteredPlatformOptions(channel.channelId)"
                               item-title="name"
                               item-value="_id"
                               variant="outlined"
@@ -1523,6 +1524,22 @@ const validateYear = (event) => {
 
   // 使用 setValue 方法更新值
   year.setValue(numYear.toString())
+}
+
+// ===== 平台選擇相關方法 =====
+// 根據廣告渠道過濾平台選項
+const getFilteredPlatformOptions = (channelId) => {
+  if (!channelId) return []
+  return platformOptions.value.filter(platform => platform.parentId?._id === channelId)
+}
+
+// 監聽廣告渠道變更
+const handleChannelChange = (channelId, channelIndex) => {
+  // 當廣告渠道變更時，清空該渠道下所有平台的選擇
+  const channel = budgetData.value[channelIndex]
+  channel.platforms.forEach(platform => {
+    platform.platformId = ''
+  })
 }
 </script>
 
