@@ -199,7 +199,7 @@
 
               <template #[`item.details`]="{ item }">
                 <template v-if="Array.isArray(item.details) && item.details.length > 0">
-                  {{ item.details.map(d => d.detail?.name || '').filter(Boolean).join('、') }}
+                  {{ formatDetails(item.details) }}
                 </template>
                 <template v-else>
                   -
@@ -219,6 +219,16 @@
                   @click="editItem(item)"
                 >
                   <v-icon>mdi-pencil</v-icon>
+                </v-btn>
+                <v-btn
+                  v-tooltip="'複製'"
+                  icon
+                  color="teal-darken-2"
+                  variant="plain"
+                  :size="buttonSize"
+                  @click="copyItem(item)"
+                >
+                  <v-icon>mdi-content-copy</v-icon>
                 </v-btn>
               </template>
             </v-data-table-server>
@@ -1359,6 +1369,71 @@ const addAllDetails = () => {
     text: `已新增 ${totalToAdd} 個線別`,
     snackbarProps: { color: 'teal-lighten-1' }
   })
+}
+
+// 新增線別明細格式化函數
+const formatDetails = (details) => {
+  if (!Array.isArray(details)) return '-'
+  
+  const validDetails = details
+    .map(d => d.detail?.name || '')
+    .filter(Boolean)
+  
+  if (validDetails.length === 0) return '-'
+  if (validDetails.length <= 4) return validDetails.join('、')
+  
+  return validDetails.slice(0, 4).join('、') + '...'
+}
+
+// 在 methods 區域新增 copyItem 方法
+const copyItem = async (item) => {
+  try {
+    if (!item || !item._id) {
+      console.error('無效的項目:', item)
+      return
+    }
+
+    // 打開對話框
+    dialog.value = {
+      open: true,
+      id: '' // 設為空因為是新增
+    }
+    isLoadingEdit.value = true
+
+    // 獲取完整的資料
+    const { data } = await apiAuth.get(`/marketing/expenses/${item._id}`)
+    if (!data.success) {
+      throw new Error('獲取資料失敗')
+    }
+
+    const fullItem = data.result
+    
+    // 不帶入發票日期
+    invoiceDate.value.value = null
+    theme.value.value = fullItem.theme._id
+    channel.value.value = fullItem.channel._id
+    platform.value.value = fullItem.platform._id
+    detailsList.value = fullItem.details.map(d => ({
+      detail: d.detail._id,
+      amount: d.amount
+    }))
+    note.value.value = fullItem.note
+
+    // 顯示提示訊息
+    createSnackbar({
+      text: '請記得選擇發票日期',
+      snackbarProps: { 
+        color: 'warning',
+        timeout: 3000
+      }
+    })
+  } catch (error) {
+    console.error('複製項目發生錯誤:', error)
+    handleError(error)
+    dialog.value.open = false
+  } finally {
+    isLoadingEdit.value = false
+  }
 }
 
 // ===== 生命週期鉤子 =====

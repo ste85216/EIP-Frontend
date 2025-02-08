@@ -597,6 +597,7 @@ const fieldTranslations = {
   maintenanceContent: '維修內容',
   maintenanceResult: '維修結果',
   reportUser: '報修人',
+  annualTotalBudget: '年度總預算',
 }
 
 // 行銷分類類型對應
@@ -742,6 +743,12 @@ const formatChanges = (item) => {
       const oldTheme = before.theme?.name || '(無)'
       const newTheme = after.theme?.name || '(無)'
       changes.push(`行銷主題: ${oldTheme} → ${newTheme}`)
+    }
+
+    if (changedFields.includes('annualTotalBudget')) {
+      const oldBudget = before.annualTotalBudget?.toLocaleString() || '0'
+      const newBudget = after.annualTotalBudget?.toLocaleString() || '0'
+      changes.push(`年度總預算: ${oldBudget} → ${newBudget}`)
     }
 
     if (changedFields.includes('note')) {
