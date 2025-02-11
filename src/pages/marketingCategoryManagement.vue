@@ -307,10 +307,16 @@
                     :key="item._id"
                   >
                     <template #prepend>
-                      <div class="channel-name">
+                      <div 
+                        class="channel-name"
+                        :style="getChannelTypeStyle(item.parentId?.parentId?.name)"
+                      >
                         {{ item.parentId?.parentId?.name || '無' }}
                       </div>
-                      <div class="platform-name">
+                      <div 
+                        class="platform-name"
+                        :style="getPlatformStyle(item.parentId?.name)"
+                      >
                         {{ item.parentId?.name || '無' }}
                       </div>
                       <div class="order-number">
@@ -1422,19 +1428,19 @@ const handleBatchAdd = () => {
   closeBatchDialog()
 }
 
-// 在 script setup 部分添加顏色陣列
+// 添加顏色陣列
 const channelColors = [
-  '#009688', // 青色
+  '#F06292', // 粉紅色
   '#FF5722', // 橙色
-  '#607D8B', // 藍灰色
-  '#E91E63', // 粉紅色
   '#F9A825', // 黃色
-  '#00695C', // 淺綠色
+  '#009688', // 青色
   '#795548', // 棕色
-  '#2196F3', // 藍色
-  '#388E3C', // 綠色
   '#0097A7', // 藍綠色
   '#283593', // 深藍色
+  '#2196F3', // 藍色
+  '#607D8B', // 藍灰色
+  '#388E3C', // 綠色
+  '#00695C', // 淺綠色
 ]
 
 // 儲存廣告渠道名稱與顏色的映射
@@ -1451,6 +1457,36 @@ const getChannelTypeStyle = (channelName) => {
   }
   
   return { backgroundColor: channelColorMap.value.get(channelName) }
+}
+
+// 在 script setup 部分添加
+const platformColors = [
+  '#4CAF50', // 綠色
+  '#00BCD4', // 青色
+  '#3F51B5', // 靛藍色
+  '#9C27B0', // 紫色
+  '#E91E63', // 粉紅色
+  '#FFC107', // 琥珀色
+  '#FF5722', // 深橙色
+  '#795548', // 棕色
+  '#607D8B', // 藍灰色
+  '#009688'  // 藍綠色
+]
+
+// 儲存平台名稱與顏色的映射
+const platformColorMap = ref(new Map())
+
+// 添加 getPlatformStyle 函數
+const getPlatformStyle = (platformName) => {
+  if (!platformName) return { backgroundColor: '#757575' }
+  
+  // 如果這個平台還沒有對應的顏色，分配一個新的顏色
+  if (!platformColorMap.value.has(platformName)) {
+    const index = platformColorMap.value.size % platformColors.length
+    platformColorMap.value.set(platformName, platformColors[index])
+  }
+  
+  return { backgroundColor: platformColorMap.value.get(platformName) }
 }
 </script>
 
@@ -1495,7 +1531,7 @@ const getChannelTypeStyle = (channelName) => {
     min-width: 16px;
     height: 16px;
     border-radius: 12px;
-    background-color: #8E24AA;
+    background-color: #666;
     color: #fff;
     display: flex;
     align-items: center;
