@@ -56,7 +56,10 @@
       :expand-on-hover="rail"
       class="position-fixed"
     >
-      <v-list class="h-100 d-flex flex-column pa-0">
+      <v-list
+        v-model:opened="openedGroups"
+        class="pt-0"
+      >
         <div>
           <template v-if="!rail">
             <v-card
@@ -146,8 +149,8 @@
             <!-- 有子選單的項目 -->
             <v-list-group
               v-if="userItem.children"
-              :value="openedGroups.includes(userItem.text)"
-              @click="toggleGroup(userItem.text)"
+              :value="userItem.text"
+              fluid
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -166,6 +169,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
+                base-color="blue-grey-darken-1"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -200,8 +204,9 @@
             <!-- 有子選單的項目 -->
             <v-list-group
               v-if="cogItem.children"
-              :value="openedGroups.includes(cogItem.text)"
-              @click="toggleGroup(cogItem.text)"
+              :value="cogItem.text"
+              :persistent="true"
+              fluid
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -220,6 +225,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
+                base-color="blue-grey-darken-1"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -252,11 +258,11 @@
               v-for="item in filteredAdminItems"
               :key="item.text"
             >
-              <!-- 有子選單的項目 -->
+              <!-- 有子選單的項目 --> <!-- fluid 可以讓列表子項目併上左邊空白-->
               <v-list-group
                 v-if="item.children"
-                :value="openedGroups.includes(item.text)"
-                @click="toggleGroup(item.text)"
+                :value="item.text"
+                fluid
               >
                 <template #activator="{ props }">
                   <v-list-item
@@ -275,6 +281,7 @@
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
+                  base-color="blue-grey-darken-1"
                 >
                   <template #prepend>
                     <v-icon>{{ child.icon }}</v-icon>
@@ -288,7 +295,6 @@
                 v-else
                 :to="item.to"
                 color="grey-darken-3"
-
                 class="mt-2"
               >
                 <template #prepend>
@@ -385,8 +391,9 @@
             <!-- 有子選單的項目 -->
             <v-list-group
               v-if="userItem.children"
-              :value="openedGroups.includes(userItem.text)"
-              @click="toggleGroup(userItem.text)"
+              :value="userItem.text"
+              fluid
+              base-color="grey-lighten-4"
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -437,7 +444,12 @@
               :key="item.text"
             >
               <!-- 有子選單的項目 -->
-              <v-list-group v-if="item.children">
+              <v-list-group
+                v-if="item.children"
+                :value="item.text"
+                fluid
+                base-color="grey-lighten-4"
+              >
                 <template #activator="{ props }">
                   <v-list-item
                     v-bind="props"
@@ -518,7 +530,7 @@ const createSnackbar = useSnackbar()
 const router = useRouter()
 const route = useRoute()
 
-const openedGroups = ref([])
+const openedGroups = ref(['行銷費用管理']) // 修改為數組形式
 const isBackgroundLoaded = ref(false)
 const isAvatarLoaded = ref(false)
 const handleImageLoad = () => {
@@ -533,14 +545,6 @@ const handleAvatarLoad = () => {
 
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
-}
-
-const toggleGroup = (group) => {
-  if (openedGroups.value.includes(group)) {
-    openedGroups.value = openedGroups.value.filter(g => g !== group)
-  } else {
-    openedGroups.value.push(group)
-  }
 }
 
 const userItems = [
@@ -577,21 +581,33 @@ const cogItems = [
         icon: 'mdi-table-edit',
         roles: ['ADMIN', 'MANAGER', 'USER']
       },
-      // {
-      //   to: '/marketingReportDownload',
-      //   text: '行銷報表下載',
-      //   icon: 'mdi-file-download-outline',
-      //   roles: ['ADMIN', 'MANAGER']
-      // },
       {
         to: '/marketingCategoryManagement',
         text: '行銷分類管理',
         icon: 'mdi-shape-plus-outline',
         roles: ['ADMIN', 'MANAGER']
       },
-      
     ]
   },
+  {
+    text: '人事管理',
+    icon: 'mdi-account-group',
+    roles: ['ADMIN', 'MANAGER'],
+    children: [
+      {
+        to: '/employeeManagement',
+        text: '員工管理',
+        icon: 'mdi-account-cog',
+        roles: ['ADMIN', 'MANAGER']
+      },
+      {
+        to: '/companyAndDepartmentManagement',
+        text: '公司部門管理',
+        icon: 'mdi-office-building-cog',
+        roles: ['ADMIN','MANAGER']
+      }
+    ]
+  }
 ]
 
 const adminItems = [
@@ -756,10 +772,19 @@ const filteredUserItems = computed(() => {
   })
 })
 
-// 監聽路由變化，當路由改變時收合所有子選單
+// 修改 watch 函數
 watch(() => route.path, () => {
+  const path = route.path
   openedGroups.value = []
-})
+  
+  // 根據路徑決定要打開哪些選單組
+  if (path.includes('/marketing')) {
+    openedGroups.value.push('行銷費用管理')
+  }
+  if (path.includes('/employee') || path.includes('/companyAndDepartment')) {
+    openedGroups.value.push('人事管理')
+  }
+}, { immediate: true })
 
 // 監聽螢幕尺寸變化
 watch(() => breakpoint.value, () => {

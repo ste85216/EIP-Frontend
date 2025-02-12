@@ -212,25 +212,27 @@
               </template>
 
               <template #[`item.actions`]="{ item }">
-                <v-btn
-                  icon
-                  color="light-blue-darken-4"
-                  variant="plain"
-                  :size="buttonSize"
-                  @click="editItem(item)"
-                >
-                  <v-icon>mdi-pencil</v-icon>
-                </v-btn>
-                <v-btn
-                  v-tooltip="'複製'"
-                  icon
-                  color="teal-darken-2"
-                  variant="plain"
-                  :size="buttonSize"
-                  @click="copyItem(item)"
-                >
-                  <v-icon>mdi-content-copy</v-icon>
-                </v-btn>
+                <div class="d-flex justify-center">
+                  <v-btn
+                    icon
+                    color="light-blue-darken-4"
+                    variant="plain"
+                    :size="buttonSize"
+                    @click="editItem(item)"
+                  >
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-tooltip="'複製'"
+                    icon
+                    color="teal-darken-2"
+                    variant="plain"
+                    :size="buttonSize"
+                    @click="copyItem(item)"
+                  >
+                    <v-icon>mdi-content-copy</v-icon>
+                  </v-btn>
+                </div>
               </template>
             </v-data-table-server>
           </v-col>
