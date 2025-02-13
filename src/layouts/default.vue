@@ -225,7 +225,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
-                base-color="blue-grey-darken-1"
+                base-color="deep-purple-darken-4"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
