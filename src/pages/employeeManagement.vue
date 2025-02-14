@@ -204,7 +204,7 @@
                         cols="6"
                       >
                         <v-btn 
-                          prepend-icon="mdi-microsoft-excel"
+                          prepend-icon="mdi-file-export"
                           color="deep-orange-darken-1"
                           block
                           @click="openExportDialog"
@@ -1590,7 +1590,6 @@ const reinstatementDate = useField('reinstatementDate')
 
 // 處理任職狀態變更
 const handleEmploymentStatusChange = (newStatus) => {
-  
   if (newStatus === '離職') {
     // 離職狀態
     leaveDialog.value = {
@@ -1598,16 +1597,22 @@ const handleEmploymentStatusChange = (newStatus) => {
       date: null
     }
   } else if (newStatus === '留職停薪') {
-    // 留停狀態
+    // 留停狀態，清除之前的復職日期
+    reinstatementDate.value.value = null
     suspensionDialog.value = {
       open: true,
       date: null
     }
-  } else if (newStatus === '在職' && unpaidLeaveStartDate.value.value && !reinstatementDate.value.value) {
-    // 從留停狀態改為在職狀態時，要選擇復職日期
-    reinstatementDialog.value = {
-      open: true,
-      date: null
+  } else if (newStatus === '在職') {
+    // 清除離職日期（如果是從離職狀態改回在職）
+    resignationDate.value.value = null
+    
+    // 檢查是否有未結束的留停狀態（有留停開始日期但沒有復職日期）
+    if (unpaidLeaveStartDate.value.value && !reinstatementDate.value.value) {
+      reinstatementDialog.value = {
+        open: true,
+        date: null
+      }
     }
   }
 }
@@ -1623,6 +1628,8 @@ const handleLeaveConfirm = () => {
 const handleSuspensionConfirm = () => {
   if (suspensionDialog.value.date) {
     unpaidLeaveStartDate.value.value = suspensionDialog.value.date
+    // 確保清除復職日期
+    reinstatementDate.value.value = null
     suspensionDialog.value.open = false
   }
 }
