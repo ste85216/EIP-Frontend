@@ -204,6 +204,7 @@
             <!-- 有子選單的項目 -->
             <v-list-group
               v-if="cogItem.children"
+              v-model="openedGroups"
               :value="cogItem.text"
               :persistent="true"
               fluid
@@ -530,7 +531,7 @@ const createSnackbar = useSnackbar()
 const router = useRouter()
 const route = useRoute()
 
-const openedGroups = ref(['行銷費用管理']) // 修改為數組形式
+const openedGroups = ref([]) // 初始值改為空數組
 const isBackgroundLoaded = ref(false)
 const isAvatarLoaded = ref(false)
 const handleImageLoad = () => {
@@ -560,7 +561,11 @@ const userItems = [
     icon: 'mdi-chart-multiple',
     roles: ['ADMIN', 'MANAGER', 'USER']
   },
-
+  {
+    to: '/employeeList',
+    text: '公司員工列表',
+    icon: 'mdi-account-details',
+  }
 ]
 
 const cogItems = [
@@ -773,16 +778,18 @@ const filteredUserItems = computed(() => {
 })
 
 // 修改 watch 函數
-watch(() => route.path, () => {
-  const path = route.path
-  openedGroups.value = []
-  
-  // 根據路徑決定要打開哪些選單組
-  if (path.includes('/marketing')) {
-    openedGroups.value.push('行銷費用管理')
+watch(() => route.path, (newPath) => {
+  // 檢查新路徑是否包含特定關鍵字，但不重置整個數組
+  if (newPath.includes('/marketing')) {
+    if (!openedGroups.value.includes('行銷費用管理')) {
+      openedGroups.value.push('行銷費用管理')
+    }
   }
-  if (path.includes('/employee') || path.includes('/companyAndDepartment')) {
-    openedGroups.value.push('人事管理')
+  
+  if (newPath.includes('/employee') || newPath.includes('/companyAndDepartment')) {
+    if (!openedGroups.value.includes('人事管理')) {
+      openedGroups.value.push('人事管理')
+    }
   }
 }, { immediate: true })
 

@@ -5,7 +5,7 @@
     max-width="360"
     persistent
   >
-    <v-card class="rounded-lg">
+    <v-card class="rounded-lg pb-2">
       <v-card-title class="font-weight-bold mt-4 ms-2">
         {{ title }}
       </v-card-title>

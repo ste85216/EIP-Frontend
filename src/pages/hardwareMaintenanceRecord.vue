@@ -730,7 +730,7 @@ const tableHeaders = [
 ]
 
 const tableItemsPerPage = ref(10)
-const tableSortBy = ref([{ key: 'maintenanceDate', order: 'desc' }])
+const tableSortBy = ref([{ key: 'maintenanceRecordId', order: 'desc' }])
 const tablePage = ref(1)
 const tableItems = ref([])
 const tableLoading = ref(true)

@@ -355,7 +355,7 @@
     v-model="showUserListDialog"
     max-width="400"
   >
-    <v-card class="px-6 py-5">
+    <v-card class="px-6 pt-6 pb-5 rounded-lg">
       <div class="card-title">
         使用者清單
       </div>

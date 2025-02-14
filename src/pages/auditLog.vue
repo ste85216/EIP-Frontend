@@ -608,7 +608,11 @@ const fieldTranslations = {
   company: '公司',
   department: '部門',
   employeeId: '系統員編',
-  departmentId: '部門編號'
+  departmentId: '部門編號',
+  hireDate: '到職日期',
+  resignationDate: '離職日期',
+  unpaidLeaveStartDate: '留職停薪開始日期',
+  reinstatementDate: '復職日期'
 }
 
 // 行銷分類類型對應
@@ -890,6 +894,9 @@ const formatChanges = (item) => {
           changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
         } else if (key === 'department') {
           changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+        } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
+          // 處理四種日期格式
+          changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
         } else {
           changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
         }
@@ -919,6 +926,9 @@ const formatChanges = (item) => {
         changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
       } else if (key === 'department') {
         changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+      } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
+        // 處理四種日期格式
+        changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
       } else {
         changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
       }
@@ -935,7 +945,7 @@ const formatChanges = (item) => {
   return changes
 }
 
-// 添加載入所有使用者的函數
+// 修改 loadAllUsers 函數
 const loadAllUsers = async () => {
   operatorLoading.value = true
   try {
@@ -943,7 +953,15 @@ const loadAllUsers = async () => {
       params: { search: '' }
     })
     if (data.success) {
-      operatorSuggestions.value = data.result
+      // 添加 SYSTEM 用戶到建議列表
+      operatorSuggestions.value = [
+        {
+          _id: '000000000000000000000000',
+          name: 'SYSTEM',
+          userId: 'SYSTEM'
+        },
+        ...data.result
+      ]
     }
   } catch (error) {
     console.error('載入使用者失敗:', error)
@@ -969,7 +987,16 @@ const handleOperatorSearch = debounce(async (text) => {
       params: { search: text }
     })
     if (data.success) {
-      operatorSuggestions.value = data.result
+      // 如果搜尋文字包含 SYSTEM（不分大小寫），則加入 SYSTEM 用戶
+      const systemUser = {
+        _id: '000000000000000000000000',
+        name: 'SYSTEM',
+        userId: 'SYSTEM'
+      }
+      
+      operatorSuggestions.value = text.toUpperCase().includes('SYSTEM')
+        ? [systemUser, ...data.result]
+        : data.result
     }
   } catch (error) {
     console.error('搜尋操作人員失敗:', error)

@@ -843,7 +843,7 @@
       v-model="exportOptionsDialogOpen"
       max-width="300"
     >
-      <v-card class="px-2 py-4">
+      <v-card class="px-4 py-4 rounded-lg">
         <v-card-title class="card-title">
           選擇匯出內容
         </v-card-title>
@@ -852,14 +852,17 @@
             <v-radio
               label="報價單"
               value="quotation"
+              color="purple-darken-1"
             />
             <v-radio
               label="合約書"
               value="contract"
+              color="purple-darken-1"
             />
             <v-radio
               label="報價單 + 合約書"
               value="both"
+              color="purple-darken-1"
               hide-details
             />
           </v-radio-group>
