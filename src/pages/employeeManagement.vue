@@ -15,7 +15,7 @@
                 class="mt-1 px-lg-5"
               >
                 <v-card class="elevation-4 rounded-lg py-4 py-sm-8 px-4 px-sm-2 px-xl-4">
-                  <v-card-title class="font-weight-bold d-flex align-center">
+                  <v-card-title class="font-weight-bold d-flex align-center mb-2">
                     搜尋條件
                   </v-card-title>
                   <v-card-text class="pa-2">
@@ -168,15 +168,15 @@
                 class="px-5"
               >
                 <v-card
-                  class="elevation-4 rounded-lg py-4 px-4 px-sm-2 px-xl-4"
+                  class="elevation-4 rounded-lg py-5 px-4 px-sm-2 px-xl-4"
                 >
-                  <v-card-title class="font-weight-bold d-flex justify-space-between">
-                    <span>匯入/匯出 Excel</span> 
+                  <v-card-title class="font-weight-bold d-flex justify-space-between mb-2">
+                    <span>匯入 / 匯出 Excel</span> 
                     <v-btn
                       v-tooltip:start="'下載範例檔案'"
                       icon
                       variant="text"
-                      color="purple-darken-2"
+                      color="purple-darken-1"
                       size="28"
                       @click="downloadExampleFile"
                     >
@@ -192,7 +192,7 @@
                       >
                         <v-btn
                           prepend-icon="mdi-file-import"
-                          color="teal-darken-1"
+                          color="light-blue-darken-2"
                           block
                           class="me-4"
                           @click="openImportDialog"
@@ -1012,6 +1012,37 @@
                 </template>
               </v-select>
             </v-col>
+
+            <v-col cols="12">
+              <v-select
+                v-model="exportDialog.employmentStatus"
+                :items="statusOptions"
+                label="任職狀態"
+                item-title="title"
+                item-value="value"
+                variant="outlined"
+                density="compact"
+                :error-messages="exportDialog.employmentStatusError"
+                clearable
+                hide-details
+                multiple
+              >
+                <template #selection="{ item, index }">
+                  <span v-if="index === 0">{{ item.raw.title }}</span>
+                  <span v-else-if="index === 1">...</span>
+                </template>
+                <template #prepend-item>
+                  <v-list-item
+                    title="全選"
+                    color="purple-lighten-1"
+                    prepend-icon="mdi-checkbox-multiple-marked"
+                    :active="exportDialog.employmentStatus.length === statusOptions.length"
+                    @click="selectAllEmploymentStatus"
+                  />
+                  <v-divider class="mt-2" />
+                </template>
+              </v-select>
+            </v-col>
           </v-row>
         </v-card-text>
         <v-card-actions class="pa-4">
@@ -1801,8 +1832,10 @@ const exportDialog = ref({
   company: null,
   departments: [],
   departmentOptions: [],
+  employmentStatus: [],
   companyError: '',
-  departmentError: ''
+  departmentError: '',
+  employmentStatusError: ''
 })
 
 // 載入 XLSX 函數
@@ -1828,8 +1861,10 @@ const openExportDialog = () => {
     company: null,
     departments: [],
     departmentOptions: [],
+    employmentStatus: [],
     companyError: '',
-    departmentError: ''
+    departmentError: '',
+    employmentStatusError: ''
   }
 }
 
@@ -1882,6 +1917,15 @@ const selectAllDepartments = () => {
   }
 }
 
+// 全選任職狀態
+const selectAllEmploymentStatus = () => {
+  if (exportDialog.value.employmentStatus.length === statusOptions.length) {
+    exportDialog.value.employmentStatus = []
+  } else {
+    exportDialog.value.employmentStatus = statusOptions.map(status => status.value)
+  }
+}
+
 // 處理匯出 Excel
 const handleExportExcel = async () => {
   try {
@@ -1889,10 +1933,24 @@ const handleExportExcel = async () => {
     let hasError = false
     exportDialog.value.companyError = ''
     exportDialog.value.departmentError = ''
+    exportDialog.value.employmentStatusError = ''
 
+    // 檢查任職狀態（不論匯出類型都必選）
+    if (!exportDialog.value.employmentStatus || exportDialog.value.employmentStatus.length === 0) {
+      exportDialog.value.employmentStatusError = '請選擇至少一個任職狀態'
+      hasError = true
+    }
+
+    // 如果是單一公司匯出，檢查公司和部門
     if (exportDialog.value.type === 'company') {
       if (!exportDialog.value.company) {
         exportDialog.value.companyError = '請選擇公司'
+        hasError = true
+      }
+
+      // 只有在有選擇公司的情況下才檢查部門
+      if (exportDialog.value.company && (!exportDialog.value.departments || exportDialog.value.departments.length === 0)) {
+        exportDialog.value.departmentError = '請選擇至少一個部門'
         hasError = true
       }
     }
@@ -1911,6 +1969,11 @@ const handleExportExcel = async () => {
       if (exportDialog.value.departments.length > 0) {
         params.departments = exportDialog.value.departments.join(',')
       }
+    }
+
+    // 添加任職狀態參數
+    if (exportDialog.value.employmentStatus.length > 0) {
+      params.employmentStatus = exportDialog.value.employmentStatus.join(',')
     }
 
     // 呼叫 API 取得資料
