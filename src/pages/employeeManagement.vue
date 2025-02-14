@@ -8,154 +8,215 @@
         lg="2"
       >
         <v-row>
-          <v-col
-            cols="12"
-            class="mt-1 px-lg-5"
-          >
-            <v-card class="elevation-4 rounded-lg py-4 py-sm-8 px-4 px-sm-2 px-xl-4">
-              <v-card-title class="font-weight-bold d-flex align-center">
-                搜尋條件
-              </v-card-title>
-              <v-card-text class="pa-2">
-                <v-row>
-                  <!-- 公司選擇 -->
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    lg="12"
-                  >
-                    <v-select
-                      v-model="searchCriteria.company"
-                      :items="companies"
-                      :item-title="item => item ? `${item.name} (${item.companyId})` : ''"
-                      item-value="_id"
-                      label="公司"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      @update:model-value="handleCompanyChange"
-                    />
-                  </v-col>
-
-                  <!-- 部門選擇 -->
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    lg="12"
-                  >
-                    <v-select
-                      v-model="searchCriteria.department"
-                      :items="departments"
-                      :item-title="item => item ? `${item.name} (${item.departmentId})` : ''"
-                      item-value="_id"
-                      label="部門"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      :disabled="!searchCriteria.company"
-                    />
-                  </v-col>
-
-                  <!-- 任職狀態 -->
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    lg="12"
-                  >
-                    <v-select
-                      v-model="searchCriteria.status"
-                      :items="statusOptions"
-                      label="任職狀態"
-                      item-title="title"
-                      item-value="value"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                    />
-                  </v-col>
-                </v-row>
-
-                <v-row class="border rounded-lg border border-opacity-25 mb-2 mx-0">
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    lg="12"
-                  >
-                    <v-select
-                      v-model="searchCriteria.dateType"
-                      :items="dateTypeOptions"
-                      label="日期類型"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      @update:model-value="handleDateTypeChange"
-                    />
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    lg="12"
-                  >
-                    <v-date-input
-                      v-model="searchCriteria.dateRange"
-                      label="日期區間"
-                      variant="outlined"
-                      density="compact"
-                      prepend-icon
-                      hide-details
-                      clearable
-                      multiple="range"
-                      :disabled="!searchCriteria.dateType"
-                      :cancel-text="'取消'"
-                      :ok-text="'確認'"
-                      @update:model-value="handleDateRangeChange"
-                    />
-                  </v-col>
-                </v-row>
-
-                <!-- 搜尋按鈕區 -->
-                <v-row>
-                  <v-col
-                    cols="12"
-                    class="d-flex justify-end gap-2"
-                  >
-                    <v-row class="d-flex justify-space-between">
+          <v-col cols="12">
+            <v-row>
+              <v-col
+                cols="12"
+                class="mt-1 px-lg-5"
+              >
+                <v-card class="elevation-4 rounded-lg py-4 py-sm-8 px-4 px-sm-2 px-xl-4">
+                  <v-card-title class="font-weight-bold d-flex align-center">
+                    搜尋條件
+                  </v-card-title>
+                  <v-card-text class="pa-2">
+                    <v-row>
+                      <!-- 公司選擇 -->
                       <v-col
-                        cols="3"
-                        class="pe-0"
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                      >
+                        <v-select
+                          v-model="searchCriteria.company"
+                          :items="companies"
+                          :item-title="item => item ? `${item.name} (${item.companyId})` : ''"
+                          item-value="_id"
+                          label="公司"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                          @update:model-value="handleCompanyChange"
+                        />
+                      </v-col>
+
+                      <!-- 部門選擇 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                      >
+                        <v-select
+                          v-model="searchCriteria.department"
+                          :items="departments"
+                          :item-title="item => item ? `${item.name} (${item.departmentId})` : ''"
+                          item-value="_id"
+                          label="部門"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                          :disabled="!searchCriteria.company"
+                        />
+                      </v-col>
+
+                      <!-- 任職狀態 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                      >
+                        <v-select
+                          v-model="searchCriteria.status"
+                          :items="statusOptions"
+                          label="任職狀態"
+                          item-title="title"
+                          item-value="value"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                        />
+                      </v-col>
+                    </v-row>
+
+                    <v-row class="border rounded-lg border border-opacity-25 mb-2 mx-0">
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                      >
+                        <v-select
+                          v-model="searchCriteria.dateType"
+                          :items="dateTypeOptions"
+                          label="日期類型"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                          @update:model-value="handleDateTypeChange"
+                        />
+                      </v-col>
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                      >
+                        <v-date-input
+                          v-model="searchCriteria.dateRange"
+                          label="日期區間"
+                          variant="outlined"
+                          density="compact"
+                          prepend-icon
+                          hide-details
+                          clearable
+                          multiple="range"
+                          :disabled="!searchCriteria.dateType"
+                          :cancel-text="'取消'"
+                          :ok-text="'確認'"
+                          @update:model-value="handleDateRangeChange"
+                        />
+                      </v-col>
+                    </v-row>
+
+                    <!-- 搜尋按鈕區 -->
+                    <v-row>
+                      <v-col
+                        cols="12"
+                        class="d-flex justify-end gap-2"
+                      >
+                        <v-row class="d-flex justify-space-between">
+                          <v-col
+                            cols="3"
+                            class="pe-0"
+                          >
+                            <v-btn
+                              color="grey"
+                              width="40"
+                              block
+                              @click="resetSearch"
+                            >
+                              <v-icon>mdi-refresh</v-icon>
+                            </v-btn>
+                          </v-col>
+                          <v-col
+                            cols="8"
+                            class="ps-0"
+                          >
+                            <v-btn
+                              color="cyan-darken-2"
+                              prepend-icon="mdi-magnify"
+                              :loading="tableLoading"
+                              block
+                              @click="performSearch"
+                            >
+                              搜尋
+                            </v-btn>
+                          </v-col>
+                        </v-row>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-col>
+          <v-col cols="12">
+            <v-row>
+              <v-col
+                cols="12"
+                class="px-5"
+              >
+                <v-card
+                  class="elevation-4 rounded-lg py-4 px-4 px-sm-2 px-xl-4"
+                >
+                  <v-card-title class="font-weight-bold d-flex justify-space-between">
+                    <span>匯入/匯出 Excel</span> 
+                    <v-btn
+                      v-tooltip:start="'下載範例檔案'"
+                      icon
+                      variant="text"
+                      color="purple-darken-2"
+                      size="28"
+                      @click="downloadExampleFile"
+                    >
+                      <v-icon size="20">
+                        mdi-download-box-outline
+                      </v-icon>
+                    </v-btn>
+                  </v-card-title>
+                  <v-card-text class="pa-2">
+                    <v-row>
+                      <v-col
+                        cols="6"
                       >
                         <v-btn
-                          color="grey"
-                          width="40"
+                          prepend-icon="mdi-file-import"
+                          color="teal-darken-1"
                           block
-                          @click="resetSearch"
+                          class="me-4"
+                          @click="openImportDialog"
                         >
-                          <v-icon>mdi-refresh</v-icon>
+                          匯入
                         </v-btn>
                       </v-col>
                       <v-col
-                        cols="8"
-                        class="ps-0"
+                        cols="6"
                       >
-                        <v-btn
-                          color="cyan-darken-2"
-                          prepend-icon="mdi-magnify"
-                          :loading="tableLoading"
+                        <v-btn 
+                          prepend-icon="mdi-microsoft-excel"
+                          color="deep-orange-darken-1"
                           block
-                          @click="performSearch"
+                          @click="openExportDialog"
                         >
-                          搜尋
+                          匯出
                         </v-btn>
                       </v-col>
                     </v-row>
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </v-card>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
           </v-col>
         </v-row>
       </v-col>
@@ -173,17 +234,10 @@
             class="ps-4 pb-sm-4"
           >
             <v-row>
-              <v-col class="d-flex align-center justify-space-between">
-                <h3 class="d-inline-block">
+              <v-col>
+                <h3>
                   員工管理
                 </h3>
-                <v-btn 
-                  prepend-icon="mdi-microsoft-excel"
-                  color="teal-darken-1"
-                  @click="openExportDialog"
-                >
-                  匯出 Excel
-                </v-btn>
               </v-col>
               <v-col
                 cols="12"
@@ -206,7 +260,7 @@
                     class="d-flex align-center"
                   >
                     <v-icon
-                      v-tooltip:start="'可搜尋系統員工編號、姓名、Email、科威員工編號、分機號碼、列印編號、備註'"
+                      v-tooltip:start="'可搜尋系統員工編號、姓名、Email、科威員工編號、分機號碼、列印號碼、備註'"
                       icon="mdi-information"
                       size="small"
                       color="blue-grey-darken-2"
@@ -977,6 +1031,119 @@
             @click="handleExportExcel"
           >
             匯出
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 匯入 Excel 對話框 -->
+    <v-dialog
+      v-model="importDialog.open"
+      max-width="380"
+    >
+      <v-card class="rounded-lg px-4 pt-5 pb-4">
+        <v-card-title class="card-title mb-2">
+          匯入員工資料
+        </v-card-title>
+        <v-card-text class="pa-4">
+          <v-row>
+            <v-col cols="12">
+              <v-file-input
+                v-model="importDialog.file"
+                label="*選擇 Excel 檔案"
+                variant="outlined"
+                density="compact"
+                :error-messages="importDialog.fileError"
+                accept=".xlsx"
+                clearable
+                hide-details
+                @change="handleFileChange"
+              />
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions class="pa-4">
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="outlined"
+            @click="closeImportDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            :loading="isImporting"
+            class="ms-2"
+            @click="handleImportExcel"
+          >
+            匯入
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 匯入結果對話框 -->
+    <v-dialog
+      v-model="importResultDialog.open"
+      max-width="600"
+    >
+      <v-card class="rounded-lg px-4 pt-5 pb-4">
+        <v-card-title class="card-title">
+          匯入結果
+        </v-card-title>
+        <v-card-text class="pa-4">
+          <v-row>
+            <v-col
+              v-if="importResultDialog.success.length > 0"
+              cols="12"
+            >
+              <div class="text-subtitle-1 font-weight-bold text-teal-lighten-1 mb-2">
+                成功匯入 {{ importResultDialog.success.length }} 筆資料
+              </div>
+              <v-list
+                density="compact"
+                class="bg-teal-lighten-5 rounded-lg"
+              >
+                <v-list-item
+                  v-for="(item, index) in importResultDialog.success"
+                  :key="index"
+                  :title="`${item.employeeCode} - ${item.name}`"
+                  :subtitle="item.message"
+                />
+              </v-list>
+            </v-col>
+
+            <v-col
+              v-if="importResultDialog.errors.length > 0"
+              cols="12"
+            >
+              <div class="text-subtitle-1 font-weight-bold text-red-lighten-1 mb-2">
+                匯入失敗 {{ importResultDialog.errors.length }} 筆資料
+              </div>
+              <v-list
+                density="compact"
+                class="bg-red-lighten-5 rounded-lg"
+              >
+                <v-list-item
+                  v-for="(item, index) in importResultDialog.errors"
+                  :key="index"
+                  :title="`${item.employeeCode} - ${item.name}`"
+                  :subtitle="item.message"
+                />
+              </v-list>
+            </v-col>
+          </v-row>
+        </v-card-text>
+        <v-card-actions class="pa-4">
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="outlined"
+            @click="closeImportResultDialog"
+          >
+            關閉
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -1754,22 +1921,34 @@ const handleExportExcel = async () => {
       const XLSX = await loadXLSX()
 
       // 準備 Excel 資料
-      const excelData = data.result.map(employee => ({
-        '科威員編': employee.employeeCode,
-        '姓名': employee.name,
-        '公司': employee.company?.name || '',
-        '部門': employee.department?.name || '',
-        '分機號碼': employee.extNumber,
-        '列印編號': employee.printNumber,
-        'Email': employee.email,
-        'Email密碼': employee.emailPassword,
-        '任職狀態': employee.employmentStatus,
-        '到職日期': employee.hireDate ? new Date(employee.hireDate).toLocaleDateString('zh-TW') : '',
-        '離職日期': employee.resignationDate ? new Date(employee.resignationDate).toLocaleDateString('zh-TW') : '',
-        '留停開始日期': employee.unpaidLeaveStartDate ? new Date(employee.unpaidLeaveStartDate).toLocaleDateString('zh-TW') : '',
-        '留停復職日期': employee.reinstatementDate ? new Date(employee.reinstatementDate).toLocaleDateString('zh-TW') : '',
-        '備註': employee.note || ''
-      }))
+      const excelData = data.result.map(employee => {
+        // 格式化日期函數
+        const formatExcelDate = (date) => {
+          if (!date) return ''
+          const d = new Date(date)
+          const year = d.getFullYear()
+          const month = String(d.getMonth() + 1).padStart(2, '0')
+          const day = String(d.getDate()).padStart(2, '0')
+          return `${year}/${month}/${day}`
+        }
+
+        return {
+          '科威員編': employee.employeeCode,
+          '姓名': employee.name,
+          '公司': employee.company?.name || '',
+          '部門': employee.department?.name || '',
+          '分機號碼': employee.extNumber,
+          '列印編號': employee.printNumber,
+          'Email': employee.email,
+          'Email密碼': employee.emailPassword,
+          '任職狀態': employee.employmentStatus,
+          '到職日期': formatExcelDate(employee.hireDate),
+          '離職日期': formatExcelDate(employee.resignationDate),
+          '留停開始日期': formatExcelDate(employee.unpaidLeaveStartDate),
+          '留停復職日期': formatExcelDate(employee.reinstatementDate),
+          '備註': employee.note || ''
+        }
+      })
 
       // 創建工作表
       const ws = XLSX.utils.json_to_sheet(excelData)
@@ -1847,6 +2026,204 @@ const appendCompanyDomain = () => {
   if (cleanValue && cleanValue.trim() !== '') {
     email.value.value = `${cleanValue}@ystravel.com.tw`
   }
+}
+
+// 匯入相關
+const isImporting = ref(false)
+const importDialog = ref({
+  open: false,
+  file: null,
+  fileError: ''
+})
+
+const importResultDialog = ref({
+  open: false,
+  success: [],
+  errors: []
+})
+
+// 開啟匯入對話框
+const openImportDialog = () => {
+  importDialog.value = {
+    open: true,
+    file: null,
+    fileError: ''
+  }
+}
+
+// 關閉匯入對話框
+const closeImportDialog = () => {
+  importDialog.value.open = false
+}
+
+// 關閉匯入結果對話框
+const closeImportResultDialog = () => {
+  importResultDialog.value.open = false
+}
+
+// 處理檔案變更
+const handleFileChange = () => {
+  importDialog.value.fileError = ''
+}
+
+// 處理匯入 Excel
+const handleImportExcel = async () => {
+  try {
+    // 驗證
+    let hasError = false
+    importDialog.value.fileError = ''
+
+    if (!importDialog.value.file) {
+      importDialog.value.fileError = '請選擇檔案'
+      hasError = true
+    }
+
+    if (hasError) return
+
+    isImporting.value = true
+
+    // 載入 XLSX
+    const XLSX = await loadXLSX()
+
+    // 讀取檔案
+    const reader = new FileReader()
+    reader.onload = async (e) => {
+      try {
+        const data = new Uint8Array(e.target.result)
+        const workbook = XLSX.read(data, { 
+          type: 'array',
+          cellDates: true,  // 將 Excel 日期轉換為 JS Date 物件
+          dateNF: 'yyyy/mm/dd'  // 指定日期格式
+        })
+
+        // 獲取第一個工作表
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]]
+        
+        // 轉換為 JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet)
+
+        // 準備匯入資料
+        const employees = jsonData.map(row => {
+          // 處理日期格式
+          const formatDate = (dateStr) => {
+            if (!dateStr) return ''
+            
+            // 如果是 Excel 的日期數字格式
+            if (typeof dateStr === 'number') {
+              // Excel 的日期是從 1900/1/1 開始計算的天數
+              // 需要減去 Excel 的系統日期偏差 (1900 年的 bug)
+              const excelEpoch = new Date(1899, 11, 30)
+              const date = new Date(excelEpoch.getTime() + (dateStr * 24 * 60 * 60 * 1000))
+              return date.toLocaleDateString('zh-TW', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              }).replace(/\//g, '/')
+            }
+            
+            // 如果是日期字串，確保格式為 YYYY/MM/DD
+            if (typeof dateStr === 'string') {
+              const date = new Date(dateStr)
+              if (!isNaN(date.getTime())) {
+                return date.toLocaleDateString('zh-TW', {
+                  year: 'numeric',
+                  month: '2-digit',
+                  day: '2-digit'
+                }).replace(/\//g, '/')
+              }
+            }
+            
+            return dateStr
+          }
+
+          // 印出原始日期資料，用於除錯
+          console.log('Excel 原始日期:', {
+            hireDate: row['到職日期'],
+            type: typeof row['到職日期']
+          })
+
+          return {
+            employeeCode: row['科威員編']?.toString(),
+            name: row['姓名'],
+            company: row['公司'],
+            department: row['部門'],
+            extNumber: row['分機號碼']?.toString(),
+            printNumber: row['列印編號']?.toString(),
+            email: row['Email'],
+            emailPassword: row['Email密碼'],
+            employmentStatus: row['任職狀態'],
+            hireDate: formatDate(row['到職日期']),
+            resignationDate: formatDate(row['離職日期']),
+            unpaidLeaveStartDate: formatDate(row['留停開始日期']),
+            reinstatementDate: formatDate(row['留停復職日期']),
+            note: row['備註']
+          }
+        })
+
+        // 印出處理後的資料，用於除錯
+        console.log('處理後的匯入資料:', JSON.stringify(employees, null, 2))
+
+        // 呼叫 API
+        const { data: response } = await apiAuth.post('/employees/import', {
+          employees
+        })
+
+        if (response.success) {
+          // 顯示結果
+          importResultDialog.value = {
+            open: true,
+            success: response.result.success,
+            errors: response.result.errors
+          }
+
+          // 關閉匯入對話框
+          closeImportDialog()
+
+          // 重新載入資料
+          await performSearch()
+
+          createSnackbar({
+            text: '匯入完成',
+            snackbarProps: { color: 'teal-lighten-1' }
+          })
+        }
+      } catch (error) {
+        console.error('Error:', error)
+        const errorMessage = error?.response?.data?.message || '匯入失敗'
+        createSnackbar({
+          text: errorMessage,
+          snackbarProps: { color: 'red-lighten-1' }
+        })
+      } finally {
+        isImporting.value = false
+      }
+    }
+
+    reader.readAsArrayBuffer(importDialog.value.file)
+  } catch (error) {
+    console.error('Error:', error)
+    const errorMessage = error?.response?.data?.message || '匯入失敗'
+    createSnackbar({
+      text: errorMessage,
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    isImporting.value = false
+  }
+}
+
+// 在 script setup 部分添加以下函數
+const downloadExampleFile = () => {
+  const link = document.createElement('a')
+  link.href = 'https://yst001.com/GInternational/uploads/example/example_employeeList.xlsx'
+  link.download = 'example_employeeList.xlsx'
+  link.style.display = 'none'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  createSnackbar({
+    text: '範例檔案下載成功',
+    snackbarProps: { color: 'teal-lighten-1' }
+  })
 }
 </script>
 
