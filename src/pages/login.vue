@@ -32,6 +32,7 @@
               density="compact"
               variant="underlined"
               clearable
+              autocomplete="username"
             />
           </v-col>
           <v-col
@@ -46,6 +47,7 @@
               label="password"
               density="compact"
               variant="underlined"
+              autocomplete="current-password"
               @click:append-inner="showPassword = !showPassword"
             />
           </v-col>

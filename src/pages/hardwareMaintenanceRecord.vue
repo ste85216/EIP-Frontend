@@ -28,7 +28,7 @@
               class="px-3"
             >
               <v-card
-                class="rounded-lg border"
+                class="rounded-lg border border-opacity-25"
                 elevation="0"
                 min-height="80"
               >
@@ -61,6 +61,46 @@
               </v-card>
             </v-col>
           </template>
+          <!-- Total 卡片 -->
+          <v-col
+            cols="12"
+            sm="3"
+            lg="1"
+            class="px-3"
+          >
+            <v-card
+              class="rounded-lg border border-error border-opacity-50"
+              elevation="0"
+              min-height="80"
+            >
+              <v-card-text class="text-center pb-3 px-2">
+                <div class="sub-title mb-2">
+                  Total
+                </div>
+                <div
+                  v-if="!statsLoading"
+                  :class="[
+                    'sub-title',
+                    getTotalCount > 0 ? 'text-red-darken-3' : 'text-grey'
+                  ]"
+                >
+                  {{ getTotalCount }}
+                </div>
+                <div
+                  v-else
+                  class="d-flex justify-center align-center"
+                  style="min-height: 21.38px"
+                >
+                  <v-progress-circular
+                    indeterminate
+                    size="20"
+                    width="2"
+                    color="purple-darken-2"
+                  />
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
         </v-row>
       </v-col>
 
@@ -1556,6 +1596,13 @@ const handleExportPDF = async () => {
     isExporting.value = false
   }
 }
+
+// 在 script setup 區域新增 getTotalCount 計算屬性
+const getTotalCount = computed(() => {
+  return categories.value.reduce((total, category) => {
+    return total + getCategoryCount(category._id)
+  }, 0)
+})
 </script>
 
 <style lang="scss" scoped>

@@ -4044,8 +4044,8 @@ const exportChartsToPDF = async () => {
 
     // 創建圓餅圖容器
     const pieContainer = document.createElement('div')
-    pieContainer.style.width = '1600px'
-    pieContainer.style.height = '900px'
+    pieContainer.style.width = '1680px'
+    pieContainer.style.height = '920px'
     pieContainer.style.backgroundColor = 'white'
     pieContainer.style.padding = '20px'
     pieContainer.style.boxSizing = 'border-box'
@@ -4053,8 +4053,8 @@ const exportChartsToPDF = async () => {
 
     // 創建長條圖容器
     const barContainer = document.createElement('div')
-    barContainer.style.width = '1600px'
-    barContainer.style.height = '900px'
+    barContainer.style.width = '1680px'
+    barContainer.style.height = '920px'
     barContainer.style.backgroundColor = 'white'
     barContainer.style.padding = '20px'
     barContainer.style.boxSizing = 'border-box'
@@ -4093,7 +4093,7 @@ const exportChartsToPDF = async () => {
         label: {
           ...pieChartOption.value.series[0].label,
           fontSize: 14,
-          lineHeight: 18
+          lineHeight: 24
         },
         emphasis: {
           ...pieChartOption.value.series[0].emphasis,
@@ -4750,7 +4750,7 @@ const generateChartsPDF = async () => {
     // 創建圓餅圖容器
     const pieContainer = document.createElement('div')
     pieContainer.style.width = '1680px'
-    pieContainer.style.height = '9200px'
+    pieContainer.style.height = '920px'
     pieContainer.style.backgroundColor = 'white'
     pieContainer.style.padding = '20px'
     pieContainer.style.boxSizing = 'border-box'
