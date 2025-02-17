@@ -50,7 +50,7 @@
                     <v-autocomplete
                       v-model="searchCriteria.platform"
                       :items="getFilteredPlatformOptions(searchCriteria.channel)"
-                      label="平台"
+                      :label="searchCriteria.channel ? '平台' : '平台 ( 請先選擇廣告渠道 )'"
                       item-title="name"
                       item-value="_id"
                       variant="outlined"
@@ -58,6 +58,7 @@
                       hide-details
                       clearable
                       class="mb-6"
+                      :disabled="!searchCriteria.channel"
                     />
                     <v-autocomplete
                       v-model="searchCriteria.detail"
@@ -323,12 +324,13 @@
                         v-model="platform.value.value"
                         :error-messages="platform.errorMessage.value"
                         :items="getFilteredPlatformOptions(channel.value.value)"
+                        :label="channel.value.value ? '*平台' : '*平台 ( 請先選擇廣告渠道 )'"
                         item-title="name"
                         item-value="_id"
-                        label="*平台"
                         variant="outlined"
                         density="compact"
                         clearable
+                        :disabled="!channel.value.value"
                       />
                     </v-col>
 
