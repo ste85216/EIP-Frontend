@@ -413,10 +413,10 @@
               :items="defaultDepartments"
               item-title="name"
               item-value="code"
-              label="選擇部門代碼"
+              label="參考部門代碼 ( 可不選 )"
               required
               clearable
-              hint="可選擇預設部門或自行輸入部門資訊"
+              hint="選擇後，會自動帶入部門編號及部門名稱"
               persistent-hint
               variant="outlined"
               density="compact"
@@ -431,7 +431,7 @@
               density="compact"
               class="mb-3"
               :error-messages="departmentErrors.departmentId"
-              :hint="departmentForm.company ? '請輸入部門編號 (公司編號 + 部門代碼)' : '請先選擇公司'"
+              :hint="departmentForm.company ? '建議輸入「公司編號 + 部門代碼」' : '請先選擇公司'"
               persistent-hint
             />
             <v-text-field
@@ -960,6 +960,9 @@ watch([() => departmentForm.value.company, () => departmentForm.value.department
     if (selectedCompany) {
       departmentForm.value.departmentId = `${selectedCompany.companyId}${departmentForm.value.departmentCode}`
     }
+  } else if (!departmentDialog.value.id) {
+    // 只在新增模式下清除部門編號
+    departmentForm.value.departmentId = ''
   }
 }, { immediate: true })
 
