@@ -306,11 +306,12 @@
     <!-- 確認停用對話框 -->
     <ConfirmDeleteDialog
       v-model="showConfirmDialog"
+      :width="300"
       title="確認停用帳號"
-      message="確定要停用此帳號嗎？停用後該用戶將無法登入系統。"
+      message="確定要停用此帳號嗎？停用後該使用者將無法登入系統。"
       confirm-button-text="停用"
       cancel-button-text="取消"
-      confirm-button-color="error"
+      confirm-button-color="red-darken-1"
       @confirm="confirmStatusChange"
     />
   </v-container>

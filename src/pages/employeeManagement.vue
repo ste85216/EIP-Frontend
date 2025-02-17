@@ -817,6 +817,7 @@
             prepend-icon
             :ok-text="'確認'"
             :cancel-text="'取消'"
+            :error-messages="leaveDialog.error"
           />
         </v-card-text>
         <v-card-actions class="px-0">
@@ -860,6 +861,7 @@
             prepend-icon
             :ok-text="'確認'"
             :cancel-text="'取消'"
+            :error-messages="suspensionDialog.error"
           />
         </v-card-text>
         <v-card-actions class="px-0">
@@ -903,6 +905,7 @@
             prepend-icon
             :ok-text="'確認'"
             :cancel-text="'取消'"
+            :error-messages="reinstatementDialog.error"
           />
         </v-card-text>
         <v-card-actions class="px-0">
@@ -1594,24 +1597,27 @@ const handleEmploymentStatusChange = (newStatus) => {
     // 離職狀態
     leaveDialog.value = {
       open: true,
-      date: null
+      date: null,
+      error: ''
     }
   } else if (newStatus === '留職停薪') {
     // 留停狀態，清除之前的復職日期
     reinstatementDate.value.value = null
     suspensionDialog.value = {
       open: true,
-      date: null
+      date: null,
+      error: ''
     }
-  } else if (newStatus === '在職') {
-    // 清除離職日期（如果是從離職狀態改回在職）
+  } else if (newStatus === '在職' || newStatus === '待入職') {
+    // 清除離職日期（如果是從離職狀態改回在職或待入職）
     resignationDate.value.value = null
     
     // 檢查是否有未結束的留停狀態（有留停開始日期但沒有復職日期）
     if (unpaidLeaveStartDate.value.value && !reinstatementDate.value.value) {
       reinstatementDialog.value = {
         open: true,
-        date: null
+        date: null,
+        error: ''
       }
     }
   }
@@ -1619,27 +1625,36 @@ const handleEmploymentStatusChange = (newStatus) => {
 
 // 修改對話框確認按鈕處理函數
 const handleLeaveConfirm = () => {
-  if (leaveDialog.value.date) {
-    resignationDate.value.value = leaveDialog.value.date
-    leaveDialog.value.open = false
+  if (!leaveDialog.value.date) {
+    leaveDialog.value.error = '請選擇離職日期'
+    return
   }
+  resignationDate.value.value = leaveDialog.value.date
+  leaveDialog.value.open = false
+  leaveDialog.value.error = ''
 }
 
 const handleSuspensionConfirm = () => {
-  if (suspensionDialog.value.date) {
-    unpaidLeaveStartDate.value.value = suspensionDialog.value.date
-    // 確保清除復職日期
-    reinstatementDate.value.value = null
-    suspensionDialog.value.open = false
+  if (!suspensionDialog.value.date) {
+    suspensionDialog.value.error = '請選擇留停開始日期'
+    return
   }
+  unpaidLeaveStartDate.value.value = suspensionDialog.value.date
+  // 確保清除復職日期
+  reinstatementDate.value.value = null
+  suspensionDialog.value.open = false
+  suspensionDialog.value.error = ''
 }
 
 const handleReinstatementConfirm = () => {
-  if (reinstatementDialog.value.date) {
-    // 設定復職日期，不會覆蓋留停開始日期
-    reinstatementDate.value.value = reinstatementDialog.value.date
-    reinstatementDialog.value.open = false
+  if (!reinstatementDialog.value.date) {
+    reinstatementDialog.value.error = '請選擇留停復職日期'
+    return
   }
+  // 設定復職日期，不會覆蓋留停開始日期
+  reinstatementDate.value.value = reinstatementDialog.value.date
+  reinstatementDialog.value.open = false
+  reinstatementDialog.value.error = ''
 }
 
 // 修改 openDialog 函數
@@ -1760,32 +1775,38 @@ const submitEmployee = handleSubmit(async (values) => {
 // 對話框相關的 ref
 const leaveDialog = ref({
   open: false,
-  date: null
+  date: null,
+  error: ''
 })
 
 const suspensionDialog = ref({
   open: false,
-  date: null
+  date: null,
+  error: ''
 })
 
 const reinstatementDialog = ref({
   open: false,
-  date: null
+  date: null,
+  error: ''
 })
 
 // 對話框取消按鈕處理函數
 const handleLeaveCancel = () => {
   leaveDialog.value.open = false
+  leaveDialog.value.error = ''
   employmentStatus.value.value = '在職'
 }
 
 const handleSuspensionCancel = () => {
   suspensionDialog.value.open = false
+  suspensionDialog.value.error = ''
   employmentStatus.value.value = '在職'
 }
 
 const handleReinstatementCancel = () => {
   reinstatementDialog.value.open = false
+  reinstatementDialog.value.error = ''
   employmentStatus.value.value = '留職停薪'
 }
 
