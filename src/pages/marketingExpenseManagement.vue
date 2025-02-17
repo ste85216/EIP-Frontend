@@ -3,15 +3,14 @@
     <v-row class="pt-md-5">
       <v-col 
         cols="12"
-        lg="4"
-        xl="3"
+        lg="2"
       >
         <v-row>
           <v-col
             cols="12"
-            class="mt-1 px-lg-10"
+            class="mt-1 ps-lg-6 pe-lg-0"
           >
-            <v-card class="elevation-4 rounded-lg py-4 py-sm-8 px-4 px-sm-4 px-xl-8">
+            <v-card class="elevation-4 rounded-lg py-4 py-sm-8 px-4 px-sm-4 px-xl-4">
               <v-card-title class="font-weight-bold d-flex align-center">
                 搜尋條件
               </v-card-title>
@@ -132,7 +131,7 @@
         </v-row>
       </v-col>
       <v-col>
-        <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-1 mx-0 mx-sm-4 ms-md-0 me-md-4 mb-4 bg-white">
+        <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-1 mx-0 mx-sm-4 ms-md-4 me-md-4 mb-4 bg-white">
           <!-- 標題區塊 -->
           <v-col
             cols="12"

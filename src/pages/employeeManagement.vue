@@ -965,6 +965,7 @@
             <v-col
               v-if="exportDialog.type === 'company'"
               cols="12"
+              class="pb-0"
             >
               <v-select
                 v-model="exportDialog.company"
@@ -976,7 +977,6 @@
                 density="compact"
                 :error-messages="exportDialog.companyError"
                 clearable
-                hide-details
                 @update:model-value="handleExportCompanyChange"
               />
             </v-col>
@@ -984,6 +984,7 @@
             <v-col
               v-if="exportDialog.type === 'company'"
               cols="12"
+              class="pb-0"
             >
               <v-select
                 v-model="exportDialog.departments"
@@ -995,9 +996,9 @@
                 density="compact"
                 :error-messages="exportDialog.departmentError"
                 clearable
-                hide-details
                 multiple
                 :disabled="!exportDialog.company"
+                @update:model-value="() => exportDialog.departmentError = ''"
               >
                 <template #selection="{ item, index }">
                   <span v-if="index === 0">{{ item.raw.name }}</span>
@@ -1027,8 +1028,8 @@
                 density="compact"
                 :error-messages="exportDialog.employmentStatusError"
                 clearable
-                hide-details
                 multiple
+                @update:model-value="() => exportDialog.employmentStatusError = ''"
               >
                 <template #selection="{ item, index }">
                   <span v-if="index === 0">{{ item.raw.title }}</span>
@@ -1081,7 +1082,10 @@
         </v-card-title>
         <v-card-text class="pa-4">
           <v-row>
-            <v-col cols="12">
+            <v-col
+              cols="12"
+              class="pb-0"
+            >
               <v-file-input
                 v-model="importDialog.file"
                 label="*選擇 Excel 檔案"
@@ -1090,7 +1094,6 @@
                 :error-messages="importDialog.fileError"
                 accept=".xlsx"
                 clearable
-                hide-details
                 @change="handleFileChange"
               />
             </v-col>
@@ -1938,6 +1941,7 @@ const handleExportCompanyChange = async (companyId) => {
 
 // 全選部門
 const selectAllDepartments = () => {
+  exportDialog.value.departmentError = '' // 清除部門錯誤訊息
   if (exportDialog.value.departments.length === exportDialog.value.departmentOptions.length) {
     exportDialog.value.departments = []
   } else {
@@ -1947,6 +1951,7 @@ const selectAllDepartments = () => {
 
 // 全選任職狀態
 const selectAllEmploymentStatus = () => {
+  exportDialog.value.employmentStatusError = '' // 清除任職狀態錯誤訊息
   if (exportDialog.value.employmentStatus.length === statusOptions.length) {
     exportDialog.value.employmentStatus = []
   } else {
