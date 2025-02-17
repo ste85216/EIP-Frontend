@@ -541,10 +541,10 @@
     <!-- 輸入總金額對話框 -->
     <v-dialog
       v-model="amountDialog.open"
-      max-width="360"
+      max-width="320"
       persistent
     >
-      <v-card>
+      <v-card class="rounded-lg">
         <div class="card-title px-6 pt-6 pb-4">
           輸入總金額
         </div>
@@ -597,10 +597,10 @@
     <!-- 新增多個線別對話框 -->
     <v-dialog
       v-model="addDetailsDialog.open"
-      max-width="360"
+      max-width="320"
       persistent
     >
-      <v-card>
+      <v-card class="rounded-lg">
         <div class="card-title px-6 pt-6 pb-4">
           批量新增線別
         </div>
@@ -646,6 +646,7 @@
     <!-- 確認清除所有金額對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmClearAmountsDialog"
+      :width="300"
       title="確認清除所有金額"
       message="確定要清除所有線別的金額嗎？此操作無法復原。"
       confirm-button-text="清除"
@@ -655,6 +656,7 @@
     <!-- 確認刪除所有線別對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmClearDetailsDialog"
+      :width="300"
       title="確認刪除所有線別"
       message="確定要刪除所有線別嗎？此操作無法復原。"
       confirm-button-text="刪除"
