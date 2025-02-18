@@ -401,7 +401,7 @@
               :items="companies"
               :item-title="item => item ? `${item.name} (${item.companyId})` : ''"
               item-value="_id"
-              label="選擇公司"
+              label="*選擇公司"
               required
               variant="outlined"
               density="compact"
@@ -422,27 +422,32 @@
               density="compact"
               class="mb-3"
               :error-messages="departmentErrors.departmentCode"
+              :disabled="!departmentForm.company"
             />
             <v-text-field
               v-model="departmentForm.departmentId"
-              label="部門編號"
+              label="*部門編號"
               required
               variant="outlined"
               density="compact"
               class="mb-3"
+              clearable
               :error-messages="departmentErrors.departmentId"
               :hint="departmentForm.company ? '建議輸入「公司編號 + 部門代碼」' : '請先選擇公司'"
               persistent-hint
+              :disabled="!departmentForm.company"
             />
             <v-text-field
               v-model="departmentForm.name"
-              label="部門名稱"
+              label="*部門名稱"
               required
               variant="outlined"
               density="compact"
+              clearable
               :error-messages="departmentErrors?.name"
               :hint="'請輸入部門名稱'"
               persistent-hint
+              :disabled="!departmentForm.company"
             />
             <v-card-actions class="pa-0 mt-2">
               <v-spacer />

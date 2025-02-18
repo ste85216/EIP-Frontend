@@ -150,6 +150,7 @@
               :headers="headers"
               :items="items"
               :items-length="totalItems"
+              :items-per-page-options="[10, 20, 50, 100]"
               :loading="isLoading"
               class="elevation-0 rounded-lg"
             >
