@@ -554,7 +554,7 @@
                   :key="index"
                   cols="12"
                 >
-                  <div class="d-flex align-center gap-2 item-container">
+                  <div class="d-flex align-center item-container">
                     <v-text-field
                       v-model="item.name"
                       :error-messages="item.error"
@@ -563,7 +563,6 @@
                       variant="outlined"
                       density="compact"
                       clearable
-                      class="flex-grow-1"
                       hide-details="auto"
                     />
                     <v-btn
@@ -736,7 +735,7 @@
             <v-btn
               color="grey-darken-1"
               variant="outlined"
-              :size="buttonSize"
+              size="small"
               @click="closeBatchDialog"
             >
               取消
@@ -745,7 +744,7 @@
               color="teal-darken-1"
               variant="outlined"
               class="ms-1"
-              :size="buttonSize"
+              size="small"
               type="submit"
             >
               確定
@@ -1439,8 +1438,8 @@ const channelColors = [
   '#283593', // 深藍色
   '#2196F3', // 藍色
   '#607D8B', // 藍灰色
-  '#388E3C', // 綠色
-  '#00695C', // 淺綠色
+  '#388E3C', // 淺綠色
+  '#00695C', // 深綠色
 ]
 
 // 儲存廣告渠道名稱與顏色的映射
@@ -1568,8 +1567,12 @@ const getPlatformStyle = (platformName) => {
 }
 
 .item-container {
-  background: #f6f6f6;
-  padding: 8px;
+  padding: 10px; 
+  background: #f9f9f9;
+  border: 1px solid #a9a9a9;
   border-radius: 4px;
+  :deep(.v-field) {
+    background-color: #fff;
+  }
 }
 </style>

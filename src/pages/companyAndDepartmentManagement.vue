@@ -708,7 +708,10 @@ const submitEditCompany = async () => {
       })
     }
   } catch (error) {
-    editCompanyErrors.value = [error?.response?.data?.message || '修改失敗']
+    createSnackbar({
+      text: error?.response?.data?.message || '修改失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
   } finally {
     isSubmitting.value = false
   }

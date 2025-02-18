@@ -108,7 +108,7 @@
             cols="12"
           >
             <span class="text-subtitle-2 opacity-80 font-weight-regular">
-              <span class="text-red-darken-2">* </span>若有需要修改 請聯絡管理員 ( 密碼可自行修改 )
+              <span class="text-red-darken-2">* </span>若有需要修改 請聯絡管理者 ( 密碼可自行修改 )
             </span>
           </v-col>
           <v-col>
@@ -280,7 +280,7 @@
     v-model="showPasswordDialog"
     max-width="320"
   >
-    <v-card>
+    <v-card class="rounded-lg pb-2 px-1 pt-1">
       <div class="card-title ps-6 py-6">
         修改密碼
       </div>

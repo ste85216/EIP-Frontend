@@ -576,7 +576,7 @@ const fieldTranslations = {
   email: '電子郵件',
   role: '權限',
   userId: '使用者編號',
-  adminId: '管理員編號',
+  adminId: '管理者編號',
   formNumber: '表單編號',
   clientName: '客戶名稱',
   projectName: '專案名稱',

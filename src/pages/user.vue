@@ -445,7 +445,7 @@ const dialog = ref({
 })
 
 const dialogWidth = computed(() => {
-  if (mdAndUp.value) return '800'
+  if (mdAndUp.value) return '900'
   if (smAndUp.value) return '600'
   return '100%'
 })

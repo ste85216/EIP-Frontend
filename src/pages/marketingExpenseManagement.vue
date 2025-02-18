@@ -211,6 +211,15 @@
                 {{ formatNumber(item.totalExpense || 0) }}
               </template>
 
+              <template #[`item.note`]="{ item }">
+                <div 
+                  v-tooltip="item.note"
+                  class="note-cell"
+                >
+                  {{ item.note }}
+                </div>
+              </template>
+
               <template #[`item.actions`]="{ item }">
                 <div class="d-flex justify-center">
                   <v-btn
@@ -272,7 +281,7 @@
             <v-card-text class="mt-2 mb-4 pa-3">
               <v-row>
                 <v-col
-                  cols="4"
+                  cols="3"
                   class="px-8"
                 >
                   <v-row class="border rounded-lg px-4 pt-2">
@@ -342,13 +351,13 @@
                         density="compact"
                         clearable
                         auto-grow
-                        rows="3"
+                        rows="4"
                       />
                     </v-col>
                   </v-row>
                 </v-col>
                 <v-col
-                  cols="8"
+                  cols="9"
                   class="px-8"
                 >
                   <v-row class="border rounded-lg px-4 pt-2">
@@ -721,7 +730,7 @@ const router = useRouter()
 // ===== 響應式設定與螢幕斷點 =====
 const { smAndUp } = useDisplay()
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
-const dialogWidth = computed(() => smAndUp.value ? '1400' : '100%')
+const dialogWidth = computed(() => smAndUp.value ? '1520' : '100%')
 
 // ===== 基礎狀態管理 =====
 const confirmDeleteDialog = ref(false)
@@ -787,7 +796,7 @@ const headers = [
   { title: '平台', key: 'platform.name', align: 'start', sortable: false },
   { title: '線別', key: 'details', align: 'start', maxWidth: '150', sortable: false },
   { title: '總金額', key: 'totalExpense', align: 'start', sortable: false },
-  { title: '備註', key: 'note', align: 'start', sortable: false },
+  { title: '備註', key: 'note', align: 'start', width: '160', sortable: false },
   { title: '建立者', key: 'creator.name', align: 'start', sortable: false },
   { title: '建立日期', key: 'createdAt', align: 'start', sortable: false },
   { title: '操作', key: 'actions', align: 'center', sortable: false }
@@ -1109,6 +1118,39 @@ const submit = handleSubmit(async (values) => {
         text: '請確認選擇所有線別及費用皆已輸入',
         snackbarProps: { 
           color: 'red-lighten-1',
+        }
+      })
+      return
+    }
+
+    // 檢查是否有重複的線別
+    const detailMap = new Map()
+    const duplicateDetails = []
+
+    detailsList.value.forEach(detail => {
+      if (detail.detail) {
+        // 找出目前線別的名稱
+        const detailOption = detailOptions.value.find(opt => opt._id === detail.detail)
+        const detailName = detailOption?.name || detail.detail
+
+        if (detailMap.has(detail.detail)) {
+          // 如果已經存在，加入重複清單
+          if (!duplicateDetails.includes(detailName)) {
+            duplicateDetails.push(detailName)
+          }
+        } else {
+          // 如果不存在，加入 Map
+          detailMap.set(detail.detail, detailName)
+        }
+      }
+    })
+
+    if (duplicateDetails.length > 0) {
+      createSnackbar({
+        text: `重複的線別：${duplicateDetails.join('、')}`,
+        snackbarProps: { 
+          color: 'red-lighten-1',
+          timeout: 4000
         }
       })
       return
@@ -1502,8 +1544,13 @@ onMounted(async () => {
 
 .detail-item {
   background-color: #f6f6f6;
+  border: 1px solid #b9b9b9;
   border-radius: 8px;
   padding: 8px;
+
+  :deep(.v-field) {
+    background-color: #fff;
+  }
   
   &:hover {
     background-color: #eeeeee;
@@ -1516,8 +1563,16 @@ onMounted(async () => {
     align-items: center;
 
     .detail-field {
-      width: calc(50% - 20px); // 減去間距和按鈕的空間
-      min-width: 0; // 防止內容溢出
+      width: 50%;
+      min-width: 0;
+    }
+
+    .detail-field:first-child {
+      width: 55%;
+    }
+
+    .detail-field:last-child {
+      width: 45%;
     }
 
     .detail-action {
@@ -1558,5 +1613,12 @@ onMounted(async () => {
 
 .details-grid::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+.note-cell {
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

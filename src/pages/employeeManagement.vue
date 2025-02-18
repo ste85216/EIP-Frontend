@@ -298,6 +298,9 @@
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                  <td>
+                    {{ item.employeeCode }}
+                  </td>
                   <td>{{ item.employeeId }}</td>
                   <td>{{ item.name }}</td>
                   <td>
@@ -305,9 +308,6 @@
                   </td>
                   <td>
                     {{ item.department?.name }}
-                  </td>
-                  <td>
-                    {{ item.employeeCode }}
                   </td>
                   <td>
                     {{ item.extNumber }}
@@ -1224,11 +1224,11 @@ const dialogWidth = computed(() => mdAndUp.value ? '1200' : '100%')
 
 // 表格相關
 const tableHeaders = [
+  { title: '科威員編', key: 'employeeCode', align: 'start', sortable: true },
   { title: '系統編號', key: 'employeeId', minWidth: '120px', align: 'start', sortable: true },
   { title: '姓名', key: 'name', minWidth: '90px', align: 'start', sortable: true },
   { title: '公司', key: 'company.name', minWidth: '90px', align: 'start', sortable: true },
   { title: '部門', key: 'department.name', align: 'start', sortable: true },
-  { title: '科威員編', key: 'employeeCode', align: 'start', sortable: true },
   { title: '分機號碼', key: 'extNumber', align: 'start', sortable: true },
   { title: '列印編號', key: 'printNumber', align: 'start', sortable: true },
   { title: 'Email', key: 'email', align: 'start', sortable: true },
@@ -1243,7 +1243,7 @@ const tableItems = ref([])
 const tablePage = ref(1)
 const tableItemsPerPage = ref(10)
 const tableItemsLength = ref(0)
-const tableSortBy = ref([{ key: 'employeeId', order: 'asc' }])
+const tableSortBy = ref([{ key: 'employeeCode', order: 'asc' }])
 
 // 搜尋相關響應式變數
 const quickSearchText = ref('')

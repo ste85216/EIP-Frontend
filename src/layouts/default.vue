@@ -192,7 +192,6 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="!user.isIT"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -249,7 +248,29 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="user.isAdmin"
+            v-if="!user.isIT"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
+          />
+          <!-- IT功能選單 -->
+          <template
+            v-for="itItem in filteredITItems"
+            :key="itItem.text"
+          >
+            <v-list-item
+              :to="itItem.to"
+              color="grey-darken-3"
+              class="mt-2"
+            >
+              <template #prepend>
+                <v-icon>{{ itItem.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ itItem.text }}</v-list-item-title>
+            </v-list-item>
+          </template>
+          <v-divider
+            v-if="user.isAdmin || user.isIT"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -615,13 +636,16 @@ const cogItems = [
   }
 ]
 
-const adminItems = [
+const ITItems = [
   {
     to: '/hardwareMaintenanceRecord',
     text: '硬體維修記錄',
     icon: 'mdi-wrench',
     roles: ['ADMIN', 'IT']
-  },
+  }
+]
+
+const adminItems = [
   {
     to: '/admin',
     text: '管理者管理',
@@ -774,6 +798,22 @@ const filteredUserItems = computed(() => {
     }
 
     return hasPermission
+  })
+})
+
+// 在 script setup 部分添加新的 computed property
+const filteredITItems = computed(() => {
+  return ITItems.filter(item => {
+    return item.roles.some(role => {
+      switch (role) {
+        case 'ADMIN':
+          return user.isAdmin
+        case 'IT':
+          return user.isIT
+        default:
+          return false
+      }
+    })
   })
 })
 

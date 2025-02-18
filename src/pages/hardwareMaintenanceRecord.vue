@@ -810,6 +810,11 @@ const editCategoryDialog = ref({
   order: 0
 })
 
+const editCategoryErrors = ref({
+  name: '',
+  order: ''
+})
+
 const deleteCategoryDialog = ref({
   open: false,
   id: '',
@@ -822,11 +827,6 @@ const categoryForm = ref({
 })
 
 const categoryErrors = ref({
-  name: '',
-  order: ''
-})
-
-const editCategoryErrors = ref({
   name: '',
   order: ''
 })
@@ -990,10 +990,6 @@ const closeCategoryDialog = () => {
     name: '',
     order: ''
   }
-  editCategoryErrors.value = {
-    name: '',
-    order: ''
-  }
   editCategoryDialog.value = {
     open: false,
     id: '',
@@ -1026,7 +1022,6 @@ const closeEditCategoryDialog = () => {
     name: '',
     order: ''
   }
-
 }
 
 const confirmDeleteCategory = (category) => {
@@ -1104,20 +1099,24 @@ const submitCategory = async () => {
 }
 
 const submitEditCategory = async () => {
-  // 驗證所有必填欄位
-  const errors = {
+  // 重置錯誤訊息
+  editCategoryErrors.value = {
     name: '',
     order: ''
   }
 
-  if (!editCategoryDialog.value.name) errors.name = '請輸入類型名稱'
-  if (!editCategoryDialog.value.order) errors.order = '請輸入排序'
-
-  // 如果有任何錯誤
-  if (Object.values(errors).some(error => error)) {
-    editCategoryErrors.value = errors
-    return
+  // 前端驗證
+  let hasError = false
+  if (!editCategoryDialog.value.name) {
+    editCategoryErrors.value.name = '請輸入類型名稱'
+    hasError = true
   }
+  if (!editCategoryDialog.value.order) {
+    editCategoryErrors.value.order = '請輸入排序'
+    hasError = true
+  }
+
+  if (hasError) return
 
   isSubmitting.value = true
   try {
@@ -1136,17 +1135,14 @@ const submitEditCategory = async () => {
       closeEditCategoryDialog()
       // 重置新增表單的狀態
       resetCategoryForm()
-      categoryErrors.value = {
-        name: '',
-        order: ''
-      }
       await loadCategories()
     }
   } catch (error) {
-    editCategoryErrors.value = {
-      name: error.response?.data?.message || '修改失敗',
-      order: ''
-    }
+    // 處理後端回傳的錯誤
+    createSnackbar({
+      text: error?.response?.data?.message || '修改失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
   } finally {
     isSubmitting.value = false
   }
