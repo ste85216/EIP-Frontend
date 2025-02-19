@@ -3,15 +3,14 @@
     <v-row class="pt-md-5">
       <v-col 
         cols="12"
-        lg="4"
-        xl="3"
+        lg="2"
       >
         <v-row>
           <v-col
             cols="12"
-            class="mt-1 px-lg-10"
+            class="mt-1 ps-lg-6 pe-lg-0"
           >
-            <v-card class="elevation-4 rounded-lg py-4 py-sm-8 px-4 px-sm-4 px-xl-8">
+            <v-card class="elevation-4 rounded-lg py-4 py-sm-8 px-4 px-sm-4 px-xl-4">
               <v-card-title class="font-weight-bold d-flex align-center">
                 搜尋條件
               </v-card-title>
@@ -50,7 +49,7 @@
                     <v-autocomplete
                       v-model="searchCriteria.platform"
                       :items="getFilteredPlatformOptions(searchCriteria.channel)"
-                      label="平台"
+                      :label="searchCriteria.channel ? '平台' : '平台 ( 請先選擇廣告渠道 )'"
                       item-title="name"
                       item-value="_id"
                       variant="outlined"
@@ -58,6 +57,7 @@
                       hide-details
                       clearable
                       class="mb-6"
+                      :disabled="!searchCriteria.channel"
                     />
                     <v-autocomplete
                       v-model="searchCriteria.detail"
@@ -131,7 +131,7 @@
         </v-row>
       </v-col>
       <v-col>
-        <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-1 mx-0 mx-sm-4 ms-md-0 me-md-4 mb-4 bg-white">
+        <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-1 mx-0 mx-sm-4 ms-md-4 me-md-4 mb-4 bg-white">
           <!-- 標題區塊 -->
           <v-col
             cols="12"
@@ -188,6 +188,7 @@
               :headers="headers"
               :items="items"
               :items-length="totalItems"
+              :items-per-page-options="[10, 20, 50, 100]"
               :loading="isLoading"
               class="elevation-0 rounded-lg"
             >
@@ -211,26 +212,37 @@
                 {{ formatNumber(item.totalExpense || 0) }}
               </template>
 
+              <template #[`item.note`]="{ item }">
+                <div 
+                  v-tooltip="item.note"
+                  class="note-cell"
+                >
+                  {{ item.note }}
+                </div>
+              </template>
+
               <template #[`item.actions`]="{ item }">
-                <v-btn
-                  icon
-                  color="light-blue-darken-4"
-                  variant="plain"
-                  :size="buttonSize"
-                  @click="editItem(item)"
-                >
-                  <v-icon>mdi-pencil</v-icon>
-                </v-btn>
-                <v-btn
-                  v-tooltip="'複製'"
-                  icon
-                  color="teal-darken-2"
-                  variant="plain"
-                  :size="buttonSize"
-                  @click="copyItem(item)"
-                >
-                  <v-icon>mdi-content-copy</v-icon>
-                </v-btn>
+                <div class="d-flex justify-center">
+                  <v-btn
+                    icon
+                    color="light-blue-darken-4"
+                    variant="plain"
+                    :size="buttonSize"
+                    @click="editItem(item)"
+                  >
+                    <v-icon>mdi-pencil</v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-tooltip="'複製'"
+                    icon
+                    color="teal-darken-2"
+                    variant="plain"
+                    :size="buttonSize"
+                    @click="copyItem(item)"
+                  >
+                    <v-icon>mdi-content-copy</v-icon>
+                  </v-btn>
+                </div>
               </template>
             </v-data-table-server>
           </v-col>
@@ -270,7 +282,7 @@
             <v-card-text class="mt-2 mb-4 pa-3">
               <v-row>
                 <v-col
-                  cols="4"
+                  cols="3"
                   class="px-8"
                 >
                   <v-row class="border rounded-lg px-4 pt-2">
@@ -321,12 +333,13 @@
                         v-model="platform.value.value"
                         :error-messages="platform.errorMessage.value"
                         :items="getFilteredPlatformOptions(channel.value.value)"
+                        :label="channel.value.value ? '*平台' : '*平台 ( 請先選擇廣告渠道 )'"
                         item-title="name"
                         item-value="_id"
-                        label="*平台"
                         variant="outlined"
                         density="compact"
                         clearable
+                        :disabled="!channel.value.value"
                       />
                     </v-col>
 
@@ -339,13 +352,13 @@
                         density="compact"
                         clearable
                         auto-grow
-                        rows="3"
+                        rows="4"
                       />
                     </v-col>
                   </v-row>
                 </v-col>
                 <v-col
-                  cols="8"
+                  cols="9"
                   class="px-8"
                 >
                   <v-row class="border rounded-lg px-4 pt-2">
@@ -538,10 +551,10 @@
     <!-- 輸入總金額對話框 -->
     <v-dialog
       v-model="amountDialog.open"
-      max-width="360"
+      max-width="320"
       persistent
     >
-      <v-card>
+      <v-card class="rounded-lg">
         <div class="card-title px-6 pt-6 pb-4">
           輸入總金額
         </div>
@@ -594,10 +607,10 @@
     <!-- 新增多個線別對話框 -->
     <v-dialog
       v-model="addDetailsDialog.open"
-      max-width="360"
+      max-width="320"
       persistent
     >
-      <v-card>
+      <v-card class="rounded-lg">
         <div class="card-title px-6 pt-6 pb-4">
           批量新增線別
         </div>
@@ -643,6 +656,7 @@
     <!-- 確認清除所有金額對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmClearAmountsDialog"
+      :width="300"
       title="確認清除所有金額"
       message="確定要清除所有線別的金額嗎？此操作無法復原。"
       confirm-button-text="清除"
@@ -652,6 +666,7 @@
     <!-- 確認刪除所有線別對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmClearDetailsDialog"
+      :width="300"
       title="確認刪除所有線別"
       message="確定要刪除所有線別嗎？此操作無法復原。"
       confirm-button-text="刪除"
@@ -716,7 +731,7 @@ const router = useRouter()
 // ===== 響應式設定與螢幕斷點 =====
 const { smAndUp } = useDisplay()
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
-const dialogWidth = computed(() => smAndUp.value ? '1400' : '100%')
+const dialogWidth = computed(() => smAndUp.value ? '1520' : '100%')
 
 // ===== 基礎狀態管理 =====
 const confirmDeleteDialog = ref(false)
@@ -782,7 +797,7 @@ const headers = [
   { title: '平台', key: 'platform.name', align: 'start', sortable: false },
   { title: '線別', key: 'details', align: 'start', maxWidth: '150', sortable: false },
   { title: '總金額', key: 'totalExpense', align: 'start', sortable: false },
-  { title: '備註', key: 'note', align: 'start', sortable: false },
+  { title: '備註', key: 'note', align: 'start', width: '160', sortable: false },
   { title: '建立者', key: 'creator.name', align: 'start', sortable: false },
   { title: '建立日期', key: 'createdAt', align: 'start', sortable: false },
   { title: '操作', key: 'actions', align: 'center', sortable: false }
@@ -1104,6 +1119,39 @@ const submit = handleSubmit(async (values) => {
         text: '請確認選擇所有線別及費用皆已輸入',
         snackbarProps: { 
           color: 'red-lighten-1',
+        }
+      })
+      return
+    }
+
+    // 檢查是否有重複的線別
+    const detailMap = new Map()
+    const duplicateDetails = []
+
+    detailsList.value.forEach(detail => {
+      if (detail.detail) {
+        // 找出目前線別的名稱
+        const detailOption = detailOptions.value.find(opt => opt._id === detail.detail)
+        const detailName = detailOption?.name || detail.detail
+
+        if (detailMap.has(detail.detail)) {
+          // 如果已經存在，加入重複清單
+          if (!duplicateDetails.includes(detailName)) {
+            duplicateDetails.push(detailName)
+          }
+        } else {
+          // 如果不存在，加入 Map
+          detailMap.set(detail.detail, detailName)
+        }
+      }
+    })
+
+    if (duplicateDetails.length > 0) {
+      createSnackbar({
+        text: `重複的線別：${duplicateDetails.join('、')}`,
+        snackbarProps: { 
+          color: 'red-lighten-1',
+          timeout: 4000
         }
       })
       return
@@ -1497,8 +1545,13 @@ onMounted(async () => {
 
 .detail-item {
   background-color: #f6f6f6;
+  border: 1px solid #b9b9b9;
   border-radius: 8px;
   padding: 8px;
+
+  :deep(.v-field) {
+    background-color: #fff;
+  }
   
   &:hover {
     background-color: #eeeeee;
@@ -1511,8 +1564,16 @@ onMounted(async () => {
     align-items: center;
 
     .detail-field {
-      width: calc(50% - 20px); // 減去間距和按鈕的空間
-      min-width: 0; // 防止內容溢出
+      width: 50%;
+      min-width: 0;
+    }
+
+    .detail-field:first-child {
+      width: 55%;
+    }
+
+    .detail-field:last-child {
+      width: 45%;
     }
 
     .detail-action {
@@ -1553,5 +1614,12 @@ onMounted(async () => {
 
 .details-grid::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+.note-cell {
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

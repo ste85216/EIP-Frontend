@@ -28,7 +28,7 @@
               class="px-3"
             >
               <v-card
-                class="rounded-lg border"
+                class="rounded-lg border border-opacity-25"
                 elevation="0"
                 min-height="80"
               >
@@ -61,6 +61,46 @@
               </v-card>
             </v-col>
           </template>
+          <!-- Total 卡片 -->
+          <v-col
+            cols="12"
+            sm="3"
+            lg="1"
+            class="px-3"
+          >
+            <v-card
+              class="rounded-lg border border-error border-opacity-50"
+              elevation="0"
+              min-height="80"
+            >
+              <v-card-text class="text-center pb-3 px-2">
+                <div class="sub-title mb-2">
+                  Total
+                </div>
+                <div
+                  v-if="!statsLoading"
+                  :class="[
+                    'sub-title',
+                    getTotalCount > 0 ? 'text-red-darken-3' : 'text-grey'
+                  ]"
+                >
+                  {{ getTotalCount }}
+                </div>
+                <div
+                  v-else
+                  class="d-flex justify-center align-center"
+                  style="min-height: 21.38px"
+                >
+                  <v-progress-circular
+                    indeterminate
+                    size="20"
+                    width="2"
+                    color="purple-darken-2"
+                  />
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
         </v-row>
       </v-col>
 
@@ -730,7 +770,7 @@ const tableHeaders = [
 ]
 
 const tableItemsPerPage = ref(10)
-const tableSortBy = ref([{ key: 'maintenanceDate', order: 'desc' }])
+const tableSortBy = ref([{ key: 'maintenanceRecordId', order: 'desc' }])
 const tablePage = ref(1)
 const tableItems = ref([])
 const tableLoading = ref(true)
@@ -770,6 +810,11 @@ const editCategoryDialog = ref({
   order: 0
 })
 
+const editCategoryErrors = ref({
+  name: '',
+  order: ''
+})
+
 const deleteCategoryDialog = ref({
   open: false,
   id: '',
@@ -782,11 +827,6 @@ const categoryForm = ref({
 })
 
 const categoryErrors = ref({
-  name: '',
-  order: ''
-})
-
-const editCategoryErrors = ref({
   name: '',
   order: ''
 })
@@ -950,10 +990,6 @@ const closeCategoryDialog = () => {
     name: '',
     order: ''
   }
-  editCategoryErrors.value = {
-    name: '',
-    order: ''
-  }
   editCategoryDialog.value = {
     open: false,
     id: '',
@@ -986,7 +1022,6 @@ const closeEditCategoryDialog = () => {
     name: '',
     order: ''
   }
-
 }
 
 const confirmDeleteCategory = (category) => {
@@ -1064,20 +1099,24 @@ const submitCategory = async () => {
 }
 
 const submitEditCategory = async () => {
-  // 驗證所有必填欄位
-  const errors = {
+  // 重置錯誤訊息
+  editCategoryErrors.value = {
     name: '',
     order: ''
   }
 
-  if (!editCategoryDialog.value.name) errors.name = '請輸入類型名稱'
-  if (!editCategoryDialog.value.order) errors.order = '請輸入排序'
-
-  // 如果有任何錯誤
-  if (Object.values(errors).some(error => error)) {
-    editCategoryErrors.value = errors
-    return
+  // 前端驗證
+  let hasError = false
+  if (!editCategoryDialog.value.name) {
+    editCategoryErrors.value.name = '請輸入類型名稱'
+    hasError = true
   }
+  if (!editCategoryDialog.value.order) {
+    editCategoryErrors.value.order = '請輸入排序'
+    hasError = true
+  }
+
+  if (hasError) return
 
   isSubmitting.value = true
   try {
@@ -1096,17 +1135,14 @@ const submitEditCategory = async () => {
       closeEditCategoryDialog()
       // 重置新增表單的狀態
       resetCategoryForm()
-      categoryErrors.value = {
-        name: '',
-        order: ''
-      }
       await loadCategories()
     }
   } catch (error) {
-    editCategoryErrors.value = {
-      name: error.response?.data?.message || '修改失敗',
-      order: ''
-    }
+    // 處理後端回傳的錯誤
+    createSnackbar({
+      text: error?.response?.data?.message || '修改失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
   } finally {
     isSubmitting.value = false
   }
@@ -1556,6 +1592,13 @@ const handleExportPDF = async () => {
     isExporting.value = false
   }
 }
+
+// 在 script setup 區域新增 getTotalCount 計算屬性
+const getTotalCount = computed(() => {
+  return categories.value.reduce((total, category) => {
+    return total + getCategoryCount(category._id)
+  }, 0)
+})
 </script>
 
 <style lang="scss" scoped>

@@ -56,7 +56,10 @@
       :expand-on-hover="rail"
       class="position-fixed"
     >
-      <v-list v-model:opened="openedGroups">
+      <v-list
+        v-model:opened="openedGroups"
+        class="pt-0"
+      >
         <div>
           <template v-if="!rail">
             <v-card
@@ -147,6 +150,7 @@
             <v-list-group
               v-if="userItem.children"
               :value="userItem.text"
+              fluid
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -165,6 +169,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
+                base-color="blue-grey-darken-1"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -187,7 +192,6 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="!user.isIT"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -199,7 +203,10 @@
             <!-- 有子選單的項目 -->
             <v-list-group
               v-if="cogItem.children"
+              v-model="openedGroups"
               :value="cogItem.text"
+              :persistent="true"
+              fluid
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -218,6 +225,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
+                base-color="deep-purple-darken-4"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -240,7 +248,29 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="user.isAdmin"
+            v-if="!user.isIT"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
+          />
+          <!-- IT功能選單 -->
+          <template
+            v-for="itItem in filteredITItems"
+            :key="itItem.text"
+          >
+            <v-list-item
+              :to="itItem.to"
+              color="grey-darken-3"
+              class="mt-2"
+            >
+              <template #prepend>
+                <v-icon>{{ itItem.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ itItem.text }}</v-list-item-title>
+            </v-list-item>
+          </template>
+          <v-divider
+            v-if="user.isAdmin || user.isIT"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -250,10 +280,11 @@
               v-for="item in filteredAdminItems"
               :key="item.text"
             >
-              <!-- 有子選單的項目 -->
+              <!-- 有子選單的項目 --> <!-- fluid 可以讓列表子項目併上左邊空白-->
               <v-list-group
                 v-if="item.children"
                 :value="item.text"
+                fluid
               >
                 <template #activator="{ props }">
                   <v-list-item
@@ -272,6 +303,7 @@
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
+                  base-color="blue-grey-darken-1"
                 >
                   <template #prepend>
                     <v-icon>{{ child.icon }}</v-icon>
@@ -382,6 +414,8 @@
             <v-list-group
               v-if="userItem.children"
               :value="userItem.text"
+              fluid
+              base-color="grey-lighten-4"
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -432,7 +466,12 @@
               :key="item.text"
             >
               <!-- 有子選單的項目 -->
-              <v-list-group v-if="item.children">
+              <v-list-group
+                v-if="item.children"
+                :value="item.text"
+                fluid
+                base-color="grey-lighten-4"
+              >
                 <template #activator="{ props }">
                   <v-list-item
                     v-bind="props"
@@ -513,7 +552,7 @@ const createSnackbar = useSnackbar()
 const router = useRouter()
 const route = useRoute()
 
-const openedGroups = ref(['行銷費用管理']) // 預設打開的選單組
+const openedGroups = ref([]) // 初始值改為空數組
 const isBackgroundLoaded = ref(false)
 const isAvatarLoaded = ref(false)
 const handleImageLoad = () => {
@@ -543,7 +582,11 @@ const userItems = [
     icon: 'mdi-chart-multiple',
     roles: ['ADMIN', 'MANAGER', 'USER']
   },
-
+  {
+    to: '/employeeList',
+    text: '公司員工列表',
+    icon: 'mdi-account-details',
+  }
 ]
 
 const cogItems = [
@@ -585,7 +628,7 @@ const cogItems = [
       },
       {
         to: '/companyAndDepartmentManagement',
-        text: '公司及部門管理',
+        text: '公司部門管理',
         icon: 'mdi-office-building-cog',
         roles: ['ADMIN','MANAGER']
       }
@@ -593,13 +636,22 @@ const cogItems = [
   }
 ]
 
-const adminItems = [
+const ITItems = [
+  {
+    to: '/hardwareManagement',
+    text: '硬體設備管理',
+    icon: 'mdi-server-outline',
+    roles: ['ADMIN', 'IT']
+  },
   {
     to: '/hardwareMaintenanceRecord',
     text: '硬體維修記錄',
     icon: 'mdi-wrench',
     roles: ['ADMIN', 'IT']
-  },
+  }
+]
+
+const adminItems = [
   {
     to: '/admin',
     text: '管理者管理',
@@ -755,16 +807,37 @@ const filteredUserItems = computed(() => {
   })
 })
 
-// 監聽路由變化，當路由改變時保持選單狀態
-watch(() => route.path, () => {
-  // 根據路由路徑來決定要打開哪些選單組
-  const path = route.path
-  if (path.includes('/marketing')) {
-    openedGroups.value = ['行銷費用管理']
-  } else {
-    openedGroups.value = []
-  }
+// 在 script setup 部分添加新的 computed property
+const filteredITItems = computed(() => {
+  return ITItems.filter(item => {
+    return item.roles.some(role => {
+      switch (role) {
+        case 'ADMIN':
+          return user.isAdmin
+        case 'IT':
+          return user.isIT
+        default:
+          return false
+      }
+    })
+  })
 })
+
+// 修改 watch 函數
+watch(() => route.path, (newPath) => {
+  // 檢查新路徑是否包含特定關鍵字，但不重置整個數組
+  if (newPath.includes('/marketing')) {
+    if (!openedGroups.value.includes('行銷費用管理')) {
+      openedGroups.value.push('行銷費用管理')
+    }
+  }
+  
+  if (newPath.includes('/employee') || newPath.includes('/companyAndDepartment')) {
+    if (!openedGroups.value.includes('人事管理')) {
+      openedGroups.value.push('人事管理')
+    }
+  }
+}, { immediate: true })
 
 // 監聽螢幕尺寸變化
 watch(() => breakpoint.value, () => {

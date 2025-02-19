@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useUserStore } from '@/stores/user'
+import { useRouter } from 'vue-router'
 
 // baseURL = http://localhost:4000
 // axios.post('/user')
@@ -41,6 +42,7 @@ apiAuth.interceptors.response.use(res => {
     // 如果得到登入過期的回應訊息，且不是舊換新
     if (error.response.data.message === '登入過期' && error.config.url !== '/user/extend') {
       const user = useUserStore()
+      const router = useRouter()
       try {
         // 傳送舊換新請求
         const { data } = await apiAuth.patch('/user/extend')
@@ -52,8 +54,10 @@ apiAuth.interceptors.response.use(res => {
         return axios(error.config)
       } catch (error) {
         console.log(error)
-        // 舊換新錯誤，登出
-        user.logout()
+        await user.logout()
+        // 重導向到登入頁面
+        router.push('/login')
+        return Promise.reject(new Error('登入已過期，請重新登入'))
       }
     }
   }

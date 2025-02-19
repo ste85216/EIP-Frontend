@@ -843,7 +843,7 @@
       v-model="exportOptionsDialogOpen"
       max-width="300"
     >
-      <v-card class="px-2 py-4">
+      <v-card class="px-4 py-4 rounded-lg">
         <v-card-title class="card-title">
           選擇匯出內容
         </v-card-title>
@@ -852,14 +852,17 @@
             <v-radio
               label="報價單"
               value="quotation"
+              color="purple-darken-1"
             />
             <v-radio
               label="合約書"
               value="contract"
+              color="purple-darken-1"
             />
             <v-radio
               label="報價單 + 合約書"
               value="both"
+              color="purple-darken-1"
               hide-details
             />
           </v-radio-group>
@@ -1938,13 +1941,20 @@ watch(templateForm, (newVal) => {
 
 // 生命週期鉤子
 onMounted(async () => {
-  await loadTemplates()
-  // 當用戶實際需要時才載入相依套件
-  if (selectedTemplate.value) {
-    await initDependencies()
+  try {
+    // 先載入模板
+    await loadTemplates()
+    // 當用戶實際需要時才載入相依套件
+    if (selectedTemplate.value) {
+      await initDependencies()
+    }
+  } catch (error) {
+    console.error('初始化失敗:', error)
+    createSnackbar({
+      text: '載入初始資料失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
   }
-  // 頁面加載時預設為新增模式
-  isAdding.value = true;
 })
 
 // 歷史紀錄相關
@@ -2450,7 +2460,7 @@ const startNewForm = () => {
   selectedTemplate.value = null;
 };
 
-const isAdding = ref(false);
+const isAdding = ref(true);
 
 // 添加查閱表單的方法
 const viewForm = async (history) => {

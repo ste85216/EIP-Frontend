@@ -5,6 +5,12 @@
 		},
 		{
 			"path": "../GInternational-Backend-Test"
+		},
+		{
+			"path": "../git/Ysphere-Frontend"
+		},
+		{
+			"path": "../git/Ysphere-Backend"
 		}
 	],
 	"settings": {

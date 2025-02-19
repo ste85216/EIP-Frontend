@@ -535,7 +535,10 @@ const modelOptions = [
   { title: '行銷預算', value: 'marketingBudgets' },
   { title: '行銷實際支出', value: 'marketingExpenses' },
   { title: '硬體維修記錄', value: 'hardwareMaintenanceRecords' },
-  { title: '硬體類型', value: 'hardwareCategories' }
+  { title: '硬體類型', value: 'hardwareCategories' },
+  { title: '員工', value: 'employees' },
+  { title: '公司', value: 'companies' },
+  { title: '部門', value: 'departments' }
 ]
 
 // 表格標頭
@@ -573,7 +576,7 @@ const fieldTranslations = {
   email: '電子郵件',
   role: '權限',
   userId: '使用者編號',
-  adminId: '管理員編號',
+  adminId: '管理者編號',
   formNumber: '表單編號',
   clientName: '客戶名稱',
   projectName: '專案名稱',
@@ -598,6 +601,18 @@ const fieldTranslations = {
   maintenanceResult: '維修結果',
   reportUser: '報修人',
   annualTotalBudget: '年度總預算',
+  employeeCode: '科威員編',
+  extNumber: '分機號碼',
+  printNumber: '列印機編號',
+  emailPassword: 'Email密碼',
+  company: '公司',
+  department: '部門',
+  employeeId: '系統員編',
+  departmentId: '部門編號',
+  hireDate: '到職日期',
+  resignationDate: '離職日期',
+  unpaidLeaveStartDate: '留職停薪開始日期',
+  reinstatementDate: '復職日期'
 }
 
 // 行銷分類類型對應
@@ -644,7 +659,10 @@ const getModelDisplay = (model) => {
     marketingExpenses: '行銷實際支出',
     marketingBudgets: '行銷預算',
     hardwareMaintenanceRecords: '硬體維修記錄',
-    hardwareCategories: '硬體類型'
+    hardwareCategories: '硬體類型',
+    employees: '員工',
+    companies: '公司',
+    departments: '部門'
   }
   return modelMap[model] || model
 }
@@ -871,6 +889,14 @@ const formatChanges = (item) => {
           changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[value] || '(無)'}`)
         } else if (key === 'maintenanceDate') {
           changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
+        } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments')) {
+          // 處理員工和部門的公司欄位
+          changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+        } else if (key === 'department') {
+          changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+        } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
+          // 處理四種日期格式
+          changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
         } else {
           changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
         }
@@ -895,6 +921,14 @@ const formatChanges = (item) => {
         changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[oldValue] || '(無)'} → ${marketingCategoryTypes[newValue] || '(無)'}`)
       } else if (key === 'maintenanceDate') {
         changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
+      } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments')) {
+        // 處理員工和部門的公司欄位
+        changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+      } else if (key === 'department') {
+        changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+      } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
+        // 處理四種日期格式
+        changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
       } else {
         changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
       }
@@ -911,7 +945,7 @@ const formatChanges = (item) => {
   return changes
 }
 
-// 添加載入所有使用者的函數
+// 修改 loadAllUsers 函數
 const loadAllUsers = async () => {
   operatorLoading.value = true
   try {
@@ -919,7 +953,15 @@ const loadAllUsers = async () => {
       params: { search: '' }
     })
     if (data.success) {
-      operatorSuggestions.value = data.result
+      // 添加 SYSTEM 用戶到建議列表
+      operatorSuggestions.value = [
+        {
+          _id: '000000000000000000000000',
+          name: 'SYSTEM',
+          userId: 'SYSTEM'
+        },
+        ...data.result
+      ]
     }
   } catch (error) {
     console.error('載入使用者失敗:', error)
@@ -945,7 +987,16 @@ const handleOperatorSearch = debounce(async (text) => {
       params: { search: text }
     })
     if (data.success) {
-      operatorSuggestions.value = data.result
+      // 如果搜尋文字包含 SYSTEM（不分大小寫），則加入 SYSTEM 用戶
+      const systemUser = {
+        _id: '000000000000000000000000',
+        name: 'SYSTEM',
+        userId: 'SYSTEM'
+      }
+      
+      operatorSuggestions.value = text.toUpperCase().includes('SYSTEM')
+        ? [systemUser, ...data.result]
+        : data.result
     }
   } catch (error) {
     console.error('搜尋操作人員失敗:', error)
