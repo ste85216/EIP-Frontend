@@ -357,7 +357,7 @@
   >
     <v-card class="px-6 py-5">
       <div class="card-title">
-        用戶列表
+        使用者清單
       </div>
       <v-card-text class="px-0 pb-2">
         <div

@@ -1,6 +1,6 @@
 <template>
   <v-container
-    max-width="1600"
+    max-width="2000"
   >
     <v-row
       class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white"
@@ -46,17 +46,17 @@
         cols="12"
         class="mt-4"
       >
-        <v-row>
+        <v-row class="d-flex justify-space-between">
           <!-- 行銷主題列 -->
           <v-col
             cols="12"
-            sm="3"
+            class="custom-col"
           >
             <v-card
               class="marketing-theme-card"
               elevation="0"
             >
-              <div class="card-title mt-3 mb-2 mx-8 d-flex align-center justify-space-between">
+              <div class="card-title mt-3 mb-2 mx-6 d-flex align-center justify-space-between">
                 行銷主題
                 <v-btn
                   v-tooltip:start="'新增行銷主題'"
@@ -124,13 +124,13 @@
           <!-- 廣告渠道列 -->
           <v-col
             cols="12"
-            sm="3"
+            class="custom-col"
           >
             <v-card
               class="marketing-theme-card"
               elevation="0"
             >
-              <div class="card-title mt-3 mb-2 mx-8 d-flex align-center justify-space-between">
+              <div class="card-title mt-3 mb-2 mx-6 d-flex align-center justify-space-between">
                 廣告渠道
                 <v-btn
                   v-tooltip:start="'新增廣告渠道'"
@@ -198,13 +198,13 @@
           <!-- 平台列 -->
           <v-col
             cols="12"
-            sm="3"
+            class="custom-col-big"
           >
             <v-card
               class="marketing-theme-card"
               elevation="0"
             >
-              <div class="card-title mt-3 mb-2 mx-8 d-flex align-center justify-space-between">
+              <div class="card-title mt-3 mb-2 mx-6 d-flex align-center justify-space-between">
                 平台
                 <v-btn
                   v-tooltip:start="'新增平台'"
@@ -227,6 +227,12 @@
                     :key="item._id"
                   >
                     <template #prepend>
+                      <div 
+                        class="channel-name"
+                        :style="getChannelTypeStyle(item.parentId?.name)"
+                      >
+                        {{ item.parentId?.name || '無' }}
+                      </div>
                       <div class="order-number">
                         {{ item.order }}
                       </div>
@@ -269,16 +275,102 @@
             </v-card>
           </v-col>
 
-          <!-- 線別列 -->
+          <!-- 平台細項列 -->
           <v-col
             cols="12"
-            sm="3"
+            class="custom-col-big"
           >
             <v-card
               class="marketing-theme-card"
               elevation="0"
             >
-              <div class="card-title mt-3 mb-2 mx-8 d-flex align-center justify-space-between">
+              <div class="card-title mt-3 mb-2 mx-6 d-flex align-center justify-space-between">
+                平台細項
+                <v-btn
+                  v-tooltip:start="'新增平台細項'"
+                  icon
+                  size="small"
+                  variant="plain"
+                  color="teal-darken-1"
+                  @click="openDialog(4)"
+                >
+                  <v-icon
+                    icon="mdi-plus"
+                    size="24"
+                  />
+                </v-btn>
+              </div>
+              <v-list>
+                <template v-if="platformDetails.length > 0">
+                  <v-list-item
+                    v-for="item in platformDetails"
+                    :key="item._id"
+                  >
+                    <template #prepend>
+                      <div 
+                        class="channel-name"
+                        :style="getChannelTypeStyle(item.parentId?.parentId?.name)"
+                      >
+                        {{ item.parentId?.parentId?.name || '無' }}
+                      </div>
+                      <div 
+                        class="platform-name"
+                        :style="getPlatformStyle(item.parentId?.name)"
+                      >
+                        {{ item.parentId?.name || '無' }}
+                      </div>
+                      <div class="order-number">
+                        {{ item.order }}
+                      </div>
+                    </template>
+                    <v-list-item-title class="ms-2">
+                      {{ item.name }}
+                    </v-list-item-title>
+                    <template #append>
+                      <v-btn
+                        v-tooltip:start="'編輯平台細項'"
+                        icon
+                        color="light-blue-darken-4"
+                        variant="plain"
+                        size="small"
+                        @click="editItem(item)"
+                      >
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                    </template>
+                  </v-list-item>
+                </template>
+                <template v-else>
+                  <v-list-item class="bg-white">
+                    <div class="text-center w-100 text-grey">
+                      沒有資料
+                    </div>
+                  </v-list-item>
+                </template>
+              </v-list>
+              <template v-if="totalPages[4] > 1">
+                <v-pagination
+                  v-model="pages[4]"
+                  :length="totalPages[4]"
+                  :total-visible="5"
+                  density="compact"
+                  class="mt-2 pb-2 px-2"
+                  @update:model-value="(page) => handlePageChange(4, page)"
+                />
+              </template>
+            </v-card>
+          </v-col>
+
+          <!-- 線別列 -->
+          <v-col
+            cols="12"
+            class="custom-col"
+          >
+            <v-card
+              class="marketing-theme-card"
+              elevation="0"
+            >
+              <div class="card-title mt-3 mb-2 mx-6 d-flex align-center justify-space-between">
                 線別
                 <v-btn
                   v-tooltip:start="'新增線別'"
@@ -361,26 +453,102 @@
         <v-card class="rounded-lg px-4 pt-7 pb-6">
           <div class="card-title px-4 pb-2 d-flex align-center justify-space-between">
             <span>{{ dialog.id ? '編輯分類' : getDialogTitle }}</span>
-            <v-btn
+            <div
               v-if="!dialog.id"
-              v-tooltip:start="'新增項目'"
-              icon
-              color="grey-darken-1"
-              size="22"
-              class="ms-2"
-              @click="addNewItem"
+              class="d-flex align-center"
             >
-              <v-icon 
-                size="14"
+              <v-btn
+                v-tooltip:start="'批量新增項目'"
+                icon
+                color="grey-darken-1"
+                size="22"
+                class="me-2"
+                @click="openBatchDialog"
               >
-                mdi-plus
-              </v-icon>
-            </v-btn>
+                <v-icon 
+                  size="14"
+                >
+                  mdi-plus-box-multiple-outline
+                </v-icon>
+              </v-btn>
+              <v-btn
+                v-tooltip:start="'新增項目'"
+                icon
+                color="grey-darken-1"
+                size="22"
+                @click="addNewItem"
+              >
+                <v-icon 
+                  size="14"
+                >
+                  mdi-plus
+                </v-icon>
+              </v-btn>
+            </div>
           </div>
           <v-card-text class="mt-3 pa-3">
-            <v-row>
+            <template v-if="isLoadingOptions">
+              <div
+                class="d-flex justify-center align-center"
+                style="min-height: 270px;"
+              >
+                <v-progress-circular
+                  indeterminate
+                  color="purple-darken-2"
+                  size="40"
+                />
+              </div>
+            </template>
+            <v-row v-else>
               <template v-if="!dialog.id">
                 <!-- 新增模式：支援多個項目 -->
+                <template v-if="dialog.type === 2">
+                  <!-- 平台新增時的父層選擇 -->
+                  <v-col cols="12">
+                    <v-select
+                      v-model="selectedChannel"
+                      :items="channelOptions"
+                      item-title="name"
+                      item-value="_id"
+                      label="*廣告渠道"
+                      :error-messages="channelError"
+                      variant="outlined"
+                      density="compact"
+                      hide-details="auto"
+                    />
+                  </v-col>
+                </template>
+                <template v-if="dialog.type === 4">
+                  <!-- 平台細項新增時的父層選擇 -->
+                  <v-col cols="12">
+                    <v-select
+                      v-model="selectedChannel"
+                      :items="channelOptions"
+                      item-title="name"
+                      item-value="_id"
+                      label="*廣告渠道"
+                      :error-messages="channelError"
+                      variant="outlined"
+                      density="compact"
+                      hide-details="auto"
+                      @update:model-value="handleChannelChange"
+                    />
+                  </v-col>
+                  <v-col cols="12">
+                    <v-select
+                      v-model="selectedPlatform"
+                      :items="platformOptions"
+                      item-title="name"
+                      item-value="_id"
+                      label="*平台"
+                      :error-messages="platformError"
+                      variant="outlined"
+                      density="compact"
+                      :disabled="!selectedChannel"
+                      hide-details="auto"
+                    />
+                  </v-col>
+                </template>
                 <v-col 
                   v-for="(item, index) in newItems"
                   :key="index"
@@ -412,6 +580,53 @@
               </template>
               <template v-else>
                 <!-- 編輯模式：單個項目 -->
+                <template v-if="dialog.type === 2">
+                  <!-- 平台編輯時的父層選擇 -->
+                  <v-col cols="12">
+                    <v-select
+                      v-model="selectedChannel"
+                      :items="channelOptions"
+                      item-title="name"
+                      item-value="_id"
+                      label="*廣告渠道"
+                      :error-messages="channelError"
+                      variant="outlined"
+                      density="compact"
+                      hide-details="auto"
+                    />
+                  </v-col>
+                </template>
+                <template v-if="dialog.type === 4">
+                  <!-- 平台細項編輯時的父層選擇 -->
+                  <v-col cols="12">
+                    <v-select
+                      v-model="selectedChannel"
+                      :items="channelOptions"
+                      item-title="name"
+                      item-value="_id"
+                      label="*廣告渠道"
+                      :error-messages="channelError"
+                      variant="outlined"
+                      density="compact"
+                      hide-details="auto"
+                      @update:model-value="handleChannelChange"
+                    />
+                  </v-col>
+                  <v-col cols="12">
+                    <v-select
+                      v-model="selectedPlatform"
+                      :items="platformOptions"
+                      item-title="name"
+                      item-value="_id"
+                      label="*平台"
+                      :error-messages="platformError"
+                      variant="outlined"
+                      density="compact"
+                      :disabled="!selectedChannel"
+                      hide-details="auto"
+                    />
+                  </v-col>
+                </template>
                 <v-col cols="12">
                   <v-text-field
                     v-model="nameValue"
@@ -421,6 +636,7 @@
                     variant="outlined"
                     density="compact"
                     clearable
+                    hide-details="auto"
                   />
                 </v-col>
                 <v-col cols="12">
@@ -489,6 +705,55 @@
       input-label="分類名稱"
       @confirm="deleteCategory"
     />
+
+    <!-- 批量新增對話框 -->
+    <v-dialog
+      v-model="batchDialog.open"
+      persistent
+      width="300"
+    >
+      <v-card class="rounded-lg px-4 pt-7 pb-6">
+        <v-form @submit.prevent="handleBatchAdd">
+          <div class="card-title px-4 pb-2">
+            批量新增項目
+          </div>
+          <v-card-text class="mt-3 pa-3">
+            <v-text-field
+              v-model="batchDialog.count"
+              label="請輸入要總共需要多少項目"
+              type="number"
+              min="1"
+              max="50"
+              variant="outlined"
+              density="compact"
+              :error-messages="batchDialog.error"
+              hide-details="auto"
+              @keyup.enter="handleBatchAdd"
+            />
+          </v-card-text>
+          <v-card-actions class="px-3 pt-4">
+            <v-spacer />
+            <v-btn
+              color="grey-darken-1"
+              variant="outlined"
+              :size="buttonSize"
+              @click="closeBatchDialog"
+            >
+              取消
+            </v-btn>
+            <v-btn
+              color="teal-darken-1"
+              variant="outlined"
+              class="ms-1"
+              :size="buttonSize"
+              type="submit"
+            >
+              確定
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -556,6 +821,25 @@ const { value: orderValue, errorMessage: orderError } = useField('order')
 // 驗證新增項目
 const validateNewItems = () => {
   let hasError = false
+  
+  // 驗證父層選擇
+  if (dialog.value.type === 2 && !selectedChannel.value) {
+    channelError.value = '請選擇廣告渠道'
+    hasError = true
+  }
+  
+  if (dialog.value.type === 4) {
+    if (!selectedChannel.value) {
+      channelError.value = '請選擇廣告渠道'
+      hasError = true
+    }
+    if (!selectedPlatform.value) {
+      platformError.value = '請選擇平台'
+      hasError = true
+    }
+  }
+
+  // 驗證名稱
   newItems.value.forEach(item => {
     item.error = ''
     if (!item.name.trim()) {
@@ -563,6 +847,7 @@ const validateNewItems = () => {
       hasError = true
     }
   })
+  
   return !hasError
 }
 
@@ -582,18 +867,75 @@ const marketingThemes = ref([])
 const advertisingChannels = ref([])
 const platforms = ref([])
 const details = ref([])
+const platformDetails = ref([])
+
+// ===== 父層選擇相關的狀態 =====
+const selectedChannel = ref(null)
+const selectedPlatform = ref(null)
+const channelOptions = ref([])
+const platformOptions = ref([])
+const channelError = ref('')
+const platformError = ref('')
+
+// ===== 父層選擇處理函數 =====
+const loadChannelOptions = async () => {
+  try {
+    const { data } = await apiAuth.get('/marketing/categories/options', {
+      params: { type: 1 }
+    })
+    if (data.success) {
+      channelOptions.value = data.result
+    }
+  } catch (error) {
+    handleError(error)
+  }
+}
+
+const handleChannelChange = async () => {
+  try {
+    selectedPlatform.value = null
+    platformOptions.value = []
+    if (!selectedChannel.value) return
+
+    const { data } = await apiAuth.get('/marketing/categories/options', {
+      params: { 
+        type: 2,
+        parentId: selectedChannel.value
+      }
+    })
+    if (data.success) {
+      platformOptions.value = data.result
+    }
+  } catch (error) {
+    handleError(error)
+  }
+}
 
 // ===== 計算屬性 =====
 const getDialogTitle = computed(() => {
-  const titles = ['新增行銷主題', '新增廣告渠道', '新增平台', '新增線別']
+  const titles = ['新增行銷主題', '新增廣告渠道', '新增平台', '新增線別', '新增平台細項']
   return titles[dialog.value.type]
 })
 
 const hasChanges = computed(() => {
   if (!dialog.value.id) return true
   if (!originalData.value) return false
-  return originalData.value.name !== nameValue.value ||
-         originalData.value.order !== parseInt(orderValue.value)
+  
+  // 基本變更檢查
+  const basicChanges = originalData.value.name !== nameValue.value ||
+                      originalData.value.order !== parseInt(orderValue.value)
+  
+  // 父層關係變更檢查
+  let parentChanges = false
+  if (dialog.value.type === 2) {
+    const originalParentId = originalData.value.parentId?._id || originalData.value.parentId
+    parentChanges = originalParentId !== selectedChannel.value
+  } else if (dialog.value.type === 4) {
+    const originalParentId = originalData.value.parentId?._id || originalData.value.parentId
+    parentChanges = originalParentId !== selectedPlatform.value
+  }
+  
+  return basicChanges || parentChanges
 })
 
 // ===== 搜尋相關設定 =====
@@ -613,7 +955,8 @@ watch(quickSearchText, () => {
     0: 1,
     1: 1,
     2: 1,
-    3: 1
+    3: 1,
+    4: 1
   }
   debouncedSearch()
 })
@@ -652,6 +995,10 @@ const loadData = async (type = null) => {
             details.value = data.result.details.data
             totalPages.value[3] = data.result.details.totalPages
             break
+          case 4:
+            platformDetails.value = data.result.platformDetails.data
+            totalPages.value[4] = data.result.platformDetails.totalPages
+            break
         }
       }
     } else {
@@ -660,7 +1007,8 @@ const loadData = async (type = null) => {
         page0: pages.value[0],
         page1: pages.value[1],
         page2: pages.value[2],
-        page3: pages.value[3]
+        page3: pages.value[3],
+        page4: pages.value[4]
       }
       
       if (quickSearchText.value) {
@@ -673,12 +1021,14 @@ const loadData = async (type = null) => {
         advertisingChannels.value = data.result.advertisingChannels.data
         platforms.value = data.result.platforms.data
         details.value = data.result.details.data
+        platformDetails.value = data.result.platformDetails.data
 
         totalPages.value = {
           0: data.result.marketingThemes.totalPages,
           1: data.result.advertisingChannels.totalPages,
           2: data.result.platforms.totalPages,
-          3: data.result.details.totalPages
+          3: data.result.details.totalPages,
+          4: data.result.platformDetails.totalPages
         }
       }
     }
@@ -702,28 +1052,92 @@ const openDialog = async (type) => {
     }
     nameValue.value = ''
     orderValue.value = ''
+    selectedChannel.value = null
+    selectedPlatform.value = null
+    channelError.value = ''
+    platformError.value = ''
     // 重置新增項目列表
     newItems.value = [{ name: '', error: '' }]
+
+    // 如果是平台或平台細項，載入廣告渠道選項
+    if (type === 2 || type === 4) {
+      isLoadingOptions.value = true
+      try {
+        await loadChannelOptions()
+      } finally {
+        isLoadingOptions.value = false
+      }
+    }
   } catch (error) {
     handleError(error)
   }
 }
 
-const editItem = (item) => {
+const editItem = async (item) => {
   try {
     if (!item || !item._id) {
       console.error('無效的項目:', item)
       return
     }
     
-    nameValue.value = item.name || ''
-    orderValue.value = item.order || 1
-    originalData.value = { ...item }
-    
+    // 先打開對話框
     dialog.value = {
       open: true,
       id: item._id,
       type: item.type
+    }
+    
+    // 設置基本資料
+    nameValue.value = item.name || ''
+    orderValue.value = item.order || 1
+    originalData.value = { ...item }
+    
+    // 如果是平台或平台細項，載入並設置父層選項
+    if (item.type === 2 || item.type === 4) {
+      isLoadingOptions.value = true
+      try {
+        if (item.type === 2) {
+          await loadChannelOptions()
+          // 設置廣告渠道
+          const parentId = item.parentId?._id || item.parentId
+          selectedChannel.value = parentId
+        } else if (item.type === 4) {
+          // 獲取平台 ID
+          const platformId = item.parentId?._id || item.parentId
+          
+          // 並行載入廣告渠道選項和平台資訊
+          const [channelResponse, platformResponse] = await Promise.all([
+            apiAuth.get('/marketing/categories/options', { params: { type: 1 } }),
+            apiAuth.get('/marketing/categories/options', { params: { type: 2, id: platformId } })
+          ])
+          
+          // 設置廣告渠道選項
+          if (channelResponse.data.success) {
+            channelOptions.value = channelResponse.data.result
+          }
+          
+          // 設置平台相關資訊
+          if (platformResponse.data.success && platformResponse.data.result.length > 0) {
+            const platform = platformResponse.data.result[0]
+            selectedChannel.value = platform.parentId?._id || platform.parentId
+            
+            // 直接載入平台選項
+            const platformOptionsResponse = await apiAuth.get('/marketing/categories/options', {
+              params: { 
+                type: 2,
+                parentId: selectedChannel.value
+              }
+            })
+            
+            if (platformOptionsResponse.data.success) {
+              platformOptions.value = platformOptionsResponse.data.result
+              selectedPlatform.value = platformId
+            }
+          }
+        }
+      } finally {
+        isLoadingOptions.value = false
+      }
     }
   } catch (error) {
     console.error('編輯項目時發生錯誤:', error)
@@ -746,6 +1160,10 @@ const closeDialog = () => {
     }
     nameValue.value = ''
     orderValue.value = ''
+    selectedChannel.value = null
+    selectedPlatform.value = null
+    channelError.value = ''
+    platformError.value = ''
     // 重置新增項目列表
     newItems.value = [{ name: '', error: '' }]
   } catch (error) {
@@ -769,6 +1187,21 @@ const submit = async (e) => {
           order: parseInt(values.order)
         }
 
+        // 添加父層 ID
+        if (dialog.value.type === 2) {
+          if (!selectedChannel.value) {
+            channelError.value = '請選擇廣告渠道'
+            return
+          }
+          submitData.parentId = selectedChannel.value
+        } else if (dialog.value.type === 4) {
+          if (!selectedPlatform.value) {
+            platformError.value = '請選擇平台'
+            return
+          }
+          submitData.parentId = selectedPlatform.value
+        }
+
         const { data } = await apiAuth.patch(`/marketing/categories/${dialog.value.id}`, submitData)
         if (!data.success) {
           throw new Error(data.message || '更新失敗')
@@ -787,7 +1220,7 @@ const submit = async (e) => {
       // 驗證所有項目
       if (!validateNewItems()) {
         isSubmitting.value = false
-        return // 直接返回，因為欄位已經顯示錯誤訊息
+        return
       }
 
       // 過濾掉空白項目
@@ -795,14 +1228,16 @@ const submit = async (e) => {
       
       if (validItems.length === 0) {
         isSubmitting.value = false
-        return // 如果沒有有效項目，直接返回
+        return
       }
 
       // 批量新增
       const { data } = await apiAuth.post('/marketing/categories/batch', {
         items: validItems.map(item => ({
           name: item.name.trim(),
-          type: dialog.value.type
+          type: dialog.value.type,
+          parentId: dialog.value.type === 2 ? selectedChannel.value : 
+                   dialog.value.type === 4 ? selectedPlatform.value : null
         }))
       })
 
@@ -874,14 +1309,16 @@ const pages = ref({
   0: 1, // 行銷主題的當前頁碼
   1: 1, // 廣告渠道的當前頁碼
   2: 1, // 平台的當前頁碼
-  3: 1  // 線別的當前頁碼
+  3: 1, // 線別的當前頁碼
+  4: 1  // 平台細項的當前頁碼
 })
 
 const totalPages = ref({
   0: 1,
   1: 1,
   2: 1,
-  3: 1
+  3: 1,
+  4: 1
 })
 
 // 添加分頁處理函數
@@ -908,13 +1345,164 @@ watch(newItems, (items) => {
     }
   })
 }, { deep: true })
+
+// 在 script setup 部分添加
+const isLoadingOptions = ref(false)
+
+// 在 script setup 部分添加新的 watch
+watch(selectedPlatform, (newValue, oldValue) => {
+  if (dialog.value.type === 4 && // 確保是平台細項類型
+      dialog.value.id && // 確保是編輯模式
+      oldValue && // 確保有舊值
+      newValue !== oldValue) { // 確保有變更
+    // 自動將排序設為 1
+    orderValue.value = '1'
+    
+    // 顯示提示訊息
+    createSnackbar({
+      text: '更換平台，排序將自動設為 1，以確保資料正確性',
+      snackbarProps: { 
+        color: 'info',
+        timeout: 5000
+      }
+    })
+  }
+})
+
+watch(selectedChannel, (newValue, oldValue) => {
+  if ((dialog.value.type === 2 || dialog.value.type === 4) && // 確保是平台或平台細項類型
+      dialog.value.id && // 確保是編輯模式
+      oldValue && // 確保有舊值
+      newValue !== oldValue) { // 確保有變更
+    // 自動將排序設為 1
+    orderValue.value = '1'
+    
+    // 顯示提示訊息
+    createSnackbar({
+      text: '更換廣告渠道，排序將自動設為 1，以確保資料正確性',
+      snackbarProps: { 
+        color: 'info',
+        timeout: 5000
+      }
+    })
+  }
+})
+
+// 在 script setup 部分添加 batchDialog
+const batchDialog = ref({
+  open: false,
+  count: '',
+  error: ''
+})
+
+const openBatchDialog = () => {
+  batchDialog.value = {
+    open: true,
+    count: '',
+    error: ''
+  }
+}
+
+const closeBatchDialog = () => {
+  batchDialog.value.open = false
+}
+
+const handleBatchAdd = () => {
+  // 驗證輸入
+  const count = parseInt(batchDialog.value.count)
+  if (!count || count < 1 || count > 10) {
+    batchDialog.value.error = '請輸入1-10之間的數字'
+    return
+  }
+
+  // 清除錯誤訊息
+  batchDialog.value.error = ''
+
+  // 批量新增項目
+  newItems.value = Array(count).fill(null).map(() => ({
+    name: '',
+    error: ''
+  }))
+
+  // 關閉批量新增對話框
+  closeBatchDialog()
+}
+
+// 添加顏色陣列
+const channelColors = [
+  '#F06292', // 粉紅色
+  '#FF5722', // 橙色
+  '#F9A825', // 黃色
+  '#009688', // 青色
+  '#795548', // 棕色
+  '#0097A7', // 藍綠色
+  '#283593', // 深藍色
+  '#2196F3', // 藍色
+  '#607D8B', // 藍灰色
+  '#388E3C', // 綠色
+  '#00695C', // 淺綠色
+]
+
+// 儲存廣告渠道名稱與顏色的映射
+const channelColorMap = ref(new Map())
+
+// 修改 getChannelTypeStyle 函數
+const getChannelTypeStyle = (channelName) => {
+  if (!channelName) return { backgroundColor: '#757575' }
+  
+  // 如果這個渠道還沒有對應的顏色，分配一個新的顏色
+  if (!channelColorMap.value.has(channelName)) {
+    const index = channelColorMap.value.size % channelColors.length
+    channelColorMap.value.set(channelName, channelColors[index])
+  }
+  
+  return { backgroundColor: channelColorMap.value.get(channelName) }
+}
+
+// 在 script setup 部分添加
+const platformColors = [
+  '#4CAF50', // 綠色
+  '#00BCD4', // 青色
+  '#3F51B5', // 靛藍色
+  '#9C27B0', // 紫色
+  '#E91E63', // 粉紅色
+  '#FFC107', // 琥珀色
+  '#FF5722', // 深橙色
+  '#795548', // 棕色
+  '#607D8B', // 藍灰色
+  '#009688'  // 藍綠色
+]
+
+// 儲存平台名稱與顏色的映射
+const platformColorMap = ref(new Map())
+
+// 添加 getPlatformStyle 函數
+const getPlatformStyle = (platformName) => {
+  if (!platformName) return { backgroundColor: '#757575' }
+  
+  // 如果這個平台還沒有對應的顏色，分配一個新的顏色
+  if (!platformColorMap.value.has(platformName)) {
+    const index = platformColorMap.value.size % platformColors.length
+    platformColorMap.value.set(platformName, platformColors[index])
+  }
+  
+  return { backgroundColor: platformColorMap.value.get(platformName) }
+}
 </script>
 
 <style lang="scss" scoped>
+.custom-col {
+  max-width: 18%;
+}
+
+.custom-col-big {
+  max-width: 23%;
+}
+
 .marketing-theme-card {
   border: 1px solid #999;
   .v-list-item {
-    padding: 6px 32px;
+    padding: 6px 24px;
     transition: background 0.2s;
     &:hover {
       background: #e0e0e0 !important;
@@ -943,7 +1531,33 @@ watch(newItems, (items) => {
     min-width: 16px;
     height: 16px;
     border-radius: 12px;
-    background-color: #8E24AA;
+    background-color: #666;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    margin-right: 8px;
+  }
+  .channel-name {
+    min-width: 16px;
+    padding: 0 4px;
+    height: 16px;
+    border-radius: 4px;
+    background-color: #e049ba;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    margin-right: 8px;
+  }
+  .platform-name {
+    min-width: 16px;
+    padding: 0 4px;
+    height: 16px;
+    border-radius: 4px;
+    background-color: #6962be;
     color: #fff;
     display: flex;
     align-items: center;

@@ -164,6 +164,9 @@
                   <v-icon>mdi-pencil</v-icon>
                 </v-btn>
               </template>
+              <template #[`item.annualTotalBudget`]="{ item }">
+                {{ formatNumber(item.annualTotalBudget) }}
+              </template>
               <template #[`item.totalBudget`]="{ item }">
                 {{ formatNumber(item.totalBudget) }}
               </template>
@@ -180,7 +183,7 @@
     <v-dialog
       v-model="dialog.open"
       persistent
-      max-width="2200"
+      max-width="2600"
       :fullscreen="!smAndUp"
     >
       <v-form
@@ -249,6 +252,19 @@
                     clearable
                   />
                 </v-col>
+                <v-col
+                  cols="3"
+                >
+                  <amount-input
+                    v-model="annualTotalBudget.value.value"
+                    :error-messages="annualTotalBudget.errorMessage.value"
+                    label="*年度總預算"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    class="mb-6"
+                  />
+                </v-col>
                 <v-col>
                   <v-textarea
                     v-model="note.value.value"
@@ -265,8 +281,25 @@
 
               <!-- 預算表格 -->
               <div class="budget-table">
-                <div class="budget-table-title text-center mb-4">
-                  <span class="text-orange-darken-2">{{ year.value.value ? `${year.value.value}` : '( 請先選擇年度 )' }}</span> 年度 <span class="text-pink-darken-1">{{ theme.value.value ? getThemeName(theme.value.value) : '( 請先選擇行銷主題 )' }}</span> 行銷廣告預算表
+                <div class="budget-table-title mb-4 d-flex align-center position-relative">
+                  <div class="budget-title-center">
+                    <span class="align-self-center">
+                      <span class="text-orange-darken-2">{{ year.value.value ? `${year.value.value}` : '( 請先選擇年度 )' }}</span> 
+                      年度 
+                      <span class="text-pink-darken-1">{{ theme.value.value ? getThemeName(theme.value.value) : '( 請先選擇行銷主題 )' }}</span> 
+                      行銷廣告預算表
+                    </span>
+                  </div>
+                  <div class="budget-title-right d-flex align-center ms-auto me-1">
+                    <span
+                      class="text-grey-darken-1 me-2"
+                      style="font-size: 16px;"
+                    >預算差異 : </span>
+                    <span
+                      :class="getBudgetDifferenceClass"
+                      style="font-size: 16px;"
+                    >{{ getBudgetDifference === 0 ? '0' : formatNumber(getBudgetDifference) }}</span>
+                  </div>
                 </div>
 
                 <v-table class="budget-grid">
@@ -356,6 +389,7 @@
                                   density="compact"
                                   hide-details
                                   class="channel-select"
+                                  @update:model-value="(val) => handleChannelChange(val, channelIndex)"
                                 />
                               </div>
                             </td>
@@ -421,7 +455,7 @@
                           <td class="platform-col">
                             <v-autocomplete
                               v-model="platform.platformId"
-                              :items="platformOptions"
+                              :items="getFilteredPlatformOptions(channel.channelId)"
                               item-title="name"
                               item-value="_id"
                               variant="outlined"
@@ -671,7 +705,8 @@ const isLoadingBudget = ref(false)
 // ===== 表單驗證架構 =====
 const schema = yup.object({
   year: yup.string().required('請選擇年度'),
-  theme: yup.string().required('請選擇行銷主題')
+  theme: yup.string().required('請選擇行銷主題'),
+  annualTotalBudget: yup.number().required('請輸入').min(0, '年度總預算不能小於0')
 })
 
 // ===== 表單初始化 =====
@@ -679,7 +714,8 @@ const { handleSubmit, resetForm } = useForm({
   validationSchema: schema,
   initialValues: {
     year: '',
-    theme: ''
+    theme: '',
+    annualTotalBudget: ''
   }
 })
 
@@ -687,6 +723,7 @@ const { handleSubmit, resetForm } = useForm({
 const year = useField('year')
 const theme = useField('theme')
 const note = useField('note')
+const annualTotalBudget = useField('annualTotalBudget')
 
 // ===== 對話框設定 =====
 const dialog = ref({
@@ -699,7 +736,8 @@ const headers = [
   { title: '建立日期', key: 'createdAt', align: 'start', sortable: false },
   { title: '年度', key: 'year', align: 'start', sortable: false },
   { title: '行銷主題', key: 'theme.name', align: 'start', sortable: false },
-  { title: '總預算', key: 'totalBudget', align: 'start', sortable: false },
+  { title: '年度總預算', key: 'annualTotalBudget', align: 'start', sortable: false },
+  { title: '總預算預估', key: 'totalBudget', align: 'start', sortable: false },
   { title: '備註', key: 'note', align: 'start', sortable: false },
   { title: '建立者', key: 'creator.name', align: 'start', sortable: false },
   { title: '操作', key: 'actions', align: 'center', sortable: false }
@@ -743,6 +781,27 @@ const monthList = {
 const hasChanges = computed(() => {
   if (!dialog.value.id) return true
   return true
+})
+
+// 計算預算差異
+const getBudgetDifference = computed(() => {
+  const plannedTotal = parseFloat(annualTotalBudget.value.value) || 0
+  const actualTotal = budgetData.value.reduce((total, channel) => {
+    return total + channel.platforms.reduce((channelTotal, platform) => {
+      return channelTotal + Object.values(platform.budget).reduce((monthTotal, value) => {
+        return monthTotal + (parseFloat(value) || 0)
+      }, 0)
+    }, 0)
+  }, 0)
+  return plannedTotal - actualTotal
+})
+
+// 根據差異值決定顯示顏色
+const getBudgetDifferenceClass = computed(() => {
+  const difference = getBudgetDifference.value
+  if (difference === 0) return 'text-grey-darken-1'
+  if (difference > 0) return 'text-teal-darken-1'
+  return 'text-red-lighten-1'
 })
 
 // ===== 預算表資料 =====
@@ -1080,6 +1139,7 @@ const editItem = async (item) => {
       year.value.value = budget.year
       theme.value.value = budget.theme._id
       note.value.value = budget.note
+      annualTotalBudget.value.value = budget.annualTotalBudget
       
       // 重組數據結構
       const channelGroups = {}
@@ -1138,6 +1198,12 @@ const closeDialog = () => {
         }
       }]
     }]
+    
+    // 確保所有欄位都被重置
+    year.value.value = ''
+    theme.value.value = ''
+    note.value.value = ''
+    annualTotalBudget.value.value = ''
   } catch (error) {
     console.error('關閉對話框時發生錯誤:', error)
   }
@@ -1166,6 +1232,15 @@ const submit = handleSubmit(async (values) => {
       return
     }
 
+    // 檢查年度總預算
+    if (!values.annualTotalBudget) {
+      createSnackbar({
+        text: '請輸入年度總預算',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+      return
+    }
+
     // 驗證預算資料
     const hasEmptyChannel = budgetData.value.some(channel => !channel.channelId)
     const hasEmptyPlatform = budgetData.value.some(channel => 
@@ -1181,73 +1256,53 @@ const submit = handleSubmit(async (values) => {
     }
 
     // 處理預算資料
-    const items = budgetData.value.flatMap(channel => 
-      channel.platforms.map(platform => ({
-        channel: channel.channelId,
-        platform: platform.platformId,
-        monthlyBudget: {
-          JAN: platform.budget.JAN === '' ? 0 : Number(platform.budget.JAN),
-          FEB: platform.budget.FEB === '' ? 0 : Number(platform.budget.FEB),
-          MAR: platform.budget.MAR === '' ? 0 : Number(platform.budget.MAR),
-          APR: platform.budget.APR === '' ? 0 : Number(platform.budget.APR),
-          MAY: platform.budget.MAY === '' ? 0 : Number(platform.budget.MAY),
-          JUN: platform.budget.JUN === '' ? 0 : Number(platform.budget.JUN),
-          JUL: platform.budget.JUL === '' ? 0 : Number(platform.budget.JUL),
-          AUG: platform.budget.AUG === '' ? 0 : Number(platform.budget.AUG),
-          SEP: platform.budget.SEP === '' ? 0 : Number(platform.budget.SEP),
-          OCT: platform.budget.OCT === '' ? 0 : Number(platform.budget.OCT),
-          NOV: platform.budget.NOV === '' ? 0 : Number(platform.budget.NOV),
-          DEC: platform.budget.DEC === '' ? 0 : Number(platform.budget.DEC)
-        }
-      }))
-    )
-
-    // 確保年度是有效的數字
-    const year = parseInt(values.year)
-    if (isNaN(year)) {
-      createSnackbar({
-        text: '請選擇年度',
-        snackbarProps: { color: 'red-lighten-1' }
-      })
-      return
-    }
-
     const submitData = {
-      year,
+      year: parseInt(values.year),
       theme: values.theme,
+      annualTotalBudget: parseFloat(values.annualTotalBudget),
       note: values.note || '',
-      items
+      items: budgetData.value.flatMap(channel => 
+        channel.platforms.map(platform => ({
+          channel: channel.channelId,
+          platform: platform.platformId,
+          monthlyBudget: {
+            JAN: platform.budget.JAN === '' ? 0 : Number(platform.budget.JAN),
+            FEB: platform.budget.FEB === '' ? 0 : Number(platform.budget.FEB),
+            MAR: platform.budget.MAR === '' ? 0 : Number(platform.budget.MAR),
+            APR: platform.budget.APR === '' ? 0 : Number(platform.budget.APR),
+            MAY: platform.budget.MAY === '' ? 0 : Number(platform.budget.MAY),
+            JUN: platform.budget.JUN === '' ? 0 : Number(platform.budget.JUN),
+            JUL: platform.budget.JUL === '' ? 0 : Number(platform.budget.JUL),
+            AUG: platform.budget.AUG === '' ? 0 : Number(platform.budget.AUG),
+            SEP: platform.budget.SEP === '' ? 0 : Number(platform.budget.SEP),
+            OCT: platform.budget.OCT === '' ? 0 : Number(platform.budget.OCT),
+            NOV: platform.budget.NOV === '' ? 0 : Number(platform.budget.NOV),
+            DEC: platform.budget.DEC === '' ? 0 : Number(platform.budget.DEC)
+          }
+        }))
+      )
     }
 
-    // console.log('提交的資料:', submitData) // 用於調試
-
-    try {
-      if (dialog.value.id) {
-        const { data } = await apiAuth.patch(`/marketing/budgets/${dialog.value.id}`, submitData)
-        // console.log('更新回應:', data) // 用於調試
-        if (data.success) {
-          createSnackbar({
-            text: '預算表更新成功',
-            snackbarProps: { color: 'teal-lighten-1' }
-          })
-          closeDialog()
-          loadData()
-        }
-      } else {
-        const { data } = await apiAuth.post('/marketing/budgets', submitData)
-        // console.log('新增回應:', data) // 用於調試
-        if (data.success) {
-          createSnackbar({
-            text: '預算表新增成功',
-            snackbarProps: { color: 'teal-lighten-1' }
-          })
-          closeDialog()
-          loadData()
-        }
+    if (dialog.value.id) {
+      const { data } = await apiAuth.patch(`/marketing/budgets/${dialog.value.id}`, submitData)
+      if (data.success) {
+        createSnackbar({
+          text: '預算表更新成功',
+          snackbarProps: { color: 'teal-lighten-1' }
+        })
+        closeDialog()
+        loadData()
       }
-    } catch (error) {
-      console.error('API 錯誤:', error.response || error) // 用於調試
-      throw error
+    } else {
+      const { data } = await apiAuth.post('/marketing/budgets', submitData)
+      if (data.success) {
+        createSnackbar({
+          text: '預算表新增成功',
+          snackbarProps: { color: 'teal-lighten-1' }
+        })
+        closeDialog()
+        loadData()
+      }
     }
   } catch (error) {
     console.error('提交表單時發生錯誤:', error)
@@ -1470,6 +1525,22 @@ const validateYear = (event) => {
   // 使用 setValue 方法更新值
   year.setValue(numYear.toString())
 }
+
+// ===== 平台選擇相關方法 =====
+// 根據廣告渠道過濾平台選項
+const getFilteredPlatformOptions = (channelId) => {
+  if (!channelId) return []
+  return platformOptions.value.filter(platform => platform.parentId?._id === channelId)
+}
+
+// 監聽廣告渠道變更
+const handleChannelChange = (channelId, channelIndex) => {
+  // 當廣告渠道變更時，清空該渠道下所有平台的選擇
+  const channel = budgetData.value[channelIndex]
+  channel.platforms.forEach(platform => {
+    platform.platformId = ''
+  })
+}
 </script>
 
 <style lang="scss" scoped>
@@ -1479,8 +1550,23 @@ const validateYear = (event) => {
 }
 
 .budget-table-title {
+  min-height: 32px;
   font-size: 20px;
   font-weight: 600;
+}
+
+.budget-title-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.budget-title-right {
+  position: relative;
+  z-index: 2;
 }
 
 .budget-grid {

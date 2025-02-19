@@ -71,7 +71,7 @@
         <v-row>
           <v-col>
             <v-row>
-              <v-col>
+              <v-col cols="3">
                 <v-btn
                   color="blue-grey-darken-2"
                   variant="outlined"
@@ -94,7 +94,8 @@
               </v-col>
               <!-- 篩選區塊 -->
               <v-col
-                cols="6"
+                cols="7"
+                class="pe-16"
               >
                 <v-row>
                   <v-col cols="4">
@@ -143,23 +144,30 @@
                       color="cyan-darken-2"
                       :size="buttonSize"
                       :loading="isSearching"
+                      class="me-4"
                       @click="handleSearch"
                     >
                       搜尋
+                    </v-btn>
+                    <v-btn
+                      prepend-icon="mdi-file-pdf-box"
+                      color="red-lighten-1"
+                      :size="buttonSize"
+                      @click="openExportDialog"
+                    >
+                      匯出
                     </v-btn>
                   </v-col>
                 </v-row>
               </v-col>
               <v-col
                 cols="12"
-                sm="6"
-                md="3"
-                xl="2"
+                md="2"
                 class="d-flex align-center"
               >
                 <v-icon
                   v-if="mdAndUp"
-                  v-tooltip:top="'可搜尋問題內容、處理結果、報修人、備註'"
+                  v-tooltip:top="'可搜尋維修單號、問題內容、處理結果、報修人、備註'"
                   icon="mdi-information"
                   size="small"
                   color="blue-grey-darken-2"
@@ -200,6 +208,7 @@
             >
               <template #item="{ item }">
                 <tr>
+                  <td>{{ item.maintenanceRecordId }}</td>
                   <td>{{ formatDate(item.maintenanceDate) }}</td>
                   <td>{{ getCategoryName(item.hardwareCategory) }}</td>
                   <td>{{ item.maintenanceContent }}</td>
@@ -577,6 +586,57 @@
       input-label="硬體類型名稱"
       @confirm="deleteCategory"
     />
+
+    <!-- 匯出 PDF 對話框 -->
+    <v-dialog
+      v-model="exportDialog.open"
+      persistent
+      width="320"
+    >
+      <v-card class="rounded-lg py-3 px-2">
+        <v-card-title class="card-title px-6 py-3">
+          匯出報表
+        </v-card-title>
+        <v-card-text class="px-5 pb-2">
+          <v-form @submit.prevent="handleExportPDF">
+            <v-date-input
+              v-model="exportDialog.dateRange"
+              label="維修日期區間"
+              variant="outlined"
+              density="compact"
+              multiple="range"
+              prepend-icon
+              clearable
+              class="mb-4"
+              :cancel-text="'取消'"
+              :ok-text="'確認'"
+              :error-messages="exportDialog.error"
+            />
+            <v-card-actions class="pa-0">
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="outlined"
+                size="small"
+                @click="closeExportDialog"
+              >
+                取消
+              </v-btn>
+              <v-btn
+                color="teal-darken-1"
+                variant="outlined"
+                size="small"
+                type="submit"
+                :loading="isExporting"
+                class="ms-2"
+              >
+                匯出
+              </v-btn>
+            </v-card-actions>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -592,6 +652,8 @@ import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWi
 import UserRole from '@/enums/UserRole.js'
 import * as yup from 'yup'
 import { useField, useForm } from 'vee-validate'
+import html2pdf from 'html2pdf.js'
+
 
 // ===== 頁面設定 =====
 definePage({
@@ -657,6 +719,7 @@ const note = useField('note')
 
 // ===== 表格相關設定 =====
 const tableHeaders = [
+  { title: '維修單號', align: 'start', sortable: true, key: 'maintenanceRecordId' },
   { title: '維修日期', align: 'start', sortable: true, key: 'maintenanceDate' },
   { title: '硬體類型', align: 'start', sortable: true, key: 'hardwareCategory' },
   { title: '問題內容', align: 'start', sortable: true, width: '300', key: 'maintenanceContent' },
@@ -1362,6 +1425,137 @@ const handleReset = async () => {
 
 // 在 script setup 區塊中新增 isSearching 狀態
 const isSearching = ref(false)
+
+// 匯出相關
+const exportDialog = ref({
+  open: false,
+  dateRange: [],
+  error: ''  // 添加錯誤訊息欄位
+})
+
+const isExporting = ref(false)
+
+// 監聽日期區間變化
+watch(() => exportDialog.value.dateRange, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    exportDialog.value.error = ''
+  }
+})
+
+const openExportDialog = () => {
+  exportDialog.value.open = true
+  exportDialog.value.dateRange = []  // 改為空陣列，不使用外面的日期區間
+  exportDialog.value.error = ''
+}
+
+const closeExportDialog = () => {
+  exportDialog.value.open = false
+  exportDialog.value.dateRange = []
+  exportDialog.value.error = ''  // 重置錯誤訊息
+}
+
+const handleExportPDF = async () => {
+  // 驗證日期區間
+  if (!exportDialog.value.dateRange || exportDialog.value.dateRange.length === 0) {
+    exportDialog.value.error = '請選擇日期區間'
+    return
+  }
+
+  try {
+    isExporting.value = true
+
+    // 獲取統計數據
+    const params = {}
+    
+    if (exportDialog.value.dateRange && exportDialog.value.dateRange.length > 0) {
+      const startDate = new Date(exportDialog.value.dateRange[0])
+      startDate.setHours(0, 0, 0, 0)
+      
+      const endDate = new Date(exportDialog.value.dateRange[exportDialog.value.dateRange.length - 1])
+      endDate.setHours(23, 59, 59, 999)
+      
+      params.maintenanceDateStart = startDate.toISOString()
+      params.maintenanceDateEnd = endDate.toISOString()
+    }
+
+    const { data } = await apiAuth.get('/hardware/maintenance-records/export-stats', { params })
+    
+    if (data.success) {
+      // 計算總維修次數
+      const totalCount = data.result.reduce((acc, curr) => acc + curr.count, 0)
+
+      // 創建 PDF 內容
+      const content = document.createElement('div')
+      content.innerHTML = `
+        <div style="padding: 20px;">
+          <div style="text-align: center; margin-bottom: 20px; font-size: 17px; font-weight: bold;">硬體維修記錄統計報表</div>
+          <p style="margin-bottom: 16px; font-size: 14px;">統計期間：${formatDate(exportDialog.value.dateRange[0])} ~ ${formatDate(exportDialog.value.dateRange[exportDialog.value.dateRange.length - 1])}</p>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px; text-align: center;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5;">硬體類型</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; padding: 8px; background-color: #f5f5f5;">維修次數</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${categories.value.map(category => {
+                const statsItem = data.result.find(item => item.name === category.name)
+                return `
+                  <tr>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px;">${category.name}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; padding: 8px; text-align: center;">${statsItem ? statsItem.count : 0}</td>
+                  </tr>
+                `
+              }).join('')}
+              <tr>
+                <td style="border: 1px solid #ddd; border-right: none; padding: 8px; font-weight: bold; background-color: #f5f5f5;">Total</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold; background-color: #f5f5f5;">${totalCount}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `
+
+      // 配置 PDF 選項
+      const options = {
+        margin: 10,
+        filename: '硬體維修記錄統計報表.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 6,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          removeContainer: true
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait',
+          compress: true
+        }
+      }
+
+      // 生成 PDF
+      const pdf = html2pdf().set(options)
+      await pdf.from(content).save()
+      
+      closeExportDialog()
+      createSnackbar({
+        text: 'PDF 匯出成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('匯出 PDF 失敗:', error)
+    createSnackbar({
+      text: '匯出 PDF 失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isExporting.value = false
+  }
+}
 </script>
 
 <style lang="scss" scoped>

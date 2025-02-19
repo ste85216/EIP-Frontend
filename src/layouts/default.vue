@@ -56,7 +56,7 @@
       :expand-on-hover="rail"
       class="position-fixed"
     >
-      <v-list class="h-100 d-flex flex-column pa-0">
+      <v-list v-model:opened="openedGroups">
         <div>
           <template v-if="!rail">
             <v-card
@@ -146,8 +146,7 @@
             <!-- 有子選單的項目 -->
             <v-list-group
               v-if="userItem.children"
-              :value="openedGroups.includes(userItem.text)"
-              @click="toggleGroup(userItem.text)"
+              :value="userItem.text"
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -200,8 +199,7 @@
             <!-- 有子選單的項目 -->
             <v-list-group
               v-if="cogItem.children"
-              :value="openedGroups.includes(cogItem.text)"
-              @click="toggleGroup(cogItem.text)"
+              :value="cogItem.text"
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -255,8 +253,7 @@
               <!-- 有子選單的項目 -->
               <v-list-group
                 v-if="item.children"
-                :value="openedGroups.includes(item.text)"
-                @click="toggleGroup(item.text)"
+                :value="item.text"
               >
                 <template #activator="{ props }">
                   <v-list-item
@@ -288,7 +285,6 @@
                 v-else
                 :to="item.to"
                 color="grey-darken-3"
-
                 class="mt-2"
               >
                 <template #prepend>
@@ -385,8 +381,7 @@
             <!-- 有子選單的項目 -->
             <v-list-group
               v-if="userItem.children"
-              :value="openedGroups.includes(userItem.text)"
-              @click="toggleGroup(userItem.text)"
+              :value="userItem.text"
             >
               <template #activator="{ props }">
                 <v-list-item
@@ -518,7 +513,7 @@ const createSnackbar = useSnackbar()
 const router = useRouter()
 const route = useRoute()
 
-const openedGroups = ref([])
+const openedGroups = ref(['行銷費用管理']) // 預設打開的選單組
 const isBackgroundLoaded = ref(false)
 const isAvatarLoaded = ref(false)
 const handleImageLoad = () => {
@@ -533,14 +528,6 @@ const handleAvatarLoad = () => {
 
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
-}
-
-const toggleGroup = (group) => {
-  if (openedGroups.value.includes(group)) {
-    openedGroups.value = openedGroups.value.filter(g => g !== group)
-  } else {
-    openedGroups.value.push(group)
-  }
 }
 
 const userItems = [
@@ -577,21 +564,33 @@ const cogItems = [
         icon: 'mdi-table-edit',
         roles: ['ADMIN', 'MANAGER', 'USER']
       },
-      // {
-      //   to: '/marketingReportDownload',
-      //   text: '行銷報表下載',
-      //   icon: 'mdi-file-download-outline',
-      //   roles: ['ADMIN', 'MANAGER']
-      // },
       {
         to: '/marketingCategoryManagement',
         text: '行銷分類管理',
         icon: 'mdi-shape-plus-outline',
         roles: ['ADMIN', 'MANAGER']
       },
-      
     ]
   },
+  {
+    text: '人事管理',
+    icon: 'mdi-account-group',
+    roles: ['ADMIN', 'MANAGER'],
+    children: [
+      {
+        to: '/employeeManagement',
+        text: '員工管理',
+        icon: 'mdi-account-cog',
+        roles: ['ADMIN', 'MANAGER']
+      },
+      {
+        to: '/companyAndDepartmentManagement',
+        text: '公司及部門管理',
+        icon: 'mdi-office-building-cog',
+        roles: ['ADMIN','MANAGER']
+      }
+    ]
+  }
 ]
 
 const adminItems = [
@@ -756,9 +755,15 @@ const filteredUserItems = computed(() => {
   })
 })
 
-// 監聽路由變化，當路由改變時收合所有子選單
+// 監聽路由變化，當路由改變時保持選單狀態
 watch(() => route.path, () => {
-  openedGroups.value = []
+  // 根據路由路徑來決定要打開哪些選單組
+  const path = route.path
+  if (path.includes('/marketing')) {
+    openedGroups.value = ['行銷費用管理']
+  } else {
+    openedGroups.value = []
+  }
 })
 
 // 監聽螢幕尺寸變化

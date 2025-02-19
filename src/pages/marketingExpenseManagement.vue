@@ -45,10 +45,11 @@
                       hide-details
                       clearable
                       class="mb-6"
+                      @update:model-value="handleChannelChange"
                     />
                     <v-autocomplete
                       v-model="searchCriteria.platform"
-                      :items="platformOptions"
+                      :items="getFilteredPlatformOptions(searchCriteria.channel)"
                       label="平台"
                       item-title="name"
                       item-value="_id"
@@ -199,7 +200,7 @@
 
               <template #[`item.details`]="{ item }">
                 <template v-if="Array.isArray(item.details) && item.details.length > 0">
-                  {{ item.details.map(d => d.detail?.name || '').filter(Boolean).join('、') }}
+                  {{ formatDetails(item.details) }}
                 </template>
                 <template v-else>
                   -
@@ -219,6 +220,16 @@
                   @click="editItem(item)"
                 >
                   <v-icon>mdi-pencil</v-icon>
+                </v-btn>
+                <v-btn
+                  v-tooltip="'複製'"
+                  icon
+                  color="teal-darken-2"
+                  variant="plain"
+                  :size="buttonSize"
+                  @click="copyItem(item)"
+                >
+                  <v-icon>mdi-content-copy</v-icon>
                 </v-btn>
               </template>
             </v-data-table-server>
@@ -301,6 +312,7 @@
                         variant="outlined"
                         density="compact"
                         clearable
+                        @update:model-value="handleDialogChannelChange"
                       />
                     </v-col>
 
@@ -308,7 +320,7 @@
                       <v-autocomplete
                         v-model="platform.value.value"
                         :error-messages="platform.errorMessage.value"
-                        :items="platformOptions"
+                        :items="getFilteredPlatformOptions(channel.value.value)"
                         item-title="name"
                         item-value="_id"
                         label="*平台"
@@ -380,11 +392,23 @@
                             size="small"
                             prepend-icon="mdi-plus"
                             variant="outlined"
+                            color="blue-darken-4"
+                            class="ms-2"
+                            @click="addAllDetails"
+                          >
+                            新增所有線別
+                          </v-btn>
+
+                          <v-btn 
+                            size="small"
+                            prepend-icon="mdi-plus"
+                            variant="outlined"
                             class="ms-2"
                             @click="openAddDetailsDialog"
                           >
                             批量新增線別
                           </v-btn>
+                          
                           <v-btn
                             v-tooltip="'新增線別'"
                             icon
@@ -692,7 +716,7 @@ const router = useRouter()
 // ===== 響應式設定與螢幕斷點 =====
 const { smAndUp } = useDisplay()
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
-const dialogWidth = computed(() => smAndUp.value ? '1320' : '100%')
+const dialogWidth = computed(() => smAndUp.value ? '1400' : '100%')
 
 // ===== 基礎狀態管理 =====
 const confirmDeleteDialog = ref(false)
@@ -1298,6 +1322,139 @@ const confirmAddDetails = () => {
 // 新增線別明細
 const addDetail = () => {
   detailsList.value.push({ detail: '', amount: '' })
+}
+
+// 新增所有線別
+const addAllDetails = () => {
+  // 檢查是否有可用的線別選項
+  if (!detailOptions.value || detailOptions.value.length === 0) {
+    createSnackbar({
+      text: '目前沒有可用的線別',
+      snackbarProps: { color: 'warning' }
+    })
+    return
+  }
+
+  // 獲取目前已經使用的線別 ID（排除空值的情況）
+  const usedDetailIds = new Set(detailsList.value.map(item => item.detail).filter(Boolean))
+
+  // 過濾出未使用的線別
+  const unusedDetails = detailOptions.value.filter(detail => !usedDetailIds.has(detail._id))
+
+  if (unusedDetails.length === 0) {
+    createSnackbar({
+      text: '所有線別已經被新增',
+      snackbarProps: { color: 'warning' }
+    })
+    return
+  }
+
+  // 記錄要新增的總數量
+  const totalToAdd = unusedDetails.length
+
+  // 如果第一項是空的，先設定第一項
+  if (!detailsList.value[0].detail) {
+    detailsList.value[0].detail = unusedDetails[0]._id
+    // 移除已使用的第一項
+    unusedDetails.shift()
+  }
+
+  // 為剩餘未使用的線別新增資料
+  unusedDetails.forEach(detail => {
+    detailsList.value.push({
+      detail: detail._id,
+      amount: ''
+    })
+  })
+
+  createSnackbar({
+    text: `已新增 ${totalToAdd} 個線別`,
+    snackbarProps: { color: 'teal-lighten-1' }
+  })
+}
+
+// 新增線別明細格式化函數
+const formatDetails = (details) => {
+  if (!Array.isArray(details)) return '-'
+  
+  const validDetails = details
+    .map(d => d.detail?.name || '')
+    .filter(Boolean)
+  
+  if (validDetails.length === 0) return '-'
+  if (validDetails.length <= 4) return validDetails.join('、')
+  
+  return validDetails.slice(0, 4).join('、') + '...'
+}
+
+// 在 methods 區域新增 copyItem 方法
+const copyItem = async (item) => {
+  try {
+    if (!item || !item._id) {
+      console.error('無效的項目:', item)
+      return
+    }
+
+    // 打開對話框
+    dialog.value = {
+      open: true,
+      id: '' // 設為空因為是新增
+    }
+    isLoadingEdit.value = true
+
+    // 獲取完整的資料
+    const { data } = await apiAuth.get(`/marketing/expenses/${item._id}`)
+    if (!data.success) {
+      throw new Error('獲取資料失敗')
+    }
+
+    const fullItem = data.result
+    
+    // 不帶入發票日期
+    invoiceDate.value.value = null
+    theme.value.value = fullItem.theme._id
+    channel.value.value = fullItem.channel._id
+    platform.value.value = fullItem.platform._id
+    detailsList.value = fullItem.details.map(d => ({
+      detail: d.detail._id,
+      amount: d.amount
+    }))
+    note.value.value = fullItem.note
+
+    // 顯示提示訊息
+    createSnackbar({
+      text: '請記得選擇發票日期',
+      snackbarProps: { 
+        color: 'warning',
+        timeout: 3000
+      }
+    })
+  } catch (error) {
+    console.error('複製項目發生錯誤:', error)
+    handleError(error)
+    dialog.value.open = false
+  } finally {
+    isLoadingEdit.value = false
+  }
+}
+
+// ===== 平台選擇相關方法 =====
+// 根據廣告渠道過濾平台選項
+const getFilteredPlatformOptions = (channelId) => {
+  if (!channelId) return []
+  return platformOptions.value.filter(platform => platform.parentId?._id === channelId)
+}
+
+// 處理搜尋區域的廣告渠道變更
+const handleChannelChange = () => {
+  // 當廣告渠道變更時，清空平台選擇
+  searchCriteria.value.platform = null
+}
+
+// 處理對話框中的廣告渠道變更
+const handleDialogChannelChange = () => {
+  // 當廣告渠道變更時，清空平台選擇
+  platform.value.value = ''
 }
 
 // ===== 生命週期鉤子 =====

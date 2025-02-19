@@ -452,6 +452,26 @@
             </tbody>
           </table>
 
+          <!-- 預算資訊提示 -->
+          <div
+            v-if="searchForm.reportType === 'budget'"
+            class="d-flex justify-end align-center mt-6 px-2"
+          >
+            <v-chip
+              color="primary"
+              class="me-4"
+              variant="elevated"
+            >
+              年度總預算: {{ formatMonthValue(budgetInfo?.annualTotalBudget || 0) }}
+            </v-chip>
+            <v-chip
+              :color="(budgetInfo?.annualTotalBudget || 0) - getGrandTotal() >= 0 ? 'success' : 'error'"
+              variant="elevated"
+            >
+              預算差異: {{ formatMonthValue((budgetInfo?.annualTotalBudget || 0) - getGrandTotal()) }}
+            </v-chip>
+          </div>
+
           <!-- 行銷實際支出表 -->
           
 
@@ -1633,7 +1653,7 @@
     <!-- 在總表下方添加圖表容器 -->
     <v-row
       v-if="searchForm.reportType === 'lineExpenseTotal' && showReport"
-      class="elevation-4 rounded-lg py-sm-8 px-1 px-sm-4 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white"
+      class="elevation-4 rounded-lg py-sm-8 px-4 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white"
     >
       <v-col cols="12">
         <div class="d-flex justify-end mb-4 pe-4">
@@ -1651,9 +1671,9 @@
             <v-col
               cols="12"
               md="6"
-              class="d-flex justify-center align-center"
+              class="d-flex justify-center align-center pa-0"
             >
-              <div class="chart-box rounded-lg py-4 px-4 bg-white">
+              <div class="chart-box rounded-lg py-4 px-0 bg-white">
                 <ECharts
                   ref="pieChart"
                   :option="pieChartOption"
@@ -1665,9 +1685,9 @@
             <v-col
               cols="12"
               md="6"
-              class="d-flex justify-center align-center"
+              class="d-flex justify-center align-center pa-0"
             >
-              <div class="chart-box rounded-lg py-4 px-4 bg-white">
+              <div class="chart-box rounded-lg py-4 px-0 bg-white">
                 <ECharts
                   ref="barChart"
                   :option="barChartOption"
@@ -2007,6 +2027,7 @@ const monthOptions = ref(Array.from({ length: 12 }, (_, i) => ({
 
 // ===== 報表資料 =====
 const reportData = ref([])
+const budgetInfo = ref(null)
 
 // ===== 方法 =====
 // 載入主題選項
@@ -2038,16 +2059,14 @@ const loadYearOptions = async (theme) => {
 
     if (allYears.length === 0) {
       yearOptions.value = []
-      createSnackbar({
-        text: `「${getThemeName(theme)}」尚未有任何「預算」或是「實際支出」資料`,
-        snackbarProps: { color: 'warning' }
-      })
-      return
+      return false
     }
 
     yearOptions.value = allYears
+    return true
   } catch (error) {
     handleError(error)
+    return false
   } finally {
     isLoading.value = false
   }
@@ -2069,7 +2088,7 @@ const loadLineOptions = async () => {
 }
 
 // 處理主題變更
-const handleThemeChange = async () => {
+const handleThemeChange = () => {
   searchForm.value.year = null
   searchForm.value.reportType = null
   yearError.value = ''
@@ -2077,9 +2096,7 @@ const handleThemeChange = async () => {
   reportTypeError.value = ''
   showReport.value = false
 
-  if (searchForm.value.theme) {
-    await loadYearOptions(searchForm.value.theme)
-  } else {
+  if (!searchForm.value.theme) {
     yearOptions.value = []
   }
 }
@@ -2153,17 +2170,8 @@ watch([
     }
 
     // 載入年度選項
-    const [budgetYears, expenseYears] = await Promise.all([
-      apiAuth.get(`/marketing/budgets/years/${newTheme}`),
-      apiAuth.get(`/marketing/expenses/years/${newTheme}`)
-    ])
-
-    const budgetYearsSet = new Set(budgetYears.data.success ? budgetYears.data.result : [])
-    const expenseYearsSet = new Set(expenseYears.data.success ? expenseYears.data.result : [])
-    const allYears = [...new Set([...budgetYearsSet, ...expenseYearsSet])].sort((a, b) => b - a)
-
-    if (allYears.length === 0) {
-      yearOptions.value = []
+    const hasYears = await loadYearOptions(newTheme)
+    if (!hasYears) {
       createSnackbar({
         text: `「${getThemeName(newTheme)}」尚未有任何「預算」或是「實際支出」資料`,
         snackbarProps: { color: 'warning' }
@@ -2171,10 +2179,17 @@ watch([
       return
     }
 
-    yearOptions.value = allYears
-
     // 檢查報表類型的資料可用性
     if (newReportType && searchForm.value.year) {
+      // 重新獲取年度資料以檢查報表類型
+      const [budgetYears, expenseYears] = await Promise.all([
+        apiAuth.get(`/marketing/budgets/years/${newTheme}`),
+        apiAuth.get(`/marketing/expenses/years/${newTheme}`)
+      ])
+
+      const budgetYearsSet = new Set(budgetYears.data.success ? budgetYears.data.result : [])
+      const expenseYearsSet = new Set(expenseYears.data.success ? expenseYears.data.result : [])
+
       let hasData = true
       switch (newReportType) {
         case 'budget':
@@ -2348,6 +2363,9 @@ const generateReport = async () => {
         data = await apiAuth.get(`/marketing/budgets/${searchForm.value.year}/${searchForm.value.theme}`)
         if (data.data.success) {
           result = processBudgetData(data.data.result)
+          budgetInfo.value = {
+            annualTotalBudget: data.data.result.annualTotalBudget
+          }
         }
         break
 
@@ -3811,7 +3829,7 @@ const pieChartOption = computed(() => {
           fontSize: 11,
           lineHeight: 15,
           alignTo: 'edge',
-          edgeDistance: '8%',
+          edgeDistance: '6%',
           distanceToLabelLine: 6
         },
         labelLine: {
@@ -3896,7 +3914,7 @@ const barChartOption = computed(() => {
       data: xAxisData,
       axisLabel: {
         interval: 0,
-        rotate: 0
+        rotate: 40
       }
     },
     yAxis: {
@@ -4074,8 +4092,8 @@ const exportChartsToPDF = async () => {
         ...pieChartOption.value.series[0],
         label: {
           ...pieChartOption.value.series[0].label,
-          fontSize: 16,
-          lineHeight: 24
+          fontSize: 14,
+          lineHeight: 18
         },
         emphasis: {
           ...pieChartOption.value.series[0].emphasis,
@@ -4731,8 +4749,8 @@ const generateChartsPDF = async () => {
   try {
     // 創建圓餅圖容器
     const pieContainer = document.createElement('div')
-    pieContainer.style.width = '1600px'
-    pieContainer.style.height = '900px'
+    pieContainer.style.width = '1680px'
+    pieContainer.style.height = '9200px'
     pieContainer.style.backgroundColor = 'white'
     pieContainer.style.padding = '20px'
     pieContainer.style.boxSizing = 'border-box'
@@ -4740,8 +4758,8 @@ const generateChartsPDF = async () => {
 
     // 創建長條圖容器
     const barContainer = document.createElement('div')
-    barContainer.style.width = '1600px'
-    barContainer.style.height = '900px'
+    barContainer.style.width = '1680px'
+    barContainer.style.height = '920px'
     barContainer.style.backgroundColor = 'white'
     barContainer.style.padding = '20px'
     barContainer.style.boxSizing = 'border-box'
@@ -4777,14 +4795,14 @@ const generateChartsPDF = async () => {
         ...pieChartOption.value.series[0],
         label: {
           ...pieChartOption.value.series[0].label,
-          fontSize: 16,
+          fontSize: 14,
           lineHeight: 24
         },
         emphasis: {
           ...pieChartOption.value.series[0].emphasis,
           label: {
             ...pieChartOption.value.series[0].emphasis.label,
-            fontSize: 16
+            fontSize: 14
           }
         }
       }]
@@ -5278,7 +5296,7 @@ const handleDownloadThemeChange = (newTheme) => {
   .chart-box {
     width: 100%;
     height: 100%;
-    min-height: 800px;
+    min-height: 880px;
   }
 
   :deep(.echarts) {
@@ -5288,7 +5306,7 @@ const handleDownloadThemeChange = (newTheme) => {
 
   @media screen and (min-width: 2321px) {
     .chart-box {
-      min-height: 800px;
+      min-height: 840px;
     }
   }
 
