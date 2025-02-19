@@ -227,7 +227,13 @@
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+<<<<<<< HEAD
                   <td>{{ item.employeeCode }}</td>
+=======
+                  <td>
+                    {{ item.employeeCode }}
+                  </td>
+>>>>>>> 6c4051504fa95c831741f4c80aa9f6dc6210e602
                   <td>{{ item.employeeId }}</td>
                   <td>{{ item.name }}</td>
                   <td>
