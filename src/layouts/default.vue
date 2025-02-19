@@ -637,12 +637,15 @@ const cogItems = [
 ]
 
 const ITItems = [
+<<<<<<< HEAD
   {
     to: '/hardwareManagement',
     text: '硬體設備管理',
     icon: 'mdi-server-outline',
     roles: ['ADMIN', 'IT']
   },
+=======
+>>>>>>> 6c4051504fa95c831741f4c80aa9f6dc6210e602
   {
     to: '/hardwareMaintenanceRecord',
     text: '硬體維修記錄',
