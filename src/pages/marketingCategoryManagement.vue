@@ -494,7 +494,7 @@
               >
                 <v-progress-circular
                   indeterminate
-                  color="blue-grey-darken-2"
+                  color="deep-purple-darken-2"
                   size="40"
                 />
               </div>

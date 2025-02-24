@@ -79,7 +79,7 @@
                     使用者清單
                   </v-btn>
                   <v-btn
-                    color="light-blue-darken-3"
+                    color="blue-darken-3"
                     prepend-icon="mdi-pencil"
                     variant="outlined"
                     height="36"
@@ -90,7 +90,7 @@
                 </v-col>
                 <v-col v-if="!mdAndUp">
                   <v-btn
-                    color="light-blue-darken-3"
+                    color="blue-darken-3"
                     prepend-icon="mdi-pencil"
                     variant="outlined"
                     size="small"
@@ -366,7 +366,7 @@
         >
           <v-progress-circular
             indeterminate
-            color="blue-grey-darken-2"
+            color="deep-purple-darken-2"
             :size="60"
             :width="6"
           />

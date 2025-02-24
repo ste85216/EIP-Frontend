@@ -20,7 +20,7 @@
         <div class="text-center mb-6">
           <v-progress-circular
             :model-value="downloadProgress"
-            color="blue-grey-darken-2"
+            color="deep-purple-darken-2"
             size="150"
             width="18"
           >
@@ -150,7 +150,7 @@
                           <template #prepend-item>
                             <v-list-item
                               title="全選"
-                              color="blue-grey-darken-3"
+                              color="deep-purple-darken-2"
                               prepend-icon="mdi-checkbox-multiple-marked"
                               :active="searchForm.line.length === lineOptions.length"
                               @click="selectAllLines"
@@ -1852,7 +1852,7 @@
                 <template #prepend-item>
                   <v-list-item
                     title="全選"
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     prepend-icon="mdi-checkbox-multiple-marked"
                     :active="downloadForm.selectedLines.length === lineOptions.length"
                     @click="selectAllDownloadLines"
@@ -1873,7 +1873,7 @@
                   <v-checkbox
                     v-model="downloadForm.selectAllMonths"
                     label="全選"
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     hide-details
                     density="compact"
                     @change="handleSelectAllMonths"

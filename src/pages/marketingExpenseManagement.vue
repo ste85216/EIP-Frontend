@@ -201,7 +201,12 @@
 
               <template #[`item.details`]="{ item }">
                 <template v-if="Array.isArray(item.details) && item.details.length > 0">
-                  {{ formatDetails(item.details) }}
+                  <div 
+                    v-tooltip="item.details.map(d => d.detail?.name || '').filter(Boolean).join('、')"
+                    class="details-cell"
+                  >
+                    {{ formatDetails(item.details) }}
+                  </div>
                 </template>
                 <template v-else>
                   -
@@ -265,7 +270,7 @@
         >
           <v-progress-circular
             indeterminate
-            color="blue-grey-darken-2"
+            color="deep-purple-darken-2"
             size="64"
           />
         </div>

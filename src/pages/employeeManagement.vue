@@ -386,7 +386,7 @@
           >
             <v-progress-circular
               indeterminate
-              color="blue-grey-darken-2"
+              color="deep-purple-darken-2"
               size="64"
               width="8"
             />
@@ -674,7 +674,7 @@
                 </v-row>
               </v-col>
 
-              <!-- 到職日期 (必填) -->
+              <!-- 到職日期 -->
               <v-col
                 cols="12"
                 sm="3"
@@ -689,7 +689,7 @@
                   prepend-icon
                   :ok-text="'確認'"
                   :cancel-text="'取消'"
-                  :rules="[v => !!v || '請選擇到職日期']"
+                  @click:clear="hireDate.value.value = null"
                 />
               </v-col>
 
@@ -709,6 +709,7 @@
                   prepend-icon
                   :ok-text="'確認'"
                   :cancel-text="'取消'"
+                  @click:clear="unpaidLeaveStartDate.value.value = null"
                 />
               </v-col>
 
@@ -728,6 +729,7 @@
                   prepend-icon
                   :ok-text="'確認'"
                   :cancel-text="'取消'"
+                  @click:clear="reinstatementDate.value.value = null"
                 />
               </v-col>
 
@@ -747,6 +749,7 @@
                   prepend-icon
                   :ok-text="'確認'"
                   :cancel-text="'取消'"
+                  @click:clear="resignationDate.value.value = null"
                 />
               </v-col>
 
@@ -953,12 +956,12 @@
                 <v-radio
                   label="所有員工資料"
                   value="all"
-                  color="blue-grey-darken-2"
+                  color="deep-purple-darken-2"
                 />
                 <v-radio
                   label="單一公司資料"
                   value="company"
-                  color="blue-grey-darken-2"
+                  color="deep-purple-darken-2"
                 />
               </v-radio-group>
             </v-col>
@@ -1008,7 +1011,7 @@
                 <template #prepend-item>
                   <v-list-item
                     title="全選"
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     prepend-icon="mdi-checkbox-multiple-marked"
                     :active="exportDialog.departments.length === exportDialog.departmentOptions.length"
                     @click="selectAllDepartments"
@@ -1039,7 +1042,7 @@
                 <template #prepend-item>
                   <v-list-item
                     title="全選"
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     prepend-icon="mdi-checkbox-multiple-marked"
                     :active="exportDialog.employmentStatus.length === statusOptions.length"
                     @click="selectAllEmploymentStatus"

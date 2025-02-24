@@ -142,7 +142,7 @@
       v-if="isChecking"
       indeterminate
       size="64"
-      color="primary"
+      color="deep-purple-darken-2"
       class="center-screen"
     />
   </div>

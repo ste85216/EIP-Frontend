@@ -40,7 +40,7 @@
         prepend-icon="mdi-account-arrow-right"
         variant="outlined"
         rounded="0"
-        color="blue-grey-darken-2"
+        color="deep-purple-darken-4"
         class="me-6"
         @click="logout"
       >

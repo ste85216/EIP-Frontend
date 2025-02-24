@@ -55,7 +55,7 @@
                       indeterminate
                       size="20"
                       width="2"
-                      color="purple-darken-2"
+                      color="deep-purple-darken-2"
                     />
                   </div>
                 </v-card-text>
@@ -96,7 +96,7 @@
                     indeterminate
                     size="20"
                     width="2"
-                    color="purple-darken-2"
+                    color="deep-purple-darken-2"
                   />
                 </div>
               </v-card-text>

@@ -181,7 +181,7 @@
                     >
                       <v-progress-circular
                         indeterminate
-                        color="blue-grey-darken-2"
+                        color="deep-purple-darken-2"
                         size="32"
                       />
                       <div class="mt-4 text-grey font-weight-medium">
@@ -254,7 +254,7 @@
                   >
                     <v-progress-circular
                       indeterminate
-                      color="blue-grey-darken-2"
+                      color="deep-purple-darken-2"
                       size="32"
                     />
                     <div class="mt-4">
@@ -826,7 +826,7 @@
         <div class="text-center mb-6">
           <v-progress-circular
             :model-value="downloadProgress"
-            color="blue-grey-darken-2"
+            color="deep-purple-darken-2"
             size="120"
             width="14"
           >
@@ -852,17 +852,17 @@
             <v-radio
               label="報價單"
               value="quotation"
-              color="blue-grey-darken-2"
+              color="deep-purple-darken-2"
             />
             <v-radio
               label="合約書"
               value="contract"
-              color="blue-grey-darken-2"
+              color="deep-purple-darken-2"
             />
             <v-radio
               label="報價單 + 合約書"
               value="both"
-              color="blue-grey-darken-2"
+              color="deep-purple-darken-2"
               hide-details
             />
           </v-radio-group>

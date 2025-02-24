@@ -269,7 +269,7 @@
                   <td class="text-center">
                     <v-btn
                       icon
-                      color="blue-grey-darken-2"
+                      color="blue-darken-3"
                       variant="plain"
                       :ripple="false"
                       @click="openDeviceDialog(item)"
@@ -321,7 +321,7 @@
             <v-progress-circular
               indeterminate
               size="48"
-              color="blue-grey-darken-2"
+              color="deep-purple-darken-2"
             />
           </div>
           <div

@@ -22,7 +22,7 @@
         indeterminate
         size="20"
         width="2"
-        color="teal-lighten-1"
+        color="deep-purple-darken-2"
         class="me-2"
       />
       更換大頭貼

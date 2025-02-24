@@ -476,7 +476,7 @@
           >
             <v-progress-circular
               indeterminate
-              color="blue-grey-darken-2"
+              color="deep-purple-darken-2"
               size="64"
               width="8"
             />
@@ -704,6 +704,7 @@
                   prepend-icon
                   :ok-text="'確認'"
                   :cancel-text="'取消'"
+                  @click:clear="purchaseDate.value.value = null"
                 />
               </v-col>
 
@@ -807,6 +808,7 @@
                   prepend-icon
                   :ok-text="'確認'"
                   :cancel-text="'取消'"
+                  @click:clear="office2021InstallDate.value.value = null"
                 />
               </v-col>
 
@@ -965,6 +967,7 @@
                   prepend-icon
                   :ok-text="'確認'"
                   :cancel-text="'取消'"
+                  @click:clear="expenseDate.value.value = null"
                 />
               </v-col>
 
@@ -1029,12 +1032,12 @@
                 <v-radio
                   label="所有公司資料"
                   value="all"
-                  color="blue-grey-darken-2"
+                  color="deep-purple-darken-2"
                 />
                 <v-radio
                   label="單一公司資料"
                   value="company"
-                  color="blue-grey-darken-2"
+                  color="deep-purple-darken-2"
                 />
               </v-radio-group>
             </v-col>
@@ -1079,7 +1082,7 @@
                 <template #prepend-item>
                   <v-list-item
                     title="全選"
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     prepend-icon="mdi-checkbox-multiple-marked"
                     :active="exportDialog.hardwareTypes.length === hardwareTypes.length"
                     @click="selectAllHardwareTypes"
