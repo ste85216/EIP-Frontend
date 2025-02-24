@@ -17,6 +17,7 @@
         class="mb-4"
       >
         <v-row>
+          <!-- 各類型統計卡片 -->
           <template
             v-for="category in categories"
             :key="category._id"
@@ -28,7 +29,7 @@
               class="px-3"
             >
               <v-card
-                class="rounded-lg border border-opacity-25"
+                class="rounded-lg border"
                 elevation="0"
                 min-height="80"
               >
@@ -61,7 +62,7 @@
               </v-card>
             </v-col>
           </template>
-          <!-- Total 卡片 -->
+          <!-- Total 統計卡片 -->
           <v-col
             cols="12"
             sm="3"
@@ -112,17 +113,6 @@
           <v-col>
             <v-row>
               <v-col cols="3">
-                <v-btn
-                  color="blue-grey-darken-2"
-                  variant="outlined"
-                  prepend-icon="mdi-cog"
-                  class="me-4"
-                  :size="buttonSize"
-                  @click="openCategoryDialog"
-                >
-                  硬體類型管理
-                </v-btn>
-
                 <v-btn
                   prepend-icon="mdi-plus"
                   variant="outlined"
@@ -360,7 +350,7 @@
                   label="*問題內容"
                   variant="outlined"
                   density="compact"
-                  rows="3"
+                  rows="4"
                 />
               </v-col>
 
@@ -371,7 +361,7 @@
                   label="*處理結果"
                   variant="outlined"
                   density="compact"
-                  rows="3"
+                  rows="4"
                 />
               </v-col>
 
@@ -385,7 +375,7 @@
                   variant="outlined"
                   density="compact"
                   hide-details
-                  rows="2"
+                  rows="4"
                 />
               </v-col>
             </v-row>
@@ -424,207 +414,6 @@
       title="確認刪除維修記錄"
       :message="'確定要刪除此維修記錄嗎？此操作無法復原。'"
       @confirm="deleteRecord"
-    />
-
-    <!-- 硬體類型管理對話框 -->
-    <v-dialog
-      v-model="categoryDialog.open"
-      persistent
-      max-width="900"
-    >
-      <v-card class="rounded-lg px-8 pt-4 pb-6">
-        <div class="card-title px-2 pb-2 d-flex justify-space-between align-center">
-          硬體類型管理
-          <v-btn
-            icon="mdi-close"
-            color="red-lighten-1"
-            variant="plain"
-            :size="buttonSize"
-            @click="closeCategoryDialog"
-          />
-        </div>
-        <v-card-text class="ps-2">
-          <v-row>
-            <v-col
-              cols="7"
-              class="px-5 border rounded-lg"
-            >
-              <v-row>
-                <v-col class="card-subtitle text-blue-grey-darken-2">
-                  現有硬體類型
-                </v-col>
-              </v-row>
-              <div class="mb-8 mt-4">
-                <v-chip
-                  v-for="category in categories"
-                  :key="category._id"
-                  class="me-4 mb-2 pa-4 pe-1"
-                  color="blue-grey-darken-2"
-                  label
-                >
-                  {{ category.name }}
-                  <v-menu>
-                    <template #activator="{ props }">
-                      <v-btn
-                        icon
-                        size="x-small"
-                        variant="text"
-                        class="ms-2"
-                        :ripple="false"
-                        color="white"
-                        v-bind="props"
-                      >
-                        <v-icon color="cyan-darken-3">
-                          mdi-dots-vertical
-                        </v-icon>
-                      </v-btn>
-                    </template>
-                    <v-list density="compact">
-                      <v-list-item
-                        density="compact"
-                        class="ps-2 pe-3 py-0"
-                        @click="openEditCategory(category)"
-                      >
-                        <v-icon
-                          icon="mdi-pencil"
-                          size="16"
-                          color="light-blue-darken-4"
-                        />
-                        <span
-                          style="font-size: 14px;"
-                          class="ps-2 text-blue-grey-darken-2"
-                        >編輯</span>
-                      </v-list-item>
-                      <v-list-item
-                        density="compact"
-                        class="ps-2 pe-3 py-0"
-                        color="red-lighten-1"
-                        @click="confirmDeleteCategory(category)"
-                      >
-                        <v-icon
-                          icon="mdi-delete"
-                          size="16"
-                          color="red-lighten-1"
-                        />
-                        <span
-                          style="font-size: 14px;"
-                          class="ps-2 text-blue-grey-darken-2"
-                        >刪除</span>
-                      </v-list-item>
-                    </v-list>
-                  </v-menu>
-                </v-chip>
-              </div>
-            </v-col>
-            <v-spacer />
-            <v-col
-              cols="4"
-              class="border rounded-lg px-4 pt-4"
-            >
-              <v-row>
-                <v-col
-                  cols="12"
-                  class="card-subtitle text-blue-grey-darken-2 mb-4"
-                >
-                  新增硬體類型
-                </v-col>
-              </v-row>
-              <v-form @submit.prevent="submitCategory">
-                <v-row>
-                  <v-col cols="12">
-                    <v-text-field
-                      v-model="categoryForm.name"
-                      :error-messages="categoryErrors.name"
-                      label="類型名稱*"
-                      variant="outlined"
-                      density="compact"
-                      clearable
-                    />
-                  </v-col>
-                </v-row>
-                <v-card-actions class="pa-0 mt-2">
-                  <v-spacer />
-                  <v-btn
-                    color="teal-darken-1"
-                    variant="outlined"
-                    type="submit"
-                    size="small"
-                    :loading="isSubmitting"
-                    class="ms-2"
-                  >
-                    新增
-                  </v-btn>
-                </v-card-actions>
-              </v-form>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <!-- 編輯硬體類型對話框 -->
-    <v-dialog
-      v-model="editCategoryDialog.open"
-      persistent
-      width="360"
-    >
-      <v-card class="rounded-lg py-3 px-2">
-        <v-card-title class="card-title px-6 py-3">
-          編輯硬體類型
-        </v-card-title>
-        <v-card-text class="px-5 pb-2">
-          <v-form @submit.prevent="submitEditCategory">
-            <v-text-field
-              v-model="editCategoryDialog.name"
-              :error-messages="editCategoryErrors.name"
-              label="類型名稱*"
-              required
-              variant="outlined"
-              density="compact"
-              class="mb-4"
-            />
-            <v-text-field
-              v-model="editCategoryDialog.order"
-              :error-messages="editCategoryErrors.order"
-              label="排序*"
-              type="number"
-              required
-              variant="outlined"
-              density="compact"
-              class="mb-4"
-            />
-            <v-card-actions class="pa-0 mt-4">
-              <v-spacer />
-              <v-btn
-                color="grey"
-                variant="outlined"
-                @click="closeEditCategoryDialog"
-              >
-                取消
-              </v-btn>
-              <v-btn
-                color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                :loading="isSubmitting"
-                class="ms-2"
-              >
-                修改
-              </v-btn>
-            </v-card-actions>
-          </v-form>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <!-- 硬體類型刪除確認對話框 -->
-    <ConfirmDeleteDialogWithTextField
-      v-model="deleteCategoryDialog.open"
-      title="確認刪除硬體類型"
-      :message="`確定要刪除硬體類型「<span class='text-pink-lighten-1' style='font-weight: 800;'>${deleteCategoryDialog.name}</span>」嗎？此操作無法復原`"
-      :expected-name="deleteCategoryDialog.name"
-      input-label="硬體類型名稱"
-      @confirm="deleteCategory"
     />
 
     <!-- 匯出 PDF 對話框 -->
@@ -688,7 +477,6 @@ import { useDisplay } from 'vuetify'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
-import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import UserRole from '@/enums/UserRole.js'
 import * as yup from 'yup'
 import { useField, useForm } from 'vee-validate'
@@ -770,7 +558,7 @@ const tableHeaders = [
 ]
 
 const tableItemsPerPage = ref(10)
-const tableSortBy = ref([{ key: 'maintenanceRecordId', order: 'desc' }])
+const tableSortBy = ref([{ key: 'maintenanceDate', order: 'desc' }])
 const tablePage = ref(1)
 const tableItems = ref([])
 const tableLoading = ref(true)
@@ -799,28 +587,6 @@ const categories = ref([])
 const categoryStats = ref({})
 
 // ===== 硬體類型管理相關 =====
-const categoryDialog = ref({
-  open: false
-})
-
-const editCategoryDialog = ref({
-  open: false,
-  id: '',
-  name: '',
-  order: 0
-})
-
-const editCategoryErrors = ref({
-  name: '',
-  order: ''
-})
-
-const deleteCategoryDialog = ref({
-  open: false,
-  id: '',
-  name: ''
-})
-
 const categoryForm = ref({
   name: '',
   order: ''
@@ -949,7 +715,9 @@ const refreshData = async () => {
 // ===== 硬體類型管理方法 =====
 const loadCategories = async () => {
   try {
-    const { data } = await apiAuth.get('/hardware/categories/search')
+    const { data } = await apiAuth.get('/hardware/categories/search', {
+      params: { type: 1 }
+    })
     if (data.success) {
       categories.value = data.result
     }
@@ -957,249 +725,6 @@ const loadCategories = async () => {
     console.error('載入硬體類型失敗:', error)
     createSnackbar({
       text: '載入硬體類型失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  }
-}
-
-const openCategoryDialog = async () => {
-  try {
-    categoryDialog.value.open = true
-    // 重置表單
-    resetCategoryForm()
-    // 獲取最大順序
-    const { data } = await apiAuth.get('/hardware/categories/max-order')
-    if (data.success) {
-      categoryForm.value.order = data.result
-    }
-    await loadCategories()
-  } catch (error) {
-    console.error('開啟類型管理對話框失敗:', error)
-    createSnackbar({
-      text: '載入類型資料失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  }
-}
-
-const closeCategoryDialog = () => {
-  categoryDialog.value.open = false
-  // 重置所有表單狀態
-  resetCategoryForm()
-  categoryErrors.value = {
-    name: '',
-    order: ''
-  }
-  editCategoryDialog.value = {
-    open: false,
-    id: '',
-    name: '',
-    order: 0
-  }
-}
-
-const openEditCategory = (category) => {
-  editCategoryDialog.value = {
-    open: true,
-    id: category._id,
-    name: category.name,
-    order: category.order
-  }
-  editCategoryErrors.value = {
-    name: '',
-    order: ''
-  }
-}
-
-const closeEditCategoryDialog = () => {
-  editCategoryDialog.value = {
-    open: false,
-    id: '',
-    name: '',
-    order: 0
-  }
-  editCategoryErrors.value = {
-    name: '',
-    order: ''
-  }
-}
-
-const confirmDeleteCategory = (category) => {
-  deleteCategoryDialog.value = {
-    open: true,
-    id: category._id,
-    name: category.name
-  }
-}
-
-const submitCategory = async () => {
-  // 重置錯誤訊息
-  categoryErrors.value = {
-    name: '',
-    order: ''
-  }
-
-  // 檢查名稱欄位
-  let hasError = false
-  if (!categoryForm.value.name) {
-    categoryErrors.value.name = '請輸入類型名稱'
-    hasError = true
-  }
-
-  if (hasError) return
-
-  isSubmitting.value = true
-  try {
-    // 先獲取最大順序
-    const { data: maxOrderData } = await apiAuth.get('/hardware/categories/max-order')
-    if (!maxOrderData.success) {
-      throw new Error('獲取最大順序失敗')
-    }
-
-    // 新增類別
-    const { data } = await apiAuth.post('/hardware/categories', {
-      name: categoryForm.value.name.trim(),
-      order: maxOrderData.result
-    })
-
-    if (data.success) {
-      createSnackbar({
-        text: '新增硬體類型成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
-      // 重置表單
-      categoryForm.value = {
-        name: '',
-        order: ''
-      }
-      categoryErrors.value = {
-        name: '',
-        order: ''
-      }
-      await loadCategories()
-    }
-  } catch (error) {
-    console.error('新增失敗:', error.response?.data)
-    // 如果是後端回傳的特定欄位錯誤
-    if (error.response?.data?.validationError) {
-      const validationErrors = error.response.data.validationError
-      Object.keys(validationErrors).forEach(key => {
-        categoryErrors.value[key] = validationErrors[key].message
-      })
-    } else {
-      // 一般錯誤訊息
-      createSnackbar({
-        text: error.response?.data?.message || '新增失敗',
-        snackbarProps: { color: 'red-lighten-1' }
-      })
-    }
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-const submitEditCategory = async () => {
-  // 重置錯誤訊息
-  editCategoryErrors.value = {
-    name: '',
-    order: ''
-  }
-
-  // 前端驗證
-  let hasError = false
-  if (!editCategoryDialog.value.name) {
-    editCategoryErrors.value.name = '請輸入類型名稱'
-    hasError = true
-  }
-  if (!editCategoryDialog.value.order) {
-    editCategoryErrors.value.order = '請輸入排序'
-    hasError = true
-  }
-
-  if (hasError) return
-
-  isSubmitting.value = true
-  try {
-    const formData = {
-      name: editCategoryDialog.value.name,
-      order: parseInt(editCategoryDialog.value.order, 10)
-    }
-
-    const { data } = await apiAuth.patch(`/hardware/categories/${editCategoryDialog.value.id}`, formData)
-
-    if (data.success) {
-      createSnackbar({
-        text: '修改硬體類型成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
-      closeEditCategoryDialog()
-      // 重置新增表單的狀態
-      resetCategoryForm()
-      await loadCategories()
-    }
-  } catch (error) {
-    // 處理後端回傳的錯誤
-    createSnackbar({
-      text: error?.response?.data?.message || '修改失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  } finally {
-    isSubmitting.value = false
-  }
-}
-
-const deleteCategory = async () => {
-  try {
-    // 先檢查是否有維修記錄使用此硬體類型
-    const { data: checkData } = await apiAuth.get(`/hardware/maintenance-records/check-category/${deleteCategoryDialog.value.id}`)
-    
-    if (checkData.success && checkData.result.inUse) {
-      createSnackbar({
-        text: `此硬體類型已被 ${checkData.result.count} 筆維修記錄使用中，無法刪除`,
-        snackbarProps: { color: 'red-lighten-1' }
-      })
-      deleteCategoryDialog.value = {
-        open: false,
-        id: '',
-        name: ''
-      }
-      return
-    }
-
-    // 如果沒有被使用，才執行刪除
-    const { data } = await apiAuth.delete(`/hardware/categories/${deleteCategoryDialog.value.id}`)
-    if (data.success) {
-      createSnackbar({
-        text: '刪除硬體類型成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
-      // 從本地列表中移除被刪除的類型
-      categories.value = categories.value.filter(
-        category => category._id !== deleteCategoryDialog.value.id
-      )
-      // 如果當前選中的類型被刪除，清空選擇
-      if (filters.value.hardwareCategory === deleteCategoryDialog.value.id) {
-        filters.value.hardwareCategory = null
-      }
-      // 關閉刪除對話框
-      deleteCategoryDialog.value = {
-        open: false,
-        id: '',
-        name: ''
-      }
-      // 重新載入類別列表
-      await loadCategories()
-    }
-  } catch (error) {
-    let errorMessage = '刪除失敗'
-    // 處理特定的錯誤情況
-    if (error.response?.status === 409) {
-      errorMessage = '此硬體類型有維修記錄使用中，無法刪除'
-    } else {
-      errorMessage = error.response?.data?.message || '刪除失敗'
-    }
-    createSnackbar({
-      text: errorMessage,
       snackbarProps: { color: 'red-lighten-1' }
     })
   }
@@ -1327,17 +852,6 @@ const openDialog = (item) => {
 const closeDialog = () => {
   dialog.value.open = false
   resetForm()
-}
-
-const resetCategoryForm = () => {
-  categoryForm.value = {
-    name: '',
-    order: ''
-  }
-  categoryErrors.value = {
-    name: '',
-    order: ''
-  }
 }
 
 const submitMaintenance = handleSubmit(async (values) => {
@@ -1593,11 +1107,9 @@ const handleExportPDF = async () => {
   }
 }
 
-// 在 script setup 區域新增 getTotalCount 計算屬性
+// 在 script setup 中添加 getTotalCount 計算屬性
 const getTotalCount = computed(() => {
-  return categories.value.reduce((total, category) => {
-    return total + getCategoryCount(category._id)
-  }, 0)
+  return Object.values(categoryStats.value).reduce((total, count) => total + count, 0)
 })
 </script>
 
@@ -1606,6 +1118,7 @@ const getTotalCount = computed(() => {
   :deep(thead) {
     background-color: #455A64;
     color: white;
+    height: 48px;
   }
   :deep(tbody) {
     tr:nth-child(even) {

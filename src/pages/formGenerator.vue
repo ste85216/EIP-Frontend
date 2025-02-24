@@ -33,7 +33,7 @@
                     icon="mdi-information"
                     size="small"
                     class="me-3"
-                    color="deep-purple-darken-4"
+                    color="blue-grey-darken-2"
                   />
                 </v-col>
                 <v-col
@@ -44,7 +44,7 @@
                 >
                   <v-btn
                     v-if="user.isAdmin || user.isSuperAdmin"
-                    color="deep-purple-darken-4"
+                    color="blue-grey-darken-2"
                     variant="outlined"
                     prepend-icon="mdi-file-cog"
                     :size="buttonSize"
@@ -53,7 +53,7 @@
                     模板管理
                   </v-btn>
                   <v-btn
-                    color="pink-darken-1"
+                    color="red-darken-1"
                     variant="outlined"
                     prepend-icon="mdi-swap-horizontal"
                     :size="buttonSize"
@@ -64,7 +64,7 @@
                     新增模式
                   </v-btn>
                   <v-btn
-                    color="deep-purple-darken-4"
+                    color="blue-grey-darken-2"
                     variant="outlined"
                     prepend-icon="mdi-history"
                     :size="buttonSize"
@@ -181,7 +181,7 @@
                     >
                       <v-progress-circular
                         indeterminate
-                        color="deep-purple-darken-2"
+                        color="blue-grey-darken-2"
                         size="32"
                       />
                       <div class="mt-4 text-grey font-weight-medium">
@@ -228,7 +228,7 @@
                   {{ isEditing ? '儲存' : '新增' }}
                 </v-btn>
                 <v-btn
-                  color="pink-darken-2"
+                  color="deep-orange-darken-1"
                   :disabled="!previewReady"
                   :loading="isExportingPDF"
                   @click="handleExportPDF"
@@ -254,7 +254,7 @@
                   >
                     <v-progress-circular
                       indeterminate
-                      color="deep-purple-darken-2"
+                      color="blue-grey-darken-2"
                       size="32"
                     />
                     <div class="mt-4">
@@ -826,7 +826,7 @@
         <div class="text-center mb-6">
           <v-progress-circular
             :model-value="downloadProgress"
-            color="purple-darken-2"
+            color="blue-grey-darken-2"
             size="120"
             width="14"
           >
@@ -852,17 +852,17 @@
             <v-radio
               label="報價單"
               value="quotation"
-              color="purple-darken-1"
+              color="blue-grey-darken-2"
             />
             <v-radio
               label="合約書"
               value="contract"
-              color="purple-darken-1"
+              color="blue-grey-darken-2"
             />
             <v-radio
               label="報價單 + 合約書"
               value="both"
-              color="purple-darken-1"
+              color="blue-grey-darken-2"
               hide-details
             />
           </v-radio-group>

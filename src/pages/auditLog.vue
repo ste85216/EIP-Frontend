@@ -536,6 +536,7 @@ const modelOptions = [
   { title: '行銷實際支出', value: 'marketingExpenses' },
   { title: '硬體維修記錄', value: 'hardwareMaintenanceRecords' },
   { title: '硬體類型', value: 'hardwareCategories' },
+  { title: '硬體設備', value: 'hardwareDevices' },
   { title: '員工', value: 'employees' },
   { title: '公司', value: 'companies' },
   { title: '部門', value: 'departments' }
@@ -612,7 +613,24 @@ const fieldTranslations = {
   hireDate: '到職日期',
   resignationDate: '離職日期',
   unpaidLeaveStartDate: '留職停薪開始日期',
-  reinstatementDate: '復職日期'
+  reinstatementDate: '復職日期',
+  purchaseDate: '進貨日期',
+  serialNumber: '序號',
+  loginName: '登入名稱',
+  deviceName: '裝置名稱',
+  stockStatus: '庫存狀態',
+  expenseStatus: '報帳狀態',
+  office2021Account: 'office2021帳號',
+  office365Account: 'office365帳號',
+  office2021InstallDate: 'office2021安裝日期',
+  user: '使用者',
+  macAddress: 'MAC',
+  IPAddress: 'IP',
+  VPNAccount: 'VPN帳號',
+  VPNApplyReason: 'VPN申請原因',
+  location: '地點',
+  expenseObject: '報帳對象',
+  expenseDate: '報帳日期',
 }
 
 // 行銷分類類型對應
@@ -622,6 +640,12 @@ const marketingCategoryTypes = {
   2: '平台',
   3: '線別',
   4: '平台細項'
+}
+
+// 硬體類別類型對應
+const hardwareCategoryTypes = {
+  0: '硬體設備清單',
+  1: '硬體維修紀錄'
 }
 
 // 格式化日期函數
@@ -660,6 +684,7 @@ const getModelDisplay = (model) => {
     marketingBudgets: '行銷預算',
     hardwareMaintenanceRecords: '硬體維修記錄',
     hardwareCategories: '硬體類型',
+    hardwareDevices: '硬體設備',
     employees: '員工',
     companies: '公司',
     departments: '部門'
@@ -686,6 +711,10 @@ const formatTarget = (item) => {
       const theme = item.changes.before.theme?.name || '(無)'
       return `${year}年度 - ${theme}`
     }
+    if (item.targetModel === 'hardwareCategories') {
+      const { name, type } = item.changes.before
+      return `${name} (${hardwareCategoryTypes[type]})`
+    }
   }
   
   if (item.targetModel === 'marketingBudgets') {
@@ -705,7 +734,14 @@ const formatTarget = (item) => {
   
   if (formNumber) return `${formNumber}`
   if (item.targetModel === 'marketingCategories') {
-    return name || '-'
+    return `${name} (${marketingCategoryTypes[item.targetInfo.type]})`
+  }
+  if (item.targetModel === 'hardwareCategories') {
+    return `${name} (${hardwareCategoryTypes[item.targetInfo.type]})`
+  }
+  if (item.targetModel === 'hardwareDevices') {
+    const { type } = item.targetInfo || {}
+    return `${name} - ${type || '未知類型'}`
   }
   return `${name}${userId ? ` (${userId})` : ''}`
 }
@@ -740,6 +776,57 @@ const formatChanges = (item) => {
   }
 
   const changes = []
+
+  // 處理公司地點的特殊顯示
+  if (item.targetModel === 'companies' && item.changes.changedFields.includes('locations')) {
+    const beforeLocations = item.changes.before.locations || []
+    const afterLocations = item.changes.after.locations || []
+
+    // 找出刪除的地點
+    const deletedLocations = beforeLocations.filter(before => 
+      !afterLocations.some(after => after.locationName === before.locationName)
+    )
+    if (deletedLocations.length > 0) {
+      changes.push('刪除的地點:')
+      deletedLocations.forEach(loc => {
+        changes.push(` - ${loc.locationName}`)
+      })
+    }
+
+    // 找出新增的地點
+    const addedLocations = afterLocations.filter(after => 
+      !beforeLocations.some(before => before.locationName === after.locationName)
+    )
+    if (addedLocations.length > 0) {
+      changes.push('新增的地點:')
+      addedLocations.forEach(loc => {
+        changes.push(` - ${loc.locationName}`)
+      })
+    }
+
+    // 找出順序變更的地點
+    const commonLocations = afterLocations.filter(after => 
+      beforeLocations.some(before => before.locationName === after.locationName)
+    )
+    const orderChanges = commonLocations.filter(after => {
+      const before = beforeLocations.find(b => b.locationName === after.locationName)
+      return before.order !== after.order
+    })
+    if (orderChanges.length > 0) {
+      changes.push('順序變更:')
+      orderChanges.forEach(loc => {
+        const oldOrder = beforeLocations.find(b => b.locationName === loc.locationName).order + 1
+        const newOrder = loc.order + 1
+        changes.push(` - ${loc.locationName}: ${oldOrder} → ${newOrder}`)
+      })
+    }
+
+    if (changes.length === 0) {
+      changes.push('地點資料已更新')
+    }
+
+    return changes
+  }
 
   // 處理行銷預算的特殊顯示
   if (item.targetModel === 'marketingBudgets') {
@@ -879,23 +966,52 @@ const formatChanges = (item) => {
     const after = item.changes.after || {}
     // 過濾掉不需要顯示的欄位
     const excludeFields = ['_id', 'createdAt', 'updatedAt', 'password', 'tokens', '__v']
+    
+    // 針對硬體設備的特殊處理
+    if (item.targetModel === 'hardwareDevices') {
+      Object.entries(after).forEach(([key, value]) => {
+        if (!excludeFields.includes(key) && fieldTranslations[key]) {
+          if (key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate') {
+            changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
+          } else if (key === 'type') {
+            changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+          } else if (key === 'user') {
+            changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+          } else if (key === 'company') {
+            changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+          } else if (key === 'location') {
+            changes.push(`${fieldTranslations[key]}: ${value?.locationName || '(無)'}`)
+          } else if (key === 'expenseObject') {
+            changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+          } else if (typeof value === 'boolean') {
+            changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
+          } else {
+            changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
+          }
+        }
+      })
+      return changes
+    }
+    
     Object.entries(after).forEach(([key, value]) => {
       if (!excludeFields.includes(key) && fieldTranslations[key]) {
         if (key === 'role') {
           changes.push(`${fieldTranslations[key]}: ${formatRole(value)}`)
         } else if (typeof value === 'boolean') {
           changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
-        } else if (key === 'type' && item.targetModel === 'marketingCategories') {
-          changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[value] || '(無)'}`)
+        } else if (key === 'type') {
+          if (item.targetModel === 'marketingCategories') {
+            changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[value] || '(無)'}`)
+          } else if (item.targetModel === 'hardwareCategories') {
+            changes.push(`${fieldTranslations[key]}: ${hardwareCategoryTypes[value] || '(無)'}`)
+          }
         } else if (key === 'maintenanceDate') {
           changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
         } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments')) {
-          // 處理員工和部門的公司欄位
           changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
         } else if (key === 'department') {
           changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
         } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
-          // 處理四種日期格式
           changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
         } else {
           changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
@@ -908,6 +1024,37 @@ const formatChanges = (item) => {
   // 處理修改操作
   const { before = {}, after = {}, changedFields = [] } = item.changes
   
+  // 針對硬體設備的特殊處理
+  if (item.targetModel === 'hardwareDevices') {
+    changedFields.forEach(key => {
+      if (fieldTranslations[key]) {
+        const oldValue = before[key]
+        const newValue = after[key]
+        
+        if (key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate') {
+          changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
+        } else if (key === 'type') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+        } else if (key === 'user') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+        } else if (key === 'company') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+        } else if (key === 'location') {
+          const oldLocationName = oldValue === null ? '(無)' : (oldValue?.locationName || '2F')
+          const newLocationName = newValue === null ? '(無)' : (newValue?.locationName || '2F')
+          changes.push(`${fieldTranslations[key]}: ${oldLocationName} → ${newLocationName}`)
+        } else if (key === 'expenseObject') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+        } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+          changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
+        } else {
+          changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        }
+      }
+    })
+    return changes
+  }
+
   changedFields.forEach(key => {
     if (fieldTranslations[key]) {
       const oldValue = before[key]
@@ -917,17 +1064,19 @@ const formatChanges = (item) => {
         changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)} → ${formatRole(newValue)}`)
       } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
         changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
-      } else if (key === 'type' && item.targetModel === 'marketingCategories') {
-        changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[oldValue] || '(無)'} → ${marketingCategoryTypes[newValue] || '(無)'}`)
+      } else if (key === 'type') {
+        if (item.targetModel === 'marketingCategories') {
+          changes.push(`${fieldTranslations[key]}: ${marketingCategoryTypes[oldValue] || '(無)'} → ${marketingCategoryTypes[newValue] || '(無)'}`)
+        } else if (item.targetModel === 'hardwareCategories') {
+          changes.push(`${fieldTranslations[key]}: ${hardwareCategoryTypes[oldValue] || '(無)'} → ${hardwareCategoryTypes[newValue] || '(無)'}`)
+        }
       } else if (key === 'maintenanceDate') {
         changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
       } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments')) {
-        // 處理員工和部門的公司欄位
         changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
       } else if (key === 'department') {
         changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
       } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
-        // 處理四種日期格式
         changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
       } else {
         changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
@@ -1275,6 +1424,7 @@ watch(
   thead {
     background-color: #455A64;
     color: #fff;
+    height: 48px;
   }
   td {
     white-space: pre-line;

@@ -176,7 +176,7 @@
                       v-tooltip:start="'下載範例檔案'"
                       icon
                       variant="text"
-                      color="purple-darken-1"
+                      color="blue-grey-darken-2"
                       size="28"
                       @click="downloadExampleFile"
                     >
@@ -257,6 +257,7 @@
                   </v-col>
                   <v-col
                     cols="3"
+                    xl="2"
                     class="d-flex align-center"
                   >
                     <v-icon
@@ -385,7 +386,7 @@
           >
             <v-progress-circular
               indeterminate
-              color="purple-darken-2"
+              color="blue-grey-darken-2"
               size="64"
               width="8"
             />
@@ -952,12 +953,12 @@
                 <v-radio
                   label="所有員工資料"
                   value="all"
-                  color="purple-darken-1"
+                  color="blue-grey-darken-2"
                 />
                 <v-radio
                   label="單一公司資料"
                   value="company"
-                  color="purple-darken-1"
+                  color="blue-grey-darken-2"
                 />
               </v-radio-group>
             </v-col>
@@ -1007,7 +1008,7 @@
                 <template #prepend-item>
                   <v-list-item
                     title="全選"
-                    color="purple-lighten-1"
+                    color="blue-grey-darken-2"
                     prepend-icon="mdi-checkbox-multiple-marked"
                     :active="exportDialog.departments.length === exportDialog.departmentOptions.length"
                     @click="selectAllDepartments"
@@ -1038,7 +1039,7 @@
                 <template #prepend-item>
                   <v-list-item
                     title="全選"
-                    color="purple-lighten-1"
+                    color="blue-grey-darken-2"
                     prepend-icon="mdi-checkbox-multiple-marked"
                     :active="exportDialog.employmentStatus.length === statusOptions.length"
                     @click="selectAllEmploymentStatus"
@@ -1252,7 +1253,7 @@ const departments = ref([])
 const searchCriteria = ref({
   company: '',
   department: '',
-  status: '',
+  status: '在職',
   dateType: '',
   dateRange: []
 })
@@ -1400,7 +1401,7 @@ const resetSearch = () => {
   searchCriteria.value = {
     company: '',
     department: '',
-    status: '',
+    status: '在職',
     dateType: '',
     dateRange: []
   }
@@ -2325,6 +2326,7 @@ const downloadExampleFile = () => {
 
 <style lang="scss" scoped>
 .v-table :deep(thead) {
+  height: 48px !important;
   background-color: #455a64 !important;
   color: #fff !important;
 }

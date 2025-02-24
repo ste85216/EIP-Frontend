@@ -20,7 +20,7 @@
         <div class="text-center mb-6">
           <v-progress-circular
             :model-value="downloadProgress"
-            color="purple-darken-2"
+            color="blue-grey-darken-2"
             size="150"
             width="18"
           >
@@ -106,7 +106,7 @@
                   </v-col>
                   <v-col cols="2">
                     <v-btn
-                      color="purple-darken-2"
+                      color="blue-grey-darken-1"
                       :loading="isLoading"
                       block
                       @click="generateReport"
@@ -117,7 +117,7 @@
                   <v-col cols="2">
                     <v-btn
                       prepend-icon="mdi-download"
-                      color="pink-darken-2"
+                      color="deep-orange-darken-1"
                       :loading="isExporting"
                       block
                       @click="openDownloadDialog"
@@ -150,7 +150,7 @@
                           <template #prepend-item>
                             <v-list-item
                               title="全選"
-                              color="purple-lighten-1"
+                              color="blue-grey-darken-3"
                               prepend-icon="mdi-checkbox-multiple-marked"
                               :active="searchForm.line.length === lineOptions.length"
                               @click="selectAllLines"
@@ -458,15 +458,17 @@
             class="d-flex justify-end align-center mt-6 px-2"
           >
             <v-chip
-              color="primary"
+              color="blue-darken-3"
               class="me-4"
-              variant="elevated"
+              label
+              variant="outlined"
             >
               年度總預算: {{ formatMonthValue(budgetInfo?.annualTotalBudget || 0) }}
             </v-chip>
             <v-chip
-              :color="(budgetInfo?.annualTotalBudget || 0) - getGrandTotal() >= 0 ? 'success' : 'error'"
-              variant="elevated"
+              :color="(budgetInfo?.annualTotalBudget || 0) - getGrandTotal() >= 0 ? 'teal-darken-2' : 'error'"
+              label
+              variant="outlined"
             >
               預算差異: {{ formatMonthValue((budgetInfo?.annualTotalBudget || 0) - getGrandTotal()) }}
             </v-chip>
@@ -1762,7 +1764,7 @@
                     label="行銷廣告預算表"
                     density="compact"
                     value="budget"
-                    color="purple-darken-1"
+                    color="blue-grey-darken-2"
                     hide-details
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasBudget"
                   />
@@ -1774,7 +1776,7 @@
                     density="compact"
                     value="expense"
                     hide-details
-                    color="purple-darken-1"
+                    color="blue-grey-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1785,7 +1787,7 @@
                     density="compact"
                     value="comparison"
                     hide-details
-                    color="purple-darken-1"
+                    color="blue-grey-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasBudget || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1797,7 +1799,7 @@
                     density="compact"
                     value="lineExpense"
                     hide-details
-                    color="purple-darken-1"
+                    color="blue-grey-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1808,7 +1810,7 @@
                     density="compact"
                     value="lineExpenseTotal"
                     hide-details
-                    color="purple-darken-1"
+                    color="blue-grey-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1819,7 +1821,7 @@
                     density="compact"
                     value="charts"
                     hide-details
-                    color="purple-darken-1"
+                    color="blue-grey-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1845,18 +1847,17 @@
                 hide-details
                 clearable
                 multiple
-                color="purple-lighten-1"
                 select-all
               >
                 <template #prepend-item>
                   <v-list-item
                     title="全選"
-                    color="deep-purple-darken-1"
+                    color="blue-grey-darken-2"
                     prepend-icon="mdi-checkbox-multiple-marked"
                     :active="downloadForm.selectedLines.length === lineOptions.length"
                     @click="selectAllDownloadLines"
                   />
-                  <v-divider />
+                  <v-divider class="mt-2" />
                 </template>
               </v-autocomplete>
               
@@ -1872,7 +1873,7 @@
                   <v-checkbox
                     v-model="downloadForm.selectAllMonths"
                     label="全選"
-                    color="purple-darken-1"
+                    color="blue-grey-darken-2"
                     hide-details
                     density="compact"
                     @change="handleSelectAllMonths"
@@ -1888,7 +1889,7 @@
                     v-model="downloadForm.selectedMonths"
                     :label="month.name"
                     :value="month.value"
-                    color="purple-darken-1"
+                    color="blue-grey-darken-2"
                     density="compact"
                     hide-details
                   />
@@ -1910,7 +1911,7 @@
                 value="pdf"
                 hide-details
                 density="compact"
-                color="purple-darken-1"
+                color="blue-grey-darken-2"
                 class="mb-2"
                 :disabled="!downloadForm.selectedReports.length"
               />
@@ -1920,7 +1921,7 @@
                 value="excel"
                 hide-details
                 density="compact"
-                color="purple-darken-1"
+                color="blue-grey-darken-2"
                 :disabled="!downloadForm.selectedReports.length || (downloadForm.selectedReports.length === 1 && downloadForm.selectedReports[0] === 'charts')"
               />
               <div 

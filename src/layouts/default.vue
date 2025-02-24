@@ -40,7 +40,7 @@
         prepend-icon="mdi-account-arrow-right"
         variant="outlined"
         rounded="0"
-        color="purple-darken-4"
+        color="blue-grey-darken-2"
         class="me-6"
         @click="logout"
       >
@@ -258,7 +258,43 @@
             v-for="itItem in filteredITItems"
             :key="itItem.text"
           >
+            <!-- 有子選單的項目 -->
+            <v-list-group
+              v-if="itItem.children"
+              v-model="openedGroups"
+              :value="itItem.text"
+              :persistent="true"
+              fluid
+            >
+              <template #activator="{ props }">
+                <v-list-item
+                  v-bind="props"
+                  color="grey-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ itItem.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ itItem.text }}</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <v-list-item
+                v-for="child in itItem.children"
+                :key="child.to"
+                :to="child.to"
+                color="grey-darken-3"
+                base-color="deep-purple-darken-4"
+              >
+                <template #prepend>
+                  <v-icon>{{ child.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ child.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list-group>
+
+            <!-- 沒有子選單的項目 -->
             <v-list-item
+              v-else
               :to="itItem.to"
               color="grey-darken-3"
               class="mt-2"
@@ -637,20 +673,30 @@ const cogItems = [
 ]
 
 const ITItems = [
-<<<<<<< HEAD
   {
-    to: '/hardwareManagement',
-    text: '硬體設備管理',
-    icon: 'mdi-server-outline',
-    roles: ['ADMIN', 'IT']
-  },
-=======
->>>>>>> 6c4051504fa95c831741f4c80aa9f6dc6210e602
-  {
-    to: '/hardwareMaintenanceRecord',
-    text: '硬體維修記錄',
-    icon: 'mdi-wrench',
-    roles: ['ADMIN', 'IT']
+    text: '公司硬體管理',
+    icon: 'mdi-server-network-outline',
+    roles: ['ADMIN', 'IT'],
+    children: [
+      {
+        to: '/hardwareDeviceManagement',
+        text: '硬體設備管理',
+        icon: 'mdi-server-outline',
+        roles: ['ADMIN', 'IT']
+      },
+      {
+        to: '/hardwareMaintenanceRecord',
+        text: '硬體維修記錄',
+        icon: 'mdi-wrench',
+        roles: ['ADMIN', 'IT']
+      },
+      {
+        to: '/hardwareCategoryManagement',
+        text: '硬體類型管理',
+        icon: 'mdi-shape-plus-outline',
+        roles: ['ADMIN', 'IT']
+      }
+    ]
   }
 ]
 
@@ -838,6 +884,12 @@ watch(() => route.path, (newPath) => {
   if (newPath.includes('/employee') || newPath.includes('/companyAndDepartment')) {
     if (!openedGroups.value.includes('人事管理')) {
       openedGroups.value.push('人事管理')
+    }
+  }
+
+  if (newPath.includes('/hardware')) {
+    if (!openedGroups.value.includes('硬體管理')) {
+      openedGroups.value.push('硬體管理')
     }
   }
 }, { immediate: true })

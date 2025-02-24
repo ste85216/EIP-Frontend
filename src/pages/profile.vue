@@ -70,7 +70,7 @@
                 >
                   <v-btn 
                     class="me-4"
-                    color="purple-darken-4"
+                    color="blue-grey-darken-2"
                     prepend-icon="mdi-account"
                     variant="outlined"
                     height="36"
@@ -79,7 +79,7 @@
                     使用者清單
                   </v-btn>
                   <v-btn
-                    color="purple-darken-4"
+                    color="light-blue-darken-3"
                     prepend-icon="mdi-pencil"
                     variant="outlined"
                     height="36"
@@ -90,7 +90,7 @@
                 </v-col>
                 <v-col v-if="!mdAndUp">
                   <v-btn
-                    color="purple-darken-4"
+                    color="light-blue-darken-3"
                     prepend-icon="mdi-pencil"
                     variant="outlined"
                     size="small"
@@ -123,7 +123,7 @@
             </div>
           </v-col> -->
           <v-col cols="12">
-            <v-row class="text-purple-darken-4">
+            <v-row class="text-blue-grey-darken-2">
               <v-col
                 class="py-0 mb-6"
                 cols="12"
@@ -366,7 +366,7 @@
         >
           <v-progress-circular
             indeterminate
-            color="purple-darken-2"
+            color="blue-grey-darken-2"
             :size="60"
             :width="6"
           />

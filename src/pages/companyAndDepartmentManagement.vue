@@ -60,16 +60,24 @@
                   prepend-icon="mdi-domain"
                   variant="outlined"
                   color="blue-grey-darken-2"
-                  class="me-2"
+                  class="me-4"
                   @click="openCompanyDialog"
                 >
                   公司管理
                 </v-btn>
                 <v-btn
+                  prepend-icon="mdi-office-building-marker"
+                  variant="outlined"
+                  color="blue-grey-darken-2"
+                  class="me-4"
+                  @click="openLocationDialog"
+                >
+                  公司地點
+                </v-btn>
+                <v-btn
                   prepend-icon="mdi-account-multiple-plus"
                   variant="outlined"
                   color="blue-grey-darken-2"
-                  class="ms-3"
                   @click="openDepartmentDialog"
                 >
                   新增部門
@@ -474,6 +482,270 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <!-- 公司地點管理 Dialog -->
+    <v-dialog
+      v-model="locationDialog.open"
+      max-width="1000"
+    >
+      <v-card class="rounded-lg px-8 py-4">
+        <div class="card-title px-2 pb-2 d-flex justify-space-between align-center">
+          公司地點管理
+          <v-btn
+            icon="mdi-close"
+            color="red-lighten-1"
+            variant="plain"
+            :size="buttonSize"
+            @click="closeLocationDialog"
+          />
+        </div>
+        <v-card-text class="ps-2">
+          <v-row>
+            <v-col cols="12">
+              <v-table
+                density="compact"
+                class="rounded-ts-lg rounded-te-lg"
+              >
+                <thead>
+                  <tr>
+                    <th>公司</th>
+                    <th>地點</th>
+                    <th class="text-center">
+                      操作
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="(company, index) in companies"
+                    :key="company._id"
+                    :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }"
+                  >
+                    <td>{{ company.name }}</td>
+                    <td>
+                      <v-chip
+                        v-for="location in [...company.locations].sort((a, b) => a.order - b.order)"
+                        :key="location._id"
+                        class="me-2 mb-1"
+                        variant="outlined"
+                        color="blue-grey-darken-2"
+                        label
+                      >
+                        {{ location.locationName }}
+                      </v-chip>
+                    </td>
+                    <td class="text-center">
+                      <v-btn
+                        icon
+                        color="light-blue-darken-4"
+                        variant="plain"
+                        :size="buttonSize"
+                        :ripple="false"
+                        @click="editCompanyLocations(company)"
+                      >
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                    </td>
+                  </tr>
+                </tbody>
+              </v-table>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- 新增/新增/編輯地點 Dialog -->
+    <v-dialog
+      v-model="editLocationDialog.open"
+      persistent
+      width="360"
+    >
+      <v-card class="rounded-lg px-4 pt-7 pb-6">
+        <v-form @submit.prevent="submitEditLocations">
+          <div class="card-title px-4 pb-2 d-flex align-center justify-space-between">
+            <span>新增 / 編輯公司地點</span>
+            <div>
+              <v-btn
+                v-tooltip:start="'批量新增地點'"
+                icon
+                color="grey-darken-1"
+                size="22"
+                class="me-2"
+                @click="openBatchLocationDialog"
+              >
+                <v-icon size="14">
+                  mdi-plus-box-multiple-outline
+                </v-icon>
+              </v-btn>
+              <v-btn
+                v-tooltip:start="'新增地點'"
+                icon
+                color="grey-darken-1"
+                size="22"
+                @click="addEditingLocation"
+              >
+                <v-icon size="14">
+                  mdi-plus
+                </v-icon>
+              </v-btn>
+            </div>
+          </div>
+          <v-card-text class="mt-3 pa-3">
+            <v-row>
+              <v-col 
+                v-for="(location, index) in editingLocations"
+                :key="index"
+                cols="12"
+                class="mt-4"
+              >
+                <div class="d-flex align-center item-container">
+                  <v-row>
+                    <v-col
+                      cols="9"
+                      class="d-flex align-center pe-0"
+                    >
+                      <div class="order-number">
+                        {{ index + 1 }}
+                      </div>
+                      <v-text-field
+                        v-model="location.locationName"
+                        :error-messages="location.error"
+                        label="*地點名稱"
+                        type="text"
+                        variant="outlined"
+                        density="compact"
+                        clearable
+                        hide-details="auto"
+                      />
+                    </v-col>
+                    <v-col
+                      cols="3"
+                      class="d-flex align-center"
+                    >
+                      <div class="d-flex align-center justify-space-between w-100 pe-1">
+                        <div class="d-flex flex-column">
+                          <v-btn
+                            v-if="index > 0"
+                            icon
+                            variant="text"
+                            color="grey-darken-1"
+                            size="18"
+                            :ripple="false"
+                            class="me-1"
+                            @click="moveLocation(index, 'up')"
+                          >
+                            <v-icon size="18">
+                              mdi-chevron-up
+                            </v-icon>
+                          </v-btn>
+                          <v-btn
+                            v-if="index < editingLocations.length - 1"
+                            icon
+                            variant="text"
+                            color="grey-darken-1"
+                            size="18"
+                            :ripple="false"
+                            class="me-1"
+                            @click="moveLocation(index, 'down')"
+                          >
+                            <v-icon size="18">
+                              mdi-chevron-down
+                            </v-icon>
+                          </v-btn>
+                        </div>
+                        
+                        <v-btn
+                          icon
+                          variant="text"
+                          color="red-lighten-1"
+                          size="20"
+                          @click="removeEditingLocation(index)"
+                        >
+                          <v-icon size="18">
+                            mdi-delete
+                          </v-icon>
+                        </v-btn>
+                      </div>
+                    </v-col>
+                  </v-row>
+                </div>
+              </v-col>
+            </v-row>
+          </v-card-text>
+          <v-card-actions class="px-3 pt-4">
+            <v-spacer />
+            <v-btn
+              color="grey-darken-1"
+              variant="outlined"
+              :size="buttonSize"
+              @click="closeEditLocationDialog"
+            >
+              取消
+            </v-btn>
+            <v-btn
+              color="teal-darken-1"
+              variant="outlined"
+              type="submit"
+              class="ms-2"
+              :size="buttonSize"
+              :loading="isSubmitting"
+              :disabled="!hasLocationChanges"
+            >
+              確定
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+
+    <!-- 批量新增 Dialog -->
+    <v-dialog
+      v-model="batchLocationDialog.open"
+      persistent
+      width="300"
+    >
+      <v-card class="rounded-lg px-4 pt-7 pb-6">
+        <v-form @submit.prevent="handleBatchLocationAdd">
+          <div class="card-title px-4 pb-2">
+            批量新增地點
+          </div>
+          <v-card-text class="mt-3 pa-3">
+            <v-text-field
+              v-model="batchLocationDialog.count"
+              label="請輸入要新增的地點數量"
+              type="number"
+              min="1"
+              max="10"
+              variant="outlined"
+              density="compact"
+              :error-messages="batchLocationDialog.error"
+              hide-details="auto"
+            />
+          </v-card-text>
+          <v-card-actions class="px-3 pt-4">
+            <v-spacer />
+            <v-btn
+              color="grey-darken-1"
+              variant="outlined"
+              size="small"
+              @click="closeBatchLocationDialog"
+            >
+              取消
+            </v-btn>
+            <v-btn
+              color="teal-darken-1"
+              variant="outlined"
+              class="ms-1"
+              size="small"
+              type="submit"
+            >
+              確定
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -486,6 +758,8 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import UserRole from '@/enums/UserRole'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
+import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
 definePage({
   meta: {
@@ -498,6 +772,8 @@ definePage({
 const { smAndUp, mdAndUp } = useDisplay()
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
+const router = useRouter()
+const user = useUserStore()
 const buttonSize = computed(() => (smAndUp.value ? 'default' : 'small'))
 
 // 表格相關
@@ -992,20 +1268,257 @@ watch(() => departmentForm.value.name, () => {
     departmentErrors.value.name = []
   }
 })
+
+// 在 script setup 中添加
+const locationDialog = ref({
+  open: false
+})
+
+const editLocationDialog = ref({
+  open: false,
+  companyId: '',
+  companyName: ''
+})
+
+const editingLocations = ref([])
+const originalLocations = ref([])
+
+const hasLocationChanges = computed(() => {
+  if (editingLocations.value.length !== originalLocations.value.length) return true
+  return editingLocations.value.some((loc, index) => 
+    loc.locationName !== originalLocations.value[index]?.locationName
+  )
+})
+
+const openLocationDialog = () => {
+  locationDialog.value.open = true
+}
+
+const closeLocationDialog = () => {
+  locationDialog.value.open = false
+}
+
+const editCompanyLocations = (company) => {
+  editLocationDialog.value = {
+    open: true,
+    companyId: company._id,
+    companyName: company.name
+  }
+  // 確保地點按照 order 排序
+  const sortedLocations = [...company.locations].sort((a, b) => a.order - b.order)
+  editingLocations.value = sortedLocations.map((loc, index) => ({
+    ...loc,
+    order: index,
+    error: ''
+  }))
+  originalLocations.value = sortedLocations.map(loc => ({ ...loc }))
+}
+
+const closeEditLocationDialog = () => {
+  editLocationDialog.value = {
+    open: false,
+    companyId: '',
+    companyName: ''
+  }
+  editingLocations.value = []
+  originalLocations.value = []
+}
+
+const addEditingLocation = () => {
+  const newOrder = editingLocations.value.length
+  editingLocations.value.push({ 
+    locationName: '', 
+    order: newOrder,
+    error: '' 
+  })
+}
+
+const removeEditingLocation = (index) => {
+  editingLocations.value.splice(index, 1)
+}
+
+const validateLocations = (items) => {
+  let hasError = false
+  items.forEach(item => {
+    item.error = ''
+    if (!item.locationName?.trim()) {
+      item.error = '請輸入地點名稱'
+      hasError = true
+    }
+  })
+  return !hasError
+}
+
+const submitEditLocations = async () => {
+  if (isSubmitting.value) return
+  
+  try {
+    isSubmitting.value = true
+
+    if (!validateLocations(editingLocations.value)) {
+      return
+    }
+
+    // 檢查重複的地點名稱
+    const locationNames = editingLocations.value.map(loc => loc.locationName.trim())
+    const uniqueLocationNames = new Set(locationNames)
+    if (locationNames.length !== uniqueLocationNames.size) {
+      createSnackbar({
+        text: '同一公司內不能有重複的地點名稱',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+      return
+    }
+
+    const { data } = await apiAuth.patch(`/companies/${editLocationDialog.value.companyId}`, {
+      locations: editingLocations.value.map((loc, index) => ({
+        locationName: loc.locationName.trim(),
+        order: index
+      }))
+    })
+
+    if (data.success) {
+      createSnackbar({
+        text: '地點更新成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+      await loadCompanies()
+      closeEditLocationDialog()
+    }
+  } catch (error) {
+    console.error('更新地點時發生錯誤:', error)
+    handleError(error)
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+// 統一錯誤處理
+const handleError = (error) => {
+  console.error('Error:', error)
+  const errorMessage = error?.response?.data?.message || '操作失敗'
+  if (error?.response?.status === 401) {
+    user.logout()
+    router.push('/login')
+    createSnackbar({
+      text: '登入已過期，請重新登入',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } else {
+    createSnackbar({
+      text: errorMessage,
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+const batchLocationDialog = ref({
+  open: false,
+  count: '',
+  error: ''
+})
+
+const openBatchLocationDialog = () => {
+  batchLocationDialog.value = {
+    open: true,
+    count: '',
+    error: ''
+  }
+}
+
+const closeBatchLocationDialog = () => {
+  batchLocationDialog.value = {
+    open: false,
+    count: '',
+    error: ''
+  }
+}
+
+const handleBatchLocationAdd = () => {
+  const count = parseInt(batchLocationDialog.value.count)
+  if (!count || count < 1 || count > 10) {
+    batchLocationDialog.value.error = '請輸入1-10之間的數字'
+    return
+  }
+
+  batchLocationDialog.value.error = ''
+  const startOrder = editingLocations.value.length
+  const newLocations = Array(count).fill(null).map((_, index) => ({
+    locationName: '',
+    order: startOrder + index,
+    error: ''
+  }))
+  editingLocations.value.push(...newLocations)
+  closeBatchLocationDialog()
+}
+
+const moveLocation = (index, direction) => {
+  if (
+    (direction === 'up' && index === 0) || 
+    (direction === 'down' && index === editingLocations.value.length - 1)
+  ) {
+    return
+  }
+
+  const newIndex = direction === 'up' ? index - 1 : index + 1
+  const temp = { ...editingLocations.value[index] }
+  editingLocations.value[index] = { ...editingLocations.value[newIndex], order: temp.order }
+  editingLocations.value[newIndex] = { ...temp, order: editingLocations.value[index].order }
+}
 </script>
 
 <style lang="scss" scoped>
 .v-table :deep(thead) {
   background-color: #455a64 !important;
   color: #fff !important;
+  height: 48px;
 }
 
-.odd-row {
-  background-color: #f3f7fa;
+.item-container {
+  padding: 10px; 
+  background: #f9f9f9;
+  border: 1px solid #a9a9a9;
+  border-radius: 4px;
+  :deep(.v-field) {
+    background-color: #fff;
+  }
 }
 
-.even-row {
-  background-color:  rgb(255, 250, 240);
+.v-table {
+  :deep(tbody) {
+    tr:nth-child(odd) {
+      background-color: #f8fcff !important;
+    }
+    tr:nth-child(even) {
+      background-color: #fffef2 !important;
+    }
+  }
 }
 
+.v-card-text .v-table {
+  :deep(thead) {
+    background-color: #5e3f32 !important;
+  }
+  :deep(tbody) {
+    tr:nth-child(odd) {
+      background-color: #fff5f4 !important;
+    }
+    tr:nth-child(even) {
+      background-color: #f1fcff !important;
+    }
+  }
+}
+
+.order-number {
+  min-width: 18px;
+  height: 18px;
+  border-radius: 12px;
+  background-color: #666;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  margin-right: 8px;
+}
 </style>

@@ -730,6 +730,7 @@ const updateUserStatus = async (user, newStatus) => {
 .v-data-table :deep(thead) {
   background-color: #455A64;
   color: white;
+  height: 48px;
 }
 
 .odd-row {

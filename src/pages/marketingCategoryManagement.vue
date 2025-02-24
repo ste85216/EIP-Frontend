@@ -23,7 +23,7 @@
             v-tooltip:start="'可搜尋各分類名稱'"
             icon="mdi-information"
             size="small"
-            color="deep-purple-darken-4"
+            color="blue-grey-darken-2"
             class="me-2"
           />
           <v-text-field
@@ -494,7 +494,7 @@
               >
                 <v-progress-circular
                   indeterminate
-                  color="purple-darken-2"
+                  color="blue-grey-darken-2"
                   size="40"
                 />
               </div>

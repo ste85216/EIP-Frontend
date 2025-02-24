@@ -185,6 +185,7 @@
                   </v-col>
                   <v-col
                     cols="3"
+                    xl="2"
                     class="d-flex align-center"
                   >
                     <v-icon
@@ -227,19 +228,9 @@
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
-<<<<<<< HEAD
-<<<<<<< HEAD
-                  <td>{{ item.employeeCode }}</td>
-=======
                   <td>
                     {{ item.employeeCode }}
                   </td>
->>>>>>> 6c4051504fa95c831741f4c80aa9f6dc6210e602
-=======
-                  <td>
-                    {{ item.employeeCode }}
-                  </td>
->>>>>>> 6c4051504fa95c831741f4c80aa9f6dc6210e602
                   <td>{{ item.employeeId }}</td>
                   <td>{{ item.name }}</td>
                   <td>
@@ -275,6 +266,17 @@
                       {{ item.note }}
                     </div>
                   </td>
+                  <td class="text-center">
+                    <v-btn
+                      icon
+                      color="blue-grey-darken-2"
+                      variant="plain"
+                      :ripple="false"
+                      @click="openDeviceDialog(item)"
+                    >
+                      <v-icon>mdi-devices</v-icon>
+                    </v-btn>
+                  </td>
                 </tr>
               </template>
             </v-data-table-server>
@@ -282,6 +284,210 @@
         </v-row>
       </v-col>
     </v-row>
+
+    <!-- 設備清單對話框 -->
+    <v-dialog
+      v-model="deviceDialog.open"
+      max-width="1000"
+    >
+      <v-card class="device-dialog rounded-lg">
+        <v-toolbar
+          color="blue-darken-3"
+          height="60"
+          class="px-2"
+        >
+          <v-toolbar-title
+            class="card-title text-white rounded-t-lg"
+          >
+            <span class="font-weight-regular">設備清單 - </span>
+            <span class="font-weight-medium">{{ deviceDialog.employeeName }}</span>
+          </v-toolbar-title>
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="text"
+            @click="closeDeviceDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-toolbar>
+
+        <v-card-text class="pa-6">
+          <div
+            v-if="deviceDialog.loading"
+            class="d-flex justify-center py-12"
+          >
+            <v-progress-circular
+              indeterminate
+              size="48"
+              color="blue-grey-darken-2"
+            />
+          </div>
+          <div
+            v-else-if="deviceDialog.devices.length === 0"
+            class="d-flex flex-column align-center py-8 text-grey"
+          >
+            <v-icon
+              icon="mdi-devices"
+              size="48"
+              class="mb-4"
+              color="grey-lighten-1"
+            />
+            <span class="card-title">尚無設備資料</span>
+          </div>
+          <v-row v-else>
+            <v-col
+              v-for="device in deviceDialog.devices"
+              :key="device._id"
+              cols="12"
+              md="6"
+            >
+              <v-card
+                variant="outlined"
+                class="device-card rounded-lg"
+                elevation="0"
+              >
+                <v-card-item class="px-6 py-3">
+                  <template #prepend>
+                    <v-icon
+                      size="26"
+                      class="me-3"
+                      :icon="getDeviceIcon(device.type?.name)"
+                      color="blue-darken-3"
+                    />
+                  </template>
+                  <v-card-title class="text-blue-grey-darken-2 font-weight-bold">
+                    {{ device.type?.name }}
+                  </v-card-title>
+                  <v-card-subtitle v-if="device.deviceName">
+                    {{ device.deviceName }}
+                  </v-card-subtitle>
+                </v-card-item>
+
+                <v-divider />
+
+                <v-card-text class="pt-4 px-6">
+                  <v-row dense>
+                    <template v-if="device.serialNumber">
+                      <v-col cols="12">
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            size="18"
+                            color="grey"
+                            class="me-2"
+                          >
+                            mdi-barcode
+                          </v-icon>
+                          <span class="text-grey">序號：</span>
+                          <span class="ml-2">{{ device.serialNumber }}</span>
+                        </div>
+                      </v-col>
+                    </template>
+
+                    <template v-if="device.loginName">
+                      <v-col cols="12">
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            size="18"
+                            color="grey"
+                            class="me-2"
+                          >
+                            mdi-account
+                          </v-icon>
+                          <span class="text-grey">登入名稱：</span>
+                          <span class="ml-2">{{ device.loginName }}</span>
+                        </div>
+                      </v-col>
+                    </template>
+
+                    <template v-if="device.office2021Account">
+                      <v-col cols="12">
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            size="18"
+                            color="grey"
+                            class="me-2"
+                          >
+                            mdi-microsoft-office
+                          </v-icon>
+                          <span class="text-grey">Office 2021：</span>
+                          <span class="ml-2">{{ device.office2021Account }}</span>
+                        </div>
+                      </v-col>
+                    </template>
+
+                    <template v-if="device.office365Account">
+                      <v-col cols="12">
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            size="18"
+                            color="grey"
+                            class="me-2"
+                          >
+                            mdi-microsoft-office
+                          </v-icon>
+                          <span class="text-grey">Office 365：</span>
+                          <span class="ml-2">{{ device.office365Account }}</span>
+                        </div>
+                      </v-col>
+                    </template>
+
+                    <template v-if="device.office2021InstallDate">
+                      <v-col cols="12">
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            size="18"
+                            color="grey"
+                            class="me-2"
+                          >
+                            mdi-calendar
+                          </v-icon>
+                          <span class="text-grey">安裝日期：</span>
+                          <span class="ml-2">{{ formatDate(device.office2021InstallDate) }}</span>
+                        </div>
+                      </v-col>
+                    </template>
+
+                    <template v-if="device.macAddress">
+                      <v-col cols="12">
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            size="18"
+                            color="grey"
+                            class="me-2"
+                          >
+                            mdi-ethernet
+                          </v-icon>
+                          <span class="text-grey">MAC：</span>
+                          <span class="ml-2">{{ device.macAddress }}</span>
+                        </div>
+                      </v-col>
+                    </template>
+
+                    <template v-if="device.note">
+                      <v-col cols="12">
+                        <div class="d-flex align-center">
+                          <v-icon
+                            size="18"
+                            color="grey"
+                            class="me-2"
+                          >
+                            mdi-note-text
+                          </v-icon>
+                          <span class="text-grey">備註：</span>
+                          <span class="ml-2">{{ device.note }}</span>
+                        </div>
+                      </v-col>
+                    </template>
+                  </v-row>
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -317,7 +523,8 @@ const tableHeaders = [
   { title: '列印編號', key: 'printNumber', align: 'start', sortable: true },
   { title: 'Email', key: 'email', align: 'start', sortable: true },
   { title: '狀態', key: 'employmentStatus', align: 'start', sortable: true },
-  { title: '備註', key: 'note', minWidth:'200px', align: 'start', sortable: true }
+  { title: '備註', key: 'note', minWidth:'160px', align: 'start', sortable: true },
+  { title: '設備', key: 'devices', align: 'center', sortable: false }
 ]
 
 // 表格相關響應式變數
@@ -335,7 +542,7 @@ const departments = ref([])
 const searchCriteria = ref({
   company: '',
   department: '',
-  status: '',
+  status: '在職',
   dateType: '',
   dateRange: []
 })
@@ -369,6 +576,15 @@ const filteredHeaders = computed(() => {
     )
   }
   return tableHeaders
+})
+
+// 設備對話框相關
+const deviceDialog = ref({
+  open: false,
+  loading: false,
+  employeeName: '',
+  employeeId: '',
+  devices: []
 })
 
 // API 相關函數
@@ -471,7 +687,7 @@ const resetSearch = () => {
   searchCriteria.value = {
     company: '',
     department: '',
-    status: '',
+    status: '在職',
     dateType: '',
     dateRange: []
   }
@@ -549,12 +765,64 @@ const getStatusDateTooltip = (item) => {
       return ''
   }
 }
+
+// 開啟設備對話框
+const openDeviceDialog = async (employee) => {
+  deviceDialog.value = {
+    open: true,
+    loading: true,
+    employeeName: employee.name,
+    employeeId: employee._id,
+    devices: []
+  }
+
+  try {
+    const { data } = await apiAuth.get('/hardware/devices/all', {
+      params: {
+        user: employee._id,
+        all: true
+      }
+    })
+    if (data.success) {
+      deviceDialog.value.devices = data.result.data
+    }
+  } catch (error) {
+    console.error('載入設備清單失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '載入設備清單失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    deviceDialog.value.loading = false
+  }
+}
+
+// 關閉設備對話框
+const closeDeviceDialog = () => {
+  deviceDialog.value.open = false
+}
+
+// 在 script setup 部分添加以下函數
+const getDeviceIcon = (deviceType) => {
+  if (!deviceType) return 'mdi-devices'
+  
+  const type = deviceType.toLowerCase()
+  if (type.includes('筆電') || type.includes('筆記型電腦')) return 'mdi-laptop'
+  if (type.includes('桌機') || type.includes('桌上型電腦')) return 'mdi-desktop-tower-monitor'
+  if (type.includes('平板')) return 'mdi-tablet'
+  if (type.includes('手機')) return 'mdi-cellphone'
+  if (type.includes('螢幕')) return 'mdi-monitor'
+  if (type.includes('印表機')) return 'mdi-printer'
+  
+  return 'mdi-devices'
+}
 </script>
 
 <style lang="scss" scoped>
 .v-table :deep(thead) {
   background-color: #455a64 !important;
   color: #fff !important;
+  height: 48px !important;
 }
 
 .odd-row {
@@ -574,5 +842,17 @@ const getStatusDateTooltip = (item) => {
 
 .v-table :deep(tbody tr) {
   height: 48px !important;
+}
+
+.device-dialog {
+  .device-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.12) !important;
+
+    &:hover {
+      border-color: var(--v-primary-base) !important;
+      transform: translateY(-2px);
+    }
+  }
 }
 </style>

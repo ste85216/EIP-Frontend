@@ -146,7 +146,7 @@
           <v-col cols="12">
             <div class="d-flex align-center mb-4">
               <v-btn
-                color="purple-darken-4"
+                color="blue-grey-darken-2"
                 variant="outlined"
                 prepend-icon="mdi-plus"
                 @click="openDialog()"
@@ -161,7 +161,7 @@
                   v-tooltip:start="'可搜尋備註、建立者'"
                   icon="mdi-information"
                   size="small"
-                  color="deep-purple-darken-4"
+                  color="blue-grey-darken-2"
                   class="me-2"
                 />
                 <v-text-field
@@ -265,7 +265,7 @@
         >
           <v-progress-circular
             indeterminate
-            color="purple-darken-4"
+            color="blue-grey-darken-2"
             size="64"
           />
         </div>
@@ -1517,9 +1517,9 @@ onMounted(async () => {
 <style lang="scss" scoped>
 :deep(.v-data-table) {
   thead {
-    background: #5c0199;
+    background: #455a64;
     color: #fff;
-    
+    height: 48px;
   }
   .v-data-table__tr {
     &:nth-child(odd) {
@@ -1586,7 +1586,7 @@ onMounted(async () => {
   .detail-number {
     min-width: 18px;
     height: 18px;
-    background-color: #5c0199;
+    background-color: #283593;
     color: white;
     border-radius: 50%;
     display: flex;
