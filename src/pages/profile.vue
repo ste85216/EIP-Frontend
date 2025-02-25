@@ -70,7 +70,7 @@
                 >
                   <v-btn 
                     class="me-4"
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     prepend-icon="mdi-account"
                     variant="outlined"
                     height="36"
@@ -79,7 +79,7 @@
                     使用者清單
                   </v-btn>
                   <v-btn
-                    color="blue-darken-3"
+                    color="light-blue-darken-4"
                     prepend-icon="mdi-pencil"
                     variant="outlined"
                     height="36"
@@ -123,7 +123,7 @@
             </div>
           </v-col> -->
           <v-col cols="12">
-            <v-row class="text-blue-grey-darken-2">
+            <v-row class="text-deep-purple-darken-2">
               <v-col
                 class="py-0 mb-6"
                 cols="12"

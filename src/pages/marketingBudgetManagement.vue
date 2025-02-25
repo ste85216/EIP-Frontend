@@ -108,7 +108,7 @@
           <v-col cols="12">
             <div class="d-flex align-center mb-4">
               <v-btn
-                color="blue-grey-darken-2"
+                color="blue-grey-darken-1"
                 variant="outlined"
                 prepend-icon="mdi-plus"
                 @click="openDialog()"
@@ -173,6 +173,47 @@
               </template>
               <template #[`item.createdAt`]="{ item }">
                 {{ formatDate(item.createdAt) }}
+              </template>
+              <template #[`item.note`]="{ item }">
+                <template v-if="item.note">
+                  <v-menu
+                    location="top"
+                    transition="fade-transition"
+                    :close-on-content-click="true"
+                    :close-on-back="true"
+                  >
+                    <template #activator="{ props }">
+                      <div 
+                        v-bind="props"
+                        class="note-cell"
+                      >
+                        {{ item.note }}
+                      </div>
+                    </template>
+                    <v-card
+                      min-width="300"
+                      max-width="400"
+                      class="rounded-lg menu-card"
+                      elevation="3"
+                    >
+                      <v-card-text class="pa-0">
+                        <div class="menu-header px-3 py-2">
+                          <v-icon
+                            size="16"
+                            color="white"
+                            class="me-2"
+                          >
+                            mdi-text-box
+                          </v-icon>
+                          <span class="text-white text-subtitle-2">備註內容</span>
+                        </div>
+                        <div class="menu-card-text pa-4 pt-3">
+                          {{ item.note }}
+                        </div>
+                      </v-card-text>
+                    </v-card>
+                  </v-menu>
+                </template>
               </template>
             </v-data-table-server>
           </v-col>
@@ -1700,6 +1741,28 @@ tbody {
   width: 32px;
   padding: 0 16px 0 8px !important;
   text-align: center;
+}
+
+.note-cell {
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.menu-card {
+  overflow: hidden;
+  .menu-header {
+    font-size: 14px;
+    background: linear-gradient(to right, #7E57C2, #4527A0);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .menu-card-text {
+    font-size: 13px;
+  }
 }
 
 @media (max-width: 600px) {

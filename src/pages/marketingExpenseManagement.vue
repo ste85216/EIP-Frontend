@@ -146,7 +146,7 @@
           <v-col cols="12">
             <div class="d-flex align-center mb-4">
               <v-btn
-                color="blue-grey-darken-2"
+                color="blue-grey-darken-1"
                 variant="outlined"
                 prepend-icon="mdi-plus"
                 @click="openDialog()"
@@ -201,12 +201,62 @@
 
               <template #[`item.details`]="{ item }">
                 <template v-if="Array.isArray(item.details) && item.details.length > 0">
-                  <div 
-                    v-tooltip="item.details.map(d => d.detail?.name || '').filter(Boolean).join('、')"
-                    class="details-cell"
+                  <v-menu
+                    location="top"
+                    transition="fade-transition"
+                    :close-on-content-click="true"
+                    :close-on-back="true"
                   >
-                    {{ formatDetails(item.details) }}
-                  </div>
+                    <template #activator="{ props }">
+                      <div 
+                        v-bind="props"
+                        class="details-cell"
+                      >
+                        {{ formatDetails(item.details) }}
+                      </div>
+                    </template>
+                    <v-card
+                      min-width="300"
+                      max-width="360"
+                      class="rounded-lg menu-card"
+                      elevation="3"
+                    >
+                      <v-card-text class="pa-0">
+                        <div class="menu-header px-3 py-2">
+                          <v-icon
+                            size="16"
+                            color="white"
+                            class="me-2"
+                          >
+                            mdi-format-list-text
+                          </v-icon>
+                          <span class="text-white text-subtitle-2">線別明細</span>
+                        </div>
+                        <v-row
+                          dense
+                          class="details-grid-menu px-2 py-2"
+                        >
+                          <template
+                            v-for="(detail, index) in item.details.filter(d => d.detail?.name)"
+                            :key="index"
+                          >
+                            <v-col cols="6">
+                              <div class="d-flex align-center pa-1">
+                                <v-icon
+                                  size="small"
+                                  color="blue-grey-darken-1"
+                                  class="me-2"
+                                >
+                                  mdi-circle-small
+                                </v-icon>
+                                <span class="text-body-2 text-truncate">{{ detail.detail.name }}</span>
+                              </div>
+                            </v-col>
+                          </template>
+                        </v-row>
+                      </v-card-text>
+                    </v-card>
+                  </v-menu>
                 </template>
                 <template v-else>
                   -
@@ -218,12 +268,46 @@
               </template>
 
               <template #[`item.note`]="{ item }">
-                <div 
-                  v-tooltip="item.note"
-                  class="note-cell"
-                >
-                  {{ item.note }}
-                </div>
+                <template v-if="item.note">
+                  <v-menu
+                    location="top"
+                    transition="fade-transition"
+                    :close-on-content-click="true"
+                    :close-on-back="true"
+                  >
+                    <template #activator="{ props }">
+                      <div 
+                        v-bind="props"
+                        class="note-cell"
+                      >
+                        {{ item.note }}
+                      </div>
+                    </template>
+                    <v-card
+                      min-width="300"
+                      max-width="360"
+                      class="rounded-lg menu-card"
+                      elevation="3"
+                    >
+                      <v-card-text class="pa-0">
+                        <div class="menu-header px-3 py-2">
+                          <v-icon
+                            size="16"
+                            color="white"
+                            class="me-2"
+                          >
+                            mdi-text-box
+                          </v-icon>
+                          <span class="text-white text-subtitle-2">備註內容</span>
+                        </div>
+                        <div class="pa-4 pt-3 menu-card-text">
+                          {{ item.note }}
+                        </div>
+                      </v-card-text>
+                    </v-card>
+                  </v-menu>
+                </template>
+                <template v-else />
               </template>
 
               <template #[`item.actions`]="{ item }">
@@ -1626,5 +1710,52 @@ onMounted(async () => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.details-grid-menu {
+  margin: 0;
+  .v-col {
+    padding: 4px;
+    .text-truncate {
+      max-width: 120px;
+    }
+  }
+}
+
+.menu-card {
+  overflow: hidden;
+
+  .menu-card-text {
+    font-size: 13px;
+  }
+  
+  .menu-header {
+    font-size: 14px;
+    background: linear-gradient(to right, #7E57C2, #311B92);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+  }
+
+  .details-grid-menu {
+    margin: 0;
+    
+    .v-col {
+      padding: 2px 4px;
+      
+      .menu-item {
+        border-radius: 6px;
+        .text-truncate {
+          max-width: 100px;
+          color: #37474f;
+        }
+      }
+    }
+  }
+}
+
+.details-cell {
+  cursor: pointer;
 }
 </style>

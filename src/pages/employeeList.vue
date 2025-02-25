@@ -248,23 +248,94 @@
                   <td>
                     {{ item.email }}
                   </td>
-                  <td>
-                    <v-chip
-                      v-tooltip="getStatusDateTooltip(item)"
-                      size="small"
-                      variant="outlined"
-                      :color="getStatusColor(item.employmentStatus)"
+                  <td class="pa-2">
+                    <v-menu
+                      location="end"
+                      transition="fade-transition"
+                      open-on-hover
+                      close-delay="30"
+                      open-delay="30"
+                      class="pa-0"
                     >
-                      {{ item.employmentStatus }}
-                    </v-chip>
+                      <template #activator="{ props }">
+                        <div 
+                          v-bind="props"
+                          class="status-cell d-flex align-center"
+                        >
+                          <v-chip
+                            size="small"
+                            variant="outlined"
+                            :color="getStatusColor(item.employmentStatus)"
+                          >
+                            {{ item.employmentStatus }}
+                          </v-chip>
+                        </div>
+                      </template>
+                      <v-card
+                        min-width="200"
+                        class="rounded-lg pa-0 status-card"
+                        elevation="3"
+                      >
+                        <v-card-text class="pa-0">
+                          <div
+                            class="d-flex align-center px-3 py-2"
+                            :class="getStatusDateClass(item)"
+                          >
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                            >
+                              {{ getStatusDateIcon(item) }}
+                            </v-icon>
+                            <span>{{ getStatusDateText(item) }}</span>
+                          </div>
+                        </v-card-text>
+                      </v-card>
+                    </v-menu>
                   </td>
                   <td>
-                    <div 
-                      v-tooltip="item.note"
-                      class="note-cell"
-                    >
-                      {{ item.note }}
-                    </div>
+                    <template v-if="item.note">
+                      <v-menu
+                        location="top"
+                        transition="fade-transition"
+                        :close-on-content-click="true"
+                        :close-on-back="true"
+                      >
+                        <template #activator="{ props }">
+                          <div 
+                            v-bind="props"
+                            class="note-cell"
+                          >
+                            {{ item.note }}
+                          </div>
+                        </template>
+                        <v-card
+                          min-width="300"
+                          max-width="400"
+                          class="rounded-lg menu-card"
+                          elevation="3"
+                        >
+                          <v-card-text class="pa-0">
+                            <div class="menu-header px-3 py-2">
+                              <v-icon
+                                size="16"
+                                color="white"
+                                class="me-2"
+                              >
+                                mdi-text-box
+                              </v-icon>
+                              <span class="text-white text-subtitle-2">備註內容</span>
+                            </div>
+                            <div
+                              class="menu-card-text pa-4"
+                            >
+                              {{ item.note }}
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </v-menu>
+                    </template>
+                    <template v-else />
                   </td>
                   <td class="text-center">
                     <v-btn
@@ -522,7 +593,7 @@ const tableHeaders = [
   { title: '分機號碼', key: 'extNumber', align: 'start', sortable: true },
   { title: '列印編號', key: 'printNumber', align: 'start', sortable: true },
   { title: 'Email', key: 'email', align: 'start', sortable: true },
-  { title: '狀態', key: 'employmentStatus', align: 'start', sortable: true },
+  { title: '狀態', key: 'employmentStatus', width: '100px', align: 'start', sortable: true },
   { title: '備註', key: 'note', minWidth:'160px', align: 'start', sortable: true },
   { title: '設備', key: 'devices', align: 'center', sortable: false }
 ]
@@ -750,22 +821,6 @@ const formatDate = (date) => {
   })
 }
 
-// 取得狀態對應的日期提示文字
-const getStatusDateTooltip = (item) => {
-  switch (item.employmentStatus) {
-    case '在職':
-      return `到職日期：${formatDate(item.hireDate)}`
-    case '離職':
-      return `離職日期：${formatDate(item.resignationDate)}`
-    case '待入職':
-      return `到職日期：${formatDate(item.hireDate)}`
-    case '留職停薪':
-      return `留停開始日期：${formatDate(item.unpaidLeaveStartDate)}`
-    default:
-      return ''
-  }
-}
-
 // 開啟設備對話框
 const openDeviceDialog = async (employee) => {
   deviceDialog.value = {
@@ -819,6 +874,66 @@ const getDeviceIcon = (deviceType) => {
   
   return 'mdi-devices'
 }
+
+// const getStatusIcon = (status) => {
+//   switch (status) {
+//     case '在職':
+//       return 'mdi-account-check'
+//     case '離職':
+//       return 'mdi-account-off'
+//     case '留職停薪':
+//       return 'mdi-account-clock'
+//     case '待入職':
+//       return 'mdi-account-arrow-right'
+//     default:
+//       return 'mdi-account'
+//   }
+// }
+
+const getStatusDateIcon = (item) => {
+  switch (item.employmentStatus) {
+    case '在職':
+      return 'mdi-calendar-check'
+    case '離職':
+      return 'mdi-calendar-remove'
+    case '留職停薪':
+      return 'mdi-calendar-clock'
+    case '待入職':
+      return 'mdi-calendar-arrow-right'
+    default:
+      return 'mdi-calendar'
+  }
+}
+
+const getStatusDateText = (item) => {
+  switch (item.employmentStatus) {
+    case '在職':
+      return `到職日期：${formatDate(item.hireDate)}`
+    case '離職':
+      return `離職日期：${formatDate(item.resignationDate)}`
+    case '待入職':
+      return `到職日期：${formatDate(item.hireDate)}`
+    case '留職停薪':
+      return `留停開始日期：${formatDate(item.unpaidLeaveStartDate)}`
+    default:
+      return ''
+  }
+}
+
+const getStatusDateClass = (item) => {
+  switch (item.employmentStatus) {
+    case '在職':
+      return 'bg-teal-lighten-1 text-white'
+    case '離職':
+      return 'bg-grey text-white'
+    case '留職停薪':
+      return 'bg-amber-darken-2 text-white'
+    case '待入職':
+      return 'bg-light-blue-darken-1 text-white'
+    default:
+      return 'bg-grey text-white'
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -841,6 +956,21 @@ const getDeviceIcon = (deviceType) => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.menu-card {
+  overflow: hidden;
+  .menu-header {
+    font-size: 14px;
+    background: linear-gradient(to right, #7E57C2, #4527A0);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .menu-card-text{
+    font-size: 13px;
+  }
 }
 
 .v-table :deep(tbody tr) {
@@ -856,6 +986,18 @@ const getDeviceIcon = (deviceType) => {
       border-color: var(--v-primary-base) !important;
       transform: translateY(-2px);
     }
+  }
+}
+
+.status-cell {
+  padding: 4px;
+  border-radius: 4px;
+  min-height: 32px;
+}
+
+.status-card {
+  .v-card-text {
+    font-size: 0.875rem;
   }
 }
 </style>

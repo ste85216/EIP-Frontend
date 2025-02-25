@@ -17,7 +17,7 @@
                 <v-btn
                   prepend-icon="mdi-account-plus"
                   variant="outlined"
-                  color="blue-grey-darken-2"
+                  color="blue-grey-darken-1"
                   @click="openDialog(null)"
                 >
                   新增管理者

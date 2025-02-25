@@ -313,7 +313,7 @@
                     <v-btn
                       prepend-icon="mdi-laptop"
                       variant="outlined"
-                      color="blue-grey-darken-2"
+                      color="blue-grey-darken-1"
                       class="me-4"
                       @click="openDialog(null)"
                     >
@@ -366,8 +366,41 @@
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
                   <td>{{ item.type?.name }}</td>
                   <td>
-                    <div v-tooltip="item.location?.locationName || '無地點資訊'">
-                      {{ item.company?.name }}
+                    <div v-if="item.company?.name">
+                      <v-menu
+                        location="end"
+                        transition="fade-transition"
+                        open-on-hover
+                        close-delay="30"
+                        open-delay="30"
+                        class="pa-0"
+                      >
+                        <template #activator="{ props }">
+                          <div 
+                            v-bind="props"
+                            class="d-flex align-center status-cell"
+                          >
+                            {{ item.company?.name }}
+                          </div>
+                        </template>
+                        <v-card
+                          class="rounded-lg pa-0 status-card"
+                          elevation="3"
+                        >
+                          <v-card-text class="pa-0">
+                            <div class="d-flex align-center ps-3 pe-4 py-2 bg-light-blue-darken-2 text-white">
+                              <v-icon
+                                size="16"
+                                class="me-2"
+                                color="white"
+                              >
+                                mdi-map-marker
+                              </v-icon>
+                              <span>地點：{{ item.location?.locationName || '無' }}</span>
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </v-menu>
                     </div>
                   </td>
                   <td>{{ item.serialNumber }}</td>
@@ -375,20 +408,95 @@
                   <td>{{ item.loginName }}</td>
                   <td>{{ formatDate(item.purchaseDate) }}</td>
                   <td>
-                    <div
-                      v-if="item.office2021Account"
-                      v-tooltip="item.office2021InstallDate ? `安裝日期：${formatDate(item.office2021InstallDate)}` : ''"
-                    >
-                      {{ item.office2021Account }}
+                    <div v-if="item.office2021Account">
+                      <v-menu
+                        location="end"
+                        transition="fade-transition"
+                        open-on-hover
+                        close-delay="30"
+                        open-delay="30"
+                        class="pa-0"
+                      >
+                        <template #activator="{ props }">
+                          <div 
+                            v-bind="props"
+                            class="d-flex align-center status-cell"
+                          >
+                            {{ item.office2021Account }}
+                          </div>
+                        </template>
+                        <v-card
+                          min-width="200"
+                          class="rounded-lg pa-0 status-card"
+                          elevation="3"
+                        >
+                          <v-card-text class="pa-0">
+                            <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-2 text-white">
+                              <v-icon
+                                size="16"
+                                class="me-2"
+                                color="white"
+                              >
+                                mdi-calendar
+                              </v-icon>
+                              <span>安裝日期：{{ formatDate(item.office2021InstallDate) || '無' }}</span>
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </v-menu>
                     </div>
                   </td>
                   <td>{{ item.office365Account }}</td>
                   <td>
                     <div
                       v-if="item.user"
-                      v-tooltip="item.user ? `分機號碼：${item.user.extNumber || '無'}、列印編號：${item.user.printNumber || '無'}` : ''"
+                      class="status-cell d-flex align-center"
                     >
-                      {{ item.user.name }}
+                      <v-menu
+                        location="end"
+                        transition="fade-transition"
+                        open-on-hover
+                        close-delay="30"
+                        open-delay="30"
+                        class="pa-0"
+                      >
+                        <template #activator="{ props }">
+                          <div 
+                            v-bind="props"
+                            class="d-flex align-center status-cell pe-4"
+                          >
+                            {{ item.user.name }}
+                          </div>
+                        </template>
+                        <v-card
+                          min-width="130"
+                          class="rounded-lg pa-0 status-card"
+                          elevation="3"
+                        >
+                          <v-card-text class="pa-0">
+                            <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-1 text-white">
+                              <v-icon
+                                size="16"
+                                class="me-2"
+                                color="white"
+                              >
+                                mdi-phone
+                              </v-icon>
+                              <span>分機號碼：{{ item.user.extNumber || '無' }}</span>
+                            </div>
+                            <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-3 text-white">
+                              <v-icon
+                                size="16"
+                                class="me-2"
+                                color="white"
+                              >
+                                mdi-printer
+                              </v-icon>
+                              <span>列印編號：{{ item.user.printNumber || '無' }}</span>
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </v-menu>
                     </div>
                   </td>
                   <td>
@@ -410,12 +518,45 @@
                     </v-chip>
                   </td>
                   <td>
-                    <div 
-                      v-tooltip="item.note"
-                      class="note-cell"
-                    >
-                      {{ item.note }}
-                    </div>
+                    <template v-if="item.note">
+                      <v-menu
+                        location="top"
+                        transition="fade-transition"
+                        :close-on-content-click="true"
+                        :close-on-back="true"
+                      >
+                        <template #activator="{ props }">
+                          <div 
+                            v-bind="props"
+                            class="note-cell"
+                          >
+                            {{ item.note }}
+                          </div>
+                        </template>
+                        <v-card
+                          min-width="300"
+                          max-width="400"
+                          class="rounded-lg menu-card"
+                          elevation="3"
+                        >
+                          <v-card-text class="pa-0">
+                            <div class="menu-header px-3 py-2">
+                              <v-icon
+                                size="16"
+                                color="white"
+                                class="me-2"
+                              >
+                                mdi-text-box
+                              </v-icon>
+                              <span class="text-white text-subtitle-2">備註內容</span>
+                            </div>
+                            <div class="menu-card-text pa-4 pt-3">
+                              {{ item.note }}
+                            </div>
+                          </v-card-text>
+                        </v-card>
+                      </v-menu>
+                    </template>
                   </td>
                   <td class="text-center">
                     <v-btn
@@ -1175,7 +1316,7 @@ const tableHeaders = [
   { title: '進貨日期', key: 'purchaseDate', align: 'start', sortable: true },
   { title: 'Office 2021 帳號', key: 'office2021Account', align: 'start', sortable: true },
   { title: 'Office 365 帳號', key: 'office365Account', align: 'start', sortable: true },
-  { title: '使用者', key: 'user.name', align: 'start', sortable: true },
+  { title: '使用者', key: 'user.name', width: '100px',align: 'start', sortable: true },
   { title: '庫存狀態', key: 'stockStatus', align: 'start', sortable: true },
   { title: '報帳狀態', key: 'expenseStatus', align: 'start', sortable: true },
   { title: '備註', key: 'note', align: 'start', sortable: true },
@@ -2094,10 +2235,34 @@ const selectAllHardwareTypes = () => {
 }
 
 .note-cell {
-  max-width: 120px;
+  max-width: 100px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
 
+.menu-card {
+  overflow: hidden;
+  .menu-header {
+    font-size: 14px;
+    background: linear-gradient(to right, #7E57C2, #4527A0);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+  }
+  .menu-card-text {
+    font-size: 13px;
+  }
+}
+
+.status-cell {
+  min-height: 32px;
+}
+
+.status-card {
+  .v-card-text {
+    font-size: 0.875rem;
+  }
+}
 </style>

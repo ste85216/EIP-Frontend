@@ -60,7 +60,7 @@
               <div class="card-title mt-3 mb-2 mx-6 d-flex align-center justify-space-between">
                 硬體類型 (設備)
                 <v-btn
-                  v-tooltip:start="'新增硬體設備清單類型'"
+                  v-tooltip:start="'新增硬體設備類型'"
                   icon
                   size="small"
                   variant="plain"
@@ -490,7 +490,7 @@ const maintenanceCategories = ref([])
 
 // ===== 計算屬性 =====
 const getDialogTitle = computed(() => {
-  const titles = ['新增硬體設備清單類型', '新增硬體維修紀錄類型']
+  const titles = ['新增硬體類型 ( 設備 )', '新增硬體類型 ( 維修 )']
   return titles[dialog.value.type]
 })
 

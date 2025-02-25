@@ -44,7 +44,7 @@
                 >
                   <v-btn
                     v-if="user.isAdmin || user.isSuperAdmin"
-                    color="blue-grey-darken-2"
+                    color="blue-grey-darken-1"
                     variant="outlined"
                     prepend-icon="mdi-file-cog"
                     :size="buttonSize"
@@ -64,7 +64,7 @@
                     新增模式
                   </v-btn>
                   <v-btn
-                    color="blue-grey-darken-2"
+                    color="blue-grey-darken-1"
                     variant="outlined"
                     prepend-icon="mdi-history"
                     :size="buttonSize"

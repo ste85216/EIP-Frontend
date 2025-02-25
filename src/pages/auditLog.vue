@@ -644,8 +644,8 @@ const marketingCategoryTypes = {
 
 // 硬體類別類型對應
 const hardwareCategoryTypes = {
-  0: '硬體設備清單',
-  1: '硬體維修紀錄'
+  0: '設備',
+  1: '維修'
 }
 
 // 格式化日期函數

@@ -31,7 +31,7 @@
                 <v-btn
                   prepend-icon="mdi-domain"
                   variant="outlined"
-                  color="blue-grey-darken-2"
+                  color="blue-grey-darken-1"
                   class="me-2"
                   block
                   @click="openCompanyDialog"
@@ -46,7 +46,7 @@
                 <v-btn
                   prepend-icon="mdi-account-multiple-plus"
                   variant="outlined"
-                  color="blue-grey-darken-2"
+                  color="blue-grey-darken-1"
                   block
                   @click="openDepartmentDialog"
                 >
@@ -59,7 +59,7 @@
                 <v-btn
                   prepend-icon="mdi-domain"
                   variant="outlined"
-                  color="blue-grey-darken-2"
+                  color="blue-grey-darken-1"
                   class="me-4"
                   @click="openCompanyDialog"
                 >

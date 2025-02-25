@@ -12,7 +12,7 @@
       v-if="isLgmUp"
       v-tooltip:top="'檔案不超過 2MB，格式僅限 JPG、PNG、WEBP。'"
       prepend-icon="mdi-camera-outline"
-      color="blue-grey-darken-2"
+      color="deep-purple-darken-2"
       variant="outlined"
       :loading="isUploading"
       @click="$refs.fileInput.click()"

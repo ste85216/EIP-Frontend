@@ -116,7 +116,7 @@
                 <v-btn
                   prepend-icon="mdi-plus"
                   variant="outlined"
-                  color="blue-grey-darken-2"
+                  color="blue-grey-darken-1"
                   @click="openDialog(null)"
                 >
                   新增維修記錄
