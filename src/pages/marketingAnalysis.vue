@@ -37,142 +37,181 @@
     </v-overlay>
 
     <!-- 搜尋條件區塊 -->
-    <v-row class="elevation-4 rounded-lg py-4 pt-sm-8 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white">
-      <v-col cols="12">
-        <v-row>
-          <v-col cols="2">
-            <h3>行銷費用分析</h3>
-          </v-col>
-          <v-col cols="10">
-            <v-row>
-              <v-col cols="12">
-                <v-row>
-                  <!-- 第一行搜尋條件 -->
-                  <v-col>
-                    <v-autocomplete
-                      v-model="searchForm.theme"
-                      :items="themeOptions"
-                      label="行銷主題"
-                      item-title="name"
-                      item-value="_id"
-                      variant="outlined"
-                      density="compact"
-                      :error-messages="themeError"
-                      clearable
-                      @update:model-value="handleThemeChange"
-                    />
-                  </v-col>
-                  <v-col>
-                    <v-select
-                      v-model="searchForm.year"
-                      :items="yearOptions"
-                      label="年度"
-                      variant="outlined"
-                      density="compact"
-                      :error-messages="yearError"
-                      clearable
-                      :disabled="!searchForm.theme || yearOptions.length === 0"
-                      @update:model-value="handleYearChange"
-                    />
-                  </v-col>
-                  <v-col>
-                    <v-select
-                      v-model="searchForm.reportType"
-                      :items="reportTypeOptions"
-                      label="報表類型"
-                      variant="outlined"
-                      density="compact"
-                      :error-messages="reportTypeError"
-                      clearable
-                      :disabled="!searchForm.year || reportTypeOptions.length === 0"
-                      @update:model-value="handleReportTypeChange"
-                    />
-                  </v-col>
-                  <v-col
-                    v-if="searchForm.reportType === 'lineExpense'"
-                  >
-                    <v-select
-                      v-model="searchForm.month"
-                      :items="monthOptions"
-                      item-title="name"
-                      item-value="value"
-                      label="月份"
-                      variant="outlined"
-                      density="compact"
-                      :error-messages="monthError"
-                      clearable
-                      @update:model-value="handleMonthChange"
-                    />
-                  </v-col>
-                  <v-col cols="2">
-                    <v-btn
-                      color="blue-grey-darken-1"
-                      :loading="isLoading"
-                      block
-                      @click="generateReport"
+    <v-row>
+      <v-row class="mt-0">
+        <v-col
+          cols="10"
+        >
+          <v-row
+            class="elevation-4 rounded-lg py-4 pt-sm-8 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 ms-sm-4 me-sm-0 mb-4 bg-white"
+          >
+            <v-col cols="2">
+              <h3>行銷費用分析</h3>
+            </v-col>
+            <v-col
+              cols="10"
+              class="ps-10"
+            >
+              <v-row>
+                <v-col cols="12">
+                  <v-row>
+                    <v-col>
+                      <v-autocomplete
+                        v-model="searchForm.theme"
+                        :items="themeOptions"
+                        label="行銷主題"
+                        item-title="name"
+                        item-value="_id"
+                        variant="outlined"
+                        density="compact"
+                        :error-messages="themeError"
+                        clearable
+                        @update:model-value="handleThemeChange"
+                      />
+                    </v-col>
+                    <v-col>
+                      <v-select
+                        v-model="searchForm.year"
+                        :items="yearOptions"
+                        label="年度"
+                        variant="outlined"
+                        density="compact"
+                        :error-messages="yearError"
+                        clearable
+                        :disabled="!searchForm.theme || yearOptions.length === 0"
+                        @update:model-value="handleYearChange"
+                      />
+                    </v-col>
+                    <v-col>
+                      <v-select
+                        v-model="searchForm.reportType"
+                        :items="reportTypeOptions"
+                        label="報表類型"
+                        variant="outlined"
+                        density="compact"
+                        :error-messages="reportTypeError"
+                        clearable
+                        :disabled="!searchForm.year || reportTypeOptions.length === 0"
+                        @update:model-value="handleReportTypeChange"
+                      />
+                    </v-col>
+                    <v-col
+                      v-if="searchForm.reportType === 'lineExpense'"
                     >
-                      查看報表
-                    </v-btn>
-                  </v-col>
-                  <v-col cols="2">
-                    <v-btn
-                      prepend-icon="mdi-download"
-                      color="deep-orange-darken-1"
-                      :loading="isExporting"
-                      block
-                      @click="openDownloadDialog"
+                      <v-select
+                        v-model="searchForm.month"
+                        :items="monthOptions"
+                        item-title="name"
+                        item-value="value"
+                        label="月份"
+                        variant="outlined"
+                        density="compact"
+                        :error-messages="monthError"
+                        clearable
+                        @update:model-value="handleMonthChange"
+                      />
+                    </v-col>
+                    <v-col
+                      v-if="searchForm.reportType === 'lineExpense'"
                     >
-                      批次下載報表
-                    </v-btn>
-                  </v-col>
-                  <v-col
-                    v-if="searchForm.reportType === 'lineExpense'"
-                    cols="12"
-                  >
-                    <v-row>
-                      <v-col
-                        cols="12"
+                      <v-select
+                        v-if="searchForm.reportType === 'lineExpense'"
+                        v-model="searchForm.line"
+                        :items="lineOptions"
+                        label="線別"
+                        item-title="name"
+                        item-value="_id"
+                        variant="outlined"
+                        density="compact"
+                        :error-messages="lineError"
+                        clearable
+                        multiple
+                        @update:model-value="handleLineChange"
                       >
-                        <v-autocomplete
-                          v-model="searchForm.line"
-                          :items="lineOptions"
-                          label="線別"
-                          item-title="name"
-                          item-value="_id"
-                          variant="outlined"
-                          density="compact"
-                          :error-messages="lineError"
-                          clearable
-                          multiple
-                          select-all
-                          @update:model-value="handleLineChange"
+                        <template #selection="{ item, index }">
+                          <span v-if="index === 0">{{ item.raw.name }}</span>
+                          <span v-else-if="index === 1">...</span>
+                        </template>
+                        <template #prepend-item>
+                          <v-list-item
+                            title="全選"
+                            color="deep-purple-darken-2"
+                            prepend-icon="mdi-checkbox-multiple-marked"
+                            :active="searchForm.line.length === lineOptions.length"
+                            @click="selectAllLines"
+                          />
+                          <v-divider class="mt-2" />
+                        </template>
+                      </v-select>
+                    </v-col>
+                    <v-col cols="3">
+                      <v-row class="d-flex justify-space-between">
+                        <v-col
+                          cols="3"
+                          class="pe-0"
                         >
-                          <template #prepend-item>
-                            <v-list-item
-                              title="全選"
-                              color="deep-purple-darken-2"
-                              prepend-icon="mdi-checkbox-multiple-marked"
-                              :active="searchForm.line.length === lineOptions.length"
-                              @click="selectAllLines"
-                            />
-                            <v-divider class="mt-2" />
-                          </template>
-                        </v-autocomplete>
-                      </v-col>
-                    </v-row>
-                  </v-col>
-                </v-row>
-              </v-col>
-            </v-row>
-          </v-col>
-        </v-row>
-      </v-col>
+                          <v-btn
+                            color="grey"
+                            width="40"
+                            block
+                            @click="resetSearch"
+                          >
+                            <v-icon>mdi-refresh</v-icon>
+                          </v-btn>
+                        </v-col>
+                        <v-col
+                          cols="9"
+                          class="ps-4"
+                        >
+                          <v-btn
+                            color="cyan-darken-2"
+                            :loading="isLoading"
+                            block
+                            @click="generateReport"
+                          >
+                            查看報表
+                          </v-btn>
+                        </v-col>
+                      </v-row>
+                    </v-col>
+                  </v-row>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+        </v-col>
+        <v-col cols="2">
+          <v-row
+            class="elevation-4 rounded-lg pt-sm-4 pb-4 px-4 mt-2 mt-sm-6 me-sm-4 ms-sm-0 mb-4 bg-white"
+          >
+            <v-col
+              cols="12"
+              class="pb-1"
+            >
+              <div class="card-title">
+                批次匯出報表
+              </div>
+            </v-col>
+            <v-col>
+              <v-btn
+                prepend-icon="mdi-file-export"
+                color="deep-orange-darken-1"
+                :loading="isExporting"
+                block
+                @click="openDownloadDialog"
+              >
+                批次匯出
+              </v-btn>
+            </v-col>
+          </v-row>
+        </v-col>
+      </v-row>
     </v-row>
 
     <!-- 報表呈現區塊 -->
     <v-row 
       v-if="showReport"
-      class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-2 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white"
+      class="elevation-4 rounded-lg py-4 py-sm-8 px-sm-8 mt-6 mx-md-1 mb-4 bg-white"
     >
       <v-col cols="12">
         <div class="d-flex justify-end align-center mb-4 sticky-buttons">
@@ -239,7 +278,10 @@
           {{ reportTypeOptions.find(option => option.value === 'comparison')?.title || '' }}
         </div>
 
-        <div class="table-container">
+        <div
+          v-if="searchForm.reportType === 'budget' || searchForm.reportType === 'expense' || searchForm.reportType === 'comparison'"
+          class="table-container"
+        >
           <!-- 年度行銷預算表 -->
           <table
             v-if="searchForm.reportType === 'budget'"
@@ -475,8 +517,6 @@
           </div>
 
           <!-- 行銷實際支出表 -->
-          
-
           <table
             v-if="searchForm.reportType === 'expense'"
             class="budget-table"
@@ -1374,9 +1414,11 @@
         </div>
 
         <!-- 行銷各線實際支出表 -->
-        <div class="table-container">
+        <div
+          v-if="searchForm.reportType === 'lineExpense'"
+          class="table-container"
+        >
           <table
-            v-if="searchForm.reportType === 'lineExpense'"
             class="budget-table"
           >
             <thead>
@@ -1460,11 +1502,12 @@
           </table>
         </div>
 
-        
         <!-- 行銷各線實際支出總表 -->
-        <div class="table-container">
+        <div
+          v-if="searchForm.reportType === 'lineExpenseTotal'"
+          class="table-container"
+        >
           <table
-            v-if="searchForm.reportType === 'lineExpenseTotal'"
             class="budget-table line-expense-total-table"
           >
             <thead>
@@ -1655,7 +1698,7 @@
     <!-- 在總表下方添加圖表容器 -->
     <v-row
       v-if="searchForm.reportType === 'lineExpenseTotal' && showReport"
-      class="elevation-4 rounded-lg py-sm-8 px-4 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white"
+      class="elevation-4 rounded-lg py-sm-8 px-4 mt-2 mt-sm-6 mx-sm-1 mb-4 bg-white"
     >
       <v-col cols="12">
         <div class="d-flex justify-end mb-4 pe-4">
@@ -1703,14 +1746,14 @@
       </v-col>
     </v-row>
 
-    <!-- 批次下載報表對話框 -->
+    <!-- 批次匯出報表對話框 -->
     <v-dialog
       v-model="showDownloadDialog"
       max-width="640"
     >
       <v-card class="rounded-lg px-4 pt-5 pb-4">
         <v-card-title class="card-title mb-2">
-          批次下載報表
+          批次匯出報表
         </v-card-title>
         <v-card-text class="pa-4">
           <v-row>
@@ -1755,7 +1798,7 @@
               class="pb-0"
             >
               <div class="sub-title mb-2">
-                選擇要下載的報表：
+                選擇要匯出的報表：
               </div>
               <v-row>
                 <v-col cols="6">
@@ -1949,7 +1992,7 @@
             class="ms-2"
             @click="handleDownloadReports"
           >
-            下載
+            匯出
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -2112,7 +2155,7 @@ const handleReportTypeChange = async () => {
       await loadLineOptions()
     }
     createSnackbar({
-      text: '請記得選擇「線別」及「月份」',
+      text: '請記得選擇「月份」及「線別」',
       snackbarProps: { color: 'info' }
     })
   } else {
@@ -2304,14 +2347,34 @@ const handleYearChange = async () => {
   }
 }
 
+// 處理線別變更
 const handleLineChange = () => {
   lineError.value = ''
   showReport.value = false
 }
 
+// 處理月份變更
 const handleMonthChange = () => {
   monthError.value = ''
   showReport.value = false
+}
+
+// 添加重置搜尋功能
+const resetSearch = () => {
+  searchForm.value = {
+    year: null,
+    theme: null,
+    reportType: null,
+    line: [],
+    month: null
+  }
+  showReport.value = false
+  reportData.value = []
+  yearError.value = ''
+  themeError.value = ''
+  reportTypeError.value = ''
+  lineError.value = ''
+  monthError.value = ''
 }
 
 // 產生報表
@@ -3167,11 +3230,11 @@ const exportToExcel = async () => {
 
     ws.A1.s = { alignment: { horizontal: 'center' }, font: { bold: true, sz: 14 } }
 
-    // 下載檔案
+    // 匯出檔案
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Report')
     
-    // 生成 blob 而不是直接下載
+    // 生成 blob 而不是直接匯出
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
     const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     
@@ -3723,12 +3786,12 @@ const validObjectId = (id) => /^[a-fA-F0-9]{24}$/.test(id)
 
 // 在 script setup 中添加 selectAllLines 函數
 const selectAllLines = () => {
+  lineError.value = '' // 清除線別錯誤訊息
   if (searchForm.value.line.length === lineOptions.value.length) {
     searchForm.value.line = []
   } else {
     searchForm.value.line = lineOptions.value.map(line => line._id)
   }
-  handleLineChange()
 }
 
 // 在 script setup 中添加總表專用的計算方法
@@ -4252,7 +4315,7 @@ const downloadForm = ref({
 const downloadThemeError = ref('')
 const downloadYearError = ref('')
 
-// 首先，添加一個新的 ref 來存儲下載用的年度選項
+// 首先，添加一個新的 ref 來存儲匯出用的年度選項
 const downloadYearOptions = ref([])
 
 // 修改 updateDownloadYearOptions 函數，使用獨立的年度選項
@@ -4383,7 +4446,7 @@ const handleDownloadReports = async () => {
       return
     }
 
-    // 以下是下載邏輯
+    // 以下是匯出邏輯
     isExporting.value = true
     const zip = new JSZip()
     
@@ -4391,7 +4454,7 @@ const handleDownloadReports = async () => {
       // 顯示進度遮罩
       showProgressOverlay.value = true
       downloadProgress.value = 0
-      progressMessage.value = '準備下載...'
+      progressMessage.value = '準備匯出...'
 
       // 先將報表隱藏，避免渲染錯誤
       showReport.value = false
@@ -4525,7 +4588,7 @@ const handleDownloadReports = async () => {
       }
 
       progressMessage.value = '正在打包檔案...'
-      // 生成並下載 ZIP 檔案
+      // 生成並匯出 ZIP 檔案
       const zipBlob = await zip.generateAsync({ type: 'blob' })
       const downloadLink = document.createElement('a')
       downloadLink.href = URL.createObjectURL(zipBlob)
@@ -4535,7 +4598,7 @@ const handleDownloadReports = async () => {
       document.body.removeChild(downloadLink)
       URL.revokeObjectURL(downloadLink.href)
 
-      // 關閉下載對話框
+      // 關閉匯出對話框
       showDownloadDialog.value = false
 
       // 重置所有狀態
@@ -4555,7 +4618,7 @@ const handleDownloadReports = async () => {
       await nextTick()
 
       createSnackbar({
-        text: '報表下載完成',
+        text: '報表匯出完成',
         snackbarProps: { color: 'teal-lighten-1' }
       })
     } finally {
