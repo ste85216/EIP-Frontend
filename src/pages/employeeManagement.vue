@@ -2339,7 +2339,7 @@ const downloadExampleFile = () => {
 }
 
 .even-row {
-  background-color: rgb(255, 250, 240);
+  background-color: #fffaf0;
 }
 
 .note-cell {

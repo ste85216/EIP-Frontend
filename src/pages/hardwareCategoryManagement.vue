@@ -841,10 +841,10 @@ onMounted(async () => {
     }
   }
   .v-list-item:nth-child(odd) {
-    background: #f8fcff;
+    background: #f6f8fa;
   }
   .v-list-item:nth-child(even) {
-    background: #fffef2;
+    background: #fffaf0;
   }
   .text-grey {
     color: #999;

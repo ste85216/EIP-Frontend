@@ -1122,10 +1122,10 @@ const getTotalCount = computed(() => {
   }
   :deep(tbody) {
     tr:nth-child(even) {
-      background-color: #fafaf3;
+      background-color: #fffaf0;
     }
     tr:nth-child(odd) {
-      background-color: #f2f8fc;
+      background-color: #f6f8fa;
     }
   }
 }

@@ -690,10 +690,10 @@ const updateUserStatus = async (user, newStatus) => {
 }
 
 .odd-row {
-  background-color: #fcfbf8;
+  background-color: #f6f8fa;
 }
 
 .even-row {
-  background-color: #f2f8fc;
+  background-color: #fffaf0;
 }
 </style>

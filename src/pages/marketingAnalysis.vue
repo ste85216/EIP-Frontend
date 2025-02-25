@@ -1764,7 +1764,7 @@
                     label="行銷廣告預算表"
                     density="compact"
                     value="budget"
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     hide-details
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasBudget"
                   />
@@ -1776,7 +1776,7 @@
                     density="compact"
                     value="expense"
                     hide-details
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1787,7 +1787,7 @@
                     density="compact"
                     value="comparison"
                     hide-details
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasBudget || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1799,7 +1799,7 @@
                     density="compact"
                     value="lineExpense"
                     hide-details
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1810,7 +1810,7 @@
                     density="compact"
                     value="lineExpenseTotal"
                     hide-details
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1821,7 +1821,7 @@
                     density="compact"
                     value="charts"
                     hide-details
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
                   />
                 </v-col>
@@ -1889,7 +1889,7 @@
                     v-model="downloadForm.selectedMonths"
                     :label="month.name"
                     :value="month.value"
-                    color="blue-grey-darken-2"
+                    color="deep-purple-darken-2"
                     density="compact"
                     hide-details
                   />
@@ -1911,7 +1911,7 @@
                 value="pdf"
                 hide-details
                 density="compact"
-                color="blue-grey-darken-2"
+                color="deep-purple-darken-2"
                 class="mb-2"
                 :disabled="!downloadForm.selectedReports.length"
               />
@@ -1921,7 +1921,7 @@
                 value="excel"
                 hide-details
                 density="compact"
-                color="blue-grey-darken-2"
+                color="deep-purple-darken-2"
                 :disabled="!downloadForm.selectedReports.length || (downloadForm.selectedReports.length === 1 && downloadForm.selectedReports[0] === 'charts')"
               />
               <div 

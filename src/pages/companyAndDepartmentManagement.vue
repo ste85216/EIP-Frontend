@@ -1487,10 +1487,10 @@ const moveLocation = (index, direction) => {
 .v-table {
   :deep(tbody) {
     tr:nth-child(odd) {
-      background-color: #f8fcff !important;
+      background-color: #f6f8fa !important;
     }
     tr:nth-child(even) {
-      background-color: #fffef2 !important;
+      background-color: #fffaf0 !important;
     }
   }
 }

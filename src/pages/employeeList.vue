@@ -809,10 +809,13 @@ const getDeviceIcon = (deviceType) => {
   const type = deviceType.toLowerCase()
   if (type.includes('筆電') || type.includes('筆記型電腦')) return 'mdi-laptop'
   if (type.includes('桌機') || type.includes('桌上型電腦')) return 'mdi-desktop-tower-monitor'
+  if (type.includes('主機')) return 'mdi-desktop-tower'
   if (type.includes('平板')) return 'mdi-tablet'
   if (type.includes('手機')) return 'mdi-cellphone'
   if (type.includes('螢幕')) return 'mdi-monitor'
-  if (type.includes('印表機')) return 'mdi-printer'
+  if (type.includes('印表機') || type.includes('事務機')) return 'mdi-printer'
+  if (type.includes('鍵盤')) return 'mdi-keyboard-outline'
+  if (type.includes('滑鼠')) return 'mdi-mouse-outline'
   
   return 'mdi-devices'
 }
@@ -830,7 +833,7 @@ const getDeviceIcon = (deviceType) => {
 }
 
 .even-row {
-  background-color: rgb(255, 250, 240);
+  background-color: #fffaf0;
 }
 
 .note-cell {

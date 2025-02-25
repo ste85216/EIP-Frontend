@@ -1528,10 +1528,10 @@ onMounted(async () => {
   }
   .v-data-table__tr {
     &:nth-child(odd) {
-      background: #f8fcff;
+      background: #f6f8fa;
     }
     &:nth-child(even) {
-      background: #fffef2;
+      background: #fffaf0;
     }
     &:hover {
       background: #e0e0e0 !important;
