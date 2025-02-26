@@ -43,7 +43,7 @@
           cols="10"
         >
           <v-row
-            class="elevation-4 rounded-lg py-4 pt-sm-8 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 ms-sm-4 me-sm-0 mb-4 bg-white"
+            class="elevation-4 rounded-lg py-4 pt-sm-8 px-1 px-sm-8 mt-2 mt-sm-6 ms-sm-6 me-sm-1 mb-4 bg-white"
           >
             <v-col cols="2">
               <h3>行銷費用分析</h3>
@@ -182,7 +182,7 @@
         </v-col>
         <v-col cols="2">
           <v-row
-            class="elevation-4 rounded-lg pt-sm-4 pb-4 px-4 mt-2 mt-sm-6 me-sm-4 ms-sm-0 mb-4 bg-white"
+            class="elevation-4 rounded-lg pt-sm-4 pb-4 px-4 mt-2 mt-sm-6 me-sm-6 ms-sm-1 mb-4 bg-white"
           >
             <v-col
               cols="12"
@@ -211,7 +211,7 @@
     <!-- 報表呈現區塊 -->
     <v-row 
       v-if="showReport"
-      class="elevation-4 rounded-lg py-4 py-sm-8 px-sm-8 mt-6 mx-md-1 mb-4 bg-white"
+      class="elevation-4 rounded-lg py-4 py-sm-8 px-sm-8 mt-6 mx-sm-3 mb-4 bg-white"
     >
       <v-col cols="12">
         <div class="d-flex justify-end align-center mb-4 sticky-buttons">
@@ -1698,7 +1698,7 @@
     <!-- 在總表下方添加圖表容器 -->
     <v-row
       v-if="searchForm.reportType === 'lineExpenseTotal' && showReport"
-      class="elevation-4 rounded-lg py-sm-8 px-4 mt-2 mt-sm-6 mx-sm-1 mb-4 bg-white"
+      class="elevation-4 rounded-lg py-sm-8 px-4 mt-2 mt-sm-6 mx-sm-3 mb-4 bg-white"
     >
       <v-col cols="12">
         <div class="d-flex justify-end mb-4 pe-4">

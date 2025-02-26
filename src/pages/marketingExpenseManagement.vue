@@ -886,7 +886,7 @@ const headers = [
   { title: '平台', key: 'platform.name', align: 'start', sortable: false },
   { title: '線別', key: 'details', align: 'start', maxWidth: '150', sortable: false },
   { title: '總金額', key: 'totalExpense', align: 'start', sortable: false },
-  { title: '備註', key: 'note', align: 'start', width: '160', sortable: false },
+  { title: '備註', key: 'note', align: 'start', width: '130', sortable: false },
   { title: '建立者', key: 'creator.name', align: 'start', sortable: false },
   { title: '建立日期', key: 'createdAt', align: 'start', sortable: false },
   { title: '操作', key: 'actions', align: 'center', sortable: false }
@@ -1706,7 +1706,7 @@ onMounted(async () => {
 }
 
 .note-cell {
-  max-width: 240px;
+  max-width: 160px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
