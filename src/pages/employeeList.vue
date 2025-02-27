@@ -10,7 +10,7 @@
         <v-row>
           <v-col
             cols="12"
-            class="mt-1 ps-lg-6"
+            class="mt-1 ps-lg-5"
           >
             <v-card class="elevation-4 rounded-lg py-4 py-sm-8 px-4 px-sm-2 px-xl-4">
               <v-card-title class="font-weight-bold d-flex align-center mb-2">
@@ -164,9 +164,9 @@
       <v-col
         cols="12"
         lg="10"
-        class="px-6 ps-lg-8 pe-lg-12 mb-6"
+        class="px-6 ps-lg-6 pe-lg-8 mb-6"
       >
-        <v-row class="elevation-4 rounded-lg py-4 py-sm-7 px-1 px-sm-4 px-md-8 mt-1 bg-white">
+        <v-row class="elevation-4 rounded-lg py-4 py-sm-7 px-1 px-sm-4 px-md-6 mt-1 bg-white">
           <!-- 標題和功能按鈕區 -->
           <v-col
             cols="12"
@@ -368,10 +368,13 @@
           class="px-2"
         >
           <v-toolbar-title
-            class="card-title text-white rounded-t-lg"
+            class="card-title text-white rounded-t-lg d-flex align-center"
           >
-            <span class="font-weight-regular">設備清單 - </span>
-            <span class="font-weight-medium">{{ deviceDialog.employeeName }}</span>
+            <span class="font-weight-bold"><v-icon
+              size="small"
+              class="me-2"
+            >mdi-devices</v-icon> 設備清單 - </span>
+            <span class="font-weight-bold">{{ deviceDialog.employeeName }}</span>
           </v-toolbar-title>
           <v-spacer />
           <v-btn
@@ -835,7 +838,9 @@ const openDeviceDialog = async (employee) => {
     const { data } = await apiAuth.get('/hardware/devices/all', {
       params: {
         user: employee._id,
-        all: true
+        all: true,
+        sortBy: 'type.order',
+        sortOrder: 'asc'
       }
     })
     if (data.success) {
@@ -979,11 +984,12 @@ const getStatusDateClass = (item) => {
 
 .device-dialog {
   .device-card {
-    transition: all 0.3s ease;
-    border: 1px solid rgba(0, 0, 0, 0.12) !important;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    min-height: 345.69px;
 
     &:hover {
-      border-color: var(--v-primary-base) !important;
+      border-color: var(--v-primary-base);
       transform: translateY(-2px);
     }
   }

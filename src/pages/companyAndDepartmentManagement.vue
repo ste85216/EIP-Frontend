@@ -488,8 +488,8 @@
       v-model="locationDialog.open"
       max-width="1000"
     >
-      <v-card class="rounded-lg px-8 py-4">
-        <div class="card-title px-2 pb-2 d-flex justify-space-between align-center">
+      <v-card class="rounded-lg px-6 py-4">
+        <div class="card-title ps-6 pe-3 pb-2 d-flex justify-space-between align-center">
           公司地點管理
           <v-btn
             icon="mdi-close"
@@ -499,7 +499,7 @@
             @click="closeLocationDialog"
           />
         </div>
-        <v-card-text class="ps-2">
+        <v-card-text>
           <v-row>
             <v-col cols="12">
               <v-table

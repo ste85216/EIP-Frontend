@@ -468,9 +468,9 @@
       width="360"
     >
       <v-card class="rounded-lg pa-4">
-        <v-card-title class="text-h6 ps-5 py-3">
+        <div class="card-title ps-5 py-3">
           編輯表單模板
-        </v-card-title>
+        </div>
         <v-card-text class="px-5 pb-2">
           <v-form @submit.prevent="submitEditTemplate">
             <v-select

@@ -1316,7 +1316,7 @@ const tableHeaders = [
   { title: '進貨日期', key: 'purchaseDate', align: 'start', sortable: true },
   { title: 'Office 2021 帳號', key: 'office2021Account', align: 'start', sortable: true },
   { title: 'Office 365 帳號', key: 'office365Account', align: 'start', sortable: true },
-  { title: '使用者', key: 'user.name', width: '100px',align: 'start', sortable: true },
+  { title: '使用者', key: 'user.name', width: '100px', align: 'start', sortable: true },
   { title: '庫存狀態', key: 'stockStatus', align: 'start', sortable: true },
   { title: '報帳狀態', key: 'expenseStatus', align: 'start', sortable: true },
   { title: '備註', key: 'note', align: 'start', sortable: true },
