@@ -57,6 +57,7 @@
               <!-- 桌面版按鈕 -->
               <v-col v-if="mdAndUp">
                 <v-btn
+                  v-if="!user.isIT"
                   prepend-icon="mdi-domain"
                   variant="outlined"
                   color="blue-grey-darken-1"
@@ -75,6 +76,7 @@
                   公司地點
                 </v-btn>
                 <v-btn
+                  v-if="!user.isIT"
                   prepend-icon="mdi-account-multiple-plus"
                   variant="outlined"
                   color="blue-grey-darken-2"
@@ -163,6 +165,7 @@
                       variant="plain"
                       :size="buttonSize"
                       :ripple="false"
+                      :disabled="user.isIT"
                       @click="openEditDepartment(item)"
                     >
                       <v-icon>mdi-pencil</v-icon>
@@ -173,6 +176,7 @@
                       variant="plain"
                       :size="buttonSize"
                       :ripple="false"
+                      :disabled="user.isIT"
                       @click="confirmDeleteDepartment(item)"
                     >
                       <v-icon>mdi-delete</v-icon>
@@ -486,7 +490,7 @@
     <!-- 公司地點管理 Dialog -->
     <v-dialog
       v-model="locationDialog.open"
-      max-width="1000"
+      max-width="1200"
     >
       <v-card class="rounded-lg px-6 py-4">
         <div class="card-title ps-6 pe-3 pb-2 d-flex justify-space-between align-center">
@@ -521,12 +525,14 @@
                     :key="company._id"
                     :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }"
                   >
-                    <td>{{ company.name }}</td>
-                    <td>
+                    <td style="min-width: 100px;">
+                      {{ company.name }}
+                    </td>
+                    <td class="pt-2">
                       <v-chip
                         v-for="location in [...company.locations].sort((a, b) => a.order - b.order)"
                         :key="location._id"
-                        class="me-2 mb-1"
+                        class="me-2 mb-2"
                         variant="outlined"
                         color="blue-grey-darken-2"
                         label
@@ -765,7 +771,7 @@ definePage({
   meta: {
     title: '公司部門管理 | GInternational',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER]
+    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT]
   }
 })
 

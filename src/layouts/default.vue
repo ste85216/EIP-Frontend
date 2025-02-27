@@ -654,7 +654,7 @@ const cogItems = [
   {
     text: '人事管理',
     icon: 'mdi-account-group',
-    roles: ['ADMIN', 'MANAGER'],
+    roles: ['ADMIN', 'MANAGER', 'IT'],
     children: [
       {
         to: '/employeeManagement',
@@ -666,7 +666,7 @@ const cogItems = [
         to: '/companyAndDepartmentManagement',
         text: '公司部門管理',
         icon: 'mdi-office-building-cog',
-        roles: ['ADMIN','MANAGER']
+        roles: ['ADMIN','MANAGER', 'IT']
       }
     ]
   }
@@ -697,7 +697,13 @@ const ITItems = [
         roles: ['ADMIN', 'IT']
       }
     ]
-  }
+  },
+  // {
+  //   text: '員工帳號與權限管理',
+  //   icon: 'mdi-database-cog-outline',
+  //   roles: ['ADMIN', 'IT'],
+  //   to: '/employeeAccountAndAccessManagement'
+  // }
 ]
 
 const adminItems = [
@@ -731,6 +737,8 @@ const filteredCogItems = computed(() => {
           return user.isManager
         case 'USER':
           return user.isUser
+        case 'IT':
+          return user.isIT
         default:
           return false
       }
@@ -747,6 +755,8 @@ const filteredCogItems = computed(() => {
               return user.isManager
             case 'USER':
               return user.isUser
+            case 'IT':
+              return user.isIT
             default:
               return false
           }
