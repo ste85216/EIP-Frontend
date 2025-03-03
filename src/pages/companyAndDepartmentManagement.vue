@@ -492,7 +492,7 @@
       v-model="locationDialog.open"
       max-width="1200"
     >
-      <v-card class="rounded-lg px-6 py-4">
+      <v-card class="rounded-lg px-2 py-4">
         <div class="card-title ps-6 pe-3 pb-2 d-flex justify-space-between align-center">
           公司地點管理
           <v-btn

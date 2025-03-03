@@ -242,16 +242,18 @@
                   density="compact"
                   hide-details
                   clearable
-                  class="me-2"
                   @input="debouncedSearch"
                 />
                 <!-- 添加刪除按鈕 -->
                 <v-btn
                   v-tooltip:top="'刪除異動紀錄'"
-                  icon="mdi-delete"
-                  color="red-lighten-1"
+                  icon="mdi-delete-clock-outline"
+                  :color="isHovered ? 'red-lighten-1' : 'grey'"
                   variant="plain"
-                  size="small"
+                  size="36"
+                  class="mx-2"
+                  @mouseenter="isHovered = true"
+                  @mouseleave="isHovered = false"
                   @click="showDeleteDialog"
                 />
               </v-col>
@@ -477,8 +479,8 @@
     v-model="deleteDialog"
     max-width="400"
   >
-    <v-card class="rounded-lg px-6 pt-5 pb-4">
-      <div class="card-title">
+    <v-card class="rounded-lg px-8 pt-7 pb-4">
+      <div class="card-title mb-2">
         刪除異動紀錄
       </div>
       <v-card-text class="pt-6 px-0">
@@ -487,29 +489,44 @@
           v-model="selectedOperatorForDelete"
           :items="deleteOperatorSuggestions"
           :loading="deleteOperatorLoading"
-          item-title="name"
-          item-value="_id"
           label="選擇操作人員"
+          return-object
+          :item-props="item => ({
+            key: item._id,
+            title: formatUserDisplay(item),
+            value: item
+          })"
           variant="outlined"
           density="compact"
           clearable
-          :return-object="true"
           @update:search="searchOperatorsForDelete"
           @click:clear="onClearOperatorForDelete"
         >
-          <template #item="{ props, item }">
-            <v-list-item
-              v-bind="props"
-              :title="formatUserDisplay(item.raw)"
-            />
+          <template #selection="{ item }">
+            {{ formatUserDisplay(item.raw) }}
           </template>
         </v-autocomplete>
+
+        <!-- 新增確認輸入欄位 -->
+        <v-text-field
+          v-model="confirmOperatorName"
+          label="請輸入操作人員名稱進行確認"
+          :error-messages="confirmNameError"
+          :disabled="!selectedOperatorForDelete"
+          variant="outlined"
+          density="compact"
+          class="mt-4"
+          clearable
+          persistent-hint
+          :hint="selectedOperatorForDelete ? `請輸入: ${selectedOperatorForDelete.name}` : '請先選擇操作人員'"
+          @update:model-value="validateConfirmName"
+        />
 
         <v-alert
           type="warning"
           variant="tonal"
           density="compact"
-          class="mt-2 custom-alert"
+          class="mt-4 custom-alert"
         >
           注意：此操作將刪除該操作人員的所有異動紀錄，且不可恢復。
         </v-alert>
@@ -520,7 +537,7 @@
           color="grey"
           variant="outlined"
           class="me-2"
-          @click="deleteDialog = false"
+          @click="closeDeleteDialog"
         >
           取消
         </v-btn>
@@ -528,7 +545,7 @@
           color="red-darken-1"
           variant="outlined"
           :loading="isDeleting"
-          :disabled="!selectedOperatorForDelete"
+          :disabled="!selectedOperatorForDelete || confirmOperatorName !== selectedOperatorForDelete.name"
           @click="deleteMyLogs"
         >
           確認
@@ -1254,7 +1271,7 @@ const resetSearch = () => {
   }
   clearOperatorSearch()
   clearTargetSearch()
-  performSearch()
+  performSearch(true)
 }
 
 // 新增 quickSearchText 和 isLoading
@@ -1263,7 +1280,7 @@ const isLoading = ref(false)
 
 // 使用 lodash 的 debounce 來優化搜尋
 const debouncedSearch = debounce(() => {
-  performSearch()
+  performSearch(true)
 }, 300)
 
 // 監聽 quickSearchText 的變化
@@ -1274,8 +1291,10 @@ watch(quickSearchText, () => {
   debouncedSearch()
 })
 
-const performSearch = async () => {
-  // console.log('開始執行搜尋，搜尋條件:', searchCriteria.value)
+const performSearch = async (resetPage = true) => {
+  if (resetPage) {
+    tablePage.value = 1
+  }
   tableLoading.value = true
   try {
     const params = {
@@ -1357,12 +1376,15 @@ const performSearch = async () => {
 }
 
 const handleTableOptionsChange = async (options) => {
+  const isPageChange = tablePage.value !== options.page
   tablePage.value = options.page
   tableItemsPerPage.value = options.itemsPerPage
   if (options.sortBy?.length > 0) {
     tableSortBy.value = options.sortBy
   }
-  await performSearch()
+
+  // 如果是改變每頁筆數或排序，需要重置到第一頁
+  await performSearch(!isPageChange)
 }
 
 const showDetail = (item) => {
@@ -1471,6 +1493,8 @@ const isDeleting = ref(false)
 const selectedOperatorForDelete = ref(null)
 const deleteOperatorSuggestions = ref([])
 const deleteOperatorLoading = ref(false)
+const confirmOperatorName = ref('')
+const confirmNameError = ref('')
 
 // 初始化時載入所有使用者
 const loadAllUsersForDelete = async () => {
@@ -1520,12 +1544,14 @@ watch(deleteDialog, async (newValue) => {
     await loadAllUsersForDelete()
   } else {
     selectedOperatorForDelete.value = null
+    confirmOperatorName.value = ''
   }
 })
 
 // 當清除操作人員選擇時，重新載入所有使用者
 const onClearOperatorForDelete = async () => {
   selectedOperatorForDelete.value = null
+  confirmOperatorName.value = ''
   await loadAllUsersForDelete()
 }
 
@@ -1550,7 +1576,7 @@ const deleteMyLogs = async () => {
     if (data.success) {
       createSnackbar({
         text: data.message,
-        snackbarProps: { color: 'success' }
+        snackbarProps: { color: 'teal-lighten-1' }
       })
       deleteDialog.value = false
       selectedOperatorForDelete.value = null
@@ -1571,6 +1597,44 @@ const deleteMyLogs = async () => {
 const showDeleteDialog = () => {
   deleteDialog.value = true
 }
+
+// 在 script setup 區塊中添加
+const isHovered = ref(false)
+
+// 修改關閉對話框的函數
+const closeDeleteDialog = () => {
+  deleteDialog.value = false
+  confirmOperatorName.value = ''
+}
+
+// 驗證確認名稱
+const validateConfirmName = (value) => {
+  if (!selectedOperatorForDelete.value) {
+    confirmNameError.value = ''
+    return
+  }
+  
+  if (!value) {
+    confirmNameError.value = '請輸入操作人員名稱'
+    return
+  }
+  
+  if (value !== selectedOperatorForDelete.value.name) {
+    confirmNameError.value = '請輸入完全相符的操作人員名稱'
+    return
+  }
+  
+  confirmNameError.value = ''
+}
+
+// 修改監聽選擇的操作人員變更
+watch(selectedOperatorForDelete, (newValue) => {
+  confirmOperatorName.value = ''
+  confirmNameError.value = ''
+  if (!newValue) {
+    confirmOperatorName.value = ''
+  }
+})
 </script>
 
 <style lang="scss" scoped>
@@ -1659,10 +1723,10 @@ const showDeleteDialog = () => {
   }
 }
 
-.custom-alert {
-  font-size: 0.875rem !important;
-}
-.custom-alert :deep(.v-icon) {
-  font-size: 1.25rem !important;
-}
+.v-alert {
+  font-size: 14px;
+  :deep(.v-icon) {
+    font-size: 18px !important;
+  }
+} 
 </style>
