@@ -242,7 +242,17 @@
                   density="compact"
                   hide-details
                   clearable
+                  class="me-2"
                   @input="debouncedSearch"
+                />
+                <!-- 添加刪除按鈕 -->
+                <v-btn
+                  v-tooltip:top="'刪除異動紀錄'"
+                  icon="mdi-delete"
+                  color="red-lighten-1"
+                  variant="plain"
+                  size="small"
+                  @click="showDeleteDialog"
                 />
               </v-col>
             </v-row>
@@ -457,6 +467,71 @@
           @click="detailDialog = false"
         >
           關閉
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- 刪除確認對話框 -->
+  <v-dialog
+    v-model="deleteDialog"
+    max-width="400"
+  >
+    <v-card class="rounded-lg px-6 pt-5 pb-4">
+      <div class="card-title">
+        刪除異動紀錄
+      </div>
+      <v-card-text class="pt-6 px-0">
+        <!-- 操作人員選擇 -->
+        <v-autocomplete
+          v-model="selectedOperatorForDelete"
+          :items="deleteOperatorSuggestions"
+          :loading="deleteOperatorLoading"
+          item-title="name"
+          item-value="_id"
+          label="選擇操作人員"
+          variant="outlined"
+          density="compact"
+          clearable
+          :return-object="true"
+          @update:search="searchOperatorsForDelete"
+          @click:clear="onClearOperatorForDelete"
+        >
+          <template #item="{ props, item }">
+            <v-list-item
+              v-bind="props"
+              :title="formatUserDisplay(item.raw)"
+            />
+          </template>
+        </v-autocomplete>
+
+        <v-alert
+          type="warning"
+          variant="tonal"
+          density="compact"
+          class="mt-2 custom-alert"
+        >
+          注意：此操作將刪除該操作人員的所有異動紀錄，且不可恢復。
+        </v-alert>
+      </v-card-text>
+      <v-card-actions class="px-0">
+        <v-spacer />
+        <v-btn
+          color="grey"
+          variant="outlined"
+          class="me-2"
+          @click="deleteDialog = false"
+        >
+          取消
+        </v-btn>
+        <v-btn
+          color="red-darken-1"
+          variant="outlined"
+          :loading="isDeleting"
+          :disabled="!selectedOperatorForDelete"
+          @click="deleteMyLogs"
+        >
+          確認
         </v-btn>
       </v-card-actions>
     </v-card>
@@ -1096,7 +1171,7 @@ const formatChanges = (item) => {
 const loadAllUsers = async () => {
   operatorLoading.value = true
   try {
-    const { data } = await apiAuth.get('/user/suggestions', {
+    const { data } = await apiAuth.get('/users/suggestions', {
       params: { search: '' }
     })
     if (data.success) {
@@ -1130,7 +1205,7 @@ const handleOperatorSearch = debounce(async (text) => {
   }
   operatorLoading.value = true
   try {
-    const { data } = await apiAuth.get('/user/suggestions', {
+    const { data } = await apiAuth.get('/users/suggestions', {
       params: { search: text }
     })
     if (data.success) {
@@ -1389,6 +1464,113 @@ watch(
     }
   }
 )
+
+// 新增刪除相關變數
+const deleteDialog = ref(false)
+const isDeleting = ref(false)
+const selectedOperatorForDelete = ref(null)
+const deleteOperatorSuggestions = ref([])
+const deleteOperatorLoading = ref(false)
+
+// 初始化時載入所有使用者
+const loadAllUsersForDelete = async () => {
+  deleteOperatorLoading.value = true
+  try {
+    const { data } = await apiAuth.get('/users/suggestions', {
+      params: { search: '' }
+    })
+    if (data.success) {
+      deleteOperatorSuggestions.value = data.result
+    }
+  } catch (error) {
+    console.error('載入使用者失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '載入使用者失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    deleteOperatorLoading.value = false
+  }
+}
+
+// 搜尋操作人員
+const searchOperatorsForDelete = debounce(async (search) => {
+  deleteOperatorLoading.value = true
+  try {
+    const { data } = await apiAuth.get('/users/suggestions', {
+      params: { search }
+    })
+    if (data.success) {
+      deleteOperatorSuggestions.value = data.result
+    }
+  } catch (error) {
+    console.error('搜尋操作人員失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '搜尋操作人員失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    deleteOperatorLoading.value = false
+  }
+}, 300)
+
+// 監聽對話框的開啟
+watch(deleteDialog, async (newValue) => {
+  if (newValue) {
+    await loadAllUsersForDelete()
+  } else {
+    selectedOperatorForDelete.value = null
+  }
+})
+
+// 當清除操作人員選擇時，重新載入所有使用者
+const onClearOperatorForDelete = async () => {
+  selectedOperatorForDelete.value = null
+  await loadAllUsersForDelete()
+}
+
+// 刪除紀錄
+const deleteMyLogs = async () => {
+  if (!selectedOperatorForDelete.value?._id) {
+    createSnackbar({
+      text: '請選擇要刪除的操作人員',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    return
+  }
+
+  isDeleting.value = true
+  try {
+    const { data } = await apiAuth.delete('/auditLogs/my-logs', {
+      params: {
+        operatorId: selectedOperatorForDelete.value._id
+      }
+    })
+
+    if (data.success) {
+      createSnackbar({
+        text: data.message,
+        snackbarProps: { color: 'success' }
+      })
+      deleteDialog.value = false
+      selectedOperatorForDelete.value = null
+      await performSearch()
+    }
+  } catch (error) {
+    console.error('刪除異動紀錄失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '刪除異動紀錄失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+// 顯示刪除對話框
+const showDeleteDialog = () => {
+  deleteDialog.value = true
+}
 </script>
 
 <style lang="scss" scoped>
@@ -1475,5 +1657,12 @@ watch(
   &:not(.budget-detail) {
     max-width: 600px !important;
   }
+}
+
+.custom-alert {
+  font-size: 0.875rem !important;
+}
+.custom-alert :deep(.v-icon) {
+  font-size: 1.25rem !important;
 }
 </style>

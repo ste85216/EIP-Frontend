@@ -182,11 +182,11 @@
         </v-col>
         <v-col cols="2">
           <v-row
-            class="elevation-4 rounded-lg pt-sm-4 pb-4 px-4 mt-2 mt-sm-6 me-sm-6 ms-sm-1 mb-4 bg-white"
+            class="elevation-4 rounded-lg pt-sm-3 pb-4 px-4 mt-2 mt-sm-6 me-sm-6 ms-sm-1 mb-4 bg-white"
           >
             <v-col
               cols="12"
-              class="pb-1"
+              class="pb-2"
             >
               <div class="card-title">
                 批次匯出報表

@@ -26,7 +26,7 @@ export const useUserStore = defineStore('user', () => {
   // 登入
   const login = async (values) => {
     try {
-      const { data } = await api.post('/user/login', values)
+      const { data } = await api.post('/users/login', values)
 
       if (data.success && data.result.token) {
         token.value = data.result.token
@@ -51,7 +51,7 @@ export const useUserStore = defineStore('user', () => {
   // Google 登入
   const googleLogin = async (code) => {
     try {
-      const response = await api.post('/user/google-login', { code })
+      const response = await api.post('/users/google-login', { code })
 
       if (response.data.success) {
         token.value = response.data.result.token
@@ -77,7 +77,7 @@ export const useUserStore = defineStore('user', () => {
     if (!isLogin.value) return
 
     try {
-      const { data } = await apiAuth.get('/user/profile')
+      const { data } = await apiAuth.get('/users/profile')
       email.value = data.result.email
       name.value = data.result.name
       role.value = data.result.role
@@ -94,7 +94,7 @@ export const useUserStore = defineStore('user', () => {
   // 修改密碼
   const changePassword = async (currentPassword, newPassword) => {
     try {
-      const { data } = await apiAuth.patch('/user/change-password', {
+      const { data } = await apiAuth.patch('/users/change-password', {
         currentPassword,
         newPassword
       })
@@ -116,7 +116,7 @@ export const useUserStore = defineStore('user', () => {
   // 忘記密碼
   const forgotPassword = async (email) => {
     try {
-      const { data } = await api.post('/user/forgot-password', { email })
+      const { data } = await api.post('/users/forgot-password', { email })
 
       if (!data.success) {
         throw new Error(data.message || '發送重設密碼郵件失敗')
@@ -135,7 +135,7 @@ export const useUserStore = defineStore('user', () => {
   // 重設密碼
   const resetPassword = async (token, newPassword) => {
     try {
-      const { data } = await api.post('/user/reset-password', {
+      const { data } = await api.post('/users/reset-password', {
         resetPasswordToken: token,
         password: newPassword
       })
@@ -157,7 +157,7 @@ export const useUserStore = defineStore('user', () => {
     // 添加更新頭像的方法
     const updateAvatar = async (formData) => {
       try {
-        const { data } = await apiAuth.patch('/user/avatar', formData)
+        const { data } = await apiAuth.patch('/users/avatar', formData)
         if (!data.success) {
           throw new Error(data.message || '頭像更新失敗')
         }
@@ -175,7 +175,7 @@ export const useUserStore = defineStore('user', () => {
   // 登出
   const logout = async () => {
     try {
-      await apiAuth.delete('/user/logout')
+      await apiAuth.delete('/users/logout')
     } catch (error) {
       console.log(error)
     }

@@ -492,7 +492,7 @@ const performSearch = async () => {
       quickSearch: quickSearchText.value
     }
 
-    const { data } = await apiAuth.get('/user/search', { params })
+    const { data } = await apiAuth.get('/users/search', { params })
     
     if (data.success) {
       tableItems.value = data.result.data
@@ -523,7 +523,7 @@ const performSearch = async () => {
 const submit = handleSubmit(async (values) => {
   try {
     if (isEditing.value) {
-      const { data } = await apiAuth.patch(`/user/${dialog.value.id}`, values)
+      const { data } = await apiAuth.patch(`users/${dialog.value.id}`, values)
       const index = tableItems.value.findIndex(item => item._id === dialog.value.id)
       if (index !== -1) {
         tableItems.value[index] = data.result
@@ -532,7 +532,7 @@ const submit = handleSubmit(async (values) => {
       const submitData = Object.fromEntries(
         Object.entries(values).filter(([key]) => key !== 'userId')
       )
-      await apiAuth.post('/user', submitData)
+      await apiAuth.post('/users', submitData)
       await tableLoadItems(true)
     }
 
@@ -591,7 +591,7 @@ const closeDialog = () => {
 const deleteUser = async () => {
   try {
     tableLoading.value = true
-    await apiAuth.delete(`/user/${dialog.value.id}`)
+    await apiAuth.delete(`/users/${dialog.value.id}`)
     closeDialog()
     await tableLoadItems(true)
 
@@ -695,7 +695,7 @@ const confirmStatusChange = async () => {
 // 更新用戶狀態
 const updateUserStatus = async (user, newStatus) => {
   try {
-    const response = await apiAuth.patch(`/user/${user._id}`, {
+    const response = await apiAuth.patch(`/users/${user._id}`, {
       isActive: newStatus
     })
 

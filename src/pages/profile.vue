@@ -456,7 +456,7 @@ const getRoleTitle = (roleValue) => {
 const fetchUserList = async () => {
     try {
       isLoadingUsers.value = true
-      const { data } = await apiAuth.get('/user/public/all')
+      const { data } = await apiAuth.get('/users/public/all')
       // 定義角色優先順序
       const roleOrder = {
         2: 0, // ADMIN
