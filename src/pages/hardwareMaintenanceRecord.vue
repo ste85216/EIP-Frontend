@@ -174,6 +174,7 @@
                       color="cyan-darken-2"
                       :size="buttonSize"
                       :loading="isSearching"
+                      prepend-icon="mdi-magnify"
                       class="me-4"
                       @click="handleSearch"
                     >

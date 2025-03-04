@@ -121,7 +121,7 @@
                 />
                 <v-text-field
                   v-model="tableSearch"
-                  label="搜尋"
+                  label="快速搜尋"
                   append-inner-icon="mdi-magnify"
                   variant="outlined"
                   density="compact"

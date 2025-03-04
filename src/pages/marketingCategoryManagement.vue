@@ -28,7 +28,7 @@
           />
           <v-text-field
             v-model="quickSearchText"
-            label="搜尋"
+            label="快速搜尋"
             append-inner-icon="mdi-magnify"
             :loading="isLoading"
             base-color="#666"

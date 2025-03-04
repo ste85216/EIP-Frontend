@@ -40,7 +40,7 @@
                     />
                     <v-text-field
                       v-model="quickSearchText"
-                      label="搜尋"
+                      label="快速搜尋"
                       append-inner-icon="mdi-magnify"
                       base-color="#666"
                       color="blue-grey-darken-3"
