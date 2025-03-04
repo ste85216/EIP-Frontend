@@ -1189,7 +1189,10 @@ const loadAllUsers = async () => {
   operatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/users/suggestions', {
-      params: { search: '' }
+      params: { 
+        search: '',
+        itemsPerPage: 9999
+      }
     })
     if (data.success) {
       // 添加 SYSTEM 用戶到建議列表
@@ -1223,7 +1226,10 @@ const handleOperatorSearch = debounce(async (text) => {
   operatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/users/suggestions', {
-      params: { search: text }
+      params: { 
+        search: text,
+        itemsPerPage: 9999
+      }
     })
     if (data.success) {
       // 如果搜尋文字包含 SYSTEM（不分大小寫），則加入 SYSTEM 用戶
@@ -1435,32 +1441,6 @@ const formatUserDisplay = (user) => {
   return `${user.name} (${user.userId || ''})`
 }
 
-// 修改 formatTargetDisplay 函數
-// const formatTargetDisplay = (item) => {
-//   if (!item) return ''
-  
-//   let date
-  
-//   switch (targetType.value) {
-//     case 'users':
-//       if (item.adminId) {
-//         return `${item.name} (${item.adminId})`
-//       }
-//       return `${item.name}${item.userId ? ` (${item.userId})` : ''}`
-//     case 'forms':
-//       return `${item.formNumber}${item.clientName ? ` - ${item.clientName}` : ''}`
-//     case 'formTemplates':
-//       return item.name || ''
-//     case 'marketingCategories':
-//       return `${item.name} (${marketingCategoryTypes[item.type]})`
-//     case 'marketingExpenses':
-//       date = formatDateTime(item.invoiceDate).split(' ')[0] // 只取日期部分
-//       return `${date} - ${item.theme?.name || ''}`
-//     default:
-//       return ''
-//   }
-// }
-
 // 監聽資料類型變更
 watch(() => searchCriteria.value.targetModel, () => {
   // 當資料類型改變時，清空操作對象
@@ -1501,7 +1481,10 @@ const loadAllUsersForDelete = async () => {
   deleteOperatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/users/suggestions', {
-      params: { search: '' }
+      params: { 
+        search: '',
+        itemsPerPage: 9999
+      }
     })
     if (data.success) {
       deleteOperatorSuggestions.value = data.result
@@ -1522,7 +1505,10 @@ const searchOperatorsForDelete = debounce(async (search) => {
   deleteOperatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/users/suggestions', {
-      params: { search }
+      params: { 
+        search,
+        itemsPerPage: 9999
+      }
     })
     if (data.success) {
       deleteOperatorSuggestions.value = data.result

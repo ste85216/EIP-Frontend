@@ -145,6 +145,7 @@
             <v-data-table-server
               v-model:items-per-page="itemsPerPage"
               v-model:page="page"
+              v-model:sort-by="tableSortBy"
               density="compact"
               :headers="headers"
               :items="items"
@@ -152,6 +153,7 @@
               :items-per-page-options="[10, 20, 50, 100]"
               :loading="isLoading"
               class="elevation-0 rounded-lg"
+              @update:options="handleTableOptionsChange"
             >
               <template #[`item.actions`]="{ item }">
                 <v-btn
@@ -774,13 +776,13 @@ const dialog = ref({
 
 // ===== 表格設定 =====
 const headers = [
-  { title: '建立日期', key: 'createdAt', align: 'start', sortable: false },
-  { title: '年度', key: 'year', align: 'start', sortable: false },
-  { title: '行銷主題', key: 'theme.name', align: 'start', sortable: false },
-  { title: '年度總預算', key: 'annualTotalBudget', align: 'start', sortable: false },
+  { title: '建立日期', key: 'createdAt', align: 'start', sortable: true },
+  { title: '年度', key: 'year', align: 'start', sortable: true },
+  { title: '行銷主題', key: 'theme.name', align: 'start', sortable: true },
+  { title: '年度總預算', key: 'annualTotalBudget', align: 'start', sortable: true },
   { title: '總預算預估', key: 'totalBudget', align: 'start', sortable: false },
-  { title: '備註', key: 'note', align: 'start', sortable: false },
-  { title: '建立者', key: 'creator.name', align: 'start', sortable: false },
+  { title: '備註', key: 'note', align: 'start', sortable: true },
+  { title: '建立者', key: 'creator.name', align: 'start', sortable: true },
   { title: '操作', key: 'actions', align: 'center', sortable: false }
 ]
 
@@ -788,6 +790,7 @@ const items = ref([])
 const totalItems = ref(0)
 const itemsPerPage = ref(10)
 const page = ref(1)
+const tableSortBy = ref([{ key: 'createdAt', order: 'desc' }])
 
 // ===== 選項資料 =====
 const yearOptions = ref([])
@@ -1025,7 +1028,9 @@ const loadData = async () => {
     isLoading.value = true
     const params = {
       page: page.value,
-      itemsPerPage: itemsPerPage.value
+      itemsPerPage: itemsPerPage.value,
+      sortBy: tableSortBy.value[0]?.key || 'createdAt',
+      sortOrder: tableSortBy.value[0]?.order || 'desc'
     }
 
     if (quickSearchText.value) {
@@ -1052,8 +1057,6 @@ const loadData = async () => {
       params.createdDateEnd = endDate.toISOString()
     }
 
-    // console.log('搜尋參數:', params)
-
     const { data } = await apiAuth.get('/marketing/budgets/all', { params })
     if (data.success) {
       items.value = data.result.data
@@ -1064,6 +1067,16 @@ const loadData = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+// 表格操作函數
+const handleTableOptionsChange = async (options) => {
+  page.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  if (options.sortBy?.length > 0) {
+    tableSortBy.value = options.sortBy
+  }
+  await loadData()
 }
 
 // 新增搜尋用的年度選項

@@ -184,6 +184,7 @@
             <v-data-table-server
               v-model:items-per-page="itemsPerPage"
               v-model:page="page"
+              v-model:sort-by="tableSortBy"
               density="compact"
               :headers="headers"
               :items="items"
@@ -191,6 +192,7 @@
               :items-per-page-options="[10, 20, 50, 100]"
               :loading="isLoading"
               class="elevation-0 rounded-lg"
+              @update:options="handleTableOptionsChange"
             >
               <template #[`item.invoiceDate`]="{ item }">
                 {{ formatDate(item.invoiceDate) }}
@@ -880,15 +882,15 @@ const dialog = ref({
 
 // ===== 表格設定 =====
 const headers = [
-  { title: '發票日期', key: 'invoiceDate', align: 'start', sortable: false },
-  { title: '行銷主題', key: 'theme.name', align: 'start', sortable: false },
-  { title: '廣告渠道', key: 'channel.name', align: 'start', sortable: false },
-  { title: '平台', key: 'platform.name', align: 'start', sortable: false },
-  { title: '線別', key: 'details', align: 'start', maxWidth: '150', sortable: false },
-  { title: '總金額', key: 'totalExpense', align: 'start', sortable: false },
-  { title: '備註', key: 'note', align: 'start', width: '130', sortable: false },
-  { title: '建立者', key: 'creator.name', align: 'start', sortable: false },
-  { title: '建立日期', key: 'createdAt', align: 'start', sortable: false },
+  { title: '發票日期', key: 'invoiceDate', align: 'start', sortable: true },
+  { title: '行銷主題', key: 'theme.name', align: 'start', sortable: true },
+  { title: '廣告渠道', key: 'channel.name', align: 'start', sortable: true },
+  { title: '平台', key: 'platform.name', align: 'start', sortable: true },
+  { title: '線別', key: 'details', align: 'start', maxWidth: '150', sortable: true },
+  { title: '總金額', key: 'totalExpense', align: 'start', sortable: true },
+  { title: '備註', key: 'note', align: 'start', width: '130', sortable: true },
+  { title: '建立者', key: 'creator.name', align: 'start', sortable: true },
+  { title: '建立日期', key: 'createdAt', align: 'start', sortable: true },
   { title: '操作', key: 'actions', align: 'center', sortable: false }
 ]
 
@@ -896,6 +898,7 @@ const items = ref([])
 const totalItems = ref(0)
 const itemsPerPage = ref(10)
 const page = ref(1)
+const tableSortBy = ref([{ key: 'invoiceDate', order: 'desc' }])
 
 // ===== 選項資料 =====
 const themeOptions = ref([])
@@ -910,8 +913,8 @@ const searchCriteria = ref({
   channel: null,
   platform: null,
   detail: null,
-  createdDateRange: [], // 建立日期範圍
-  invoiceDateRange: []  // 發票日期範圍
+  createdDateRange: [],
+  invoiceDateRange: []
 })
 
 const searchText = ref('')
@@ -999,7 +1002,9 @@ const loadData = async () => {
     isLoading.value = true
     const params = {
       page: page.value,
-      itemsPerPage: itemsPerPage.value
+      itemsPerPage: itemsPerPage.value,
+      sortBy: tableSortBy.value[0]?.key || 'createdAt',
+      sortOrder: tableSortBy.value[0]?.order || 'desc'
     }
 
     // 處理快速搜尋
@@ -1045,36 +1050,9 @@ const loadData = async () => {
       params.invoiceDateEnd = endDate.toISOString()
     }
 
-    // console.log('搜尋參數:', params)
-
     const { data } = await apiAuth.get('/marketing/expenses/all', { params })
     if (data.success) {
-      // console.log('原始資料:', data.result.data) // 調試用
-
-      items.value = data.result.data.map(item => {
-        // 檢查並確保每個關聯欄位都有正確的資料
-        const processedItem = {
-          ...item,
-          theme: item.theme || { name: '' },
-          channel: item.channel || { name: '' },
-          platform: item.platform || { name: '' },
-          creator: item.creator || { name: '' },
-          details: Array.isArray(item.details) 
-            ? item.details.map((d, index) => ({
-                ...d,
-                detail: {
-                  _id: d.detail?._id || d.detail,
-                  // 從 detailsInfo 中獲取對應的名稱
-                  name: item.detailsInfo?.[index]?.name || ''
-                }
-              }))
-            : []
-        }
-
-        // console.log('處理後的項目:', processedItem) // 調試用
-        return processedItem
-      })
-
+      items.value = data.result.data
       totalItems.value = data.result.totalItems
     }
   } catch (error) {
@@ -1592,6 +1570,16 @@ const handleChannelChange = () => {
 const handleDialogChannelChange = () => {
   // 當廣告渠道變更時，清空平台選擇
   platform.value.value = ''
+}
+
+// 表格操作函數
+const handleTableOptionsChange = async (options) => {
+  page.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  if (options.sortBy?.length > 0) {
+    tableSortBy.value = options.sortBy
+  }
+  await loadData()
 }
 
 // ===== 生命週期鉤子 =====
