@@ -162,7 +162,7 @@
                     class="d-flex align-center"
                   >
                     <v-btn
-                      color="grey-darken-1"
+                      color="grey"
                       :size="buttonSize"
                       :loading="isSearching"
                       class="me-4"

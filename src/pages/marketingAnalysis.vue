@@ -218,7 +218,7 @@
           <div>
             <v-btn
               color="teal-darken-1"
-              class="me-2"
+              class="me-4"
               prepend-icon="mdi-microsoft-excel"
               :loading="isExporting"
               @click="handleExportExcel"
