@@ -15,6 +15,7 @@ export const useUserStore = defineStore('user', () => {
   const adminId = ref('')
   const note = ref('')
   const avatar = ref('')
+  const isDefaultPasswordChanged = ref(true)
 
   // 計算屬性
   const isLogin = computed(() => token.value.length > 0)
@@ -37,6 +38,7 @@ export const useUserStore = defineStore('user', () => {
         adminId.value = data.result.adminId
         note.value = data.result.note
         avatar.value = data.result.avatar
+        isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
         await profile()
         return '登入成功'
       } else {
@@ -62,6 +64,7 @@ export const useUserStore = defineStore('user', () => {
         adminId.value = response.data.result.adminId
         note.value = response.data.result.note
         avatar.value = response.data.result.avatar
+        isDefaultPasswordChanged.value = response.data.result.isDefaultPasswordChanged
         return '登入成功'
       } else {
         throw new Error(response.data.message)
@@ -85,6 +88,7 @@ export const useUserStore = defineStore('user', () => {
       adminId.value = data.result.adminId
       note.value = data.result.note
       avatar.value = data.result.avatar
+      isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
     } catch (error) {
       console.log(error)
       logout()
@@ -199,6 +203,7 @@ export const useUserStore = defineStore('user', () => {
     adminId,
     note,
     avatar,
+    isDefaultPasswordChanged,
 
     // 計算屬性
     isLogin,
