@@ -299,16 +299,32 @@
                       {{ change }}
                     </div>
                   </td>
-                  <td
-                    class="text-center"
-                  >
-                    <v-icon
-                      icon="mdi-book-open-variant-outline"
-                      color="blue-grey-darken-3"
-                      size="small"
-                      class="my-4"
-                      @click="showDetail(item)"
-                    />
+                  <td class="text-center">
+                    <div class="d-flex align-center justify-center">
+                      <v-btn
+                        icon
+                        class="me-2"
+                        color="light-blue-darken-4"
+                        variant="plain"
+                        size="24"
+                        :ripple="false"
+                        @click="showDetail(item)"
+                      >
+                        <v-icon>mdi-book-open-variant-outline</v-icon>
+                      </v-btn>
+                      <v-btn
+                        icon
+                        :color="hoveredItemId === item._id ? 'red-lighten-1' : 'grey'"
+                        variant="plain"
+                        size="24"
+                        :ripple="false"
+                        @mouseenter="hoveredItemId = item._id"
+                        @mouseleave="hoveredItemId = null"
+                        @click="confirmDeleteLog(item)"
+                      >
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </div>
                   </td>
                 </tr>
               </template>
@@ -326,7 +342,7 @@
     :width="selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action === '創建' ? 1300 : (selectedItem?.targetModel === 'marketingBudgets' && selectedItem?.action !== '刪除' && hasBudgetItemsChanged(selectedItem) ? undefined : 600)"
     :data-action="selectedItem?.action"
   >
-    <v-card class="pa-4">
+    <v-card class="pa-4 rounded-lg">
       <div class="ps-6 pt-4 pb-1 pb-sm-3 card-title">
         詳細異動內容
       </div>
@@ -460,7 +476,7 @@
           </v-col>
         </v-row>
       </v-card-text>
-      <v-card-actions>
+      <v-card-actions class="px-4">
         <v-spacer />
         <v-btn
           color="grey-darken-1"
@@ -553,6 +569,16 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- 在 template 最後添加 ConfirmDeleteDialog 組件 -->
+  <ConfirmDeleteDialog
+    v-model="confirmDeleteDialog.open"
+    title="確認刪除異動紀錄"
+    :message="`確定要刪除此筆異動紀錄嗎？此操作無法復原。<br><br>操作時間：${formatDateTime(confirmDeleteDialog.item?.createdAt)}<br>操作人員：${formatOperator(confirmDeleteDialog.item)}<br>資料類型：${getModelDisplay(confirmDeleteDialog.item?.targetModel)}`"
+    :confirm-button-size="'default'"
+    :cancel-button-size="'default'"
+    @confirm="deleteLog"
+  />
 </template>
 
 <script setup>
@@ -564,6 +590,7 @@ import { definePage } from 'vue-router/auto'
 import UserRole from '@/enums/UserRole'
 import { useSnackbar } from 'vuetify-use-dialog'
 import MarketingBudgetChangeTable from '@/components/MarketingBudgetChangeTable.vue'
+import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 
 definePage({
   meta: {
@@ -640,7 +667,7 @@ const tableHeaders = [
   { title: '操作類型', align: 'start', sortable: true, key: 'action' },
   { title: '操作對象', align: 'start', sortable: true, key: 'targetInfo.name' },
   { title: '異動內容', align: 'start', sortable: false, key: 'changes' },
-  { title: '查看', align: 'center', sortable: false, key: 'actions' }
+  { title: '操作', align: 'center', sortable: false, key: 'actions' }
 ]
 
 // 響應式表格標頭
@@ -1621,6 +1648,43 @@ watch(selectedOperatorForDelete, (newValue) => {
     confirmOperatorName.value = ''
   }
 })
+
+// 添加刪除相關變數
+const confirmDeleteDialog = ref({
+  open: false,
+  item: null
+})
+
+// 添加確認刪除函數
+const confirmDeleteLog = (item) => {
+  confirmDeleteDialog.value = {
+    open: true,
+    item
+  }
+}
+
+// 添加刪除函數
+const deleteLog = async () => {
+  try {
+    const { data } = await apiAuth.delete(`/auditLogs/${confirmDeleteDialog.value.item._id}`)
+    if (data.success) {
+      await performSearch()
+      createSnackbar({
+        text: '刪除異動紀錄成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('刪除異動紀錄失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '刪除失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+// 在 script setup 部分添加
+const hoveredItemId = ref(null)
 </script>
 
 <style lang="scss" scoped>
