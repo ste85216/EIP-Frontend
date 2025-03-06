@@ -711,7 +711,7 @@
       persistent
       width="300"
     >
-      <v-card class="rounded-lg px-4 pt-7 pb-6">
+      <v-card class="rounded-lg px-3 pt-6 pb-4">
         <v-form @submit.prevent="handleBatchAdd">
           <div class="card-title px-4 pb-2">
             批量新增項目

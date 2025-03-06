@@ -248,7 +248,6 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="!user.isIT"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
