@@ -25,6 +25,13 @@ export const quotationSchema = {
       price: ''
     }
   ],
+  costs: [
+    {
+      costName: '',
+      costAmount: 0,
+      remark: ''
+    }
+  ],
   contract: {
     page1: {
       partyA: '',

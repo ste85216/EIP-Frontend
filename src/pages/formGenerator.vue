@@ -228,12 +228,22 @@
                   {{ isEditing ? '儲存' : '新增' }}
                 </v-btn>
                 <v-btn
-                  color="deep-orange-darken-1"
+                  color="red-darken-1"
+                  prepend-icon="mdi-file-pdf-box"
                   :disabled="!previewReady"
                   :loading="isExportingPDF"
+                  class="me-4"
                   @click="handleExportPDF"
                 >
-                  匯出 PDF
+                  匯出
+                </v-btn>
+                <v-btn
+                  color="deep-orange-darken-1"
+                  :loading="isExportingReport"
+                  prepend-icon="mdi-file-export"
+                  @click="openReportDialog"
+                >
+                  匯出報表
                 </v-btn>
               </div>
             </div>
@@ -888,6 +898,84 @@
             確認
           </v-btn>
         </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 匯出報表對話框 -->
+    <v-dialog
+      v-model="reportDialog.open"
+      persistent
+      width="320"
+    >
+      <v-card class="rounded-lg py-3 px-2">
+        <v-card-title class="card-title px-6 py-3 mb-2">
+          匯出報表
+        </v-card-title>
+        <v-card-text class="px-5 pb-2">
+          <v-form @submit.prevent="handleExportReport">
+            <v-select
+              v-model="reportDialog.type"
+              :items="templateTypeOptions"
+              label="表單類型"
+              item-title="title"
+              item-value="value"
+              variant="outlined"
+              density="compact"
+              class="mb-4"
+              :error-messages="reportDialog.typeError"
+              clearable
+              @update:model-value="loadReportTemplateOptions"
+            />
+
+            <v-select
+              v-model="reportDialog.template"
+              :items="reportTemplateOptions"
+              label="表單模板"
+              item-title="title"
+              item-value="value"
+              variant="outlined"
+              density="compact"
+              class="mb-4"
+              :error-messages="reportDialog.templateError"
+              :disabled="!reportDialog.type"
+              clearable
+            />
+
+            <v-date-input
+              v-model="reportDialog.dateRange"
+              label="報價日期區間"
+              variant="outlined"
+              density="compact"
+              multiple="range"
+              prepend-icon
+              clearable
+              class="mb-4"
+              :cancel-text="'取消'"
+              :ok-text="'確認'"
+              :error-messages="reportDialog.dateError"
+            />
+
+            <v-card-actions class="pa-0">
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="outlined"
+                @click="closeReportDialog"
+              >
+                取消
+              </v-btn>
+              <v-btn
+                color="teal-darken-1"
+                variant="outlined"
+                type="submit"
+                :loading="isExportingReport"
+                class="ms-2"
+              >
+                匯出
+              </v-btn>
+            </v-card-actions>
+          </v-form>
+        </v-card-text>
       </v-card>
     </v-dialog>
   </v-container>
@@ -2083,9 +2171,7 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString('zh-TW', {
     year: 'numeric',
     month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit'
+    day: '2-digit'
   })
 }
 
@@ -2149,15 +2235,14 @@ const isViewingLoading = ref(false);
 const editHistory = async (history) => {
   try {
     isEditingLoading.value = true;
-    // console.log('1. 開始編輯歷史記錄:', history)
     if (!history) {
       throw new Error('歷史記錄資料不存在')
     }
 
     // 設置編輯狀態
     isEditing.value = true;
-    isViewing.value = false; // 重置查閱狀態
-    isAdding.value = false; // 不再重置新增狀態，保持按鈕可用
+    isViewing.value = false;
+    isAdding.value = false;
     editingFormId.value = history._id;
 
     // 先獲取完整的表單資料
@@ -2168,24 +2253,16 @@ const editHistory = async (history) => {
 
     // 使用完整的表單資料
     const completeHistory = data.result;
-    // console.log('2. 獲取到的完整資料:', completeHistory);
 
     // 設置表單類型
     selectedType.value = completeHistory.formTemplate?.type;
-    // console.log('3. 設置表單類型:', selectedType.value);
-
-    // 等待表單類型設置完成
     await nextTick();
 
     // 載入表單模板選項
     await loadFormTemplateOptions();
-    // console.log('4. 載入表單模板選項完成');
 
     // 設置選擇的模板
     selectedTemplate.value = completeHistory.formTemplate?._id;
-    // console.log('5. 設置選擇的模板:', selectedTemplate.value);
-
-    // 等待模板選擇完成
     await nextTick();
 
     // 根據不同的模板類型，設置對應的資料結構
@@ -2194,25 +2271,14 @@ const editHistory = async (history) => {
       throw new Error('找不到對應的模板');
     }
 
-    // console.log('6. 選擇的模板:', template);
-    // console.log('7. 歷史資料:', completeHistory.formData);
-
-    // 先關閉歷史記錄對話框
-    // console.log('8. 關閉歷史記錄對話框');
-
     // 使用 Promise 來確保資料設置完成
     await new Promise((resolve) => {
       setTimeout(async () => {
-        // console.log('9. 開始設置表單資料');
         switch (template.componentName) {
           case 'RayHuangQuotationTemplate': {
-            // console.log('10. 設置銳皇報價單資料');
-            // 直接設置表單資料，不需要先重置
             formData.value = {
               formNumber: completeHistory.formNumber,
               date: completeHistory.formData?.date ? new Date(completeHistory.formData.date) : new Date(completeHistory.createdAt),
-              
-              // 客戶資訊
               customerName: completeHistory.formData?.customerName || '',
               customerAddress: completeHistory.formData?.customerAddress || '',
               customerTaxId: completeHistory.formData?.customerTaxId || '',
@@ -2221,25 +2287,14 @@ const editHistory = async (history) => {
               customerPhone: completeHistory.formData?.customerPhone || '',
               customerEmail: completeHistory.formData?.customerEmail || '',
               customerMobile: completeHistory.formData?.customerMobile || '',
-              
-              // 專案資訊
               projectType: completeHistory.formData?.projectType || '',
               projectName: completeHistory.formData?.projectName || '',
               workDays: completeHistory.formData?.workDays || '',
               specialNote: completeHistory.formData?.specialNote || '',
               validityDays: completeHistory.formData?.validityDays || '',
               delayDays: completeHistory.formData?.delayDays || '',
-              
-              // 報價項目
               items: Array.isArray(completeHistory.formData?.items) && completeHistory.formData.items.length > 0
-                ? completeHistory.formData.items.map(item => ({
-                    name: item?.name || '',
-                    description: item?.description || '',
-                    workDays: item?.workDays || '',
-                    quantity: item?.quantity || 1,
-                    unit: item?.unit || '份',
-                    price: item?.price || ''
-                  }))
+                ? completeHistory.formData.items
                 : [{
                     name: '',
                     description: '',
@@ -2248,39 +2303,31 @@ const editHistory = async (history) => {
                     unit: '份',
                     price: ''
                   }],
-
-              // 合約相關
+              // 確保成本項目被正確初始化
+              costs: Array.isArray(completeHistory.formData?.costs) && completeHistory.formData.costs.length > 0
+                ? completeHistory.formData.costs
+                : [{
+                    costName: '',
+                    costAmount: 0,
+                    remark: ''
+                  }],
               includeContract: completeHistory.formData?.includeContract || false,
-              contract: completeHistory.formData?.contract ? {
-                page1: completeHistory.formData.contract.page1 || {},
-                page2: completeHistory.formData.contract.page2 || {},
-                page3: completeHistory.formData.contract.page3 || {}
-              } : {
+              contract: completeHistory.formData?.contract || {
                 page1: {},
                 page2: {},
                 page3: {}
               }
             };
-
-            // 輸出更多除錯資訊
-            // console.log('11. 歷史記錄中的 items:', completeHistory.formData?.items);
-            // console.log('12. 載入後的 items:', formData.value.items);
-            // console.log('13. 載入後的完整表單資料:', formData.value);
             break;
           }
-          
           case 'YstravelQuotationTemplate': {
-            // console.log('10. 設置永信旅遊報價單資料');
             // ... YstravelQuotationTemplate 的程式碼 ...
             break;
           }
         }
-
         await nextTick();
-        // console.log('14. 完成資料設置');
         resolve();
-      }, 500); // 增加延遲時間到 500ms
-
+      }, 500);
     });
 
     createSnackbar({
@@ -2593,6 +2640,255 @@ const handleConfirm = async () => {
 
 const showProgressOverlay = ref(false);
 const downloadProgress = ref(0);
+
+const isExportingReport = ref(false)
+const reportDialog = ref({
+  open: false,
+  type: '',
+  template: '',
+  dateRange: [],
+  typeError: '',
+  templateError: '',
+  dateError: ''
+})
+
+const reportTemplateOptions = ref([])
+
+// 開啟報表對話框
+const openReportDialog = () => {
+  reportDialog.value = {
+    open: true,
+    type: '',
+    template: '',
+    dateRange: [],
+    typeError: '',
+    templateError: '',
+    dateError: ''
+  }
+  reportTemplateOptions.value = []
+}
+
+// 關閉報表對話框
+const closeReportDialog = () => {
+  reportDialog.value.open = false
+  reportTemplateOptions.value = []
+}
+
+// 載入報表模板選項
+const loadReportTemplateOptions = async () => {
+  reportDialog.value.template = ''
+  reportTemplateOptions.value = []
+  reportDialog.value.typeError = ''
+
+  if (!reportDialog.value.type) return
+
+  try {
+    const params = { type: reportDialog.value.type }
+    const { data } = await apiAuth.get('/formTemplates/search', { params })
+    if (data.success) {
+      reportTemplateOptions.value = data.result.map(template => ({
+        title: template.name,
+        value: template._id
+      }))
+    }
+  } catch (error) {
+    console.error('載入模板選項失敗:', error)
+    createSnackbar({
+      text: '載入模板選項失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+// 處理匯出報表
+const handleExportReport = async () => {
+  try {
+    // 驗證
+    let hasError = false
+    reportDialog.value.typeError = ''
+    reportDialog.value.templateError = ''
+    reportDialog.value.dateError = ''
+
+    if (!reportDialog.value.type) {
+      reportDialog.value.typeError = '請選擇表單類型'
+      hasError = true
+    }
+
+    if (!reportDialog.value.template) {
+      reportDialog.value.templateError = '請選擇表單模板'
+      hasError = true
+    }
+
+    if (!reportDialog.value.dateRange || reportDialog.value.dateRange.length === 0) {
+      reportDialog.value.dateError = '請選擇日期區間'
+      hasError = true
+    }
+
+    if (hasError) return
+
+    isExportingReport.value = true
+
+    // 確保 html2pdf 已載入
+    if (!html2pdf.value) {
+      await initDependencies()
+    }
+
+    // 準備查詢參數
+    const params = {
+      formTemplate: reportDialog.value.template
+    }
+
+    // 處理日期範圍
+    if (reportDialog.value.dateRange && reportDialog.value.dateRange.length > 0) {
+      const startDate = new Date(reportDialog.value.dateRange[0])
+      startDate.setHours(0, 0, 0, 0)
+      
+      const endDate = new Date(reportDialog.value.dateRange[reportDialog.value.dateRange.length - 1])
+      endDate.setHours(23, 59, 59, 999)
+      
+      params.startDate = startDate.toISOString()
+      params.endDate = endDate.toISOString()
+    }
+
+    // 獲取報表資料
+    const { data } = await apiAuth.get('/forms/report', { params })
+    
+    if (data.success) {
+      // 計算總金額和總成本
+      const totalAmount = data.result.reduce((acc, curr) => {
+        const itemsTotal = curr.formData.items.reduce((sum, item) => {
+          return sum + (Number(item.quantity) || 0) * (Number(item.price) || 0)
+        }, 0)
+        return acc + Math.round(itemsTotal * 1.05)
+      }, 0)
+
+      const totalCost = data.result.reduce((acc, curr) => {
+        return acc + (curr.formData.costs || []).reduce((sum, cost) => {
+          return sum + (Number(cost.costAmount) || 0)
+        }, 0)
+      }, 0)
+
+      const totalIncome = totalAmount - totalCost
+
+      // 創建 PDF 內容
+      const content = document.createElement('div')
+      content.innerHTML = `
+        <div style="padding: 20px;">
+          <div style="text-align: center; margin-bottom: 20px; font-size: 17px; font-weight: bold;">
+            ${formTemplates.value.find(t => t._id === reportDialog.value.template)?.name || ''} - 統計報表
+          </div>
+          <p style="margin-bottom: 16px; font-size: 14px;">
+            統計期間：${formatDate(reportDialog.value.dateRange[0])} ~ ${formatDate(reportDialog.value.dateRange[reportDialog.value.dateRange.length - 1])}
+          </p>
+          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+            <thead>
+              <tr>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">單號</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">報價日期</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">客戶</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">總金額 (含稅)</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">成本</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; padding: 8px; background-color: #f5f5f5; text-align: center;">實際收入</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${data.result.map(form => {
+                const itemsTotal = form.formData.items.reduce((sum, item) => {
+                  return sum + (Number(item.quantity) || 0) * (Number(item.price) || 0)
+                }, 0)
+                const total = Math.round(itemsTotal * 1.05)
+                
+                const cost = (form.formData.costs || []).reduce((sum, cost) => {
+                  return sum + (Number(cost.costAmount) || 0)
+                }, 0)
+                
+                const income = total - cost
+
+                return `
+                  <tr>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">${form.formNumber}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">${formatDate(form.formData.date)}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">${form.formData.customerName || '-'}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">$ ${total.toLocaleString()}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">$ ${cost.toLocaleString()}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; padding: 8px; text-align: center;">$ ${income.toLocaleString()}</td>
+                  </tr>
+                `
+              }).join('')}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" style="border: 1px solid #ddd; border-right: none; padding: 8px; font-weight: bold; background-color: #f5f5f5; text-align: center;">總計</td>
+                <td style="border: 1px solid #ddd; border-right: none; padding: 8px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalAmount.toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; border-right: none; padding: 8px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalCost.toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalIncome.toLocaleString()}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      `
+
+      // 配置 PDF 選項
+      const options = {
+        margin: 10,
+        filename: `${formTemplates.value.find(t => t._id === reportDialog.value.template)?.name} - 統計報表.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 6,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          removeContainer: true
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'landscape',
+          compress: true
+        }
+      }
+
+      // 生成 PDF
+      await html2pdf.value().from(content).set(options).save()
+
+      closeReportDialog()
+      createSnackbar({
+        text: 'PDF 匯出成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('匯出報表失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '匯出報表失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isExportingReport.value = false
+  }
+}
+
+// 在 loadReportTemplateOptions 函數之前添加以下 watch
+// 監聽報表對話框中的表單類型變化
+watch(() => reportDialog.value.type, (newVal) => {
+  if (newVal) {
+    reportDialog.value.typeError = ''
+  }
+})
+
+// 監聽報表對話框中的表單模板變化
+watch(() => reportDialog.value.template, (newVal) => {
+  if (newVal) {
+    reportDialog.value.templateError = ''
+  }
+})
+
+// 監聽報表對話框中的日期區間變化
+watch(() => reportDialog.value.dateRange, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    reportDialog.value.dateError = ''
+  }
+}, { deep: true })
 </script>
 <style lang="scss" scoped>
 .v-table  {

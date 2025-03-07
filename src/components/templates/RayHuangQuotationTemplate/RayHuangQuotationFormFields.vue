@@ -484,6 +484,107 @@
                   </v-col>
                 </v-row>
               </v-col>
+
+              <!-- 成本項目 -->
+              <v-col cols="12">
+                <v-row>
+                  <v-col cols="12">
+                    <div class="sub-title text-blue-grey-darken-2 d-flex justify-space-between">
+                      成本項目
+                      <v-btn
+                        color="blue-grey-darken-2"
+                        variant="outlined"
+                        prepend-icon="mdi-plus"
+                        size="small"
+                        :disabled="isViewing"
+                        @click="addCost"
+                      >
+                        新增成本
+                      </v-btn>
+                    </div>
+                  </v-col>
+                  <v-col
+                    cols="12"
+                  >
+                    <v-expand-transition group>
+                      <div
+                        v-for="(cost, index) in modelValue.costs || [{ costName: '', costAmount: 0, remark: '' }]"
+                        :key="index"
+                        class="mb-4 px-3 border rounded-lg"
+                      >
+                        <v-row class="pb-2">
+                          <v-col
+                            cols="12"
+                            class="pb-0"
+                          >
+                            <div
+                              class="d-flex justify-space-between align-center mt-2"
+                              style="height: 40px;"
+                            >
+                              <span class="text-subtitle-2 text-grey-darken-1">成本 {{ index + 1 }}</span>
+                              <v-btn
+                                v-if="index > 0"
+                                icon="mdi-close"
+                                color="red-darken-1"
+                                size="small"
+                                variant="plain"
+                                :disabled="isViewing"
+                                @click="removeCost(index)"
+                              />
+                            </div>
+                          </v-col>
+                          <v-col
+                            cols="12"
+                            lg="4"
+                            class="pb-0"
+                          >
+                            <v-text-field
+                              :model-value="cost.costName"
+                              label="成本名稱"
+                              variant="outlined"
+                              density="compact"
+                              class="mb-1"
+                              clearable
+                              @update:model-value="v => updateCostField(index, 'costName', v)"
+                            />
+                          </v-col>
+                          <v-col
+                            cols="12"
+                            lg="4"
+                            class="pb-0"
+                          >
+                            <v-text-field
+                              :model-value="cost.costAmount"
+                              label="成本費用"
+                              type="number"
+                              variant="outlined"
+                              density="compact"
+                              class="mb-1"
+                              clearable
+                              @update:model-value="v => updateCostField(index, 'costAmount', Number(v))"
+                            />
+                          </v-col>
+                          <v-col
+                            cols="12"
+                            lg="4"
+                            class="pb-0"
+                          >
+                            <v-text-field
+                              :model-value="cost.remark"
+                              label="備註"
+                              variant="outlined"
+                              density="compact"
+                              class="mb-1"
+                              clearable
+                              @update:model-value="v => updateCostField(index, 'remark', v)"
+                            />
+                          </v-col>
+                        </v-row>
+                      </div>
+                    </v-expand-transition>
+                  </v-col>
+                </v-row>
+              </v-col>
             </v-row>
           </v-col>
         </v-row>
@@ -1331,6 +1432,45 @@ const fillTotalAmount = () => {
   }, 0) * 1.05);
   updateContractField('page1.totalAmount', totalAmount);
 };
+
+const addCost = () => {
+  const newValue = { ...props.modelValue }
+  if (!Array.isArray(newValue.costs)) {
+    newValue.costs = []
+  }
+  newValue.costs.push({
+    costName: '',
+    costAmount: 0,
+    remark: ''
+  })
+  emit('update:modelValue', newValue)
+}
+
+const removeCost = (index) => {
+  const newValue = { ...props.modelValue }
+  if (!Array.isArray(newValue.costs)) {
+    newValue.costs = []
+    return
+  }
+  newValue.costs.splice(index, 1)
+  emit('update:modelValue', newValue)
+}
+
+const updateCostField = (index, field, value) => {
+  const newValue = { ...props.modelValue }
+  if (!Array.isArray(newValue.costs)) {
+    newValue.costs = []
+  }
+  if (!newValue.costs[index]) {
+    newValue.costs[index] = {
+      costName: '',
+      costAmount: 0,
+      remark: ''
+    }
+  }
+  newValue.costs[index][field] = value
+  emit('update:modelValue', newValue)
+}
 
 defineExpose({
   validate
