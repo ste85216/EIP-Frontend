@@ -355,22 +355,27 @@
   <v-dialog
     v-model="showDefaultPasswordDialog"
     persistent
-    max-width="370"
+    max-width="380"
   >
     <v-card class="rounded-lg px-7 pt-7 pb-5">
       <div class="card-title mb-4">
-        修改預設密碼提醒
+        請立即修改密碼
       </div>
       <v-card-text class="px-0">
-        <p>為了您的帳戶安全，建議您修改預設密碼。</p>
-        <p class="mt-2">
+        <v-alert
+          type="warning"
+          color="red-darken-1"
+          variant="tonal"
+          class="mb-0"
+        >
+          為了您的帳戶安全，建議修改預設密碼。<br>
           是否要立即修改密碼？
-        </p>
+        </v-alert>
       </v-card-text>
       <v-card-actions class="pa-0">
         <v-spacer />
         <v-btn
-          color="grey-darken-1"
+          color="red-darken-1"
           variant="outlined"
           @click="showDefaultPasswordDialog = false"
         >
@@ -632,6 +637,13 @@ watch(() => user.avatar, (newAvatar) => {
 <style lang="scss" scoped>
 @use '@/styles/_rwd' as rwd;
 @use '@/styles/settings' as *;
+
+.v-alert {
+  font-size: 0.96rem;
+  :deep(.v-icon) {
+    font-size: 22px !important;
+  }
+}
 
 .v-col-sm-12 {
   font-size: 13px;

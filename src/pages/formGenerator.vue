@@ -207,7 +207,7 @@
           <v-col cols="12">
             <div class="card-title px-6 pt-6 text-grey-darken-3 d-flex justify-space-between">
               <div>
-                《 預覽及下載 》
+                《 預覽及匯出 》
                 <span class="text-grey font-weight-medium">
                   (&nbsp; {{ 
                     isViewing ? '查閱模式' : 
@@ -2774,21 +2774,21 @@ const handleExportReport = async () => {
       const content = document.createElement('div')
       content.innerHTML = `
         <div style="padding: 20px;">
-          <div style="text-align: center; margin-bottom: 20px; font-size: 17px; font-weight: bold;">
+          <div style="text-align: center; margin-bottom: 20px; font-size: 16px; font-weight: bold;">
             ${formTemplates.value.find(t => t._id === reportDialog.value.template)?.name || ''} - 統計報表
           </div>
-          <p style="margin-bottom: 16px; font-size: 14px;">
+          <p style="margin-bottom: 16px; font-size: 12px;">
             統計期間：${formatDate(reportDialog.value.dateRange[0])} ~ ${formatDate(reportDialog.value.dateRange[reportDialog.value.dateRange.length - 1])}
           </p>
-          <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
             <thead>
               <tr>
-                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">單號</th>
-                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">報價日期</th>
-                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">客戶</th>
-                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">總金額 (含稅)</th>
-                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; background-color: #f5f5f5; text-align: center;">成本</th>
-                <th style="border: 1px solid #ddd; border-bottom: none; padding: 8px; background-color: #f5f5f5; text-align: center;">實際收入</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; background-color: #f5f5f5; text-align: center;">單號</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; background-color: #f5f5f5; text-align: center;">報價日期</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; background-color: #f5f5f5; text-align: center;">客戶</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; background-color: #f5f5f5; text-align: center;">總金額 (含稅)</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; background-color: #f5f5f5; text-align: center;">成本</th>
+                <th style="border: 1px solid #ddd; border-bottom: none; padding: 4px; background-color: #f5f5f5; text-align: center;">實際收入</th>
               </tr>
             </thead>
             <tbody>
@@ -2806,22 +2806,22 @@ const handleExportReport = async () => {
 
                 return `
                   <tr>
-                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">${form.formNumber}</td>
-                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">${formatDate(form.formData.date)}</td>
-                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">${form.formData.customerName || '-'}</td>
-                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">$ ${total.toLocaleString()}</td>
-                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 8px; text-align: center;">$ ${cost.toLocaleString()}</td>
-                    <td style="border: 1px solid #ddd; border-bottom: none; padding: 8px; text-align: center;">$ ${income.toLocaleString()}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; text-align: center;">${form.formNumber}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; text-align: center;">${formatDate(form.formData.date)}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; text-align: center;">${form.formData.customerName || '-'}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; text-align: center;">$ ${total.toLocaleString()}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; border-right: none; padding: 4px; text-align: center;">$ ${cost.toLocaleString()}</td>
+                    <td style="border: 1px solid #ddd; border-bottom: none; padding: 4px; text-align: center;">$ ${income.toLocaleString()}</td>
                   </tr>
                 `
               }).join('')}
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="3" style="border: 1px solid #ddd; border-right: none; padding: 8px; font-weight: bold; background-color: #f5f5f5; text-align: center;">總計</td>
-                <td style="border: 1px solid #ddd; border-right: none; padding: 8px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalAmount.toLocaleString()}</td>
-                <td style="border: 1px solid #ddd; border-right: none; padding: 8px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalCost.toLocaleString()}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalIncome.toLocaleString()}</td>
+                <td colspan="3" style="border: 1px solid #ddd; border-right: none; padding: 4px; font-weight: bold; background-color: #f5f5f5; text-align: center;">總計</td>
+                <td style="border: 1px solid #ddd; border-right: none; padding: 4px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalAmount.toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; border-right: none; padding: 4px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalCost.toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 4px; text-align: center; font-weight: bold; background-color: #f5f5f5;">$ ${totalIncome.toLocaleString()}</td>
               </tr>
             </tfoot>
           </table>
