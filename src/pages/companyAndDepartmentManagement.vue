@@ -194,10 +194,10 @@
     <v-dialog
       v-model="companyDialog.open"
       persistent
-      max-width="960"
+      max-width="940"
     >
-      <v-card class="rounded-lg px-8 py-4">
-        <div class="card-title px-2 pb-2 d-flex justify-space-between align-center">
+      <v-card class="rounded-lg ps-8 pe-4 py-4">
+        <div class="card-title pb-2 d-flex justify-space-between align-center">
           公司管理
           <v-btn
             icon="mdi-close"
@@ -342,7 +342,6 @@
               variant="outlined"
               density="compact"
               class="mb-4"
-              readonly
             />
             <v-text-field
               v-model="editCompanyDialog.name"
@@ -565,7 +564,7 @@
     <v-dialog
       v-model="editLocationDialog.open"
       persistent
-      width="360"
+      width="400"
     >
       <v-card class="rounded-lg px-4 pt-7 pb-6">
         <v-form @submit.prevent="submitEditLocations">
@@ -980,7 +979,8 @@ const submitEditCompany = async () => {
   isSubmitting.value = true
   try {
     const { data } = await apiAuth.patch(`/companies/${editCompanyDialog.value._id}`, {
-      name: editCompanyDialog.value.name
+      name: editCompanyDialog.value.name,
+      companyId: editCompanyDialog.value.companyId
     })
 
     if (data.success) {

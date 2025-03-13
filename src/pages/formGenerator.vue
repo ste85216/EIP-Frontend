@@ -295,8 +295,8 @@
       persistent
       max-width="880"
     >
-      <v-card class="rounded-lg px-8 py-4">
-        <div class="card-title px-2 pb-2 d-flex justify-space-between align-center">
+      <v-card class="rounded-lg ps-8 pe-4 py-4">
+        <div class="card-title pb-2 d-flex justify-space-between align-center">
           表單模板管理
           <v-btn
             icon="mdi-close"
@@ -550,7 +550,7 @@
     <!-- 表單歷史紀錄對話框 -->
     <v-dialog
       v-model="historyDialog.open"
-      max-width="1500"
+      max-width="1600"
     >
       <v-card
         class="rounded-lg pa-4 "
@@ -708,6 +708,9 @@
                 <th style="height: 36px;">
                   最後編輯者
                 </th>
+                <th style="height: 36px;">
+                  最後編輯時間
+                </th>
                 <th
                   class="text-center"
                   style="height: 36px;"
@@ -728,11 +731,12 @@
                 <td>{{ formatDate(history?.createdAt) }}</td>
                 <td>{{ history?.creator?.name || '未知' }} {{ history?.creator?.role === 2 ? `(${history?.creator?.adminId})` : `(${history?.creator?.userId})` }}</td>
                 <td>{{ history?.lastEditor?.name || '未知' }} {{ history?.lastEditor?.role === 2 ? `(${history?.lastEditor?.adminId})` : `(${history?.lastEditor?.userId})` }}</td>
+                <td>{{ formatDateTime(history?.updatedAt) }}</td>
                 <td class="text-center">
                   <v-btn
                     v-if="(() => {
                       const currentId = user.isAdmin ? user.adminId : user.userId
-                      const creatorId = history.creator?.role === 2 ? history.creator?.adminId : history.creator?.userId
+                      const creatorId = history?.creator?.role === 2 ? history?.creator?.adminId : history?.creator?.userId
                       return creatorId === currentId || user.role === 1 || user.role === 2
                     })()"
                     v-tooltip="'編輯表單'"
@@ -757,7 +761,7 @@
                   <template
                     v-if="(() => {
                       const currentId = user.isAdmin ? user.adminId : user.userId
-                      const creatorId = history.creator?.role === 2 ? history.creator?.adminId : history.creator?.userId
+                      const creatorId = history?.creator?.role === 2 ? history?.creator?.adminId : history?.creator?.userId
                       return creatorId === currentId || user.role === 1 || user.role === 2
                     })()"
                   >
@@ -2889,6 +2893,19 @@ watch(() => reportDialog.value.dateRange, (newVal) => {
     reportDialog.value.dateError = ''
   }
 }, { deep: true })
+
+// 在 script setup 中添加新的格式化函數
+const formatDateTime = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hours = String(d.getHours()).padStart(2, '0')
+  const minutes = String(d.getMinutes()).padStart(2, '0')
+  const seconds = String(d.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
 </script>
 <style lang="scss" scoped>
 .v-table  {
