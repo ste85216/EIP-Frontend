@@ -1751,7 +1751,7 @@
       v-model="showDownloadDialog"
       max-width="640"
     >
-      <v-card class="rounded-lg px-4 pt-5 pb-4">
+      <v-card class="rounded-lg px-5 pt-6 pb-4">
         <v-card-title class="card-title mb-2">
           批次匯出報表
         </v-card-title>
@@ -1873,7 +1873,7 @@
           </v-row>
 
           <!-- 當選擇行銷各線實際支出表時顯示線別和月份選擇 -->
-          <v-row v-if="downloadForm.selectedReports.includes('lineExpense')">
+          <v-row>
             <v-col cols="12">
               <v-divider class="my-4" />
               <div class="sub-title mb-3">
@@ -1891,6 +1891,7 @@
                 clearable
                 multiple
                 select-all
+                :disabled="!downloadForm.selectedReports.includes('lineExpense')"
               >
                 <template #prepend-item>
                   <v-list-item
@@ -1919,6 +1920,7 @@
                     color="deep-purple-darken-2"
                     hide-details
                     density="compact"
+                    :disabled="!downloadForm.selectedReports.includes('lineExpense')"
                     @change="handleSelectAllMonths"
                   />
                 </v-col>
@@ -1935,6 +1937,7 @@
                     color="deep-purple-darken-2"
                     density="compact"
                     hide-details
+                    :disabled="!downloadForm.selectedReports.includes('lineExpense')"
                   />
                 </v-col>
               </v-row>
@@ -1968,7 +1971,6 @@
                 :disabled="!downloadForm.selectedReports.length || (downloadForm.selectedReports.length === 1 && downloadForm.selectedReports[0] === 'charts')"
               />
               <div 
-                v-if="downloadForm.selectedReports.includes('charts')"
                 class="text-caption text-grey mt-2"
               >
                 統計圖表僅支援 PDF 格式
