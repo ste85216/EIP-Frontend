@@ -240,6 +240,9 @@
                     {{ item.department?.name }}
                   </td>
                   <td>
+                    {{ item.employmentType }}
+                  </td>
+                  <td>
                     {{ item.extNumber }}
                   </td>
                   <td>
@@ -593,6 +596,7 @@ const tableHeaders = [
   { title: '姓名', key: 'name', minWidth: '90px', align: 'start', sortable: true },
   { title: '公司', key: 'company.name', minWidth: '90px', align: 'start', sortable: true },
   { title: '部門', key: 'department.name', align: 'start', sortable: true },
+  { title: '聘僱類型', key: 'employmentType', align: 'start', sortable: true },
   { title: '分機號碼', key: 'extNumber', align: 'start', sortable: true },
   { title: '列印編號', key: 'printNumber', align: 'start', sortable: true },
   { title: 'Email', key: 'email', align: 'start', sortable: true },

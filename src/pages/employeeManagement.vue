@@ -311,6 +311,9 @@
                     {{ item.department?.name }}
                   </td>
                   <td>
+                    {{ item.employmentType }}
+                  </td>
+                  <td>
                     {{ item.extNumber }}
                   </td>
                   <td>
@@ -609,6 +612,22 @@
                   density="compact"
                   clearable
                   :disabled="!company.value.value"
+                />
+              </v-col>
+
+              <!-- 聘僱類型 -->
+              <v-col
+                cols="12"
+                sm="4"
+              >
+                <v-select
+                  v-model="employmentType.value.value"
+                  :error-messages="employmentType.errorMessage.value"
+                  :items="employmentTypeOptions"
+                  label="*聘僱類型"
+                  variant="outlined"
+                  density="compact"
+                  clearable
                 />
               </v-col>
 
@@ -1304,6 +1323,7 @@ const tableHeaders = [
   { title: '姓名', key: 'name', minWidth: '90px', align: 'start', sortable: true },
   { title: '公司', key: 'company.name', minWidth: '90px', align: 'start', sortable: true },
   { title: '部門', key: 'department.name', align: 'start', sortable: true },
+  { title: '聘僱類型', key: 'employmentType', align: 'start', sortable: true },
   { title: '分機號碼', key: 'extNumber', align: 'start', sortable: true },
   { title: '列印編號', key: 'printNumber', align: 'start', sortable: true },
   { title: 'Email', key: 'email', align: 'start', sortable: true },
@@ -1605,6 +1625,9 @@ const employeeSchema = computed(() => {
     employmentStatus: yup
       .string()
       .required('請選擇任職狀態'),
+    employmentType: yup
+      .string()
+      .required('請選擇聘僱類型'),
     hireDate: yup
       .date()
       .required('請選擇到職日期'),
@@ -1644,6 +1667,7 @@ const { handleSubmit, isSubmitting, resetForm } = useForm({
     extNumber: '',
     printNumber: '',
     employmentStatus: '在職',
+    employmentType: '正職',
     note: '',
     hireDate: null,
     resignationDate: null,
@@ -1662,6 +1686,7 @@ const employeeCode = useField('employeeCode')
 const extNumber = useField('extNumber')
 const printNumber = useField('printNumber')
 const employmentStatus = useField('employmentStatus')
+const employmentType = useField('employmentType')
 const note = useField('note')
 const employeeId = useField('employeeId')
 const hireDate = useField('hireDate')
@@ -1759,6 +1784,7 @@ const openDialog = async (item) => {
       extNumber.value.value = item.extNumber || ''
       printNumber.value.value = item.printNumber || ''
       employmentStatus.value.value = item.employmentStatus || '在職'
+      employmentType.value.value = item.employmentType || '正職'
       note.value.value = item.note || ''
       if (employeeId.value) {
         employeeId.value.value = item.employeeId || ''
@@ -2092,6 +2118,7 @@ const handleExportExcel = async () => {
           '姓名': employee.name,
           '公司': employee.company?.name || '',
           '部門': employee.department?.name || '',
+          '聘僱類型': employee.employmentType || '正職',
           '分機號碼': employee.extNumber,
           '列印編號': employee.printNumber,
           'Email': employee.email,
@@ -2114,6 +2141,7 @@ const handleExportExcel = async () => {
         '姓名': 15,
         '公司': 20,
         '部門': 20,
+        '聘僱類型': 12,
         '分機號碼': 12,
         '列印編號': 12,
         'Email': 30,
@@ -2302,6 +2330,7 @@ const handleImportExcel = async () => {
             name: row['姓名'],
             company: row['公司'],
             department: row['部門'],
+            employmentType: row['聘僱類型'] || '正職',
             extNumber: row['分機號碼']?.toString(),
             printNumber: row['列印編號']?.toString(),
             email: row['Email'],
@@ -2425,6 +2454,12 @@ const getStatusDateClass = (item) => {
       return 'bg-grey text-white'
   }
 }
+
+const employmentTypeOptions = [
+  { title: '正職', value: '正職' },
+  { title: '非正職', value: '非正職' },
+  { title: '實習生', value: '實習生' }
+]
 </script>
 
 <style lang="scss" scoped>

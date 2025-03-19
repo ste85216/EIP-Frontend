@@ -749,6 +749,7 @@ const fieldTranslations = {
   expenseObject: '報帳對象',
   expenseDate: '報帳日期',
   companyId: '公司編號',
+  employmentType: '聘僱類型'
 }
 
 // 行銷分類類型對應
