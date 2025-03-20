@@ -58,6 +58,44 @@
                     />
                   </v-col>
 
+                  <!-- 聘僱類型 -->
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    lg="12"
+                  >
+                    <v-select
+                      v-model="searchCriteria.employmentType"
+                      :items="employmentTypeOptions"
+                      label="聘僱類型"
+                      item-title="text"
+                      item-value="value"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      clearable
+                    />
+                  </v-col>
+
+                  <!-- 職稱 -->
+                  <v-col
+                    cols="12"
+                    sm="6"
+                    lg="12"
+                  >
+                    <v-select
+                      v-model="searchCriteria.jobTitle"
+                      :items="jobTitleOptions"
+                      label="職稱"
+                      item-title="text"
+                      item-value="value"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      clearable
+                    />
+                  </v-col>
+
                   <!-- 任職狀態 -->
                   <v-col
                     cols="12"
@@ -232,7 +270,53 @@
                     {{ item.employeeCode }}
                   </td>
                   <td>{{ item.employeeId }}</td>
-                  <td>{{ item.name }}</td>
+                  <td>
+                    <v-menu
+                      location="end"
+                      transition="fade-transition"
+                      open-on-hover
+                      close-delay="30"
+                      open-delay="30"
+                      class="pa-0"
+                    >
+                      <template #activator="{ props }">
+                        <div 
+                          v-bind="props"
+                          class="d-flex align-center status-cell"
+                        >
+                          {{ item.name }}
+                        </div>
+                      </template>
+                      <v-card
+                        min-width="130"
+                        class="rounded-lg pa-0 status-card"
+                        elevation="3"
+                      >
+                        <v-card-text class="pa-0">
+                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-1 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-phone
+                            </v-icon>
+                            <span>分機號碼：{{ item.extNumber || '無' }}</span>
+                          </div>
+                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-3 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-printer
+                            </v-icon>
+                            <span>列印編號：{{ item.printNumber || '無' }}</span>
+                          </div>
+                        </v-card-text>
+                      </v-card>
+                    </v-menu>
+                  </td>
                   <td>
                     {{ item.company?.name }}
                   </td>
@@ -243,10 +327,7 @@
                     {{ item.employmentType }}
                   </td>
                   <td>
-                    {{ item.extNumber }}
-                  </td>
-                  <td>
-                    {{ item.printNumber }}
+                    {{ item.jobTitle }}
                   </td>
                   <td>
                     {{ item.email }}
@@ -597,8 +678,7 @@ const tableHeaders = [
   { title: '公司', key: 'company.name', minWidth: '90px', align: 'start', sortable: true },
   { title: '部門', key: 'department.name', align: 'start', sortable: true },
   { title: '聘僱類型', key: 'employmentType', align: 'start', sortable: true },
-  { title: '分機號碼', key: 'extNumber', align: 'start', sortable: true },
-  { title: '列印編號', key: 'printNumber', align: 'start', sortable: true },
+  { title: '職稱', key: 'jobTitle', align: 'start', sortable: true },
   { title: 'Email', key: 'email', align: 'start', sortable: true },
   { title: '狀態', key: 'employmentStatus', width: '100px', align: 'start', sortable: true },
   { title: '備註', key: 'note', minWidth:'160px', align: 'start', sortable: true },
@@ -620,6 +700,8 @@ const departments = ref([])
 const searchCriteria = ref({
   company: '',
   department: '',
+  employmentType: '',
+  jobTitle: '',
   status: '在職',
   dateType: '',
   dateRange: []
@@ -631,6 +713,33 @@ const statusOptions = [
   { title: '離職', value: '離職' },
   { title: '留職停薪', value: '留職停薪' },
   { title: '待入職', value: '待入職' }
+]
+
+// 聘僱類型選項
+const employmentTypeOptions = [
+  { text: '正職', value: '正職' },
+  { text: '非正職', value: '非正職' },
+  { text: '實習生', value: '實習生' }
+]
+
+// 職稱選項
+const jobTitleOptions = [
+  { text: '董事長', value: '董事長' },
+  { text: '總經理', value: '總經理' },
+  { text: '副總經理', value: '副總經理' },
+  { text: '協理', value: '協理' },
+  { text: '經理', value: '經理' },
+  { text: '專案經理', value: '專案經理' },
+  { text: '副理', value: '副理' },
+  { text: '部長', value: '部長' },
+  { text: '財務', value: '財務' },
+  { text: '主任', value: '主任' },
+  { text: '業務', value: '業務' },
+  { text: '業務助理', value: '業務助理' },
+  { text: 'OP', value: 'OP' },
+  { text: 'IT', value: 'IT' },
+  { text: '顧問', value: '顧問' },
+  { text: '其他', value: '其他' }
 ]
 
 // 日期類型選項
@@ -727,6 +836,8 @@ const performSearch = async () => {
       quickSearch: quickSearchText.value,
       company: searchCriteria.value.company,
       department: searchCriteria.value.department,
+      employmentType: searchCriteria.value.employmentType,
+      jobTitle: searchCriteria.value.jobTitle,
       status: searchCriteria.value.status
     }
 
@@ -765,6 +876,8 @@ const resetSearch = () => {
   searchCriteria.value = {
     company: '',
     department: '',
+    employmentType: '',
+    jobTitle: '',
     status: '在職',
     dateType: '',
     dateRange: []
@@ -883,21 +996,6 @@ const getDeviceIcon = (deviceType) => {
   
   return 'mdi-devices'
 }
-
-// const getStatusIcon = (status) => {
-//   switch (status) {
-//     case '在職':
-//       return 'mdi-account-check'
-//     case '離職':
-//       return 'mdi-account-off'
-//     case '留職停薪':
-//       return 'mdi-account-clock'
-//     case '待入職':
-//       return 'mdi-account-arrow-right'
-//     default:
-//       return 'mdi-account'
-//   }
-// }
 
 const getStatusDateIcon = (item) => {
   switch (item.employmentStatus) {

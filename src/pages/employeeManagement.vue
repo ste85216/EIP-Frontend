@@ -60,6 +60,44 @@
                         />
                       </v-col>
 
+                      <!-- 聘僱類型 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                      >
+                        <v-select
+                          v-model="searchCriteria.employmentType"
+                          :items="employmentTypeOptions"
+                          label="聘僱類型"
+                          item-title="text"
+                          item-value="value"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                        />
+                      </v-col>
+
+                      <!-- 職稱 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                      >
+                        <v-select
+                          v-model="searchCriteria.jobTitle"
+                          :items="jobTitleOptions"
+                          label="職稱"
+                          item-title="text"
+                          item-value="value"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                        />
+                      </v-col>
+
                       <!-- 任職狀態 -->
                       <v-col
                         cols="12"
@@ -299,11 +337,55 @@
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
-                  <td>
-                    {{ item.employeeCode }}
-                  </td>
+                  <td>{{ item.employeeCode }}</td>
                   <td>{{ item.employeeId }}</td>
-                  <td>{{ item.name }}</td>
+                  <td>
+                    <v-menu
+                      location="end"
+                      transition="fade-transition"
+                      open-on-hover
+                      close-delay="30"
+                      open-delay="30"
+                      class="pa-0"
+                    >
+                      <template #activator="{ props }">
+                        <div 
+                          v-bind="props"
+                          class="d-flex align-center status-cell"
+                        >
+                          {{ item.name }}
+                        </div>
+                      </template>
+                      <v-card
+                        min-width="130"
+                        class="rounded-lg pa-0 status-card"
+                        elevation="3"
+                      >
+                        <v-card-text class="pa-0">
+                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-1 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-phone
+                            </v-icon>
+                            <span>分機號碼：{{ item.extNumber || '無' }}</span>
+                          </div>
+                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-3 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-printer
+                            </v-icon>
+                            <span>列印編號：{{ item.printNumber || '無' }}</span>
+                          </div>
+                        </v-card-text>
+                      </v-card>
+                    </v-menu>
+                  </td>
                   <td>
                     {{ item.company?.name }}
                   </td>
@@ -314,10 +396,7 @@
                     {{ item.employmentType }}
                   </td>
                   <td>
-                    {{ item.extNumber }}
-                  </td>
-                  <td>
-                    {{ item.printNumber }}
+                    {{ item.jobTitle }}
                   </td>
                   <td>
                     {{ item.email }}
@@ -624,7 +703,27 @@
                   v-model="employmentType.value.value"
                   :error-messages="employmentType.errorMessage.value"
                   :items="employmentTypeOptions"
+                  item-title="text"
+                  item-value="value"
                   label="*聘僱類型"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
+              </v-col>
+
+              <!-- 職稱 -->
+              <v-col
+                cols="12"
+                sm="4"
+              >
+                <v-select
+                  v-model="jobTitle.value.value"
+                  :error-messages="jobTitle.errorMessage.value"
+                  :items="jobTitleOptions"
+                  item-title="text"
+                  item-value="value"
+                  label="*職稱"
                   variant="outlined"
                   density="compact"
                   clearable
@@ -1324,8 +1423,7 @@ const tableHeaders = [
   { title: '公司', key: 'company.name', minWidth: '90px', align: 'start', sortable: true },
   { title: '部門', key: 'department.name', align: 'start', sortable: true },
   { title: '聘僱類型', key: 'employmentType', align: 'start', sortable: true },
-  { title: '分機號碼', key: 'extNumber', align: 'start', sortable: true },
-  { title: '列印編號', key: 'printNumber', align: 'start', sortable: true },
+  { title: '職稱', key: 'jobTitle', align: 'start', sortable: true },
   { title: 'Email', key: 'email', align: 'start', sortable: true },
   { title: '狀態', key: 'employmentStatus', width: '100px', align: 'start', sortable: true },
   { title: '備註', key: 'note', width:'160px', align: 'start', sortable: true },
@@ -1347,6 +1445,8 @@ const departments = ref([])
 const searchCriteria = ref({
   company: '',
   department: '',
+  employmentType: '',
+  jobTitle: '',
   status: '在職',
   dateType: '',
   dateRange: []
@@ -1457,6 +1557,8 @@ const performSearch = async () => {
       quickSearch: quickSearchText.value,
       company: searchCriteria.value.company,
       department: searchCriteria.value.department,
+      employmentType: searchCriteria.value.employmentType,
+      jobTitle: searchCriteria.value.jobTitle,
       status: searchCriteria.value.status
     }
 
@@ -1495,6 +1597,8 @@ const resetSearch = () => {
   searchCriteria.value = {
     company: '',
     department: '',
+    employmentType: '',
+    jobTitle: '',
     status: '在職',
     dateType: '',
     dateRange: []
@@ -1628,6 +1732,9 @@ const employeeSchema = computed(() => {
     employmentType: yup
       .string()
       .required('請選擇聘僱類型'),
+    jobTitle: yup
+      .string()
+      .required('請選擇職稱'),
     hireDate: yup
       .date()
       .required('請選擇到職日期'),
@@ -1668,6 +1775,7 @@ const { handleSubmit, isSubmitting, resetForm } = useForm({
     printNumber: '',
     employmentStatus: '在職',
     employmentType: '正職',
+    jobTitle: '',
     note: '',
     hireDate: null,
     resignationDate: null,
@@ -1687,6 +1795,7 @@ const extNumber = useField('extNumber')
 const printNumber = useField('printNumber')
 const employmentStatus = useField('employmentStatus')
 const employmentType = useField('employmentType')
+const jobTitle = useField('jobTitle')
 const note = useField('note')
 const employeeId = useField('employeeId')
 const hireDate = useField('hireDate')
@@ -1785,6 +1894,7 @@ const openDialog = async (item) => {
       printNumber.value.value = item.printNumber || ''
       employmentStatus.value.value = item.employmentStatus || '在職'
       employmentType.value.value = item.employmentType || '正職'
+      jobTitle.value.value = item.jobTitle || ''
       note.value.value = item.note || ''
       if (employeeId.value) {
         employeeId.value.value = item.employeeId || ''
@@ -2119,6 +2229,7 @@ const handleExportExcel = async () => {
           '公司': employee.company?.name || '',
           '部門': employee.department?.name || '',
           '聘僱類型': employee.employmentType || '正職',
+          '職稱': employee.jobTitle || '',
           '分機號碼': employee.extNumber,
           '列印編號': employee.printNumber,
           'Email': employee.email,
@@ -2142,6 +2253,7 @@ const handleExportExcel = async () => {
         '公司': 20,
         '部門': 20,
         '聘僱類型': 12,
+        '職稱': 12,
         '分機號碼': 12,
         '列印編號': 12,
         'Email': 30,
@@ -2151,7 +2263,7 @@ const handleExportExcel = async () => {
         '離職日期': 15,
         '留停開始日期': 15,
         '留停復職日期': 15,
-        '備註': 30
+        '備註': 40
       }
 
       ws['!cols'] = Object.values(colWidths).map(width => ({ wch: width }))
@@ -2331,6 +2443,7 @@ const handleImportExcel = async () => {
             company: row['公司'],
             department: row['部門'],
             employmentType: row['聘僱類型'] || '正職',
+            jobTitle: row['職稱'] || '',
             extNumber: row['分機號碼']?.toString(),
             printNumber: row['列印編號']?.toString(),
             email: row['Email'],
@@ -2456,9 +2569,28 @@ const getStatusDateClass = (item) => {
 }
 
 const employmentTypeOptions = [
-  { title: '正職', value: '正職' },
-  { title: '非正職', value: '非正職' },
-  { title: '實習生', value: '實習生' }
+  { text: '正職', value: '正職' },
+  { text: '非正職', value: '非正職' },
+  { text: '實習生', value: '實習生' }
+]
+
+const jobTitleOptions = [
+  { text: '董事長', value: '董事長' },
+  { text: '總經理', value: '總經理' },
+  { text: '副總經理', value: '副總經理' },
+  { text: '協理', value: '協理' },
+  { text: '經理', value: '經理' },
+  { text: '專案經理', value: '專案經理' },
+  { text: '副理', value: '副理' },
+  { text: '部長', value: '部長' },
+  { text: '財務', value: '財務' },
+  { text: '主任', value: '主任' },
+  { text: '業務', value: '業務' },
+  { text: '業務助理', value: '業務助理' },
+  { text: 'OP', value: 'OP' },
+  { text: 'IT', value: 'IT' },
+  { text: '顧問', value: '顧問' },
+  { text: '其他', value: '其他' }
 ]
 </script>
 
