@@ -366,7 +366,7 @@
                 />
               </v-col>
 
-              
+
 
               <v-col cols="12">
                 <v-textarea
@@ -447,7 +447,6 @@
               <v-btn
                 color="grey"
                 variant="outlined"
-                size="small"
                 @click="closeExportDialog"
               >
                 取消
@@ -455,7 +454,6 @@
               <v-btn
                 color="teal-darken-1"
                 variant="outlined"
-                size="small"
                 type="submit"
                 :loading="isExporting"
                 class="ms-2"
@@ -613,10 +611,10 @@ const loadStats = async () => {
     if (filters.value.maintenanceDateRange && filters.value.maintenanceDateRange.length > 0) {
       const startDate = new Date(filters.value.maintenanceDateRange[0])
       startDate.setHours(0, 0, 0, 0)
-      
+
       const endDate = new Date(filters.value.maintenanceDateRange[filters.value.maintenanceDateRange.length - 1])
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.maintenanceDateStart = startDate.toISOString()
       params.maintenanceDateEnd = endDate.toISOString()
     }
@@ -667,10 +665,10 @@ const tableLoadItems = async (loading = true) => {
     if (filters.value.maintenanceDateRange && filters.value.maintenanceDateRange.length > 0) {
       const startDate = new Date(filters.value.maintenanceDateRange[0])
       startDate.setHours(0, 0, 0, 0)
-      
+
       const endDate = new Date(filters.value.maintenanceDateRange[filters.value.maintenanceDateRange.length - 1])
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.maintenanceDateStart = startDate.toISOString()
       params.maintenanceDateEnd = endDate.toISOString()
     }
@@ -861,7 +859,7 @@ const submitMaintenance = handleSubmit(async (values) => {
 
     const submitData = {
       ...values,
-      maintenanceDate: values.maintenanceDate instanceof Date 
+      maintenanceDate: values.maintenanceDate instanceof Date
         ? formatDate(values.maintenanceDate)
         : values.maintenanceDate
     }
@@ -1017,20 +1015,20 @@ const handleExportPDF = async () => {
 
     // 獲取統計數據
     const params = {}
-    
+
     if (exportDialog.value.dateRange && exportDialog.value.dateRange.length > 0) {
       const startDate = new Date(exportDialog.value.dateRange[0])
       startDate.setHours(0, 0, 0, 0)
-      
+
       const endDate = new Date(exportDialog.value.dateRange[exportDialog.value.dateRange.length - 1])
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.maintenanceDateStart = startDate.toISOString()
       params.maintenanceDateEnd = endDate.toISOString()
     }
 
     const { data } = await apiAuth.get('/hardware/maintenance-records/export-stats', { params })
-    
+
     if (data.success) {
       // 計算總維修次數
       const totalCount = data.result.reduce((acc, curr) => acc + curr.count, 0)
@@ -1072,16 +1070,16 @@ const handleExportPDF = async () => {
         margin: 10,
         filename: '硬體維修記錄統計報表.pdf',
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
+        html2canvas: {
           scale: 6,
           logging: false,
           useCORS: true,
           allowTaint: true,
           removeContainer: true
         },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
           orientation: 'portrait',
           compress: true
         }
@@ -1090,7 +1088,7 @@ const handleExportPDF = async () => {
       // 生成 PDF
       const pdf = html2pdf().set(options)
       await pdf.from(content).save()
-      
+
       closeExportDialog()
       createSnackbar({
         text: 'PDF 匯出成功',

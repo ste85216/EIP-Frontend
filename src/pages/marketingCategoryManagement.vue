@@ -6,7 +6,7 @@
       class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white"
     >
       <!-- 標題區塊 -->
-      <v-col 
+      <v-col
         cols="12"
         class="ps-3 pb-3 d-flex align-center"
       >
@@ -227,7 +227,7 @@
                     :key="item._id"
                   >
                     <template #prepend>
-                      <div 
+                      <div
                         class="channel-name"
                         :style="getChannelTypeStyle(item.parentId?.name)"
                       >
@@ -307,13 +307,13 @@
                     :key="item._id"
                   >
                     <template #prepend>
-                      <div 
+                      <div
                         class="channel-name"
                         :style="getChannelTypeStyle(item.parentId?.parentId?.name)"
                       >
                         {{ item.parentId?.parentId?.name || '無' }}
                       </div>
-                      <div 
+                      <div
                         class="platform-name"
                         :style="getPlatformStyle(item.parentId?.name)"
                       >
@@ -465,7 +465,7 @@
                 class="me-2"
                 @click="openBatchDialog"
               >
-                <v-icon 
+                <v-icon
                   size="14"
                 >
                   mdi-plus-box-multiple-outline
@@ -478,7 +478,7 @@
                 size="22"
                 @click="addNewItem"
               >
-                <v-icon 
+                <v-icon
                   size="14"
                 >
                   mdi-plus
@@ -549,7 +549,7 @@
                     />
                   </v-col>
                 </template>
-                <v-col 
+                <v-col
                   v-for="(item, index) in newItems"
                   :key="index"
                   cols="12"
@@ -735,7 +735,6 @@
             <v-btn
               color="grey-darken-1"
               variant="outlined"
-              size="small"
               @click="closeBatchDialog"
             >
               取消
@@ -744,7 +743,6 @@
               color="teal-darken-1"
               variant="outlined"
               class="ms-1"
-              size="small"
               type="submit"
             >
               確定
@@ -820,13 +818,13 @@ const { value: orderValue, errorMessage: orderError } = useField('order')
 // 驗證新增項目
 const validateNewItems = () => {
   let hasError = false
-  
+
   // 驗證父層選擇
   if (dialog.value.type === 2 && !selectedChannel.value) {
     channelError.value = '請選擇廣告渠道'
     hasError = true
   }
-  
+
   if (dialog.value.type === 4) {
     if (!selectedChannel.value) {
       channelError.value = '請選擇廣告渠道'
@@ -846,7 +844,7 @@ const validateNewItems = () => {
       hasError = true
     }
   })
-  
+
   return !hasError
 }
 
@@ -897,7 +895,7 @@ const handleChannelChange = async () => {
     if (!selectedChannel.value) return
 
     const { data } = await apiAuth.get('/marketing/categories/options', {
-      params: { 
+      params: {
         type: 2,
         parentId: selectedChannel.value
       }
@@ -919,11 +917,11 @@ const getDialogTitle = computed(() => {
 const hasChanges = computed(() => {
   if (!dialog.value.id) return true
   if (!originalData.value) return false
-  
+
   // 基本變更檢查
   const basicChanges = originalData.value.name !== nameValue.value ||
                       originalData.value.order !== parseInt(orderValue.value)
-  
+
   // 父層關係變更檢查
   let parentChanges = false
   if (dialog.value.type === 2) {
@@ -933,7 +931,7 @@ const hasChanges = computed(() => {
     const originalParentId = originalData.value.parentId?._id || originalData.value.parentId
     parentChanges = originalParentId !== selectedPlatform.value
   }
-  
+
   return basicChanges || parentChanges
 })
 
@@ -969,7 +967,7 @@ const loadData = async (type = null) => {
       const params = {
         [`page${type}`]: pages.value[type]
       }
-      
+
       if (quickSearchText.value) {
         params.quickSearch = quickSearchText.value
       }
@@ -1009,7 +1007,7 @@ const loadData = async (type = null) => {
         page3: pages.value[3],
         page4: pages.value[4]
       }
-      
+
       if (quickSearchText.value) {
         params.quickSearch = quickSearchText.value
       }
@@ -1078,19 +1076,19 @@ const editItem = async (item) => {
       console.error('無效的項目:', item)
       return
     }
-    
+
     // 先打開對話框
     dialog.value = {
       open: true,
       id: item._id,
       type: item.type
     }
-    
+
     // 設置基本資料
     nameValue.value = item.name || ''
     orderValue.value = item.order || 1
     originalData.value = { ...item }
-    
+
     // 如果是平台或平台細項，載入並設置父層選項
     if (item.type === 2 || item.type === 4) {
       isLoadingOptions.value = true
@@ -1103,31 +1101,31 @@ const editItem = async (item) => {
         } else if (item.type === 4) {
           // 獲取平台 ID
           const platformId = item.parentId?._id || item.parentId
-          
+
           // 並行載入廣告渠道選項和平台資訊
           const [channelResponse, platformResponse] = await Promise.all([
             apiAuth.get('/marketing/categories/options', { params: { type: 1 } }),
             apiAuth.get('/marketing/categories/options', { params: { type: 2, id: platformId } })
           ])
-          
+
           // 設置廣告渠道選項
           if (channelResponse.data.success) {
             channelOptions.value = channelResponse.data.result
           }
-          
+
           // 設置平台相關資訊
           if (platformResponse.data.success && platformResponse.data.result.length > 0) {
             const platform = platformResponse.data.result[0]
             selectedChannel.value = platform.parentId?._id || platform.parentId
-            
+
             // 直接載入平台選項
             const platformOptionsResponse = await apiAuth.get('/marketing/categories/options', {
-              params: { 
+              params: {
                 type: 2,
                 parentId: selectedChannel.value
               }
             })
-            
+
             if (platformOptionsResponse.data.success) {
               platformOptions.value = platformOptionsResponse.data.result
               selectedPlatform.value = platformId
@@ -1173,7 +1171,7 @@ const closeDialog = () => {
 const submit = async (e) => {
   e.preventDefault()
   if (isSubmitting.value) return
-  
+
   try {
     isSubmitting.value = true
 
@@ -1224,7 +1222,7 @@ const submit = async (e) => {
 
       // 過濾掉空白項目
       const validItems = newItems.value.filter(item => item.name.trim())
-      
+
       if (validItems.length === 0) {
         isSubmitting.value = false
         return
@@ -1235,7 +1233,7 @@ const submit = async (e) => {
         items: validItems.map(item => ({
           name: item.name.trim(),
           type: dialog.value.type,
-          parentId: dialog.value.type === 2 ? selectedChannel.value : 
+          parentId: dialog.value.type === 2 ? selectedChannel.value :
                    dialog.value.type === 4 ? selectedPlatform.value : null
         }))
       })
@@ -1262,7 +1260,7 @@ const submit = async (e) => {
 
 const deleteCategory = async () => {
   if (!dialog.value.id) return
-  
+
   try {
     const type = dialog.value.type
     await apiAuth.delete(`/marketing/categories/${dialog.value.id}`)
@@ -1356,11 +1354,11 @@ watch(selectedPlatform, (newValue, oldValue) => {
       newValue !== oldValue) { // 確保有變更
     // 自動將排序設為 1
     orderValue.value = '1'
-    
+
     // 顯示提示訊息
     createSnackbar({
       text: '更換平台，排序將自動設為 1，以確保資料正確性',
-      snackbarProps: { 
+      snackbarProps: {
         color: 'info',
         timeout: 5000
       }
@@ -1375,11 +1373,11 @@ watch(selectedChannel, (newValue, oldValue) => {
       newValue !== oldValue) { // 確保有變更
     // 自動將排序設為 1
     orderValue.value = '1'
-    
+
     // 顯示提示訊息
     createSnackbar({
       text: '更換廣告渠道，排序將自動設為 1，以確保資料正確性',
-      snackbarProps: { 
+      snackbarProps: {
         color: 'info',
         timeout: 5000
       }
@@ -1448,13 +1446,13 @@ const channelColorMap = ref(new Map())
 // 修改 getChannelTypeStyle 函數
 const getChannelTypeStyle = (channelName) => {
   if (!channelName) return { backgroundColor: '#757575' }
-  
+
   // 如果這個渠道還沒有對應的顏色，分配一個新的顏色
   if (!channelColorMap.value.has(channelName)) {
     const index = channelColorMap.value.size % channelColors.length
     channelColorMap.value.set(channelName, channelColors[index])
   }
-  
+
   return { backgroundColor: channelColorMap.value.get(channelName) }
 }
 
@@ -1478,13 +1476,13 @@ const platformColorMap = ref(new Map())
 // 添加 getPlatformStyle 函數
 const getPlatformStyle = (platformName) => {
   if (!platformName) return { backgroundColor: '#757575' }
-  
+
   // 如果這個平台還沒有對應的顏色，分配一個新的顏色
   if (!platformColorMap.value.has(platformName)) {
     const index = platformColorMap.value.size % platformColors.length
     platformColorMap.value.set(platformName, platformColors[index])
   }
-  
+
   return { backgroundColor: platformColorMap.value.get(platformName) }
 }
 </script>
@@ -1567,7 +1565,7 @@ const getPlatformStyle = (platformName) => {
 }
 
 .item-container {
-  padding: 10px; 
+  padding: 10px;
   background: #f9f9f9;
   border: 1px solid #a9a9a9;
   border-radius: 4px;

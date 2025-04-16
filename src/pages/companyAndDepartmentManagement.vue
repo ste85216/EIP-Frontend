@@ -264,6 +264,21 @@
                       <v-list-item
                         density="compact"
                         class="ps-2 pe-3 py-0"
+                        @click="openPasswordDialog(company)"
+                      >
+                        <v-icon
+                          icon="mdi-lock"
+                          size="16"
+                          color="teal-darken-2"
+                        />
+                        <span
+                          class="ps-2 text-blue-grey-darken-2"
+                          style="font-size: 14px;"
+                        >管理密碼</span>
+                      </v-list-item>
+                      <v-list-item
+                        density="compact"
+                        class="ps-2 pe-3 py-0"
                         color="red-lighten-1"
                         @click="confirmDeleteCompany(company)"
                       >
@@ -598,7 +613,7 @@
           </div>
           <v-card-text class="mt-3 pa-3">
             <v-row>
-              <v-col 
+              <v-col
                 v-for="(location, index) in editingLocations"
                 :key="index"
                 cols="12"
@@ -659,7 +674,7 @@
                             </v-icon>
                           </v-btn>
                         </div>
-                        
+
                         <v-btn
                           icon
                           variant="text"
@@ -749,6 +764,52 @@
             </v-btn>
           </v-card-actions>
         </v-form>
+      </v-card>
+    </v-dialog>
+
+    <!-- 密碼管理 Dialog -->
+    <v-dialog
+      v-model="passwordDialog.open"
+      persistent
+      max-width="320"
+    >
+      <v-card class="rounded-lg px-4 pt-7 pb-6">
+        <div class="card-title px-4 pb-2">
+          管理公司密碼
+        </div>
+        <v-card-text class="mt-3 pa-3">
+          <v-text-field
+            v-model="passwordDialog.newPassword"
+            label="新密碼"
+            type="password"
+            variant="outlined"
+            density="compact"
+            :error-messages="passwordDialog.error"
+            hide-details="auto"
+          />
+        </v-card-text>
+        <v-card-actions class="px-3 pt-4">
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            variant="outlined"
+            :size="buttonSize"
+            @click="closePasswordDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            :size="buttonSize"
+            :loading="isSubmitting"
+            :disabled="!passwordDialog.newPassword"
+            class="ms-2"
+            @click="updateCompanyPassword"
+          >
+            更新
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
@@ -1142,7 +1203,7 @@ const submitDepartment = async () => {
 
   // 收集所有錯誤
   let hasError = false
-  
+
   // 表單驗證
   if (!departmentForm.value.company) {
     departmentErrors.value.company = ['請選擇公司']
@@ -1291,7 +1352,7 @@ const originalLocations = ref([])
 
 const hasLocationChanges = computed(() => {
   if (editingLocations.value.length !== originalLocations.value.length) return true
-  return editingLocations.value.some((loc, index) => 
+  return editingLocations.value.some((loc, index) =>
     loc.locationName !== originalLocations.value[index]?.locationName
   )
 })
@@ -1332,10 +1393,10 @@ const closeEditLocationDialog = () => {
 
 const addEditingLocation = () => {
   const newOrder = editingLocations.value.length
-  editingLocations.value.push({ 
-    locationName: '', 
+  editingLocations.value.push({
+    locationName: '',
     order: newOrder,
-    error: '' 
+    error: ''
   })
 }
 
@@ -1357,7 +1418,7 @@ const validateLocations = (items) => {
 
 const submitEditLocations = async () => {
   if (isSubmitting.value) return
-  
+
   try {
     isSubmitting.value = true
 
@@ -1460,7 +1521,7 @@ const handleBatchLocationAdd = () => {
 
 const moveLocation = (index, direction) => {
   if (
-    (direction === 'up' && index === 0) || 
+    (direction === 'up' && index === 0) ||
     (direction === 'down' && index === editingLocations.value.length - 1)
   ) {
     return
@@ -1470,6 +1531,57 @@ const moveLocation = (index, direction) => {
   const temp = { ...editingLocations.value[index] }
   editingLocations.value[index] = { ...editingLocations.value[newIndex], order: temp.order }
   editingLocations.value[newIndex] = { ...temp, order: editingLocations.value[index].order }
+}
+
+// 在 script setup 中添加
+const passwordDialog = ref({
+  open: false,
+  companyId: '',
+  companyName: '',
+  newPassword: '',
+  error: ''
+})
+
+const openPasswordDialog = (company) => {
+  passwordDialog.value = {
+    open: true,
+    companyId: company._id,
+    companyName: company.name,
+    newPassword: '',
+    error: ''
+  }
+}
+
+const closePasswordDialog = () => {
+  passwordDialog.value = {
+    open: false,
+    companyId: '',
+    companyName: '',
+    newPassword: '',
+    error: ''
+  }
+}
+
+const updateCompanyPassword = async () => {
+  if (!passwordDialog.value.newPassword) return
+
+  isSubmitting.value = true
+  try {
+    await apiAuth.patch(`/companies/${passwordDialog.value.companyId}/statistics-password`, {
+      statisticsPassword: passwordDialog.value.newPassword
+    })
+
+    createSnackbar({
+      text: '密碼更新成功',
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+
+    closePasswordDialog()
+  } catch (error) {
+    passwordDialog.value.error = error?.response?.data?.message || '密碼更新失敗'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -1481,7 +1593,7 @@ const moveLocation = (index, direction) => {
 }
 
 .item-container {
-  padding: 10px; 
+  padding: 10px;
   background: #f9f9f9;
   border: 1px solid #a9a9a9;
   border-radius: 4px;

@@ -13,12 +13,13 @@
       <v-card-text>
         <div v-html="message" />
       </v-card-text>
-      <v-card-actions class="me-4 mb-2">
+      <v-card-actions class="mx-5 mb-2">
         <v-spacer />
         <v-btn
           :size="cancelButtonSize"
           :color="cancelButtonColor"
           variant="outlined"
+          class="me-1"
           @click="cancel"
         >
           {{ cancelButtonText }}
@@ -71,11 +72,11 @@ const props = defineProps({
   },
   cancelButtonSize: {
     type: String,
-    default: 'small' // 取消按紐預設大小
+    default: 'default' // 取消按紐預設大小
   },
   confirmButtonSize: {
     type: String,
-    default: 'small' // 確認按紐預設大小
+    default: 'default' // 確認按紐預設大小
   }
 })
 

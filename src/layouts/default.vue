@@ -622,6 +622,11 @@ const userItems = [
     text: '公司員工列表',
     icon: 'mdi-account-details',
   }
+  // {
+  //   to: '/orderTogether',
+  //   text: '訂餐趣',
+  //   icon: 'mdi-food-fork-drink',
+  // }
 ]
 
 const cogItems = [
@@ -668,6 +673,18 @@ const cogItems = [
         roles: ['ADMIN','MANAGER', 'IT']
       }
     ]
+  },
+  {
+    to: '/lineCategoryManagement',
+    text: '線別分類管理',
+    icon: 'mdi-shape-plus-outline',
+    roles: ['ADMIN', 'MANAGER']
+  },
+  {
+    to: '/B2CStatistics',
+    text: '直客詢問統計表',
+    icon: 'mdi-account-question',
+    roles: ['ADMIN', 'MANAGER', 'USER'],
   }
 ]
 
@@ -718,7 +735,7 @@ const adminItems = [
     icon: 'mdi-account-cog',
     roles: ['ADMIN']
   },
-  
+
   {
     to: '/auditLog',
     text: '異動紀錄',
@@ -889,7 +906,7 @@ watch(() => route.path, (newPath) => {
       openedGroups.value.push('行銷費用管理')
     }
   }
-  
+
   if (newPath.includes('/employee') || newPath.includes('/companyAndDepartment')) {
     if (!openedGroups.value.includes('人事管理')) {
       openedGroups.value.push('人事管理')

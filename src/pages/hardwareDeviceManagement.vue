@@ -261,7 +261,7 @@
                   class="elevation-4 rounded-lg py-5 px-4 px-sm-2 px-xl-4"
                 >
                   <v-card-title class="font-weight-bold d-flex justify-space-between mb-2">
-                    <span>匯入 / 匯出 Excel</span> 
+                    <span>匯入 / 匯出 Excel</span>
                     <v-btn
                       v-tooltip:start="'下載範例檔案'"
                       icon
@@ -293,7 +293,7 @@
                       <v-col
                         cols="6"
                       >
-                        <v-btn 
+                        <v-btn
                           prepend-icon="mdi-file-export"
                           color="deep-orange-darken-1"
                           block
@@ -401,7 +401,7 @@
                         class="pa-0"
                       >
                         <template #activator="{ props }">
-                          <div 
+                          <div
                             v-bind="props"
                             class="d-flex align-center status-cell"
                           >
@@ -443,7 +443,7 @@
                         class="pa-0"
                       >
                         <template #activator="{ props }">
-                          <div 
+                          <div
                             v-bind="props"
                             class="d-flex align-center status-cell"
                           >
@@ -486,7 +486,7 @@
                         class="pa-0"
                       >
                         <template #activator="{ props }">
-                          <div 
+                          <div
                             v-bind="props"
                             class="d-flex align-center status-cell pe-4"
                           >
@@ -544,7 +544,7 @@
                       class="pa-0"
                     >
                       <template #activator="{ props }">
-                        <div 
+                        <div
                           v-bind="props"
                           class="d-flex align-center status-cell"
                         >
@@ -604,7 +604,7 @@
                         :close-on-back="true"
                       >
                         <template #activator="{ props }">
-                          <div 
+                          <div
                             v-bind="props"
                             class="note-cell"
                           >
@@ -715,7 +715,7 @@
               width="8"
             />
           </div>
-          
+
           <!-- 表單內容 -->
           <v-form
             v-else
@@ -731,7 +731,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider 
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -751,7 +751,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider  
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -891,7 +891,7 @@
                   clearable
                 />
               </v-col>
-              
+
               <!-- MAC -->
               <v-col
                 cols="12"
@@ -922,7 +922,7 @@
                 />
               </v-col>
 
-              
+
               <!-- 進貨日期 -->
               <v-col
                 cols="12"
@@ -969,7 +969,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider 
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -989,7 +989,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider  
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -1055,7 +1055,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider 
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -1075,7 +1075,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider  
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -1509,17 +1509,17 @@ const expenseStatusOptions = [
 // 響應式表格標頭
 const filteredHeaders = computed(() => {
   if (!smAndUp.value) {
-    return tableHeaders.filter(header => 
+    return tableHeaders.filter(header =>
       ['deviceName', 'user.name', 'stockStatus', 'actions'].includes(header.key)
     )
   }
   if (!mdAndUp.value) {
-    return tableHeaders.filter(header => 
+    return tableHeaders.filter(header =>
       !['type.name', 'purchaseDate'].includes(header.key)
     )
   }
   if (!xlAndUp.value) {
-    return tableHeaders.filter(header => 
+    return tableHeaders.filter(header =>
       header.key !== 'note'
     )
   }
@@ -1767,15 +1767,15 @@ const performSearch = async () => {
     }
 
     // 處理日期搜尋
-    if (searchCriteria.value.dateType && 
-        Array.isArray(searchCriteria.value.dateRange) && 
+    if (searchCriteria.value.dateType &&
+        Array.isArray(searchCriteria.value.dateRange) &&
         searchCriteria.value.dateRange.length > 0) {
       const startDate = new Date(searchCriteria.value.dateRange[0])
       const endDate = new Date(searchCriteria.value.dateRange[searchCriteria.value.dateRange.length - 1])
-      
+
       startDate.setHours(0, 0, 0, 0)
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.dateType = searchCriteria.value.dateType
       params.dateStart = startDate.toISOString()
       params.dateEnd = endDate.toISOString()
@@ -1875,7 +1875,7 @@ const handleEmployeeSearch = debounce(async (search) => {
 
   try {
     const { data } = await apiAuth.get('/employees/suggestions', {
-      params: { 
+      params: {
         search,
         all: true,
         itemsPerPage: 9999
@@ -1909,7 +1909,7 @@ const clearEmployeeSearch = () => {
   } else if (searchCriteria.value) {
     searchCriteria.value.user = null
   }
-  
+
   // 重置對應的員工列表
   const isFromDialog = !!dialog.value.open
   if (isFromDialog) {
@@ -1990,7 +1990,7 @@ const openDialog = async (item) => {
       IPAddress.value.value = item.IPAddress || ''
       user.value.value = item.user?._id || ''
       company.value.value = item.company?._id || ''
-      
+
       // 如果有公司，載入地點列表並設置地點值
       if (item.company?._id) {
         await handleCompanyChange(item.company._id)
@@ -1999,7 +1999,7 @@ const openDialog = async (item) => {
           location.value.value = item.location._id || item.location
         }
       }
-      
+
       stockStatus.value.value = item.stockStatus
       office2021Account.value.value = item.office2021Account || ''
       office365Account.value.value = item.office365Account || ''
@@ -2063,7 +2063,7 @@ const copyItem = async (item) => {
     }
 
     const fullItem = data.result
-    
+
     // 複製所有欄位，除了序號
     type.value.value = fullItem.type?._id || ''
     purchaseDate.value.value = fullItem.purchaseDate ? new Date(fullItem.purchaseDate) : null
@@ -2074,7 +2074,7 @@ const copyItem = async (item) => {
     IPAddress.value.value = fullItem.IPAddress || ''
     user.value.value = fullItem.user?._id || ''
     company.value.value = fullItem.company?._id || ''
-    
+
     // 如果有公司，載入地點列表
     if (fullItem.company?._id) {
       await handleCompanyChange(fullItem.company._id)
@@ -2082,7 +2082,7 @@ const copyItem = async (item) => {
         location.value.value = fullItem.location._id || fullItem.location
       }
     }
-    
+
     stockStatus.value.value = fullItem.stockStatus ?? true
     office2021Account.value.value = fullItem.office2021Account || ''
     office365Account.value.value = fullItem.office365Account || ''
@@ -2095,7 +2095,7 @@ const copyItem = async (item) => {
     // 顯示提示訊息
     createSnackbar({
       text: '請輸入新的序號',
-      snackbarProps: { 
+      snackbarProps: {
         color: 'warning',
         timeout: 4000
       }
@@ -2153,7 +2153,7 @@ const submitDevice = handleSubmit(async (values) => {
   } catch (error) {
     const errorMessage = error?.response?.data?.message
     const errorField = error?.response?.data?.field
-    
+
     // 顯示錯誤訊息
     createSnackbar({
       text: errorMessage || '操作失敗',
@@ -2188,9 +2188,9 @@ const submitDevice = handleSubmit(async (values) => {
 const handleCompanyChange = async (companyId) => {
   location.value.value = ''
   locations.value = []
-  
+
   if (!companyId) return
-  
+
   try {
     const { data } = await apiAuth.get(`/companies/${companyId}`)
     if (data.success) {
@@ -2209,9 +2209,9 @@ const handleCompanyChange = async (companyId) => {
 const handleSearchCompanyChange = async (companyId) => {
   searchCriteria.value.location = ''
   searchLocations.value = []
-  
+
   if (!companyId) return
-  
+
   try {
     const { data } = await apiAuth.get(`/companies/${companyId}`)
     if (data.success) {
@@ -2270,7 +2270,7 @@ const handleExportExcel = async () => {
 
     // 呼叫 API 取得資料
     const { data } = await apiAuth.get('/hardware/devices/export', { params })
-    
+
     if (data.success) {
       // 載入 XLSX
       const XLSX = await import('xlsx')
@@ -2329,7 +2329,7 @@ const handleExportExcel = async () => {
       XLSX.utils.book_append_sheet(wb, ws, '硬體設備資料')
 
       // 生成檔案並下載
-      const fileName = exportDialog.value.type === 'all' 
+      const fileName = exportDialog.value.type === 'all'
         ? '所有硬體設備資料清單.xlsx'
         : `${companies.value.find(c => c._id === exportDialog.value.company)?.name}硬體設備資料清單.xlsx`
 
@@ -2337,7 +2337,7 @@ const handleExportExcel = async () => {
 
       // 關閉對話框
       closeExportDialog()
-      
+
       createSnackbar({
         text: 'Excel 匯出成功',
         snackbarProps: { color: 'teal-lighten-1' }
@@ -2496,7 +2496,7 @@ const handleImportExcel = async () => {
     reader.onload = async (e) => {
       try {
         const data = new Uint8Array(e.target.result)
-        const workbook = XLSX.read(data, { 
+        const workbook = XLSX.read(data, {
           type: 'array',
           cellDates: true,  // 將 Excel 日期轉換為 JS Date 物件
           dateNF: 'yyyy/mm/dd'  // 指定日期格式
@@ -2504,7 +2504,7 @@ const handleImportExcel = async () => {
 
         // 獲取第一個工作表
         const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-        
+
         // 轉換為 JSON
         const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
@@ -2513,7 +2513,7 @@ const handleImportExcel = async () => {
           // 處理日期格式
           const formatDate = (dateStr) => {
             if (!dateStr) return ''
-            
+
             // 如果是 Excel 的日期數字格式
             if (typeof dateStr === 'number') {
               // Excel 的日期是從 1900/1/1 開始計算的天數
@@ -2526,7 +2526,7 @@ const handleImportExcel = async () => {
                 day: '2-digit'
               }).replace(/\//g, '/')
             }
-            
+
             // 如果是日期字串，確保格式為 YYYY/MM/DD
             if (typeof dateStr === 'string') {
               const date = new Date(dateStr)
@@ -2538,7 +2538,7 @@ const handleImportExcel = async () => {
                 }).replace(/\//g, '/')
               }
             }
-            
+
             return dateStr
           }
 
@@ -2634,7 +2634,7 @@ const handleImportExcel = async () => {
 // 載入 XLSX 函數
 const loadXLSX = async () => {
   if (window.XLSX) return window.XLSX
-  
+
   await new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js'
@@ -2642,7 +2642,7 @@ const loadXLSX = async () => {
     script.onerror = reject
     document.head.appendChild(script)
   })
-  
+
   return window.XLSX
 }
 

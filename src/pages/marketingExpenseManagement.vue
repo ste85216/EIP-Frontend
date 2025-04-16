@@ -1,7 +1,7 @@
 <template>
   <v-container max-width="2160">
     <v-row class="pt-md-5">
-      <v-col 
+      <v-col
         cols="12"
         lg="2"
       >
@@ -210,7 +210,7 @@
                     :close-on-back="true"
                   >
                     <template #activator="{ props }">
-                      <div 
+                      <div
                         v-bind="props"
                         class="details-cell"
                       >
@@ -278,7 +278,7 @@
                     :close-on-back="true"
                   >
                     <template #activator="{ props }">
-                      <div 
+                      <div
                         v-bind="props"
                         class="note-cell"
                       >
@@ -459,7 +459,7 @@
                           線別費用明細
                         </div>
                         <div class="d-flex gap-2 align-center">
-                          <v-btn 
+                          <v-btn
                             size="small"
                             prepend-icon="mdi-delete-sweep"
                             variant="outlined"
@@ -469,7 +469,7 @@
                           >
                             清除所有金額
                           </v-btn>
-                          <v-btn 
+                          <v-btn
                             size="small"
                             prepend-icon="mdi-delete-alert"
                             variant="outlined"
@@ -480,7 +480,7 @@
                           >
                             刪除所有線別
                           </v-btn>
-                          <v-btn 
+                          <v-btn
                             size="small"
                             prepend-icon="mdi-calculator"
                             variant="outlined"
@@ -491,8 +491,8 @@
                           >
                             平均帶入各線別
                           </v-btn>
-                          
-                          <v-btn 
+
+                          <v-btn
                             size="small"
                             prepend-icon="mdi-plus"
                             variant="outlined"
@@ -503,7 +503,7 @@
                             新增所有線別
                           </v-btn>
 
-                          <v-btn 
+                          <v-btn
                             size="small"
                             prepend-icon="mdi-plus"
                             variant="outlined"
@@ -512,7 +512,7 @@
                           >
                             批量新增線別
                           </v-btn>
-                          
+
                           <v-btn
                             v-tooltip="'新增線別'"
                             icon
@@ -647,7 +647,7 @@
     >
       <v-card class="rounded-lg">
         <div class="card-title px-6 pt-6 pb-4">
-          輸入總金額
+          請輸入總金額
         </div>
         <v-card-text class="px-6 pb-0">
           <amount-input
@@ -666,7 +666,6 @@
           <v-btn
             color="grey-darken-1"
             variant="outlined"
-            size="small"
             @click="amountDialog.open = false"
           >
             取消
@@ -674,7 +673,6 @@
           <v-btn
             color="teal-darken-2"
             variant="outlined"
-            size="small"
             class="ms-2"
             :disabled="!amountDialog.amount || amountDialog.amount <= 0"
             @click="confirmAmount"
@@ -725,7 +723,6 @@
           <v-btn
             color="grey-darken-1"
             variant="outlined"
-            size="small"
             @click="addDetailsDialog.open = false"
           >
             取消
@@ -733,7 +730,6 @@
           <v-btn
             color="teal-darken-2"
             variant="outlined"
-            size="small"
             class="ms-2"
             :disabled="!addDetailsDialog.count || addDetailsDialog.count < 1"
             @click="confirmAddDetails"
@@ -786,17 +782,17 @@ import AmountInput from '../components/AmountInput.vue'
 // 自定義日期格式化函數
 const formatDate = (dateString) => {
   if (!dateString) return ''
-  
+
   // 創建一個 UTC 日期對象
   const utcDate = new Date(dateString)
-  
+
   // 轉換為台灣時間（UTC+8）
   const taiwanDate = new Date(utcDate.getTime() + (8 * 60 * 60 * 1000))
-  
+
   const year = taiwanDate.getUTCFullYear()
   const month = String(taiwanDate.getUTCMonth() + 1).padStart(2, '0')
   const day = String(taiwanDate.getUTCDate()).padStart(2, '0')
-  
+
   return `${year}/${month}/${day}`
 }
 
@@ -1030,10 +1026,10 @@ const loadData = async () => {
     if (searchCriteria.value.createdDateRange && searchCriteria.value.createdDateRange.length > 0) {
       const startDate = new Date(searchCriteria.value.createdDateRange[0])
       startDate.setHours(0, 0, 0, 0)
-      
+
       const endDate = new Date(searchCriteria.value.createdDateRange[searchCriteria.value.createdDateRange.length - 1])
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.createdDateStart = startDate.toISOString()
       params.createdDateEnd = endDate.toISOString()
     }
@@ -1042,10 +1038,10 @@ const loadData = async () => {
     if (searchCriteria.value.invoiceDateRange && searchCriteria.value.invoiceDateRange.length > 0) {
       const startDate = new Date(searchCriteria.value.invoiceDateRange[0])
       startDate.setHours(0, 0, 0, 0)
-      
+
       const endDate = new Date(searchCriteria.value.invoiceDateRange[searchCriteria.value.invoiceDateRange.length - 1])
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.invoiceDateStart = startDate.toISOString()
       params.invoiceDateEnd = endDate.toISOString()
     }
@@ -1142,7 +1138,7 @@ const editItem = async (item) => {
     }
 
     const fullItem = data.result
-    
+
     invoiceDate.value.value = formatToDate(fullItem.invoiceDate)
     theme.value.value = fullItem.theme._id
     channel.value.value = fullItem.channel._id
@@ -1184,7 +1180,7 @@ const submit = handleSubmit(async (values) => {
     if (hasEmptyDetails) {
       createSnackbar({
         text: '請確認選擇所有線別及費用皆已輸入',
-        snackbarProps: { 
+        snackbarProps: {
           color: 'red-lighten-1',
         }
       })
@@ -1216,7 +1212,7 @@ const submit = handleSubmit(async (values) => {
     if (duplicateDetails.length > 0) {
       createSnackbar({
         text: `重複的線別：${duplicateDetails.join('、')}`,
-        snackbarProps: { 
+        snackbarProps: {
           color: 'red-lighten-1',
           timeout: 4000
         }
@@ -1225,7 +1221,7 @@ const submit = handleSubmit(async (values) => {
     }
 
     isSubmitting.value = true
-    
+
     const submitData = {
       ...values,
       invoiceDate: values.invoiceDate instanceof Date ? values.invoiceDate.toISOString() : values.invoiceDate,
@@ -1259,7 +1255,7 @@ const submit = handleSubmit(async (values) => {
 
 const deleteExpense = async () => {
   if (!dialog.value.id) return
-  
+
   try {
     await apiAuth.delete(`/marketing/expenses/${dialog.value.id}`)
     createSnackbar({
@@ -1327,7 +1323,7 @@ const confirmAmount = () => {
 
   // 找出未填寫金額的線別
   const unfilledDetails = detailsList.value.filter(d => !d.amount || d.amount <= 0)
-  
+
   if (unfilledDetails.length === 0) {
     createSnackbar({
       text: '所有線別已填寫金額',
@@ -1339,10 +1335,10 @@ const confirmAmount = () => {
 
   // 計算每個未填寫線別應得的基本金額（取整數）
   const baseAmount = Math.floor(remainingAmount / unfilledDetails.length)
-  
+
   // 計算餘數
   const remainder = remainingAmount - (baseAmount * unfilledDetails.length)
-  
+
   // 計算需要分配餘數的項目數（餘數有多少就分給多少個項目）
   const itemsToDistribute = Math.min(remainder, unfilledDetails.length)
 
@@ -1491,14 +1487,14 @@ const addAllDetails = () => {
 // 新增線別明細格式化函數
 const formatDetails = (details) => {
   if (!Array.isArray(details)) return '-'
-  
+
   const validDetails = details
     .map(d => d.detail?.name || '')
     .filter(Boolean)
-  
+
   if (validDetails.length === 0) return '-'
   if (validDetails.length <= 4) return validDetails.join('、')
-  
+
   return validDetails.slice(0, 4).join('、') + '...'
 }
 
@@ -1524,7 +1520,7 @@ const copyItem = async (item) => {
     }
 
     const fullItem = data.result
-    
+
     // 不帶入發票日期
     invoiceDate.value.value = null
     theme.value.value = fullItem.theme._id
@@ -1539,7 +1535,7 @@ const copyItem = async (item) => {
     // 顯示提示訊息
     createSnackbar({
       text: '請記得選擇發票日期',
-      snackbarProps: { 
+      snackbarProps: {
         color: 'warning',
         timeout: 3000
       }
@@ -1629,7 +1625,7 @@ onMounted(async () => {
   :deep(.v-field) {
     background-color: #fff;
   }
-  
+
   &:hover {
     background-color: #eeeeee;
   }
@@ -1717,7 +1713,7 @@ onMounted(async () => {
   .menu-card-text {
     font-size: 13px;
   }
-  
+
   .menu-header {
     font-size: 14px;
     background: linear-gradient(to right, #7E57C2, #311B92);
@@ -1728,10 +1724,10 @@ onMounted(async () => {
 
   .details-grid-menu {
     margin: 0;
-    
+
     .v-col {
       padding: 2px 4px;
-      
+
       .menu-item {
         border-radius: 6px;
         .text-truncate {

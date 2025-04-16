@@ -68,7 +68,7 @@
                 <v-col
                   v-if="mdAndUp"
                 >
-                  <v-btn 
+                  <v-btn
                     class="me-4"
                     color="deep-purple-darken-2"
                     prepend-icon="mdi-account"
@@ -408,8 +408,8 @@
           <v-progress-circular
             indeterminate
             color="deep-purple-darken-2"
-            :size="60"
-            :width="6"
+            :size="52"
+            :width="4"
           />
         </div>
         <v-list v-else>
@@ -505,7 +505,7 @@ const fetchUserList = async () => {
         3: 2, // IT
         0: 3  // USER
       }
-      
+
       // 根據角色排序
       userList.value = data.result.data.sort((a, b) => {
         return roleOrder[a.role] - roleOrder[b.role]

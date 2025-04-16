@@ -6,7 +6,7 @@
       class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white"
     >
       <!-- 標題區塊 -->
-      <v-col 
+      <v-col
         cols="12"
         class="ps-3 pb-3 d-flex align-center"
       >
@@ -227,7 +227,7 @@
                 class="me-2"
                 @click="openBatchDialog"
               >
-                <v-icon 
+                <v-icon
                   size="14"
                 >
                   mdi-plus-box-multiple-outline
@@ -240,7 +240,7 @@
                 size="22"
                 @click="addNewItem"
               >
-                <v-icon 
+                <v-icon
                   size="14"
                 >
                   mdi-plus
@@ -252,7 +252,7 @@
             <v-row>
               <template v-if="!dialog.id">
                 <!-- 新增模式：支援多個項目 -->
-                <v-col 
+                <v-col
                   v-for="(item, index) in newItems"
                   :key="index"
                   cols="12"
@@ -391,7 +391,6 @@
             <v-btn
               color="grey-darken-1"
               variant="outlined"
-              size="small"
               @click="closeBatchDialog"
             >
               取消
@@ -400,7 +399,6 @@
               color="teal-darken-1"
               variant="outlined"
               class="ms-1"
-              size="small"
               type="submit"
             >
               確定
@@ -497,7 +495,7 @@ const getDialogTitle = computed(() => {
 const hasChanges = computed(() => {
   if (!dialog.value.id) return true
   if (!originalData.value) return false
-  
+
   return originalData.value.name !== nameValue.value ||
          originalData.value.order !== parseInt(orderValue.value)
 })
@@ -526,19 +524,19 @@ watch(quickSearchText, () => {
 const loadData = async (type = null) => {
   try {
     isLoading.value = true
-    
+
     // 構建查詢參數
     const params = {
       page0: pages.value[0],
       page1: pages.value[1]
     }
-    
+
     if (quickSearchText.value) {
       params.quickSearch = quickSearchText.value
     }
 
     const { data } = await apiAuth.get('/hardware/categories/all', { params })
-    
+
     if (data.success) {
       // 根據 type 分類數據
       const typeData = data.result.data.reduce((acc, item) => {
@@ -593,7 +591,7 @@ const editItem = async (item) => {
       id: item._id,
       type: item.type
     }
-    
+
     nameValue.value = item.name
     orderValue.value = item.order
     originalData.value = { ...item }
@@ -635,7 +633,7 @@ const validateNewItems = () => {
 const submit = async (e) => {
   e.preventDefault()
   if (isSubmitting.value) return
-  
+
   try {
     isSubmitting.value = true
 
@@ -716,7 +714,7 @@ const submit = async (e) => {
 
 const deleteCategory = async () => {
   if (!dialog.value.id) return
-  
+
   try {
     const type = dialog.value.type
     await apiAuth.delete(`/hardware/categories/${dialog.value.id}`)
@@ -874,7 +872,7 @@ onMounted(async () => {
 }
 
 .item-container {
-  padding: 10px; 
+  padding: 10px;
   background: #f9f9f9;
   border: 1px solid #a9a9a9;
   border-radius: 4px;

@@ -148,7 +148,7 @@
                       clearable
                     />
                   </v-col>
-                  
+
                   <v-col
                     cols="12"
                     sm="6"
@@ -656,7 +656,9 @@ const modelOptions = [
   { title: '硬體設備', value: 'hardwareDevices' },
   { title: '員工', value: 'employees' },
   { title: '公司', value: 'companies' },
-  { title: '部門', value: 'departments' }
+  { title: '部門', value: 'departments' },
+  { title: '直客詢問紀錄', value: 'customerInquiries' },
+  { title: '線別分類', value: 'lineCategories' }
 ]
 
 // 表格標頭
@@ -750,7 +752,21 @@ const fieldTranslations = {
   expenseDate: '報帳日期',
   companyId: '公司編號',
   employmentType: '聘僱類型',
-  jobTitle: '職稱'
+  jobTitle: '職稱',
+  nickname: '暱稱',
+  inquiryDate: '詢問日期',
+  inquiryContent: '詢問內容',
+  inquiryResult: '詢問結果',
+  inquiryPlace: '詢問地點',
+  source: '來源',
+  customerName: '客戶姓名',
+  customerPhone: '客戶電話',
+  customerEmail: '客戶Email',
+  salesPerson: '業務',
+  progress: '進度',
+  inquiryResultAndNote: '詢問結果 / 備註',
+  showInB2C: 'B2C業務',
+  progressAndNote: '進度 / 備註',
 }
 
 // 行銷分類類型對應
@@ -807,7 +823,9 @@ const getModelDisplay = (model) => {
     hardwareDevices: '硬體設備',
     employees: '員工',
     companies: '公司',
-    departments: '部門'
+    departments: '部門',
+    customerInquiries: '直客詢問紀錄',
+    lineCategories: '線別分類'
   }
   return modelMap[model] || model
 }
@@ -823,7 +841,7 @@ const formatOperator = (item) => {
 
 const formatTarget = (item) => {
   if (!item?.targetInfo && !item?.changes?.before) return '-'
-  
+
   // 如果是刪除操作，從 changes.before 中獲取資料
   if (item.action === '刪除' && item.changes?.before) {
     if (item.targetModel === 'marketingBudgets') {
@@ -836,12 +854,12 @@ const formatTarget = (item) => {
       return `${name} (${hardwareCategoryTypes[type]})`
     }
   }
-  
+
   if (item.targetModel === 'marketingBudgets') {
     const { year, theme } = item.targetInfo || {}
     return `${year}年度 - ${theme}`
   }
-  
+
   if (item.targetModel === 'marketingExpenses') {
     const { invoiceDate, theme } = item.targetInfo || {}
     if (invoiceDate) {
@@ -849,9 +867,9 @@ const formatTarget = (item) => {
     }
     return '-'
   }
-  
+
   const { name, userId, formNumber } = item?.targetInfo || {}
-  
+
   if (formNumber) return `${formNumber}`
   if (item.targetModel === 'marketingCategories') {
     return `${name} (${marketingCategoryTypes[item.targetInfo.type]})`
@@ -876,12 +894,12 @@ const formatBoolean = (value) => {
 
 const hasBudgetItemsChanged = (item) => {
   if (!item?.changes) return false
-  
+
   // 如果是創建操作，檢查是否有 items
   if (item.action === '創建') {
     return item.changes?.after?.items?.length > 0
   }
-  
+
   // 檢查是否有修改預算項目
   if (!item?.changes?.changedFields) return false
   return item.changes.changedFields.some(field => field.startsWith('items'))
@@ -889,7 +907,7 @@ const hasBudgetItemsChanged = (item) => {
 
 const formatChanges = (item) => {
   if (!item?.changes) return []
-  
+
   // 如果是刪除操作，顯示資料已刪除
   if (item.action === '刪除') {
     return ['資料已刪除']
@@ -903,7 +921,7 @@ const formatChanges = (item) => {
     const afterLocations = item.changes.after.locations || []
 
     // 找出刪除的地點
-    const deletedLocations = beforeLocations.filter(before => 
+    const deletedLocations = beforeLocations.filter(before =>
       !afterLocations.some(after => after.locationName === before.locationName)
     )
     if (deletedLocations.length > 0) {
@@ -914,7 +932,7 @@ const formatChanges = (item) => {
     }
 
     // 找出新增的地點
-    const addedLocations = afterLocations.filter(after => 
+    const addedLocations = afterLocations.filter(after =>
       !beforeLocations.some(before => before.locationName === after.locationName)
     )
     if (addedLocations.length > 0) {
@@ -925,7 +943,7 @@ const formatChanges = (item) => {
     }
 
     // 找出順序變更的地點
-    const commonLocations = afterLocations.filter(after => 
+    const commonLocations = afterLocations.filter(after =>
       beforeLocations.some(before => before.locationName === after.locationName)
     )
     const orderChanges = commonLocations.filter(after => {
@@ -1018,11 +1036,11 @@ const formatChanges = (item) => {
     // 如果是修改操作
     else if (item.action === '修改') {
       const { before, after, changedFields } = item.changes
-      
+
       // 建立線別對照表
       const beforeDetails = {}
       const afterDetails = {}
-      
+
       if (before.details) {
         before.details.forEach(d => {
           beforeDetails[d.detail.name] = d.amount
@@ -1086,7 +1104,7 @@ const formatChanges = (item) => {
     const after = item.changes.after || {}
     // 過濾掉不需要顯示的欄位
     const excludeFields = ['_id', 'createdAt', 'updatedAt', 'password', 'tokens', '__v']
-    
+
     // 針對硬體設備的特殊處理
     if (item.targetModel === 'hardwareDevices') {
       Object.entries(after).forEach(([key, value]) => {
@@ -1112,11 +1130,14 @@ const formatChanges = (item) => {
       })
       return changes
     }
-    
+
     Object.entries(after).forEach(([key, value]) => {
       if (!excludeFields.includes(key) && fieldTranslations[key]) {
         if (key === 'role') {
           changes.push(`${fieldTranslations[key]}: ${formatRole(value)}`)
+        } else if (key === 'salesPerson') {
+          const name = value?.name || value?.nickname || '(無)'
+          changes.push(`${fieldTranslations[key]}: ${name}`)
         } else if (typeof value === 'boolean') {
           changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
         } else if (key === 'type') {
@@ -1125,14 +1146,12 @@ const formatChanges = (item) => {
           } else if (item.targetModel === 'hardwareCategories') {
             changes.push(`${fieldTranslations[key]}: ${hardwareCategoryTypes[value] || '(無)'}`)
           }
-        } else if (key === 'maintenanceDate') {
+        } else if (key === 'inquiryDate' || key === 'maintenanceDate' || key === 'hireDate' || key === 'resignationDate' || key === 'unpaidLeaveStartDate' || key === 'reinstatementDate' || key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate') {
           changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
-        } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments')) {
+        } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments' || item.targetModel === 'customerInquiries')) {
           changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
         } else if (key === 'department') {
           changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
-        } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
-          changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
         } else {
           changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
         }
@@ -1143,14 +1162,14 @@ const formatChanges = (item) => {
 
   // 處理修改操作
   const { before = {}, after = {}, changedFields = [] } = item.changes
-  
+
   // 針對硬體設備的特殊處理
   if (item.targetModel === 'hardwareDevices') {
     changedFields.forEach(key => {
       if (fieldTranslations[key]) {
         const oldValue = before[key]
         const newValue = after[key]
-        
+
         if (key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate') {
           changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
         } else if (key === 'type') {
@@ -1179,9 +1198,16 @@ const formatChanges = (item) => {
     if (fieldTranslations[key]) {
       const oldValue = before[key]
       const newValue = after[key]
-      
+
       if (key === 'role') {
-        changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)} → ${formatRole(newValue)}`)
+        changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)}`)
+      } else if (key === 'salesPerson') {
+        const name = newValue?.name || newValue?.nickname || '(無)'
+        changes.push(`${fieldTranslations[key]}: ${name}`)
+      } else if (key === 'inquiryDate' || key === 'maintenanceDate' || key === 'hireDate' || key === 'resignationDate' || key === 'unpaidLeaveStartDate' || key === 'reinstatementDate' || key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate') {
+        changes.push(`${fieldTranslations[key]}: ${formatDate(newValue)}`)
+      } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments' || item.targetModel === 'customerInquiries')) {
+        changes.push(`${fieldTranslations[key]}: ${newValue?.name || '(無)'}`)
       } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
         changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
       } else if (key === 'type') {
@@ -1190,16 +1216,12 @@ const formatChanges = (item) => {
         } else if (item.targetModel === 'hardwareCategories') {
           changes.push(`${fieldTranslations[key]}: ${hardwareCategoryTypes[oldValue] || '(無)'} → ${hardwareCategoryTypes[newValue] || '(無)'}`)
         }
-      } else if (key === 'maintenanceDate') {
-        changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
-      } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments')) {
-        changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
       } else if (key === 'department') {
-        changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+        changes.push(`${fieldTranslations[key]}: ${newValue?.name || '(無)'}`)
       } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
-        changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
+        changes.push(`${fieldTranslations[key]}: ${formatDate(newValue)}`)
       } else {
-        changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        changes.push(`${fieldTranslations[key]}: ${newValue || '(無)'}`)
       }
     }
   })
@@ -1219,7 +1241,7 @@ const loadAllUsers = async () => {
   operatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/users/suggestions', {
-      params: { 
+      params: {
         search: '',
         itemsPerPage: 9999
       }
@@ -1256,7 +1278,7 @@ const handleOperatorSearch = debounce(async (text) => {
   operatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/users/suggestions', {
-      params: { 
+      params: {
         search: text,
         itemsPerPage: 9999
       }
@@ -1268,7 +1290,7 @@ const handleOperatorSearch = debounce(async (text) => {
         name: 'SYSTEM',
         userId: 'SYSTEM'
       }
-      
+
       operatorSuggestions.value = text.toUpperCase().includes('SYSTEM')
         ? [systemUser, ...data.result]
         : data.result
@@ -1355,14 +1377,14 @@ const performSearch = async (resetPage = true) => {
     if (searchCriteria.value.targetModel) {
       params.targetModel = searchCriteria.value.targetModel
     }
-    
+
     // 處理日期範圍
     if (searchCriteria.value.dateRange && searchCriteria.value.dateRange.length > 0) {
       const startDate = new Date(searchCriteria.value.dateRange[0])
       startDate.setHours(0, 0, 0, 0)
       params.startDate = startDate.toISOString()
 
-      const endDate = searchCriteria.value.dateRange.length > 1 
+      const endDate = searchCriteria.value.dateRange.length > 1
         ? new Date(searchCriteria.value.dateRange[searchCriteria.value.dateRange.length - 1])
         : new Date(searchCriteria.value.dateRange[0])
       endDate.setHours(23, 59, 59, 999)
@@ -1388,7 +1410,7 @@ const performSearch = async (resetPage = true) => {
     // console.log('發送搜尋請求，參數:', params)
     const { data } = await apiAuth.get('/auditLogs', { params })
     // console.log('搜尋回應:', data)
-    
+
     if (data.success) {
       tableItems.value = data.result.data
       tableItemsLength.value = data.result.totalItems
@@ -1432,7 +1454,7 @@ const showDetail = (item) => {
     })
     return
   }
-  
+
   selectedItem.value = item
   detailDialog.value = true
 }
@@ -1442,15 +1464,15 @@ const shouldShowBudgetTable = computed(() => {
   if (!selectedItem.value) return false
   if (selectedItem.value.targetModel !== 'marketingBudgets') return false
   if (selectedItem.value.action === '刪除') return false
-  
+
   // 如果是創建操作，檢查是否有 changes.after.items
   if (selectedItem.value.action === '創建') {
     return selectedItem.value.changes?.after?.items?.length > 0
   }
-  
+
   // 如果是修改操作，且資料已被刪除，則不顯示
   if (selectedItem.value.isTargetDeleted) return false
-  
+
   return hasBudgetItemsChanged(selectedItem.value)
 })
 
@@ -1511,7 +1533,7 @@ const loadAllUsersForDelete = async () => {
   deleteOperatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/users/suggestions', {
-      params: { 
+      params: {
         search: '',
         itemsPerPage: 9999
       }
@@ -1535,7 +1557,7 @@ const searchOperatorsForDelete = debounce(async (search) => {
   deleteOperatorLoading.value = true
   try {
     const { data } = await apiAuth.get('/users/suggestions', {
-      params: { 
+      params: {
         search,
         itemsPerPage: 9999
       }
@@ -1629,17 +1651,17 @@ const validateConfirmName = (value) => {
     confirmNameError.value = ''
     return
   }
-  
+
   if (!value) {
     confirmNameError.value = '請輸入操作人員名稱'
     return
   }
-  
+
   if (value !== selectedOperatorForDelete.value.name) {
     confirmNameError.value = '請輸入完全相符的操作人員名稱'
     return
   }
-  
+
   confirmNameError.value = ''
 }
 
@@ -1736,7 +1758,7 @@ const hoveredItemId = ref(null)
 .list-content {
   font-size: 14px;
   line-height: 1.4;
-  
+
   &.budget-content {
     min-width: 80%;
     margin: 0 -24px;
@@ -1750,7 +1772,7 @@ const hoveredItemId = ref(null)
 .budget-dialog {
   max-width: 1920px;
   margin: 0 auto;
-  
+
   :deep(.v-card) {
     max-height: 90vh;
     overflow-y: auto;
@@ -1763,13 +1785,13 @@ const hoveredItemId = ref(null)
     max-width: 1920px !important;
     width: 90% !important;
     margin: 24px auto !important;
-    
+
     .v-card {
       max-height: calc(100vh - 48px);
       overflow-y: auto;
     }
   }
-  
+
   // 當不是修改預算表格時，使用較窄的寬度
   &:not(.budget-detail) {
     max-width: 600px !important;
@@ -1781,5 +1803,5 @@ const hoveredItemId = ref(null)
   :deep(.v-icon) {
     font-size: 18px !important;
   }
-} 
+}
 </style>

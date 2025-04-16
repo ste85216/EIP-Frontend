@@ -2036,6 +2036,15 @@ onMounted(async () => {
   try {
     // 先載入模板
     await loadTemplates()
+    
+    // 預先載入所有需要的組件
+    await Promise.all([
+      import('@/components/templates/RayHuangQuotationTemplate/index.vue'),
+      import('@/components/templates/RayHuangQuotationTemplate/RayHuangQuotationFormFields.vue'),
+      import('@/components/templates/YstravelQuotationTemplate/index.vue'),
+      import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue')
+    ]);
+
     // 當用戶實際需要時才載入相依套件
     if (selectedTemplate.value) {
       await initDependencies()
@@ -2243,6 +2252,14 @@ const editHistory = async (history) => {
       throw new Error('歷史記錄資料不存在')
     }
 
+    // 確保組件已經載入
+    await Promise.all([
+      import('@/components/templates/RayHuangQuotationTemplate/index.vue'),
+      import('@/components/templates/RayHuangQuotationTemplate/RayHuangQuotationFormFields.vue'),
+      import('@/components/templates/YstravelQuotationTemplate/index.vue'),
+      import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue')
+    ]);
+
     // 設置編輯狀態
     isEditing.value = true;
     isViewing.value = false;
@@ -2274,6 +2291,9 @@ const editHistory = async (history) => {
     if (!template) {
       throw new Error('找不到對應的模板');
     }
+
+    // 增加延遲確保組件完全載入
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // 使用 Promise 來確保資料設置完成
     await new Promise((resolve) => {
@@ -2307,7 +2327,6 @@ const editHistory = async (history) => {
                     unit: '份',
                     price: ''
                   }],
-              // 確保成本項目被正確初始化
               costs: Array.isArray(completeHistory.formData?.costs) && completeHistory.formData.costs.length > 0
                 ? completeHistory.formData.costs
                 : [{

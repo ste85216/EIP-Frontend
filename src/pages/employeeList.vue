@@ -227,14 +227,15 @@
                     class="d-flex align-center"
                   >
                     <v-icon
-                      v-tooltip:start="'可搜尋系統員工編號、姓名、Email、科威員工編號、分機號碼、列印號碼、備註'"
+                      v-tooltip:start="'可搜尋系統員工編號、姓名、暱稱、Email、科威員工編號、分機號碼、列印號碼、備註、LineID'"
                       icon="mdi-information"
                       size="small"
                       color="blue-grey-darken-2"
                       class="me-2"
                     />
                     <v-text-field
-                      v-model="quickSearchText"
+                      v-model="quickSearch"
+                      :loading="tableLoading"
                       label="快速搜尋"
                       append-inner-icon="mdi-magnify"
                       variant="outlined"
@@ -280,7 +281,7 @@
                       class="pa-0"
                     >
                       <template #activator="{ props }">
-                        <div 
+                        <div
                           v-bind="props"
                           class="d-flex align-center status-cell"
                         >
@@ -293,7 +294,20 @@
                         elevation="3"
                       >
                         <v-card-text class="pa-0">
-                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-1 text-white">
+                          <div
+                            v-if="item.nickname"
+                            class="d-flex align-center px-3 py-2 bg-light-blue text-white"
+                          >
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-account-badge
+                            </v-icon>
+                            <span>暱稱：{{ item.nickname }}</span>
+                          </div>
+                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-3 text-white">
                             <v-icon
                               size="16"
                               class="me-2"
@@ -303,7 +317,7 @@
                             </v-icon>
                             <span>分機號碼：{{ item.extNumber || '無' }}</span>
                           </div>
-                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-3 text-white">
+                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-1 text-white">
                             <v-icon
                               size="16"
                               class="me-2"
@@ -342,7 +356,7 @@
                       class="pa-0"
                     >
                       <template #activator="{ props }">
-                        <div 
+                        <div
                           v-bind="props"
                           class="status-cell d-flex align-center"
                         >
@@ -386,7 +400,7 @@
                         :close-on-back="true"
                       >
                         <template #activator="{ props }">
-                          <div 
+                          <div
                             v-bind="props"
                             class="note-cell"
                           >
@@ -694,7 +708,7 @@ const tableItemsLength = ref(0)
 const tableSortBy = ref([{ key: 'employeeCode', order: 'asc' }])
 
 // 搜尋相關響應式變數
-const quickSearchText = ref('')
+const quickSearch = ref('')
 const companies = ref([])
 const departments = ref([])
 const searchCriteria = ref({
@@ -753,12 +767,12 @@ const dateTypeOptions = [
 // 響應式表格標頭
 const filteredHeaders = computed(() => {
   if (!smAndUp.value) {
-    return tableHeaders.filter(header => 
+    return tableHeaders.filter(header =>
       ['employeeId', 'name', 'employmentStatus'].includes(header.key)
     )
   }
   if (!mdAndUp.value) {
-    return tableHeaders.filter(header => 
+    return tableHeaders.filter(header =>
       !['employeeCode'].includes(header.key)
     )
   }
@@ -833,7 +847,7 @@ const performSearch = async () => {
       itemsPerPage: tableItemsPerPage.value,
       sortBy: tableSortBy.value[0]?.key || 'employeeId',
       sortOrder: tableSortBy.value[0]?.order || 'asc',
-      quickSearch: quickSearchText.value,
+      quickSearch: quickSearch.value,
       company: searchCriteria.value.company,
       department: searchCriteria.value.department,
       employmentType: searchCriteria.value.employmentType,
@@ -842,15 +856,15 @@ const performSearch = async () => {
     }
 
     // 處理日期搜尋
-    if (searchCriteria.value.dateType && 
-        Array.isArray(searchCriteria.value.dateRange) && 
+    if (searchCriteria.value.dateType &&
+        Array.isArray(searchCriteria.value.dateRange) &&
         searchCriteria.value.dateRange.length > 0) {
       const startDate = new Date(searchCriteria.value.dateRange[0])
       const endDate = new Date(searchCriteria.value.dateRange[searchCriteria.value.dateRange.length - 1])
-      
+
       startDate.setHours(0, 0, 0, 0)
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.dateType = searchCriteria.value.dateType
       params.dateStart = startDate.toISOString()
       params.dateEnd = endDate.toISOString()
@@ -882,7 +896,7 @@ const resetSearch = () => {
     dateType: '',
     dateRange: []
   }
-  quickSearchText.value = ''
+  quickSearch.value = ''
   departments.value = []
   performSearch()
 }
@@ -903,7 +917,7 @@ const debouncedSearch = debounce(() => {
   performSearch()
 }, 300)
 
-watch(quickSearchText, () => {
+watch(quickSearch, () => {
   debouncedSearch()
 })
 
@@ -982,7 +996,7 @@ const closeDeviceDialog = () => {
 // 在 script setup 部分添加以下函數
 const getDeviceIcon = (deviceType) => {
   if (!deviceType) return 'mdi-devices'
-  
+
   const type = deviceType.toLowerCase()
   if (type.includes('筆電') || type.includes('筆記型電腦')) return 'mdi-laptop'
   if (type.includes('桌機') || type.includes('桌上型電腦')) return 'mdi-desktop-tower-monitor'
@@ -993,7 +1007,7 @@ const getDeviceIcon = (deviceType) => {
   if (type.includes('印表機') || type.includes('事務機')) return 'mdi-printer'
   if (type.includes('鍵盤')) return 'mdi-keyboard-outline'
   if (type.includes('滑鼠')) return 'mdi-mouse-outline'
-  
+
   return 'mdi-devices'
 }
 

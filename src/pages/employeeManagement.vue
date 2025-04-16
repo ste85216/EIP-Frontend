@@ -209,7 +209,7 @@
                   class="elevation-4 rounded-lg py-5 px-4 px-sm-2 px-xl-4"
                 >
                   <v-card-title class="font-weight-bold d-flex justify-space-between mb-2">
-                    <span>匯入 / 匯出 Excel</span> 
+                    <span>匯入 / 匯出 Excel</span>
                     <v-btn
                       v-tooltip:start="'下載範例檔案'"
                       icon
@@ -241,7 +241,7 @@
                       <v-col
                         cols="6"
                       >
-                        <v-btn 
+                        <v-btn
                           prepend-icon="mdi-file-export"
                           color="deep-orange-darken-1"
                           block
@@ -299,18 +299,19 @@
                     class="d-flex align-center"
                   >
                     <v-icon
-                      v-tooltip:start="'可搜尋系統員工編號、姓名、Email、科威員工編號、分機號碼、列印號碼、備註'"
+                      v-tooltip:start="'可搜尋系統員工編號、姓名、Email、科威員工編號、分機號碼、列印號碼、備註、暱稱、LineID'"
                       icon="mdi-information"
                       size="small"
                       color="blue-grey-darken-2"
                       class="me-2"
                     />
                     <v-text-field
-                      v-model="quickSearchText"
+                      v-model="quickSearch"
+                      :loading="tableLoading"
+                      density="compact"
+                      variant="outlined"
                       label="快速搜尋"
                       append-inner-icon="mdi-magnify"
-                      variant="outlined"
-                      density="compact"
                       hide-details
                       clearable
                     />
@@ -349,7 +350,7 @@
                       class="pa-0"
                     >
                       <template #activator="{ props }">
-                        <div 
+                        <div
                           v-bind="props"
                           class="d-flex align-center status-cell"
                         >
@@ -362,7 +363,20 @@
                         elevation="3"
                       >
                         <v-card-text class="pa-0">
-                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-1 text-white">
+                          <div
+                            v-if="item.nickname"
+                            class="d-flex align-center px-3 py-2 bg-light-blue text-white"
+                          >
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-account-badge
+                            </v-icon>
+                            <span>暱稱：{{ item.nickname }}</span>
+                          </div>
+                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-3 text-white">
                             <v-icon
                               size="16"
                               class="me-2"
@@ -372,7 +386,7 @@
                             </v-icon>
                             <span>分機號碼：{{ item.extNumber || '無' }}</span>
                           </div>
-                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-3 text-white">
+                          <div class="d-flex align-center px-3 py-2 bg-light-blue-darken-1 text-white">
                             <v-icon
                               size="16"
                               class="me-2"
@@ -411,7 +425,7 @@
                       class="pa-0"
                     >
                       <template #activator="{ props }">
-                        <div 
+                        <div
                           v-bind="props"
                           class="status-cell d-flex align-center"
                         >
@@ -455,7 +469,7 @@
                         :close-on-back="true"
                       >
                         <template #activator="{ props }">
-                          <div 
+                          <div
                             v-bind="props"
                             class="note-cell"
                           >
@@ -544,7 +558,7 @@
               width="8"
             />
           </div>
-          
+
           <!-- 表單內容 -->
           <v-form
             v-else
@@ -560,7 +574,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider 
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -574,13 +588,13 @@
                       class="me-2"
                     >
                       mdi-card-account-details-outline
-                    </v-icon> 基本資料 
+                    </v-icon> 基本資料
                   </v-col>
                   <v-col
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider  
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -616,8 +630,36 @@
                   clearable
                 />
               </v-col>
+              <!-- 暱稱 -->
+              <v-col
+                cols="12"
+                sm="4"
+              >
+                <v-text-field
+                  v-model="nickname.value.value"
+                  :error-messages="nickname.errorMessage.value"
+                  label="暱稱"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
+              </v-col>
 
-              
+              <!-- LineID -->
+              <v-col
+                cols="12"
+                sm="4"
+              >
+                <v-text-field
+                  v-model="lineID.value.value"
+                  :error-messages="lineID.errorMessage.value"
+                  label="LineID"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
+              </v-col>
+
 
               <v-col
                 cols="12"
@@ -628,7 +670,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider 
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -648,7 +690,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider  
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -835,7 +877,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider 
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -855,7 +897,7 @@
                     cols="5"
                     class="d-flex align-center justify-center"
                   >
-                    <v-divider  
+                    <v-divider
                       class="border-opacity-25"
                       color="blue-grey-darken-2"
                     />
@@ -883,9 +925,9 @@
               </v-col>
 
               <!-- 留停日期 -->
-              <v-col 
+              <v-col
                 v-if="unpaidLeaveStartDate.value.value"
-                cols="12" 
+                cols="12"
                 sm="3"
               >
                 <v-date-input
@@ -903,9 +945,9 @@
               </v-col>
 
               <!-- 復職日期 -->
-              <v-col 
+              <v-col
                 v-if="reinstatementDate.value.value"
-                cols="12" 
+                cols="12"
                 sm="3"
               >
                 <v-date-input
@@ -923,9 +965,9 @@
               </v-col>
 
               <!-- 離職日期 -->
-              <v-col 
+              <v-col
                 v-if="resignationDate.value.value"
-                cols="12" 
+                cols="12"
                 sm="3"
               >
                 <v-date-input
@@ -1439,7 +1481,7 @@ const tableItemsLength = ref(0)
 const tableSortBy = ref([{ key: 'employeeCode', order: 'asc' }])
 
 // 搜尋相關響應式變數
-const quickSearchText = ref('')
+const quickSearch = ref('')
 const companies = ref([])
 const departments = ref([])
 const searchCriteria = ref({
@@ -1483,12 +1525,12 @@ const dateTypeOptions = [
 // 響應式表格標頭
 const filteredHeaders = computed(() => {
   if (!smAndUp.value) {
-    return tableHeaders.filter(header => 
+    return tableHeaders.filter(header =>
       ['employeeId', 'name', 'employmentStatus', 'actions'].includes(header.key)
     )
   }
   if (!mdAndUp.value) {
-    return tableHeaders.filter(header => 
+    return tableHeaders.filter(header =>
       !['employeeCode'].includes(header.key)
     )
   }
@@ -1554,7 +1596,7 @@ const performSearch = async () => {
       itemsPerPage: tableItemsPerPage.value,
       sortBy: tableSortBy.value[0]?.key || 'employeeId',
       sortOrder: tableSortBy.value[0]?.order || 'asc',
-      quickSearch: quickSearchText.value,
+      quickSearch: quickSearch.value,
       company: searchCriteria.value.company,
       department: searchCriteria.value.department,
       employmentType: searchCriteria.value.employmentType,
@@ -1563,15 +1605,15 @@ const performSearch = async () => {
     }
 
     // 處理日期搜尋
-    if (searchCriteria.value.dateType && 
-        Array.isArray(searchCriteria.value.dateRange) && 
+    if (searchCriteria.value.dateType &&
+        Array.isArray(searchCriteria.value.dateRange) &&
         searchCriteria.value.dateRange.length > 0) {
       const startDate = new Date(searchCriteria.value.dateRange[0])
       const endDate = new Date(searchCriteria.value.dateRange[searchCriteria.value.dateRange.length - 1])
-      
+
       startDate.setHours(0, 0, 0, 0)
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.dateType = searchCriteria.value.dateType
       params.dateStart = startDate.toISOString()
       params.dateEnd = endDate.toISOString()
@@ -1603,7 +1645,7 @@ const resetSearch = () => {
     dateType: '',
     dateRange: []
   }
-  quickSearchText.value = ''
+  quickSearch.value = ''
   departments.value = []
   performSearch()
 }
@@ -1624,7 +1666,7 @@ const debouncedSearch = debounce(() => {
   performSearch()
 }, 300)
 
-watch(quickSearchText, () => {
+watch(quickSearch, () => {
   debouncedSearch()
 })
 
@@ -1703,13 +1745,21 @@ const employeeSchema = computed(() => {
       .string()
       .required('請輸入姓名')
       .trim(),
+    nickname: yup
+      .string()
+      .nullable()
+      .trim(),
+    lineID: yup
+      .string()
+      .nullable()
+      .trim(),
     email: yup
       .string()
       .nullable()
       .test('email-format', value => {
         // 如果沒有填寫 email，直接返回 true
         if (!value || value.trim() === '') return true
-        
+
         // 如果有填寫，則進行驗證
         return true
       })
@@ -1768,6 +1818,8 @@ const { handleSubmit, isSubmitting, resetForm } = useForm({
     company: '',
     department: '',
     name: '',
+    nickname: '',
+    lineID: '',
     email: '',
     emailPassword: '',
     employeeCode: '',
@@ -1802,6 +1854,8 @@ const hireDate = useField('hireDate')
 const resignationDate = useField('resignationDate')
 const unpaidLeaveStartDate = useField('unpaidLeaveStartDate')
 const reinstatementDate = useField('reinstatementDate')
+const nickname = useField('nickname')
+const lineID = useField('lineID')
 
 // 處理任職狀態變更
 const handleEmploymentStatusChange = (newStatus) => {
@@ -1823,7 +1877,7 @@ const handleEmploymentStatusChange = (newStatus) => {
   } else if (newStatus === '在職' || newStatus === '待入職') {
     // 清除離職日期（如果是從離職狀態改回在職或待入職）
     resignationDate.value.value = null
-    
+
     // 檢查是否有未結束的留停狀態（有留停開始日期但沒有復職日期）
     if (unpaidLeaveStartDate.value.value && !reinstatementDate.value.value) {
       reinstatementDialog.value = {
@@ -1887,6 +1941,8 @@ const openDialog = async (item) => {
       // 設定其他欄位值
       department.value.value = item.department?._id || ''
       name.value.value = item.name || ''
+      nickname.value.value = item.nickname || ''
+      lineID.value.value = item.lineID || ''
       email.value.value = item.email ?? ''
       emailPassword.value.value = item.emailPassword || ''
       employeeCode.value.value = item.employeeCode || ''
@@ -1957,7 +2013,7 @@ const submitEmployee = handleSubmit(async (values) => {
   } catch (error) {
     const errorMessage = error?.response?.data?.message
     const errorField = error?.response?.data?.field
-    
+
     // 如果有特定欄位錯誤，更新對應欄位的錯誤訊息
     if (errorField) {
       switch (errorField) {
@@ -1978,7 +2034,7 @@ const submitEmployee = handleSubmit(async (values) => {
           break
       }
     }
-    
+
     createSnackbar({
       text: errorMessage || '操作失敗',
       snackbarProps: { color: 'red-lighten-1' }
@@ -2067,7 +2123,7 @@ const exportDialog = ref({
 // 載入 XLSX 函數
 const loadXLSX = async () => {
   if (window.XLSX) return window.XLSX
-  
+
   await new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js'
@@ -2075,7 +2131,7 @@ const loadXLSX = async () => {
     script.onerror = reject
     document.head.appendChild(script)
   })
-  
+
   return window.XLSX
 }
 
@@ -2206,7 +2262,7 @@ const handleExportExcel = async () => {
 
     // 呼叫 API 取得資料
     const { data } = await apiAuth.get('/employees/export', { params })
-    
+
     if (data.success) {
       // 載入 XLSX
       const XLSX = await loadXLSX()
@@ -2226,6 +2282,8 @@ const handleExportExcel = async () => {
         return {
           '科威員編': employee.employeeCode,
           '姓名': employee.name,
+          '暱稱': employee.nickname || '',
+          'LineID': employee.lineID || '',
           '公司': employee.company?.name || '',
           '部門': employee.department?.name || '',
           '聘僱類型': employee.employmentType || '正職',
@@ -2250,6 +2308,8 @@ const handleExportExcel = async () => {
       const colWidths = {
         '科威員編': 15,
         '姓名': 15,
+        '暱稱': 15,
+        'LineID': 15,
         '公司': 20,
         '部門': 20,
         '聘僱類型': 12,
@@ -2273,7 +2333,7 @@ const handleExportExcel = async () => {
       XLSX.utils.book_append_sheet(wb, ws, '員工資料')
 
       // 生成檔案並下載
-      const fileName = exportDialog.value.type === 'all' 
+      const fileName = exportDialog.value.type === 'all'
         ? '所有員工資料清單.xlsx'
         : `${companies.value.find(c => c._id === exportDialog.value.company)?.name}員工資料清單.xlsx`
 
@@ -2281,7 +2341,7 @@ const handleExportExcel = async () => {
 
       // 關閉對話框
       closeExportDialog()
-      
+
       createSnackbar({
         text: 'Excel 匯出成功',
         snackbarProps: { color: 'teal-lighten-1' }
@@ -2313,10 +2373,10 @@ const appendCompanyDomain = () => {
   const currentValue = email.value.value || ''
   // 如果已經包含 @ystravel.com.tw，則不做任何操作
   if (currentValue.includes('@ystravel.com.tw')) return
-  
+
   // 移除現有的 @ 及其後面的內容
   const cleanValue = currentValue.split('@')[0]
-  
+
   // 如果有值才附加網域
   if (cleanValue && cleanValue.trim() !== '') {
     email.value.value = `${cleanValue}@ystravel.com.tw`
@@ -2385,7 +2445,7 @@ const handleImportExcel = async () => {
     reader.onload = async (e) => {
       try {
         const data = new Uint8Array(e.target.result)
-        const workbook = XLSX.read(data, { 
+        const workbook = XLSX.read(data, {
           type: 'array',
           cellDates: true,  // 將 Excel 日期轉換為 JS Date 物件
           dateNF: 'yyyy/mm/dd'  // 指定日期格式
@@ -2393,7 +2453,7 @@ const handleImportExcel = async () => {
 
         // 獲取第一個工作表
         const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-        
+
         // 轉換為 JSON
         const jsonData = XLSX.utils.sheet_to_json(worksheet)
 
@@ -2402,7 +2462,7 @@ const handleImportExcel = async () => {
           // 處理日期格式
           const formatDate = (dateStr) => {
             if (!dateStr) return ''
-            
+
             // 如果是 Excel 的日期數字格式
             if (typeof dateStr === 'number') {
               // Excel 的日期是從 1900/1/1 開始計算的天數
@@ -2415,7 +2475,7 @@ const handleImportExcel = async () => {
                 day: '2-digit'
               }).replace(/\//g, '/')
             }
-            
+
             // 如果是日期字串，確保格式為 YYYY/MM/DD
             if (typeof dateStr === 'string') {
               const date = new Date(dateStr)
@@ -2427,7 +2487,7 @@ const handleImportExcel = async () => {
                 }).replace(/\//g, '/')
               }
             }
-            
+
             return dateStr
           }
 
@@ -2440,6 +2500,8 @@ const handleImportExcel = async () => {
           return {
             employeeCode: row['科威員編']?.toString(),
             name: row['姓名'],
+            nickname: row['暱稱'],
+            lineID: row['LineID'],
             company: row['公司'],
             department: row['部門'],
             employmentType: row['聘僱類型'] || '正職',

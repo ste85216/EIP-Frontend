@@ -1,7 +1,7 @@
 <template>
   <v-container max-width="2160">
     <v-row class="pt-md-5">
-      <v-col 
+      <v-col
         cols="12"
         lg="2"
       >
@@ -92,7 +92,7 @@
       <v-col>
         <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-1 mx-0 mx-sm-4 ms-md-4 me-md-4 mb-4 bg-white">
           <!-- 標題區塊 -->
-          <v-col 
+          <v-col
             cols="12"
             class="ps-3 pb-6 d-flex align-center"
           >
@@ -184,7 +184,7 @@
                     :close-on-back="true"
                   >
                     <template #activator="{ props }">
-                      <div 
+                      <div
                         v-bind="props"
                         class="note-cell"
                       >
@@ -327,9 +327,9 @@
                 <div class="budget-table-title mb-4 d-flex align-center position-relative">
                   <div class="budget-title-center">
                     <span class="align-self-center">
-                      <span class="text-orange-darken-2">{{ year.value.value ? `${year.value.value}` : '( 請先選擇年度 )' }}</span> 
-                      年度 
-                      <span class="text-pink-darken-1">{{ theme.value.value ? getThemeName(theme.value.value) : '( 請先選擇行銷主題 )' }}</span> 
+                      <span class="text-orange-darken-2">{{ year.value.value ? `${year.value.value}` : '( 請先選擇年度 )' }}</span>
+                      年度
+                      <span class="text-pink-darken-1">{{ theme.value.value ? getThemeName(theme.value.value) : '( 請先選擇行銷主題 )' }}</span>
                       行銷廣告預算表
                     </span>
                   </div>
@@ -653,14 +653,14 @@
     <!-- 快速填入金額對話框 -->
     <v-dialog
       v-model="quickFillDialog.show"
-      max-width="360"
+      max-width="320"
     >
       <v-form
         ref="quickFillForm"
         @submit.prevent="validateAndApplyQuickFill"
       >
-        <v-card class="px-6 pt-6 pb-3">
-          <div class="card-title mb-2">
+        <v-card class="px-6 pt-6 pb-3 rounded-lg">
+          <div class="card-title">
             快速填入月份金額
           </div>
           <v-card-text class="px-0 pb-2">
@@ -681,7 +681,6 @@
             <v-spacer />
             <v-btn
               color="grey-darken-1"
-              size="small"
               variant="outlined"
               @click="quickFillDialog.show = false"
             >
@@ -689,7 +688,6 @@
             </v-btn>
             <v-btn
               color="teal-darken-1"
-              size="small"
               variant="outlined"
               type="submit"
             >
@@ -905,7 +903,7 @@ const getPlatformName = (platformId) => {
 // 刪除渠道
 const removeChannel = (channelIndex) => {
   const channel = budgetData.value[channelIndex]
-  
+
   // 檢查渠道是否為空且所有平台和金額都是空的
   const isEmpty = !channel.channelId && channel.platforms.every(platform => {
     return !platform.platformId && Object.values(platform.budget).every(value => !value)
@@ -957,7 +955,7 @@ const addPlatform = (channelIndex) => {
 // 刪除平台
 const removePlatform = (channelIndex, platformIndex) => {
   const platforms = budgetData.value[channelIndex].platforms
-  
+
   // 如果該渠道只有一個平台，則不允許刪除
   if (platforms.length <= 1) {
     createSnackbar({
@@ -968,7 +966,7 @@ const removePlatform = (channelIndex, platformIndex) => {
   }
 
   const platform = platforms[platformIndex]
-  
+
   // 檢查平台是否為空且所有金額都是空的
   const isEmpty = !platform.platformId && Object.values(platform.budget).every(value => !value)
 
@@ -990,7 +988,7 @@ const removePlatform = (channelIndex, platformIndex) => {
 const confirmDeletePlatform = () => {
   const { channelIndex, platformIndex } = confirmDeletePlatformDialog.value
   const platforms = budgetData.value[channelIndex].platforms
-  
+
   // 再次確認是否可以刪除
   if (platforms.length > 1) {
     platforms.splice(platformIndex, 1)
@@ -1049,10 +1047,10 @@ const loadData = async () => {
     if (searchCriteria.value.createdDateRange && searchCriteria.value.createdDateRange.length > 0) {
       const startDate = new Date(searchCriteria.value.createdDateRange[0])
       startDate.setHours(0, 0, 0, 0)
-      
+
       const endDate = new Date(searchCriteria.value.createdDateRange[searchCriteria.value.createdDateRange.length - 1])
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.createdDateStart = startDate.toISOString()
       params.createdDateEnd = endDate.toISOString()
     }
@@ -1085,11 +1083,11 @@ const searchYearOptions = ref([])
 const loadOptions = async () => {
   try {
     // 先獲取所有預算資料來提取實際存在的年度
-    const { data: budgetData } = await apiAuth.get('/marketing/budgets/all', { 
-      params: { 
+    const { data: budgetData } = await apiAuth.get('/marketing/budgets/all', {
+      params: {
         page: 1,
         itemsPerPage: 9999 // 獲取所有資料以確保不遺漏任何年度
-      } 
+      }
     })
 
     // 從預算資料中提取實際的年度（只用於搜尋條件）
@@ -1182,19 +1180,19 @@ const editItem = async (item) => {
       open: true,
       id: item._id
     }
-    
+
     // 設置載入狀態
     isLoadingBudget.value = true
 
     const { data } = await apiAuth.get(`/marketing/budgets/${item._id}`)
     if (data.success) {
       const budget = data.result
-      
+
       year.value.value = budget.year
       theme.value.value = budget.theme._id
       note.value.value = budget.note
       annualTotalBudget.value.value = budget.annualTotalBudget
-      
+
       // 重組數據結構
       const channelGroups = {}
       budget.items.forEach(item => {
@@ -1209,7 +1207,7 @@ const editItem = async (item) => {
           budget: item.monthlyBudget
         })
       })
-      
+
       budgetData.value = Object.values(channelGroups)
       originalData.value = budget
     }
@@ -1252,7 +1250,7 @@ const closeDialog = () => {
         }
       }]
     }]
-    
+
     // 確保所有欄位都被重置
     year.value.value = ''
     theme.value.value = ''
@@ -1265,10 +1263,10 @@ const closeDialog = () => {
 
 const submit = handleSubmit(async (values) => {
   if (isSubmitting.value) return
-  
+
   try {
     isSubmitting.value = true
-    
+
     // 驗證必填欄位
     if (!values.year) {
       createSnackbar({
@@ -1297,7 +1295,7 @@ const submit = handleSubmit(async (values) => {
 
     // 驗證預算資料
     const hasEmptyChannel = budgetData.value.some(channel => !channel.channelId)
-    const hasEmptyPlatform = budgetData.value.some(channel => 
+    const hasEmptyPlatform = budgetData.value.some(channel =>
       channel.platforms.some(platform => !platform.platformId)
     )
 
@@ -1315,7 +1313,7 @@ const submit = handleSubmit(async (values) => {
       theme: values.theme,
       annualTotalBudget: parseFloat(values.annualTotalBudget),
       note: values.note || '',
-      items: budgetData.value.flatMap(channel => 
+      items: budgetData.value.flatMap(channel =>
         channel.platforms.map(platform => ({
           channel: channel.channelId,
           platform: platform.platformId,
@@ -1368,7 +1366,7 @@ const submit = handleSubmit(async (values) => {
 
 const deleteBudget = async () => {
   if (!dialog.value.id) return
-  
+
   try {
     await apiAuth.delete(`/marketing/budgets/${dialog.value.id}`)
     createSnackbar({
@@ -1465,7 +1463,7 @@ const showQuickFillDialog = (channelIndex, platformIndex) => {
 const moveChannel = (index, direction) => {
   const newIndex = direction === 'up' ? index - 1 : index + 1
   if (newIndex < 0 || newIndex >= budgetData.value.length) return
-  
+
   const temp = budgetData.value[index]
   budgetData.value[index] = budgetData.value[newIndex]
   budgetData.value[newIndex] = temp
@@ -1476,7 +1474,7 @@ const movePlatform = (channelIndex, platformIndex, direction) => {
   const platforms = budgetData.value[channelIndex].platforms
   const newIndex = direction === 'up' ? platformIndex - 1 : platformIndex + 1
   if (newIndex < 0 || newIndex >= platforms.length) return
-  
+
   const temp = platforms[platformIndex]
   platforms[platformIndex] = platforms[newIndex]
   platforms[newIndex] = temp
@@ -1500,17 +1498,17 @@ const handleQuickSearch = () => {
 // 新增日期格式化函數
 const formatDate = (dateString) => {
   if (!dateString) return ''
-  
+
   // 創建一個 UTC 日期對象
   const utcDate = new Date(dateString)
-  
+
   // 轉換為台灣時間（UTC+8）
   const taiwanDate = new Date(utcDate.getTime() + (8 * 60 * 60 * 1000))
-  
+
   const year = taiwanDate.getUTCFullYear()
   const month = String(taiwanDate.getUTCMonth() + 1).padStart(2, '0')
   const day = String(taiwanDate.getUTCDate()).padStart(2, '0')
-  
+
   return `${year}/${month}/${day}`
 }
 
@@ -1539,7 +1537,7 @@ const clearAllMonths = (channelIndex, platformIndex) => {
   Object.keys(monthList).forEach(month => {
     platform.budget[month] = ''
   })
-  
+
   createSnackbar({
     text: '已清空所有月份金額',
     snackbarProps: { color: 'teal-lighten-1' }
@@ -1549,7 +1547,7 @@ const clearAllMonths = (channelIndex, platformIndex) => {
 // 在 script setup 中添加年度驗證方法
 const validateYear = (event) => {
   const yearValue = event.target.value
-  
+
   // 檢查是否為空
   if (!yearValue) {
     year.setValue('')
@@ -1637,7 +1635,7 @@ const handleChannelChange = (channelId, channelIndex) => {
 .budget-header {
   background: #455A64;
   color: white;
-  
+
   th {
     text-align: center !important;
     font-weight: 600 !important;
@@ -1734,15 +1732,15 @@ tbody {
   min-width: 32px;
   padding: 0 !important;
   text-align: center;
-  
+
   .v-btn {
     margin: 2px 0;
     opacity: 0.7;
-    
+
     &:hover {
       opacity: 1;
     }
-    
+
     &:disabled {
       opacity: 0.3;
     }
