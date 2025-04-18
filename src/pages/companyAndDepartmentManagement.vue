@@ -274,7 +274,7 @@
                         <span
                           class="ps-2 text-blue-grey-darken-2"
                           style="font-size: 14px;"
-                        >管理密碼</span>
+                        >密碼設定</span>
                       </v-list-item>
                       <v-list-item
                         density="compact"
@@ -775,7 +775,7 @@
     >
       <v-card class="rounded-lg px-4 pt-7 pb-6">
         <div class="card-title px-4 pb-2">
-          管理公司密碼
+          公司密碼設定
         </div>
         <v-card-text class="mt-3 pa-3">
           <v-text-field
@@ -786,6 +786,8 @@
             density="compact"
             :error-messages="passwordDialog.error"
             hide-details="auto"
+            persistent-hint
+            hint="請直接輸入欲設定新密碼 會覆蓋掉舊密碼"
           />
         </v-card-text>
         <v-card-actions class="px-3 pt-4">

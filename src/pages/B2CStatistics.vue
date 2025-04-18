@@ -1220,7 +1220,7 @@
           </div>
 
           <!-- 已選擇的業務區塊 -->
-          <div class="mt-8">
+          <div class="mt-8 selected-employees-container">
             <div class="sub-title mb-5 ps-1">
               已選擇的業務：
             </div>
@@ -3487,6 +3487,7 @@ watch(() => company.value.value, async (newVal) => {
   line-height: 16px;
   font-weight: bold;
 }
+
 </style>
 
 <route lang="yaml">
