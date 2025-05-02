@@ -3,14 +3,14 @@
     <v-main>
       <v-app-bar
         elevation="0"
-        class="border px-8 px-xl-16 "
+        class="border px-8 ps-xl-12 pe-xl-15 "
         height="100"
       >
         <span>
           <v-img
             src="/src/assets/image/Ystravel_logo_horizontal.png"
             :width="150"
-            class="ms-xl-2"
+            class="ms-xl-3 ms-xxl-8"
           />
         </span>
         <v-spacer />
@@ -54,7 +54,7 @@
         </div>
         <v-btn
           v-if="user.isLogin && (user.isManager || user.isAdmin || user.isUser)"
-          class="ms-6 rounded-0"
+          class="ms-6 me-xl-3 me-xxl-7 rounded-0"
           variant="outlined"
           prepend-icon="mdi-arrow-left"
           color="deep-purple-darken-4"

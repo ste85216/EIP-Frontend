@@ -766,7 +766,10 @@ const fieldTranslations = {
   progress: '進度',
   inquiryResultAndNote: '詢問結果 / 備註',
   showInB2C: 'B2C業務',
-  progressAndNote: '進度 / 備註',
+  customerTitle: '稱謂',
+  lineLink: 'Line 連結',
+  lineID: 'Line ID',
+  progressNotes: '進度 / 備註'
 }
 
 // 行銷分類類型對應
@@ -1198,6 +1201,16 @@ const formatChanges = (item) => {
     if (fieldTranslations[key]) {
       const oldValue = before[key]
       const newValue = after[key]
+
+      // 處理 progressNotes 欄位
+      if (key === 'progressNotes' && Array.isArray(newValue)) {
+        const newLast = newValue[newValue.length - 1]
+        changes.push(
+          `${fieldTranslations[key]}: ` +
+          (newLast ? newLast.content : '無')
+        )
+        return
+      }
 
       if (key === 'role') {
         changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)}`)

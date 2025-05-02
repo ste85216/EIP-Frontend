@@ -2,14 +2,14 @@
 <template>
   <v-container max-width="2400">
     <!-- 搜尋條件區塊 -->
-    <v-row class="pt-md-5 px-2 px-xl-2 px-xxl-0">
+    <v-row class="pt-md-5 px-2 px-xxl-0">
       <v-col cols="12">
         <v-row>
           <v-col cols="12">
             <v-row>
               <v-col
                 cols="12"
-                class="mt-1 px-lg-5 px-xl-16 px-xxl-0"
+                class="mt-1 px-lg-6 px-xl-12 px-xxl-2"
               >
                 <v-card class="elevation-4 rounded-lg py-7 px-0">
                   <div class="d-flex align-center px-7">
@@ -59,6 +59,26 @@
                         mdi-logout
                       </v-icon>
                     </v-btn>
+                    <v-spacer />
+                    <div
+                      v-if="!user.isLogin && verifiedCompany"
+                      class="clock-container"
+                    >
+                      <div class="d-flex align-center">
+                        <v-icon
+                          icon="mdi-timer-sand"
+                          size="18"
+                          class="me-2"
+                          color="orange-darken-4"
+                        />
+                        <div
+                          class="text-orange-darken-4"
+                          style="font-size: 15px; font-weight: 600; letter-spacing: 1px;"
+                        >
+                          {{ formattedRemainingTime }}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   <v-divider class="mt-5 mb-6" />
                   <v-card-text
@@ -71,7 +91,7 @@
                         cols="2"
                       >
                         <div class="d-flex align-center">
-                          來源 :
+                          <span class="text-label">來源 :</span>
                           <v-select
                             v-model="searchCriteria.source"
                             :items="sourceOptions"
@@ -92,21 +112,25 @@
                       <v-col
                         cols="2"
                       >
-                        <div class="d-flex align-center">
-                          業務 :
+                        <div class="d-flex align-center ">
+                          <span class="text-label">業務 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.salesPerson"
                             class="ms-4"
                             :items="searchSalesPersons"
-                            :item-title="item => item ? `${item.name} ( ${item.nickname ? item.nickname + ' ' : ''} ${item.employeeCode} )` : ''"
+                            :item-title="item => {
+                              if (!item) return '';
+                              if (typeof item === 'string') return item;
+                              return `${item.name} ( ${item.nickname ? item.nickname + ' ' : ''} ${item.employeeCode} )`;
+                            }"
                             item-value="_id"
                             variant="outlined"
                             density="compact"
                             placeholder="請選擇業務"
-                            :hide-details="!!searchCriteria.company"
+                            hide-details
                             clearable
                             :disabled="!searchCriteria.company"
-                            :messages="!searchCriteria.company ? ['請先選擇公司'] : []"
+                            @update:model-value="handleSalesPersonChange"
                           />
                         </div>
                       </v-col>
@@ -117,7 +141,7 @@
                         class="pe-1"
                       >
                         <div class="d-flex align-center">
-                          日期 :
+                          <span class="text-label">日期 :</span>
                           <v-date-input
                             v-model="searchCriteria.dateRange"
                             class="ms-4"
@@ -141,7 +165,7 @@
                         cols="2"
                       >
                         <div class="d-flex align-center">
-                          地區 :
+                          <span class="text-label">地區 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.inquiryPlace"
                             class="ms-4"
@@ -161,7 +185,7 @@
                         cols="2"
                       >
                         <div class="d-flex align-center">
-                          結果 :
+                          <span class="text-label">結果 :</span>
                           <v-select
                             v-model="searchCriteria.inquiryResult"
                             class="ms-4"
@@ -246,7 +270,7 @@
                         cols="2"
                       >
                         <div class="d-flex align-center">
-                          來源 :
+                          <span class="text-label">來源 :</span>
                           <v-select
                             v-model="searchCriteria.source"
                             :items="sourceOptions"
@@ -267,7 +291,7 @@
                         cols="2"
                       >
                         <div class="d-flex align-center">
-                          業務 :
+                          <span class="text-label">業務 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.salesPerson"
                             class="ms-4"
@@ -289,7 +313,7 @@
                         cols="2"
                       >
                         <div class="d-flex align-center">
-                          日期 :
+                          <span class="text-label">日期 :</span>
                           <v-date-input
                             v-model="searchCriteria.dateRange"
                             class="ms-4"
@@ -312,7 +336,7 @@
                         cols="2"
                       >
                         <div class="d-flex align-center">
-                          地區 :
+                          <span class="text-label">地區 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.inquiryPlace"
                             class="ms-4"
@@ -330,7 +354,7 @@
                         cols="2"
                       >
                         <div class="d-flex align-center">
-                          結果 :
+                          <span class="text-label">結果 :</span>
                           <v-select
                             v-model="searchCriteria.inquiryResult"
                             class="ms-4"
@@ -380,7 +404,7 @@
                       </v-col>
                     </v-row>
                   </v-card-text>
-                  <v-divider class="mt-4 mb-2" />
+                  <v-divider class="my-2" />
                   <v-row
                     class=" px-1 px-md-7 mt-1 bg-white"
                   >
@@ -441,6 +465,23 @@
                             >
                               業務輪流表
                             </v-btn>
+                            <v-btn
+                              v-tooltip="'查看本月'"
+                              icon
+                              color="cyan-darken-2"
+                              variant="text"
+                              size="34"
+                              class="me-4"
+                              :disabled="!user.isLogin && !verifiedCompany"
+                              @click="setCurrentMonth"
+                            >
+                              <v-icon
+                                size="20"
+                                style="padding-top: 2px;"
+                              >
+                                mdi-calendar-month
+                              </v-icon>
+                            </v-btn>
                           </div>
                           <v-col
                             cols="2"
@@ -492,7 +533,20 @@
                             >
                               {{ item.company?.name }}
                             </td>
-                            <td>{{ formatDate(item.inquiryDate) }}</td>
+                            <td>
+                              <!-- inquiryDate column -->
+                              <div v-if="item.inquiryDate">
+                                <div>{{ formatDatePart(item.inquiryDate) }}</div>
+                                <div class="text-caption text-grey-darken-1">
+                                  <v-icon
+                                    size="14"
+                                    style="padding-bottom: 2px;"
+                                  >
+                                    mdi-clock-outline
+                                  </v-icon> {{ formatTimePart(item.inquiryDate) }}
+                                </div>
+                              </div>
+                            </td>
                             <td>{{ item.source }}</td>
                             <td>{{ item.inquiryPlace }}</td>
                             <td>
@@ -502,6 +556,31 @@
                               />
                             </td>
                             <td>{{ item.customerName }}</td>
+                            <td>
+                              <v-menu>
+                                <template #activator="{ props }">
+                                  <v-btn
+                                    v-bind="props"
+                                    :color="getCustomerTitleColor(item.customerTitle)"
+                                    variant="outlined"
+                                    class="px-2"
+                                    size="small"
+                                    :loading="updatingCustomerTitles.has(item._id)"
+                                  >
+                                    {{ item.customerTitle || '選擇稱謂' }}
+                                  </v-btn>
+                                </template>
+                                <v-list>
+                                  <v-list-item
+                                    v-for="title in titleOptions"
+                                    :key="title"
+                                    @click="updateCustomerTitle(item._id, title)"
+                                  >
+                                    <v-list-item-title>{{ title }}</v-list-item-title>
+                                  </v-list-item>
+                                </v-list>
+                              </v-menu>
+                            </td>
                             <td>{{ item.customerPhone }}</td>
                             <td>{{ item.customerLineId }}</td>
                             <td>{{ item.customerEmail }}</td>
@@ -516,9 +595,8 @@
                                     class="px-2"
                                     size="small"
                                     :loading="updatingSalesPersons.has(item._id)"
-                                    :disabled="!user.isLogin && !verifiedCompany"
                                   >
-                                    {{ item.salesPerson.nickname || item.salesPerson.name }}
+                                    {{ getSalesPersonIndex(item.salesPerson) }} {{ item.salesPerson.nickname || item.salesPerson.name }}
                                   </v-btn>
                                   <v-btn
                                     v-else
@@ -528,7 +606,6 @@
                                     class="px-2"
                                     size="small"
                                     :loading="updatingSalesPersons.has(item._id)"
-                                    :disabled="!user.isLogin && !verifiedCompany"
                                   >
                                     選擇業務
                                   </v-btn>
@@ -539,13 +616,16 @@
                                     :key="person._id"
                                     @click="updateSalesPerson(item._id, person._id)"
                                   >
-                                    <v-list-item-title>{{ person.nickname || person.name }} ({{ person.employeeCode }})</v-list-item-title>
+                                    <v-list-item-title>{{ getSalesPersonIndex(person) }} {{ person.nickname || person.name }} ({{ person.employeeCode }})</v-list-item-title>
                                   </v-list-item>
                                 </v-list>
                               </v-menu>
                             </td>
                             <td>
-                              <v-menu max-height="360">
+                              <v-menu
+                                max-height="360"
+                                :open-on-click="!user.isLogin || (!user.isManager && !user.isAdmin && !user.isUser)"
+                              >
                                 <template #activator="{ props }">
                                   <v-btn
                                     v-if="item.inquiryResult"
@@ -555,7 +635,6 @@
                                     class="px-2"
                                     size="small"
                                     :loading="updatingInquiryResults.has(item._id)"
-                                    :disabled="!user.isLogin && !verifiedCompany"
                                   >
                                     {{ item.inquiryResult }}
                                   </v-btn>
@@ -567,7 +646,6 @@
                                     class="px-2"
                                     size="small"
                                     :loading="updatingInquiryResults.has(item._id)"
-                                    :disabled="!user.isLogin && !verifiedCompany"
                                   >
                                     選擇結果
                                   </v-btn>
@@ -584,11 +662,46 @@
                               </v-menu>
                             </td>
                             <td>
-                              <div class="white-space-pre-wrap">
-                                {{ item.progressAndNote }}
+                              <div class="d-flex align-center">
+                                <div class="white-space-pre-wrap flex-grow-1">
+                                  <template v-if="item.latestProgressNote?.content">
+                                    {{ item.latestProgressNote.content }}
+                                    <div
+                                      v-if="item.latestProgressNote"
+                                      class="text-caption text-grey-darken-1"
+                                    >
+                                      <v-icon
+                                        size="14"
+                                        style="padding-bottom: 2px;"
+                                      >
+                                        mdi-clock-outline
+                                      </v-icon> <span>{{ formatProgressNoteTime(item.latestProgressNote.createdAt) }}</span>
+                                    </div>
+                                  </template>
+                                  <template v-else>
+                                    <div class="text-grey">
+                                      {{ user.isLogin && (user.isManager || user.isAdmin || user.isUser) ? '【 尚未新增紀錄 】' : '【 請點擊右方按鈕新增 】' }}
+                                    </div>
+                                  </template>
+                                </div>
+                                <v-btn
+                                  v-tooltip:top="user.isLogin && (user.isManager || user.isAdmin || user.isUser) ? '查看紀錄' : '新增及查看紀錄'"
+                                  icon
+                                  color="grey-darken-2"
+                                  variant="plain"
+                                  size="18"
+                                  class="ms-1"
+                                  :ripple="false"
+                                  @click="openSimpleDialog(item)"
+                                >
+                                  <v-icon>mdi-history</v-icon>
+                                </v-btn>
                               </div>
                             </td>
-                            <td>
+                            <td
+                              v-if="user.isLogin && (user.isManager || user.isAdmin || user.isUser)"
+                              class="text-center"
+                            >
                               <v-btn
                                 v-if="user.isLogin && (user.isManager || user.isAdmin || user.isUser) || verifiedCompany"
                                 icon
@@ -703,7 +816,7 @@
               <!-- 客戶姓名 -->
               <v-col
                 cols="12"
-                sm="3"
+                sm="4"
               >
                 <v-text-field
                   v-model="customerName.value.value"
@@ -715,10 +828,26 @@
                 />
               </v-col>
 
+              <!-- 客戶稱謂 -->
+              <v-col
+                cols="12"
+                sm="4"
+              >
+                <v-select
+                  v-model="customerTitle.value.value"
+                  :error-messages="customerTitle.errorMessage.value"
+                  :items="titleOptions"
+                  label="稱謂"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
+              </v-col>
+
               <!-- 客戶電話 -->
               <v-col
                 cols="12"
-                sm="3"
+                sm="4"
               >
                 <v-text-field
                   v-model="customerPhone.value.value"
@@ -733,7 +862,7 @@
               <!-- 客戶 Line ID -->
               <v-col
                 cols="12"
-                sm="3"
+                sm="6"
               >
                 <v-text-field
                   v-model="customerLineId.value.value"
@@ -748,7 +877,7 @@
               <!-- 客戶 Email -->
               <v-col
                 cols="12"
-                sm="3"
+                sm="6"
               >
                 <v-text-field
                   v-model="customerEmail.value.value"
@@ -926,7 +1055,7 @@
               </v-col>
 
               <!-- 詢問內容 -->
-              <v-col cols="4">
+              <v-col cols="12">
                 <v-textarea
                   v-model="inquiryContent.value.value"
                   :error-messages="inquiryContent.errorMessage.value"
@@ -946,6 +1075,7 @@
                     class="me-2 mt-2"
                     hide-details
                     clearable
+                    @keydown.enter.prevent
                   />
                   <v-btn
                     color="success"
@@ -960,7 +1090,7 @@
               </v-col>
 
               <!-- 詢問結果 -->
-              <v-col cols="4">
+              <!-- <v-col cols="4">
                 <v-select
                   v-model="inquiryResult.value.value"
                   :error-messages="inquiryResult.errorMessage.value"
@@ -972,10 +1102,10 @@
                   density="compact"
                   clearable
                 />
-              </v-col>
+              </v-col> -->
 
               <!-- 進度 -->
-              <v-col cols="4">
+              <!-- <v-col cols="4">
                 <v-textarea
                   v-model="progressAndNote.value.value"
                   :error-messages="progressAndNote.errorMessage.value"
@@ -986,10 +1116,10 @@
                   auto-grow
                   rows="8"
                 />
-              </v-col>
+              </v-col> -->
             </v-row>
 
-            <v-card-actions class="px-3 mt-4">
+            <v-card-actions class="px-0 mt-4">
               <v-spacer />
               <v-btn
                 color="grey-darken-1"
@@ -1017,13 +1147,23 @@
     <v-dialog
       v-model="simpleDialog.open"
       persistent
-      max-width="480"
+      max-width="720"
     >
       <v-card class="rounded-lg px-4 py-4">
-        <div class="card-title px-4 py-3">
-          編輯詢問資料
+        <div class="card-title px-4 mt-2 mb-3 d-flex justify-space-between align-center">
+          <div>進度 / 備註 - 歷史紀錄</div>
+          <v-btn
+            icon
+            variant="text"
+            size="40"
+            @click="closeSimpleDialog"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="mt-3 pa-3">
+        <v-card-text class="pa-3">
           <!-- 加入載入中動畫 -->
           <div
             v-if="isDialogLoading"
@@ -1038,80 +1178,93 @@
             />
           </div>
 
-          <!-- 簡化表單內容 -->
-          <v-form
-            v-else
-            @submit.prevent="submitSimpleInquiry"
-          >
-            <v-row>
-              <!-- 業務選擇 -->
-              <v-col cols="12">
-                <v-autocomplete
-                  v-model="simpleSalesPerson.value.value"
-                  :error-messages="simpleSalesPerson.errorMessage.value"
-                  :items="searchSalesPersons"
-                  :item-title="item => item ? `${item.name} (${item.nickname ? item.nickname + ' ' : ''}${item.employeeCode})` : ''"
-                  item-value="_id"
-                  label="業務"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  clearable
-                />
-              </v-col>
-
-              <!-- 詢問結果 -->
-              <v-col cols="12">
-                <v-select
-                  v-model="simpleInquiryResult.value.value"
-                  :error-messages="simpleInquiryResult.errorMessage.value"
-                  :items="inquiryResultOptions"
-                  item-title="text"
-                  item-value="value"
-                  label="詢問結果"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  clearable
-                />
-              </v-col>
-
-              <!-- 進度 / 備註 -->
-              <v-col cols="12">
-                <v-textarea
-                  v-model="simpleProgressAndNote.value.value"
-                  :error-messages="simpleProgressAndNote.errorMessage.value"
-                  label="進度 / 備註"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  auto-grow
-                  rows="8"
-                />
-              </v-col>
-            </v-row>
-
-            <v-card-actions class="px-0 mt-4 pb-0">
-              <v-spacer />
-              <v-btn
-                color="grey-darken-1"
+          <!-- 新增進度/備註區域 -->
+          <div v-else>
+            <div
+              v-if="!user.isLogin || (!user.isManager && !user.isAdmin && !user.isUser)"
+              class="d-flex align-center mb-6"
+            >
+              <v-textarea
+                v-model="progressNoteInput"
+                label="新增進度 / 備註"
                 variant="outlined"
-                @click="closeSimpleDialog"
-              >
-                取消
-              </v-btn>
+                density="compact"
+                :error="!!progressNoteError"
+                :error-messages="progressNoteError"
+                rows="2"
+                hide-details="auto"
+                class="flex-grow-1 me-2"
+                :disabled="isAddingNote"
+              />
               <v-btn
                 color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                class="ms-2"
-                :loading="isSimpleSubmitting"
+                :loading="isAddingNote"
+                :disabled="!progressNoteInput?.trim()"
+                @click="confirmNoteDialog = true"
               >
-                修改
+                新增
               </v-btn>
-            </v-card-actions>
-          </v-form>
+            </div>
+
+            <!-- 進度/備註列表 -->
+            <v-data-table
+              :headers="progressNotesHeaders"
+              :items="getCurrentItemProgressNotes"
+              class="elevation-0 rounded-sm progress-notes-table"
+              density="compact"
+              :sort-by="[{ key: 'createdAt', order: 'desc' }]"
+            >
+              <template #item="{ item, index }">
+                <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                  <td>{{ item.content }}</td>
+                  <td>{{ formatProgressNoteTime(item.createdAt) }}</td>
+                </tr>
+              </template>
+            </v-data-table>
+          </div>
         </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- 確認新增進度/備註對話框 -->
+    <v-dialog
+      v-model="confirmNoteDialog"
+      max-width="340"
+    >
+      <v-card class="rounded-lg pt-6 pb-4 px-6">
+        <div class="card-title mb-3">
+          確認新增
+        </div>
+        <v-card-text class="pa-0 mb-4">
+          <div class="mb-4">
+            請確認是否要新增以下進度/備註？新增後將無法修改或刪除。
+          </div>
+          <v-card
+            variant="outlined"
+            color="grey-darken-1"
+            class="pa-3"
+          >
+            {{ progressNoteInput }}
+          </v-card>
+        </v-card-text>
+        <v-card-actions class="px-0">
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            variant="outlined"
+            @click="confirmNoteDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            :loading="isAddingNote"
+            @click="addProgressNote"
+          >
+            確認
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -1179,7 +1332,7 @@
     <v-dialog
       v-model="employeeManageDialog.open"
       persistent
-      max-width="1300"
+      max-width="1374"
     >
       <v-card class="rounded-lg px-4 py-5">
         <div class="card-title px-4 pt-2">
@@ -1239,7 +1392,7 @@
                   :key="employee._id"
                   class="mb-2 me-3 sales-person-card"
                   elevation="0"
-                  width="238"
+                  width="252"
                 >
                   <v-card-text class="pa-2">
                     <div class="d-flex justify-space-between align-center ps-2 pe-1 py-1">
@@ -1262,6 +1415,21 @@
                             class="me-1"
                           />
                           Line：{{ employee.lineID || '尚未填寫' }}
+                          <v-btn
+                            v-if="employee.lineLink"
+                            v-tooltip="'複製 Line 連結'"
+                            icon
+                            variant="text"
+                            color="teal-darken-1"
+                            size="18"
+                            class="ms-2"
+                            :ripple="false"
+                            @click="copyLineLink(employee.lineLink)"
+                          >
+                            <v-icon size="14">
+                              mdi-content-copy
+                            </v-icon>
+                          </v-btn>
                         </div>
                       </div>
                       <div class="d-flex justify-space-between align-center">
@@ -1544,10 +1712,14 @@
       </v-card>
     </v-dialog>
   </v-container>
+  <TourGuide
+    v-if="!user.isLogin"
+    ref="tourGuide"
+  />
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
 import { debounce } from 'lodash'
 import { useApi } from '@/composables/axios'
@@ -1555,6 +1727,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { useUserStore } from '@/stores/user'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
+import TourGuide from '@/components/TourGuide.vue'
 import * as yup from 'yup'
 import { useForm, useField } from 'vee-validate'
 
@@ -1567,7 +1740,13 @@ definePage({
 })
 
 // 在 script setup 區域的開頭添加
-const VERIFICATION_EXPIRY_HOURS = 10 // 驗證有效期限（小時）
+const VERIFICATION_EXPIRY_HOURS = 1 // 驗證有效期限（小時）
+
+// 添加提醒狀態變數
+const reminderShown = ref({
+  fiveMinutes: false,
+  oneMinute: false
+})
 
 // API 與工具初始化
 const { apiAuth } = useApi()
@@ -1576,23 +1755,24 @@ const user = useUserStore()
 const { smAndUp, mdAndUp } = useDisplay()
 
 // 響應式變數
-const dialogWidth = computed(() => mdAndUp.value ? '1400' : '100%')
+const dialogWidth = computed(() => mdAndUp.value ? '880' : '100%')
 const isSearching = ref(false)
 
 // 表格相關
 const tableHeaders = [
   { title: '公司', key: 'company.name', align: 'start', sortable: true },
-  { title: '日期', key: 'inquiryDate', align: 'start', sortable: true },
-  { title: '來源', key: 'source', width: '84px', align: 'start', sortable: true },
+  { title: '日期 / 時間', key: 'inquiryDate', align: 'start', sortable: true },
+  { title: '來源', key: 'source', width: '90px', align: 'start', sortable: true },
   { title: '地區', key: 'inquiryPlace', width: '84px', align: 'start', sortable: true },
-  { title: '詢問內容', key: 'inquiryContent', width: '280px', align: 'start', sortable: true },
+  { title: '詢問內容', key: 'inquiryContent', width: '240px', align: 'start', sortable: true },
   { title: '客戶姓名', key: 'customerName', align: 'start', sortable: true },
+  { title: '稱謂', key: 'customerTitle', align: 'start', sortable: true },
   { title: '電話', key: 'customerPhone', align: 'start', sortable: true },
   { title: 'Line ID', key: 'customerLineId', align: 'start', sortable: true },
   { title: 'Email', key: 'customerEmail', align: 'start', sortable: true },
   { title: '業務', key: 'salesPerson.name', align: 'start', sortable: true },
   { title: '詢問結果', key: 'inquiryResult', width: '110px', align: 'start', sortable: true },
-  { title: '進度 / 備註', key: 'progressAndNote', width: '180px', align: 'start', sortable: true },
+  { title: '最新進度 / 備註', key: 'latestProgressNote.content', width: '220px', align: 'start', sortable: true },
   { title: '操作', key: 'actions', width: '100px', align: 'center', sortable: false }
 ]
 
@@ -1627,8 +1807,8 @@ const sourceOptions = [
 
 // 詢問結果選項
 const inquiryResultOptions = [
-  { text: '參團', value: '參團' },
-  { text: '不參團', value: '不參團' },
+  { text: '成交', value: '成交' },
+  { text: '不成交', value: '不成交' },
   { text: '其他', value: '其他' }
 ]
 
@@ -1658,9 +1838,11 @@ const loadPlaceOptions = async () => {
 const filteredHeaders = computed(() => {
   let headers = tableHeaders
 
-  // 如果不是管理者、管理員或一般用戶，移除公司欄位
+  // 如果不是管理者、管理員或一般用戶，移除公司欄位和操作欄位
   if (!user.isLogin || (!user.isManager && !user.isAdmin && !user.isUser)) {
-    headers = headers.filter(header => header.key !== 'company.name')
+    headers = headers.filter(header =>
+      !['company.name', 'actions'].includes(header.key)
+    )
   }
 
   // 根據螢幕大小過濾欄位
@@ -1687,7 +1869,10 @@ const confirmDeleteDialog = ref({
 // 對話框相關響應式變數
 const dialog = ref({
   open: false,
-  id: null
+  id: null,
+  originalResult: null,  // 保存原始詢問結果
+  currentItemId: null,   // 保存當前項目ID
+  submitted: false      // 新增：標記是否成功提交
 })
 
 const isDialogLoading = ref(false)
@@ -1714,6 +1899,9 @@ const inquirySchema = yup.object({
     .string()
     .required('請輸入客戶姓名')
     .trim(),
+  customerTitle: yup
+    .string()
+    .nullable(),
   customerPhone: yup
     .string()
     .nullable(),
@@ -1733,6 +1921,10 @@ const inquirySchema = yup.object({
   progressAndNote: yup
     .string()
     .nullable()
+    .when('inquiryResult', {
+      is: (val) => val === '不成交' || val === '其他',
+      then: (schema) => schema.required('當詢問結果為不成交或其他時，進度/備註為必填')
+    })
 })
 
 // 初始化表單
@@ -1745,6 +1937,7 @@ const { handleSubmit, isSubmitting, resetForm } = useForm({
     company: '',
     salesPerson: '',
     customerName: '',
+    customerTitle: null, // Add customerTitle
     customerPhone: '',
     customerLineId: '',
     customerEmail: '',
@@ -1761,6 +1954,7 @@ const inquiryPlace = useField('inquiryPlace')
 const company = useField('company')
 const salesPerson = useField('salesPerson')
 const customerName = useField('customerName')
+const customerTitle = useField('customerTitle') // Define customerTitle field
 const customerPhone = useField('customerPhone')
 const customerLineId = useField('customerLineId')
 const customerEmail = useField('customerEmail')
@@ -1776,6 +1970,9 @@ const verifiedCompany = ref(null)
 const availableCompanies = ref([])
 const tempSelectedCompany = ref(null)
 const showPassword = ref(false)
+
+// Add customerTitle options near other options
+const titleOptions = ['先生', '小姐', '其他']
 
 // 添加計算屬性來獲取所選公司的名稱
 const selectedCompanyName = computed(() => {
@@ -1818,34 +2015,31 @@ watch(() => searchCriteria.value.company, async (newVal) => {
     const now = new Date().getTime()
     const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
 
-    // 如果驗證資料已過期，才刪除
     if (now > expiryTime) {
+      const companyName = availableCompanies.value.find(company => company._id === companyId)?.name || ''
       localStorage.removeItem('companyVerification')
-      tempSelectedCompany.value = newVal
+      verifiedCompany.value = null
       searchCriteria.value.company = null
-      isPasswordDialogOpen.value = true
+      tableItems.value = []
+      tableItemsLength.value = 0
+      createSnackbar({
+        text: `登入時效已到期，已自動登出「${companyName}」`,
+        snackbarProps: {
+          color: 'warning',
+          timeout: -1,
+          location: 'top'
+        }
+      })
       return
     }
 
-    // 如果選擇的公司與驗證的公司不同，顯示密碼對話框
     if (companyId !== newVal) {
-      // 儲存新選擇的公司
       tempSelectedCompany.value = newVal
-      // 恢復選擇為舊公司
       searchCriteria.value.company = companyId
       isPasswordDialogOpen.value = true
     } else {
-      // 如果是同一家公司，重新載入業務列表並執行搜尋
       await loadSearchSalesPersons()
       performSearch()
-    }
-  } else {
-    // 有身份的人選擇公司時，也要重新載入業務列表
-    if (newVal) {
-      searchCriteria.value.salesPerson = null // 清空已選擇的業務
-      await loadSearchSalesPersons()
-    } else {
-      searchSalesPersons.value = [] // 如果沒有選擇公司，清空業務列表
     }
   }
 })
@@ -1861,7 +2055,6 @@ const verifyCompanyPassword = async () => {
     })
 
     if (data.success) {
-      // 儲存驗證資訊到 localStorage
       localStorage.setItem('companyVerification', JSON.stringify({
         companyId: tempSelectedCompany.value,
         timestamp: new Date().getTime()
@@ -1871,11 +2064,14 @@ const verifyCompanyPassword = async () => {
       searchCriteria.value.company = tempSelectedCompany.value
       isPasswordDialogOpen.value = false
       companyPassword.value = ''
+
+      // 設置新的定時器
+      setupAutoLogoutTimer()
+
       createSnackbar({
         text: '密碼驗證成功',
         snackbarProps: { color: 'teal-lighten-1' }
       })
-      // 驗證成功後重新載入業務列表
       await loadSearchSalesPersons()
       performSearch()
     }
@@ -1996,12 +2192,96 @@ const handleDateRangeChange = (dates) => {
   searchCriteria.value.dateRange = dates
 }
 
-// 修改 performSearch 函數
+// 添加檢查登出狀態的函數
+const checkAutoLogout = () => {
+  if (user.isLogin || !verifiedCompany.value) {
+    return
+  }
+
+  const verificationData = localStorage.getItem('companyVerification')
+  if (!verificationData) {
+    return
+  }
+
+  const { companyId, timestamp } = JSON.parse(verificationData)
+  const now = new Date().getTime()
+  const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
+
+  if (now > expiryTime) {
+    console.log('checkAutoLogout: 驗證已過期，開始執行登出流程')
+    // 獲取公司名稱
+    const companyName = availableCompanies.value.find(company => company._id === companyId)?.name || ''
+
+    // 清除驗證資訊
+    localStorage.removeItem('companyVerification')
+    verifiedCompany.value = null
+    searchCriteria.value.company = null
+
+    // 清空表格資料
+    tableItems.value = []
+    tableItemsLength.value = 0
+
+    // 強制觸發搜尋更新
+    performSearch()
+
+    // 顯示登出提示
+    createSnackbar({
+      text: `登入時效已到期，已自動登出「${companyName}」`,
+      snackbarProps: {
+        color: 'warning',
+        timeout: -1, // 不自動關閉
+        location: 'top'
+      }
+    })
+
+    // 清除定時器
+    if (autoLogoutTimer.value) {
+      clearInterval(autoLogoutTimer.value)
+      autoLogoutTimer.value = null
+    }
+
+    console.log('checkAutoLogout: 登出流程完成')
+  }
+}
+
+// 添加一個函數來設置定時器
+const setupAutoLogoutTimer = () => {
+  // 先清除舊的定時器
+  if (autoLogoutTimer.value) {
+    clearInterval(autoLogoutTimer.value)
+  }
+  // 設置新的定時器
+  autoLogoutTimer.value = setInterval(checkAutoLogout, 1000)
+}
+
+// 在 script setup 區域添加新的函數
+const updateVerificationTimestamp = () => {
+  const verificationData = localStorage.getItem('companyVerification')
+  if (verificationData) {
+    const data = JSON.parse(verificationData)
+    // 更新時間戳記
+    data.timestamp = new Date().getTime()
+    localStorage.setItem('companyVerification', JSON.stringify(data))
+
+    // 重置提醒狀態
+    reminderShown.value = {
+      fiveMinutes: false,
+      oneMinute: false
+    }
+
+    // 更新倒數計時
+    updateRemainingTime()
+  }
+}
+
+// 修改 performSearch 函數,加入更新時間戳記
 const performSearch = async () => {
   // 檢查未登入用戶是否有選擇公司
   if (!user.isLogin || (!user.isManager && !user.isAdmin && !user.isUser)) {
+    console.log('performSearch: 檢查驗證狀態開始')
     const verificationData = localStorage.getItem('companyVerification')
     if (!verificationData) {
+      console.log('performSearch: 無驗證資料')
       tableItems.value = []
       tableItemsLength.value = 0
       isSearching.value = false
@@ -2012,7 +2292,15 @@ const performSearch = async () => {
     const now = new Date().getTime()
     const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
 
+    console.log('performSearch 時間檢查:', {
+      現在時間: new Date(now).toLocaleString(),
+      到期時間: new Date(expiryTime).toLocaleString(),
+      剩餘分鐘: ((expiryTime - now) / 1000 / 60).toFixed(2),
+      是否過期: now > expiryTime
+    })
+
     if (now > expiryTime) {
+      console.log('performSearch: 驗證已過期')
       localStorage.removeItem('companyVerification')
       tableItems.value = []
       tableItemsLength.value = 0
@@ -2022,12 +2310,18 @@ const performSearch = async () => {
 
     // 如果驗證資料存在且有效，設定公司 ID
     if (!searchCriteria.value.company) {
+      console.log('performSearch: 設定公司ID', companyId)
       searchCriteria.value.company = companyId
       verifiedCompany.value = companyId
     }
   }
 
   try {
+    console.log('performSearch: 開始搜尋，參數:', {
+      公司: searchCriteria.value.company,
+      頁碼: tablePage.value,
+      每頁筆數: tableItemsPerPage.value
+    })
     const params = {
       page: tablePage.value,
       itemsPerPage: tableItemsPerPage.value,
@@ -2063,6 +2357,9 @@ const performSearch = async () => {
     if (!user.isLogin) {
       endpoint = '/customerInquiries/public/all'
     }
+
+    // 更新時間戳記
+    updateVerificationTimestamp()
 
     const { data } = await apiAuth.get(endpoint, { params })
     if (data.success) {
@@ -2156,37 +2453,49 @@ watch(quickSearch, () => {
 
 // 初始化
 onMounted(async () => {
+  console.log('onMounted: 開始初始化')
   try {
     tableLoading.value = true
     await Promise.all([
       loadCompanies(),
       loadSearchSalesPersons(),
       loadAvailableCompanies(),
-      loadPlaceOptions() // 添加載入地區選項
+      loadPlaceOptions()
     ])
 
     // 檢查驗證狀態
     if (!user.isLogin || (!user.isManager && !user.isAdmin && !user.isUser)) {
+      console.log('onMounted: 檢查驗證狀態')
       const verificationData = localStorage.getItem('companyVerification')
       if (verificationData) {
         const { companyId, timestamp } = JSON.parse(verificationData)
         const now = new Date().getTime()
         const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
 
+        console.log('onMounted 時間檢查:', {
+          現在時間: new Date(now).toLocaleString(),
+          到期時間: new Date(expiryTime).toLocaleString(),
+          剩餘分鐘: ((expiryTime - now) / 1000 / 60).toFixed(2),
+          是否過期: now > expiryTime
+        })
+
         if (now <= expiryTime) {
-          // 驗證資料有效，設定公司並執行搜尋
+          console.log('onMounted: 驗證有效，設定公司並啟動定時檢查')
           searchCriteria.value.company = companyId
           verifiedCompany.value = companyId
           await performSearch()
+
+          // 啟動定時檢查
+          console.log('onMounted: 啟動定時檢查')
+          setupAutoLogoutTimer()
         } else {
-          // 驗證資料已過期，清除資料
+          console.log('onMounted: 驗證已過期，清除資料')
           localStorage.removeItem('companyVerification')
           verifiedCompany.value = null
         }
       }
     } else {
-      // 管理者、管理員或一般用戶直接執行搜尋，不需要設定公司
-      searchCriteria.value.company = null
+      console.log('onMounted: 已登入用戶，直接搜尋')
       await performSearch()
     }
   } catch (error) {
@@ -2197,6 +2506,14 @@ onMounted(async () => {
     })
   } finally {
     tableLoading.value = false
+    console.log('onMounted: 初始化完成')
+  }
+})
+
+// 添加 onUnmounted 清理定時器
+onUnmounted(() => {
+  if (autoLogoutTimer.value) {
+    clearInterval(autoLogoutTimer.value)
   }
 })
 
@@ -2233,6 +2550,7 @@ const openDialog = async (item) => {
         // 再設定業務值
         salesPerson.value.value = item.salesPerson?._id || ''
         customerName.value.value = item.customerName || ''
+        customerTitle.value.value = item.customerTitle || null // Load customerTitle
         customerPhone.value.value = item.customerPhone || ''
         customerLineId.value.value = item.customerLineId || ''
         customerEmail.value.value = item.customerEmail || ''
@@ -2261,8 +2579,18 @@ const openDialog = async (item) => {
 
 // 關閉對話框
 const closeDialog = () => {
+  // 如果是從表格更改詢問結果而來，且取消操作，恢復原始狀態
+  if (dialog.value.currentItemId && !dialog.value.submitted) {
+    const currentItem = tableItems.value.find(item => item._id === dialog.value.currentItemId)
+    if (currentItem) {
+      currentItem.inquiryResult = dialog.value.originalResult
+    }
+  }
   dialog.value.open = false
   dialog.value.id = null
+  dialog.value.originalResult = null
+  dialog.value.currentItemId = null
+  dialog.value.submitted = false
   isDialogLoading.value = false
   resetForm()
 }
@@ -2270,41 +2598,60 @@ const closeDialog = () => {
 // 提交表單
 const submitInquiry = handleSubmit(async (values) => {
   try {
-    // 處理空字串轉為 null
+    // 處理時間，確保包含當前的時分秒
     const processedValues = {
       ...values,
-      salesPerson: values.salesPerson || null
+      salesPerson: values.salesPerson || null,
+      inquiryDate: values.inquiryDate ? new Date(
+        new Date(values.inquiryDate).getFullYear(),
+        new Date(values.inquiryDate).getMonth(),
+        new Date(values.inquiryDate).getDate(),
+        new Date().getHours(),
+        new Date().getMinutes(),
+        new Date().getSeconds()
+      ).toISOString() : null
     }
 
     if (dialog.value.id) {
       // 編輯模式 - 檢查資料是否有變更
+      const originalItem = tableItems.value.find(item => item._id === dialog.value.id)
+
+      // 檢查資料是否有變更
       const hasChanges = JSON.stringify({
         company: processedValues.company,
-        salesPerson: processedValues.salesPerson,
+        salesPerson: processedValues.salesPerson || null,
         inquiryDate: processedValues.inquiryDate,
         source: processedValues.source,
         inquiryPlace: processedValues.inquiryPlace || '',
         inquiryContent: processedValues.inquiryContent || '',
         customerName: processedValues.customerName || '',
+        customerTitle: processedValues.customerTitle || '',
         customerPhone: processedValues.customerPhone || '',
         customerLineId: processedValues.customerLineId || '',
         customerEmail: processedValues.customerEmail || '',
         progressAndNote: processedValues.progressAndNote || '',
         inquiryResult: processedValues.inquiryResult || ''
       }) !== JSON.stringify({
-        company: tableItems.value.find(item => item._id === dialog.value.id)?.company?._id || '',
-        salesPerson: tableItems.value.find(item => item._id === dialog.value.id)?.salesPerson?._id || null,
-        inquiryDate: tableItems.value.find(item => item._id === dialog.value.id)?.inquiryDate || null,
-        source: tableItems.value.find(item => item._id === dialog.value.id)?.source || '',
-        inquiryPlace: tableItems.value.find(item => item._id === dialog.value.id)?.inquiryPlace || '',
-        inquiryContent: tableItems.value.find(item => item._id === dialog.value.id)?.inquiryContent || '',
-        customerName: tableItems.value.find(item => item._id === dialog.value.id)?.customerName || '',
-        customerPhone: tableItems.value.find(item => item._id === dialog.value.id)?.customerPhone || '',
-        customerLineId: tableItems.value.find(item => item._id === dialog.value.id)?.customerLineId || '',
-        customerEmail: tableItems.value.find(item => item._id === dialog.value.id)?.customerEmail || '',
-        progressAndNote: tableItems.value.find(item => item._id === dialog.value.id)?.progressAndNote || '',
-        inquiryResult: tableItems.value.find(item => item._id === dialog.value.id)?.inquiryResult || ''
-      })
+        company: originalItem.company._id.toString(),
+        salesPerson: originalItem.salesPerson?._id?.toString() || null,
+        inquiryDate: originalItem.inquiryDate,
+        source: originalItem.source,
+        inquiryPlace: originalItem.inquiryPlace || '',
+        inquiryContent: originalItem.inquiryContent || '',
+        customerName: originalItem.customerName || '',
+        customerTitle: originalItem.customerTitle || '',
+        customerPhone: originalItem.customerPhone || '',
+        customerLineId: originalItem.customerLineId || '',
+        customerEmail: originalItem.customerEmail || '',
+        progressAndNote: originalItem.progressAndNote || '',
+        inquiryResult: originalItem.inquiryResult || ''
+      }) || (
+        // 特別處理：如果是從表格更改詢問結果而來，且結果為不成交或其他，
+        // 只要進度/備註有填寫就視為有變更
+        dialog.value.currentItemId &&
+        ['不成交', '其他'].includes(processedValues.inquiryResult) &&
+        processedValues.progressAndNote?.trim()
+      )
 
       if (!hasChanges) {
         createSnackbar({
@@ -2314,9 +2661,24 @@ const submitInquiry = handleSubmit(async (values) => {
         return
       }
 
-      // 編輯
-      const { data } = await apiAuth.patch(`/customerInquiries/${dialog.value.id}`, processedValues)
+      // 更新資料並獲取更新後的完整資料（包含關聯資料）
+      const { data } = await apiAuth.patch(
+        `/customerInquiries/${dialog.value.id}`,
+        processedValues
+      )
+
       if (data.success) {
+        // 標記為已成功提交
+        dialog.value.submitted = true
+        // 立即更新表格中的項目
+        const updatedItem = tableItems.value.find(item => item._id === dialog.value.id)
+        if (updatedItem) {
+          Object.assign(updatedItem, {
+            ...updatedItem,
+            ...processedValues,
+            inquiryResult: processedValues.inquiryResult
+          })
+        }
         await performSearch()
         closeDialog()
         createSnackbar({
@@ -2345,14 +2707,14 @@ const submitInquiry = handleSubmit(async (values) => {
 })
 
 // 格式化日期
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
-}
+// const formatDate = (date) => {
+//   if (!date) return ''
+//   return new Date(date).toLocaleDateString('zh-TW', {
+//     year: 'numeric',
+//     month: '2-digit',
+//     day: '2-digit'
+//   })
+// }
 
 const urlInput = ref('')
 
@@ -2367,7 +2729,7 @@ const confirmInsertUrl = () => {
   const after = text.substring(end)
 
   // 插入網址按鈕
-  const buttonHtml = ` <a href="${urlInput.value}" target="_blank" class="url-button">點擊</a>`
+  const buttonHtml = ` <a href="${urlInput.value}" target="_blank" class="url-button">連結</a>`
   inquiryContent.value.value = before + buttonHtml + after
 
   // 清空輸入框
@@ -2386,62 +2748,46 @@ const formatInquiryContent = (content) => {
   )
 }
 
-// 簡化版對話框相關響應式變數
+// 添加新的變數
+const progressNoteInput = ref('')
+const isAddingNote = ref(false)
+const confirmNoteDialog = ref(false)
+const progressNotesHeaders = [
+  { title: '進度/備註內容', key: 'content', align: 'start' },
+  { title: '建立時間', key: 'createdAt', width: '170px', align: 'start' }
+]
+
+// 修改 simpleDialog 的結構
 const simpleDialog = ref({
   open: false,
   id: null
 })
 
-// 簡化版表單驗證架構
-const simpleInquirySchema = yup.object({
-  progressAndNote: yup
-    .string()
-    .nullable(),
-  inquiryResult: yup
-    .string()
-    .nullable(),
-  salesPerson: yup
-    .string()
-    .nullable()
-    .transform((value) => value || null)
-})
+// 添加日期格式化函數
+const formatProgressNoteTime = (timestamp) => {
+  if (!timestamp) return ''
+  const date = new Date(timestamp)
+  return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
 
-// 初始化簡化版表單
-const { handleSubmit: handleSimpleSubmit, isSubmitting: isSimpleSubmitting, resetForm: resetSimpleForm } = useForm({
-  validationSchema: simpleInquirySchema,
-  initialValues: {
-    progressAndNote: '',
-    inquiryResult: '',
-    salesPerson: ''
-  }
-})
-
-// 定義簡化版表單欄位
-const simpleProgressAndNote = useField('progressAndNote')
-const simpleInquiryResult = useField('inquiryResult')
-const simpleSalesPerson = useField('salesPerson')
-
-// 開啟簡化版對話框
+// 修改 openSimpleDialog 函數
 const openSimpleDialog = async (item) => {
-  simpleDialog.value.open = true
-  simpleDialog.value.id = item?._id || null
-  isDialogLoading.value = true
+  if (!item?._id) {
+    console.error('無效的項目ID')
+    return
+  }
 
   try {
-    if (item) {
-      // 編輯模式
-      simpleProgressAndNote.value.value = item.progressAndNote || ''
-      simpleInquiryResult.value.value = item.inquiryResult || ''
-      simpleSalesPerson.value.value = item.salesPerson?._id || ''
-
-      // 如果是一般身分，重新載入該公司的業務列表
-      if (!user.isLogin && verifiedCompany.value) {
-        await loadSearchSalesPersons()
-      }
-    } else {
-      // 新增模式
-      resetSimpleForm()
+    isDialogLoading.value = true
+    simpleDialog.value = {
+      open: true,
+      id: item._id
     }
+
+    // 確保資料已載入
+    await performSearch()
+
+    isDialogLoading.value = false
   } catch (error) {
     console.error('載入詢問資料失敗:', error)
     createSnackbar({
@@ -2449,72 +2795,161 @@ const openSimpleDialog = async (item) => {
       snackbarProps: { color: 'red-lighten-1' }
     })
     closeSimpleDialog()
-  } finally {
-    isDialogLoading.value = false
   }
 }
 
-// 關閉簡化版對話框
+// 修改 closeSimpleDialog 函數
 const closeSimpleDialog = () => {
-  simpleDialog.value.open = false
-  simpleDialog.value.id = null
+  // 如果是強制新增備註的情況且還沒有完成，恢復原始詢問結果
+  if (simpleDialog.value.requireNote && simpleDialog.value.pendingResult) {
+    const currentItem = tableItems.value.find(item => item._id === simpleDialog.value.id)
+    if (currentItem) {
+      currentItem.inquiryResult = simpleDialog.value.originalResult
+    }
+  }
+
+  simpleDialog.value = {
+    open: false,
+    id: null,
+    originalResult: null,
+    pendingResult: null,
+    requireNote: false
+  }
+  progressNoteInput.value = ''
+  confirmNoteDialog.value = false
   isDialogLoading.value = false
-  resetSimpleForm()
 }
 
-// 提交簡化版表單
-const submitSimpleInquiry = handleSimpleSubmit(async (values) => {
+// 添加進度/備註驗證函數
+const validateProgressNote = (note) => {
+  if (!note || note.trim().length === 0) {
+    return '請輸入進度/備註內容'
+  }
+  if (note.length > 500) {
+    return '進度/備註內容不能超過500字'
+  }
+  return ''
+}
+
+// 添加新增進度/備註函數
+const addProgressNote = async () => {
+  const error = validateProgressNote(progressNoteInput.value)
+  if (error) {
+    createSnackbar({
+      text: error,
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    return
+  }
+
+  isAddingNote.value = true
   try {
-    // 處理空字串轉為 null
-    const processedValues = {
-      progressAndNote: values.progressAndNote || null,
-      inquiryResult: values.inquiryResult || null,
-      salesPerson: values.salesPerson || null
-    }
+    const response = await apiAuth.post(`/customerInquiries/${simpleDialog.value.id}/progress-notes`, {
+      content: progressNoteInput.value
+    })
 
-    if (simpleDialog.value.id) {
-      // 檢查資料是否有變更
-      const hasChanges = JSON.stringify({
-        salesPerson: processedValues.salesPerson,
-        progressAndNote: processedValues.progressAndNote || '',
-        inquiryResult: processedValues.inquiryResult || ''
-      }) !== JSON.stringify({
-        salesPerson: tableItems.value.find(item => item._id === simpleDialog.value.id)?.salesPerson?._id || null,
-        progressAndNote: tableItems.value.find(item => item._id === simpleDialog.value.id)?.progressAndNote || '',
-        inquiryResult: tableItems.value.find(item => item._id === simpleDialog.value.id)?.inquiryResult || ''
-      })
+    if (response.data.success) {
+      // 如果這是強制新增備註的情況（因為改為不成交或其他）
+      if (simpleDialog.value.requireNote && simpleDialog.value.pendingResult) {
+        // 更新詢問結果
+        const endpoint = user.isLogin && (user.isManager || user.isAdmin || user.isUser)
+          ? `/customerInquiries/${simpleDialog.value.id}`
+          : `/customerInquiries/public/${simpleDialog.value.id}`
 
-      if (!hasChanges) {
-        createSnackbar({
-          text: '資料未做任何變更',
-          snackbarProps: { color: 'red-lighten-1' }
-        })
-        return
+        const currentItem = tableItems.value.find(item => item._id === simpleDialog.value.id)
+
+        // 保留所有原有的資料
+        const updateData = {
+          inquiryResult: simpleDialog.value.pendingResult,
+          salesPerson: currentItem.salesPerson?._id || null,
+          customerTitle: currentItem.customerTitle || null,
+          customerPhone: currentItem.customerPhone || null,
+          customerLineId: currentItem.customerLineId || null,
+          customerEmail: currentItem.customerEmail || null,
+          inquiryContent: currentItem.inquiryContent || null,
+          inquiryPlace: currentItem.inquiryPlace || null,
+          source: currentItem.source || null
+        }
+
+        const { data: updateResponse } = await apiAuth.patch(endpoint, updateData)
+
+        if (updateResponse.success) {
+          // 更新本地資料，保留所有欄位
+          Object.assign(currentItem, {
+            inquiryResult: simpleDialog.value.pendingResult,
+            customerTitle: currentItem.customerTitle,
+            customerPhone: currentItem.customerPhone,
+            customerLineId: currentItem.customerLineId,
+            customerEmail: currentItem.customerEmail,
+            inquiryContent: currentItem.inquiryContent,
+            inquiryPlace: currentItem.inquiryPlace,
+            source: currentItem.source
+          })
+        }
       }
 
-      // 根據用戶身份選擇不同的 API endpoint
-      const endpoint = user.isLogin && (user.isManager || user.isAdmin || user.isUser)
-        ? `/customerInquiries/${simpleDialog.value.id}`
-        : `/customerInquiries/public/${simpleDialog.value.id}`
+      // 更新表格中的項目
+      const index = tableItems.value.findIndex(item => item._id === simpleDialog.value.id)
+      if (index !== -1) {
+        // 如果項目不存在 progressNotes，創建一個空陣列
+        if (!tableItems.value[index].progressNotes) {
+          tableItems.value[index].progressNotes = []
+        }
 
-      // 編輯
-      const { data } = await apiAuth.patch(endpoint, processedValues)
-      if (data.success) {
-        await performSearch()
+        // 添加新的進度/備註到陣列開頭
+        tableItems.value[index].progressNotes.unshift(response.data.result)
+
+        // 更新最新進度/備註
+        tableItems.value[index].latestProgressNote = response.data.result
+      }
+
+      progressNoteInput.value = ''
+      confirmNoteDialog.value = false
+
+      // 如果是強制新增備註的情況，關閉對話框
+      if (simpleDialog.value.requireNote) {
         closeSimpleDialog()
-        createSnackbar({
-          text: '詢問資料更新成功',
-          snackbarProps: { color: 'teal-lighten-1' }
-        })
+      }
+
+      createSnackbar({
+        text: '進度/備註已新增',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+
+      // 重新載入資料以確保顯示正確
+      await performSearch()
+    } else {
+      createSnackbar({
+        text: response.data.message || '新增進度/備註失敗',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+
+      // 如果新增失敗且是強制新增備註的情況，恢復原始詢問結果
+      if (simpleDialog.value.requireNote) {
+        const currentItem = tableItems.value.find(item => item._id === simpleDialog.value.id)
+        if (currentItem) {
+          currentItem.inquiryResult = simpleDialog.value.originalResult
+        }
       }
     }
   } catch (error) {
+    console.error('新增進度/備註錯誤:', error)
     createSnackbar({
-      text: error?.response?.data?.message || '操作失敗',
+      text: error.response?.data?.message || '新增進度/備註時發生錯誤',
       snackbarProps: { color: 'red-lighten-1' }
     })
+
+    // 如果發生錯誤且是強制新增備註的情況，恢復原始詢問結果
+    if (simpleDialog.value.requireNote) {
+      const currentItem = tableItems.value.find(item => item._id === simpleDialog.value.id)
+      if (currentItem) {
+        currentItem.inquiryResult = simpleDialog.value.originalResult
+      }
+    }
+  } finally {
+    isAddingNote.value = false
   }
-})
+}
 
 // 在 script setup 部分添加登出處理函數
 const handleLogout = () => {
@@ -2525,6 +2960,12 @@ const handleLogout = () => {
   localStorage.removeItem('companyVerification')
   verifiedCompany.value = null
   searchCriteria.value.company = null
+
+  // 重置提醒狀態
+  reminderShown.value = {
+    fiveMinutes: false,
+    oneMinute: false
+  }
 
   // 清空表格資料
   tableItems.value = []
@@ -2589,7 +3030,6 @@ const openEmployeeManageDialog = async () => {
   employeeManageDialog.value.open = true
   isLoadingEmployees.value = true
   tempSelectedEmployee.value = null
-
   // 清除 localStorage 中的排序資料，讓它與資料庫重新同步
   localStorage.removeItem('b2c_employee_order')
   console.log('已清除 localStorage 中的排序資料')
@@ -2893,11 +3333,28 @@ const updateSalesPerson = async (id, salesPersonId) => {
       ? `/customerInquiries/${id}`
       : `/customerInquiries/public/${id}`
 
-    const { data } = await apiAuth.patch(endpoint, {
+    // 保留所有原有的資料
+    const updateData = {
       salesPerson: salesPersonId,
-      inquiryResult: currentItem.inquiryResult || null // 保持原有的詢問結果
-    })
+      inquiryResult: currentItem.inquiryResult || null,
+      customerTitle: currentItem.customerTitle || null,
+      customerPhone: currentItem.customerPhone || null,
+      customerLineId: currentItem.customerLineId || null,
+      customerEmail: currentItem.customerEmail || null
+    }
+
+    const { data } = await apiAuth.patch(endpoint, updateData)
     if (data.success) {
+      // 立即更新表格中的項目，但保留其他欄位不變
+      const updatedSalesPerson = companySalesPersons.find(sp => sp._id === salesPersonId)
+      Object.assign(currentItem, {
+        salesPerson: updatedSalesPerson,
+        customerTitle: currentItem.customerTitle,
+        customerPhone: currentItem.customerPhone,
+        customerLineId: currentItem.customerLineId,
+        customerEmail: currentItem.customerEmail,
+        inquiryResult: currentItem.inquiryResult
+      })
       await performSearch()
       createSnackbar({
         text: '更新業務成功',
@@ -2916,9 +3373,9 @@ const updateSalesPerson = async (id, salesPersonId) => {
 
 const getInquiryResultColor = (result) => {
   switch (result) {
-    case '參團':
+    case '成交':
       return 'teal-lighten-1'
-    case '不參團':
+    case '不成交':
       return 'red-lighten-1'
     case '其他':
       return 'grey-darken-1'
@@ -2929,15 +3386,26 @@ const getInquiryResultColor = (result) => {
 
 const updateInquiryResult = async (id, result) => {
   try {
-    // 找到當前項目
     const currentItem = tableItems.value.find(item => item._id === id)
+    const originalResult = currentItem.inquiryResult
 
-    // 檢查資料是否有變更
     if (currentItem.inquiryResult === result) {
       createSnackbar({
         text: '資料未做任何變更',
         snackbarProps: { color: 'red-lighten-1' }
       })
+      return
+    }
+
+    if (result === '不成交' || result === '其他') {
+      // 不要立即更新狀態，而是等待備註新增完成
+      simpleDialog.value = {
+        open: true,
+        id: id,
+        originalResult: originalResult,
+        pendingResult: result,
+        requireNote: true
+      }
       return
     }
 
@@ -2947,11 +3415,20 @@ const updateInquiryResult = async (id, result) => {
       ? `/customerInquiries/${id}`
       : `/customerInquiries/public/${id}`
 
-    const { data } = await apiAuth.patch(endpoint, {
+    // 保留原有的進度/備註
+    const updateData = {
       inquiryResult: result,
-      salesPerson: currentItem.salesPerson?._id || null // 保持原有的業務
-    })
+      salesPerson: currentItem.salesPerson?._id || null,
+      customerTitle: currentItem.customerTitle || null  // 保留原有的稱謂
+    }
+
+    const { data } = await apiAuth.patch(endpoint, updateData)
     if (data.success) {
+      // 立即更新表格中的項目，但保留其他欄位不變
+      Object.assign(currentItem, {
+        inquiryResult: result,
+        customerTitle: currentItem.customerTitle  // 確保稱謂保持不變
+      })
       await performSearch()
       createSnackbar({
         text: '更新詢問結果成功',
@@ -3240,12 +3717,13 @@ const handleExportExcel = async () => {
           '地區': inquiry.inquiryPlace || '',
           '詢問內容': inquiryContent,
           '客戶姓名': inquiry.customerName || '',
+          '稱謂': inquiry.customerTitle || '', // Add customerTitle to export
           '電話': inquiry.customerPhone || '',
           'Line ID': inquiry.customerLineId || '',
           'Email': inquiry.customerEmail || '',
           '業務': inquiry.salesPerson ? (inquiry.salesPerson.nickname || inquiry.salesPerson.name) : '',
           '詢問結果': inquiry.inquiryResult || '',
-          '進度 / 備註': inquiry.progressAndNote || ''
+          '最新進度 / 備註': inquiry.progressNotes?.length > 0 ? inquiry.progressNotes[inquiry.progressNotes.length - 1].content : ''
         }
       })
 
@@ -3260,12 +3738,13 @@ const handleExportExcel = async () => {
         '地區': 12,
         '詢問內容': 50,
         '客戶姓名': 15,
+        '稱謂': 10, // Add width for customerTitle
         '電話': 15,
         'Line ID': 15,
         'Email': 30,
         '業務': 12,
         '詢問結果': 12,
-        '進度 / 備註': 50
+        '最新進度 / 備註': 50
       }
 
       ws['!cols'] = Object.values(colWidths).map(width => ({ wch: width }))
@@ -3330,7 +3809,41 @@ const formatExcelDate = (date) => {
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
-  return `${year}${month}${day}`
+  return `${year}/${month}/${day}`
+}
+
+// Add new date/time formatting functions
+const formatDatePart = (dateString) => {
+  if (!dateString) return '';
+  try {
+    const dateObj = new Date(dateString);
+    if (isNaN(dateObj.getTime())) return '';
+    return dateObj.toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  } catch (e) {
+    console.error('Error formatting date part:', e);
+    return '';
+  }
+}
+
+const formatTimePart = (dateString) => {
+  if (!dateString) return '';
+  try {
+    const dateObj = new Date(dateString);
+    if (isNaN(dateObj.getTime())) return '';
+    return dateObj.toLocaleTimeString('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false // 使用24小時制
+    });
+  } catch (e) {
+    console.error('Error formatting time part:', e);
+    return '';
+  }
 }
 
 // 添加一個 Map 來存儲每個公司的業務列表
@@ -3382,14 +3895,242 @@ watch(() => company.value.value, async (newVal) => {
   }
 })
 
+const handleSalesPersonChange = (value) => {
+  if (!value && searchCriteria.value.company) {
+    searchCriteria.value.salesPerson = null;
+  }
+};
+
+// 監聽公司選擇的變化
+watch(() => searchCriteria.value.company, (newVal) => {
+  if (!newVal) {
+    searchCriteria.value.salesPerson = null;
+  }
+});
+
+// 添加一個新的計算屬性來獲取業務的序號
+const getSalesPersonIndex = (salesPerson) => {
+  if (!salesPerson || typeof salesPerson.order !== 'number') return ''
+  return `${salesPerson.order + 1}.`
+}
+
+// 在 script setup 區域添加複製函數
+const copyLineLink = async (lineLink) => {
+  try {
+    await navigator.clipboard.writeText(lineLink)
+    createSnackbar({
+      text: 'Line連結已複製',
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+  } catch (error) {
+    console.error('複製失敗:', error)
+    createSnackbar({
+      text: '複製失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+// 監聽詢問結果變化
+watch(() => inquiryResult.value.value, (newVal) => {
+  // 只有在非管理者/管理員/一般用戶的情況下才顯示提示
+  if (!user.isLogin && (!user.isManager && !user.isAdmin && !user.isUser)) {
+    if (newVal === '不成交' || newVal === '其他') {
+      // 如果進度/備註為空，顯示提示
+      if (!progressAndNote.value.value) {
+        createSnackbar({
+          text: '當詢問結果為不成交或其他時，請填寫進度/備註',
+          snackbarProps: { color: 'warning' }
+        })
+      }
+    }
+  }
+})
+
+// 添加更新稱謂的函數
+const updatingCustomerTitles = ref(new Set())
+
+const updateCustomerTitle = async (id, title) => {
+  try {
+    // 找到當前項目
+    const currentItem = tableItems.value.find(item => item._id === id)
+
+    // 檢查是否選擇相同的稱謂
+    if (currentItem.customerTitle === title) {
+      createSnackbar({
+        text: '資料未做任何變更',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+      return
+    }
+
+    updatingCustomerTitles.value.add(id)
+
+    const endpoint = user.isLogin && (user.isManager || user.isAdmin || user.isUser)
+      ? `/customerInquiries/${id}`
+      : `/customerInquiries/public/${id}`
+
+    const { data } = await apiAuth.patch(endpoint, {
+      customerTitle: title,
+      progressAndNote: currentItem.progressAndNote || '',  // 保留原有的進度/備註
+      inquiryResult: currentItem.inquiryResult || '',      // 保留原有的詢問結果
+      salesPerson: currentItem.salesPerson?._id || null    // 保留原有的業務
+    })
+
+    if (data.success) {
+      // 立即更新表格中的項目
+      currentItem.customerTitle = title
+      await performSearch()
+      createSnackbar({
+        text: '更新稱謂成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    createSnackbar({
+      text: error?.response?.data?.message || '更新失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    updatingCustomerTitles.value.delete(id)
+  }
+}
+
+// 獲取當前項目的進度/備註
+const getCurrentItemProgressNotes = computed(() => {
+  const item = tableItems.value.find(i => i._id === simpleDialog.value.id)
+  return item?.progressNotes || []
+})
+
+// 添加稱謂顏色相關函數
+const getCustomerTitleColor = (title) => {
+  switch (title) {
+    case '小姐':
+      return 'pink-lighten-1'
+    case '先生':
+      return 'blue-darken-1'
+    case '其他':
+      return 'grey-darken-2'
+    default:
+      return 'grey'
+  }
+}
+
+// 在 script setup 區域添加
+const autoLogoutTimer = ref(null)
+
+// 在 script setup 區域添加以下程式碼
+const progressNoteError = computed(() => {
+  if (simpleDialog.value.requireNote && (!progressNoteInput.value || !progressNoteInput.value.trim())) {
+    return '更改詢問結果為"不成交"或是"其他"時，請新增一筆進度/備註紀錄說明原因'
+  }
+  return ''
+})
+
+// 在 script setup 區域添加以下程式碼
+const remainingTime = ref(0)
+const formattedRemainingTime = computed(() => {
+  const minutes = Math.floor(remainingTime.value / 60)
+  const seconds = remainingTime.value % 60
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
+})
+
+// 更新倒數計時
+const updateRemainingTime = () => {
+  const verificationData = localStorage.getItem('companyVerification')
+  if (!verificationData) {
+    remainingTime.value = 0
+    return
+  }
+
+  const { timestamp } = JSON.parse(verificationData)
+  const now = new Date().getTime()
+  const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
+  const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000))
+  remainingTime.value = remaining
+
+  // 檢查是否需要顯示提醒
+  const remainingMinutes = Math.floor(remaining / 60)
+
+  // 5分鐘提醒
+  if (remainingMinutes === 5 && !reminderShown.value.fiveMinutes) {
+    createSnackbar({
+      text: '系統將在 5 分鐘後自動登出，請注意資料保存',
+      snackbarProps: {
+        color: 'warning',
+        timeout: 10000, // 顯示10秒
+        location: 'top'
+      }
+    })
+    reminderShown.value.fiveMinutes = true
+  }
+
+  // 1分鐘提醒
+  if (remainingMinutes === 1 && !reminderShown.value.oneMinute) {
+    createSnackbar({
+      text: '系統將在 1 分鐘後自動登出，請立即保存資料！',
+      snackbarProps: {
+        color: 'warning',
+        timeout: 10000, // 顯示10秒
+        location: 'top'
+      }
+    })
+    reminderShown.value.oneMinute = true
+  }
+}
+
+// 添加定時器
+let countdownTimer = null
+
+onMounted(() => {
+  // 重置提醒狀態
+  reminderShown.value = {
+    fiveMinutes: false,
+    oneMinute: false
+  }
+
+  // 初始化倒數計時
+  updateRemainingTime()
+  countdownTimer = setInterval(() => {
+    updateRemainingTime()
+  }, 1000)
+})
+
+onUnmounted(() => {
+  if (autoLogoutTimer.value) {
+    clearInterval(autoLogoutTimer.value)
+  }
+  // 清除倒數計時器
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
+  }
+})
+
+// 監聽驗證狀態變化
+watch(() => verifiedCompany.value, (newVal) => {
+  if (newVal) {
+    updateRemainingTime()
+  } else {
+    remainingTime.value = 0
+  }
+})
+
+// 添加本月按鈕的函數
+const setCurrentMonth = () => {
+  const now = new Date()
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  searchCriteria.value.dateRange = [startOfMonth, endOfMonth]
+  performSearch()
+}
 </script>
 
 <style lang="scss" scoped>
 .white-space-pre-wrap {
+  padding: 4px 0;
   white-space: pre-wrap;
   word-wrap: break-word;
   max-width: 300px;
-  line-height: 1.5;
 }
 
 :deep(.v-data-table) {
@@ -3397,9 +4138,11 @@ watch(() => company.value.value, async (newVal) => {
     height: 48px;
     background-color: #455a64 !important;
     color: #fff !important;
+    th {
+      font-size: 13px !important;
+    }
   }
   tbody tr {
-    height: auto;
     min-height: 48px;
   }
   td {
@@ -3456,6 +4199,9 @@ watch(() => company.value.value, async (newVal) => {
 }
 
 :deep(.v-data-table__tbody) {
+  td {
+    font-size: 13px !important;
+  }
   a {
     padding: 1px 4px;
     background: #5C6BC0;
@@ -3463,7 +4209,7 @@ watch(() => company.value.value, async (newVal) => {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     color: #ffffff;
     text-decoration: none;
-    font-size: 12px;
+    font-size: 11px;
     transition: background-color 0.2s;
     &:hover {
       background-color: #283593;
@@ -3488,9 +4234,43 @@ watch(() => company.value.value, async (newVal) => {
   font-weight: bold;
 }
 
+.text-label {
+  white-space: nowrap;
+}
+
+.progress-notes-table {
+  :deep(thead) {
+    background-color: #185869 !important;
+  }
+  tbody tr {
+    td {
+      font-size: 13px !important;
+    }
+
+    &.odd-row {
+      background-color: #f0f4f5;
+    }
+
+    &.even-row {
+      background-color: #fbfcfc;
+    }
+
+    &:hover {
+      background-color: #CFD8DC !important;
+    }
+  }
+}
+
+.clock-container {
+  border: 1px solid #E65100;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-right: 8px;
+}
 </style>
 
 <route lang="yaml">
   meta:
     layout: B2CStatistics
 </route>
+

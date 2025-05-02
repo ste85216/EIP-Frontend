@@ -660,6 +660,20 @@
                 />
               </v-col>
 
+              <!-- Line連結 -->
+              <v-col
+                cols="12"
+                sm="4"
+              >
+                <v-text-field
+                  v-model="lineLink.value.value"
+                  :error-messages="lineLink.errorMessage.value"
+                  label="Line連結"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
+              </v-col>
 
               <v-col
                 cols="12"
@@ -1753,6 +1767,10 @@ const employeeSchema = computed(() => {
       .string()
       .nullable()
       .trim(),
+    lineLink: yup
+      .string()
+      .nullable()
+      .trim(),
     email: yup
       .string()
       .nullable()
@@ -1820,6 +1838,7 @@ const { handleSubmit, isSubmitting, resetForm } = useForm({
     name: '',
     nickname: '',
     lineID: '',
+    lineLink: '',
     email: '',
     emailPassword: '',
     employeeCode: '',
@@ -1856,6 +1875,7 @@ const unpaidLeaveStartDate = useField('unpaidLeaveStartDate')
 const reinstatementDate = useField('reinstatementDate')
 const nickname = useField('nickname')
 const lineID = useField('lineID')
+const lineLink = useField('lineLink')
 
 // 處理任職狀態變更
 const handleEmploymentStatusChange = (newStatus) => {
@@ -1943,6 +1963,7 @@ const openDialog = async (item) => {
       name.value.value = item.name || ''
       nickname.value.value = item.nickname || ''
       lineID.value.value = item.lineID || ''
+      lineLink.value.value = item.lineLink || ''
       email.value.value = item.email ?? ''
       emailPassword.value.value = item.emailPassword || ''
       employeeCode.value.value = item.employeeCode || ''
@@ -2284,6 +2305,7 @@ const handleExportExcel = async () => {
           '姓名': employee.name,
           '暱稱': employee.nickname || '',
           'LineID': employee.lineID || '',
+          'Line連結': employee.lineLink || '',
           '公司': employee.company?.name || '',
           '部門': employee.department?.name || '',
           '聘僱類型': employee.employmentType || '正職',
@@ -2310,6 +2332,7 @@ const handleExportExcel = async () => {
         '姓名': 15,
         '暱稱': 15,
         'LineID': 15,
+        'Line連結': 30,
         '公司': 20,
         '部門': 20,
         '聘僱類型': 12,
@@ -2502,6 +2525,7 @@ const handleImportExcel = async () => {
             name: row['姓名'],
             nickname: row['暱稱'],
             lineID: row['LineID'],
+            lineLink: row['Line連結'],
             company: row['公司'],
             department: row['部門'],
             employmentType: row['聘僱類型'] || '正職',
@@ -2641,18 +2665,37 @@ const jobTitleOptions = [
   { text: '總經理', value: '總經理' },
   { text: '副總經理', value: '副總經理' },
   { text: '協理', value: '協理' },
+  { text: '總監', value: '總監' },
+  { text: '部長', value: '部長' },
   { text: '經理', value: '經理' },
+  { text: '票務經理', value: '票務經理' },
   { text: '專案經理', value: '專案經理' },
   { text: '副理', value: '副理' },
-  { text: '部長', value: '部長' },
-  { text: '財務', value: '財務' },
   { text: '主任', value: '主任' },
-  { text: '業務', value: '業務' },
-  { text: '業務助理', value: '業務助理' },
+  { text: '業務代表', value: '業務代表' },
   { text: 'OP', value: 'OP' },
-  { text: 'IT', value: 'IT' },
-  { text: '顧問', value: '顧問' },
-  { text: '其他', value: '其他' }
+  { text: '線控', value: '線控' },
+  { text: '線控助理', value: '線控助理' },
+  { text: '日本線控', value: '日本線控' },
+  { text: '日本手配', value: '日本手配' },
+  { text: '財務', value: '財務' },
+  { text: '美編', value: '美編' },
+  { text: '行銷', value: '行銷' },
+  { text: '網頁設計', value: '網頁設計' },
+  { text: '工程師', value: '工程師' },
+  { text: '人事行政專員', value: '人事行政專員' },
+  { text: '行政專員', value: '行政專員' },
+  { text: '總務專員', value: '總務專員' },
+  { text: '財務助理', value: '財務助理' },
+  { text: '業務助理', value: '業務助理' },
+  { text: 'OP助理', value: 'OP助理' },
+  { text: '團體機位助理', value: '團體機位助理' },
+  { text: '美編助理', value: '美編助理' },
+  { text: '外務', value: '外務' },
+  { text: '旅遊經理人', value: '旅遊經理人' },
+  { text: '助理工程師', value: '助理工程師' },
+  { text: '工讀生', value: '工讀生' },
+  { text: '實習生', value: '實習生' }
 ]
 </script>
 
