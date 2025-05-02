@@ -22,6 +22,7 @@
                     >
                       <v-select
                         v-if="!user.isLogin || (!user.isManager && !user.isAdmin && !user.isUser)"
+                        v-show="availableCompanies.length > 0"
                         v-model="searchCriteria.company"
                         :items="availableCompanies"
                         item-title="name"
@@ -1761,11 +1762,11 @@ const isSearching = ref(false)
 // 表格相關
 const tableHeaders = [
   { title: '公司', key: 'company.name', align: 'start', sortable: true },
-  { title: '日期 / 時間', key: 'inquiryDate', align: 'start', sortable: true },
+  { title: '日期 / 時間', key: 'inquiryDate', minWidth: '116px', align: 'start', sortable: true },
   { title: '來源', key: 'source', width: '90px', align: 'start', sortable: true },
-  { title: '地區', key: 'inquiryPlace', width: '84px', align: 'start', sortable: true },
+  { title: '地區', key: 'inquiryPlace', minWidth: '84px', align: 'start', sortable: true },
   { title: '詢問內容', key: 'inquiryContent', width: '240px', align: 'start', sortable: true },
-  { title: '客戶姓名', key: 'customerName', align: 'start', sortable: true },
+  { title: '客戶姓名', key: 'customerName', minWidth: '90px', align: 'start', sortable: true },
   { title: '稱謂', key: 'customerTitle', align: 'start', sortable: true },
   { title: '電話', key: 'customerPhone', align: 'start', sortable: true },
   { title: 'Line ID', key: 'customerLineId', align: 'start', sortable: true },

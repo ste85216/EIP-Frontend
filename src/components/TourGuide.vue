@@ -18,12 +18,12 @@
     <v-card
       min-width="300"
       max-width="440"
-      class="tour-guide-card rounded-lg px-4 pt-1 mb-2  border"
+      class="tour-guide-card rounded-lg px-4 pt-2 mb-2"
     >
       <v-card-text class="pa-4">
         <div class="d-flex justify-space-between align-center mb-4">
           <div class="tour-guide-title">
-            歡迎使用直客詢問統計表功能導覽
+            歡迎使用功能導覽
           </div>
           <v-btn
             icon="mdi-close"
@@ -33,15 +33,15 @@
           />
         </div>
 
-        <div class="mb-4">
-          請選擇以下功能進行說明:
+        <div class="mb-4 text-grey-darken-2">
+          請選擇以下功能將為您進行說明:
         </div>
 
         <v-timeline density="compact">
           <v-timeline-item
             v-for="(step, index) in tourSteps"
             :key="index"
-            :dot-color="currentStep === index ? 'amber-darken-4' : 'grey'"
+            :dot-color="currentStep === index ? 'amber-darken-4' : 'blue-grey-darken-2'"
             size="small"
           >
             <div
@@ -54,10 +54,10 @@
                   :icon="step.icon"
                   size="18"
                   class="me-2"
-                  :color="currentStep === index ? 'amber-darken-4' : 'grey-darken-1'"
+                  :color="currentStep === index ? 'amber-darken-4' : 'blue-grey-darken-2'"
                 />
                 <div>
-                  <div class="tour-step-title">
+                  <div class="tour-step-title ">
                     {{ step.title }}
                   </div>
                   <div
@@ -76,21 +76,21 @@
           <v-spacer />
           <v-btn
             v-if="currentStep > 0"
-            color="amber-darken-4"
+            color="blue-grey-darken-2"
             @click="prevStep"
           >
             上一步
           </v-btn>
           <v-btn
             v-if="currentStep < tourSteps.length - 1"
-            color="amber-darken-4"
+            color="blue-grey-darken-2"
             @click="nextStep"
           >
             下一步
           </v-btn>
           <v-btn
             v-else
-            color="amber-darken-4"
+            color="blue-grey-darken-2"
             @click="finishTour"
           >
             完成導覽
@@ -218,9 +218,9 @@ defineExpose({
 }
 
 .tour-guide-title {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
-  color: #333;
+  color: #37474F;
 }
 
 .tour-guide-card {
@@ -240,12 +240,17 @@ defineExpose({
       background-color: #FFF8E1;
       color: #FF6F00;
       font-weight: 500;
+
+      .tour-step-title {
+        color: #FF6F00;
+      }
     }
 
     .tour-step-title {
       font-size: 14px;
       font-weight: 600;
       line-height: 1.4;
+      color: #455A64;
     }
 
     .tour-step-description {
