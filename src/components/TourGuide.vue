@@ -29,6 +29,7 @@
             icon="mdi-close"
             variant="text"
             size="small"
+            color="blue-grey-darken-2"
             @click="isOpen = false"
           />
         </div>
@@ -43,11 +44,12 @@
             :key="index"
             :dot-color="currentStep === index ? 'amber-darken-4' : 'blue-grey-darken-2'"
             size="small"
+            class="timeline-item"
+            @click="goToStep(index)"
           >
             <div
               class="tour-step"
               :class="{ 'active-step': currentStep === index }"
-              @click="goToStep(index)"
             >
               <div class="d-flex align-center">
                 <v-icon
@@ -57,7 +59,7 @@
                   :color="currentStep === index ? 'amber-darken-4' : 'blue-grey-darken-2'"
                 />
                 <div>
-                  <div class="tour-step-title ">
+                  <div class="tour-step-title">
                     {{ step.title }}
                   </div>
                   <div
@@ -261,7 +263,17 @@ defineExpose({
   }
 }
 
-:deep(.v-timeline-item__body) {
+.timeline-item {
+  cursor: pointer;
+
+  :deep(.v-timeline-divider__dot) {
+    cursor: pointer;
+
+    &:hover {
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
+    }
+  }
 }
 
 :deep(.v-timeline) {

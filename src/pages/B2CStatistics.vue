@@ -633,9 +633,10 @@
                                     v-bind="props"
                                     :color="getInquiryResultColor(item.inquiryResult)"
                                     variant="outlined"
-                                    class="px-2"
+                                    class="px-2 opacity-100"
                                     size="small"
                                     :loading="updatingInquiryResults.has(item._id)"
+                                    :disabled="user.isLogin && (user.isManager || user.isAdmin || user.isUser)"
                                   >
                                     {{ item.inquiryResult }}
                                   </v-btn>
@@ -644,14 +645,16 @@
                                     v-bind="props"
                                     color="grey"
                                     variant="outlined"
-                                    class="px-2"
+                                    class="px-2 opacity-100"
                                     size="small"
                                     :loading="updatingInquiryResults.has(item._id)"
+                                    :disabled="user.isLogin && (user.isManager || user.isAdmin || user.isUser)"
+                                    :style="user.isLogin && (user.isManager || user.isAdmin || user.isUser) ? 'cursor: default !important' : ''"
                                   >
                                     選擇結果
                                   </v-btn>
                                 </template>
-                                <v-list>
+                                <v-list v-if="!user.isLogin || (!user.isManager && !user.isAdmin && !user.isUser)">
                                   <v-list-item
                                     v-for="option in inquiryResultOptions"
                                     :key="option.value"
@@ -4268,6 +4271,7 @@ const setCurrentMonth = () => {
   padding: 4px 8px;
   margin-right: 8px;
 }
+
 </style>
 
 <route lang="yaml">
