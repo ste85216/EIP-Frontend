@@ -2660,7 +2660,7 @@ const employmentTypeOptions = [
   { text: '實習生', value: '實習生' }
 ]
 
-const jobTitleOptions = [
+const jobTitleOptions = [  // 有順序之分
   { text: '董事長', value: '董事長' },
   { text: '總經理', value: '總經理' },
   { text: '副總經理', value: '副總經理' },
@@ -2694,6 +2694,7 @@ const jobTitleOptions = [
   { text: '外務', value: '外務' },
   { text: '旅遊經理人', value: '旅遊經理人' },
   { text: '助理工程師', value: '助理工程師' },
+  { text: 'Indoor', value: 'Indoor' },
   { text: '工讀生', value: '工讀生' },
   { text: '實習生', value: '實習生' }
 ]
