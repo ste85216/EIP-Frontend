@@ -661,7 +661,7 @@ const updateUserStatus = async (user, newStatus) => {
       if (index !== -1) {
         tableItems.value[index].isActive = newStatus
       }
-      
+
       createSnackbar({
         text: `帳號已${newStatus ? '啟用' : '停用'}`,
         snackbarProps: { color: newStatus ? 'teal-lighten-1' : 'warning' }

@@ -681,11 +681,17 @@ const cogItems = [
     roles: ['ADMIN', 'MANAGER']
   },
   {
-    to: '/B2CStatistics',
-    text: '直客詢問統計表',
+    to: '/B2CStatisticsManagement',
+    text: '直客詢問管理',
     icon: 'mdi-account-question',
     roles: ['ADMIN', 'MANAGER', 'USER'],
-  }
+  },
+  // {
+  //   to: '/marketingDesignRequest',
+  //   text: '行銷美編需求申請單管理',
+  //   icon: 'mdi-form-select',
+  //   roles: ['ADMIN', 'MANAGER', 'USER'],
+  // }
 ]
 
 const ITItems = [
