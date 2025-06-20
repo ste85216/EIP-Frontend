@@ -209,7 +209,7 @@
     </v-row>
 
     <!-- 報表呈現區塊 -->
-    <v-row 
+    <v-row
       v-if="showReport"
       class="elevation-4 rounded-lg py-4 py-sm-8 px-sm-8 mt-6 mx-sm-3 mb-4 bg-white"
     >
@@ -238,43 +238,43 @@
 
         <!-- 行銷預算與實際支出比較表，因要滑動時，標題會被蓋住，所以需要獨立出來 -->
         <div
-          v-if="searchForm.reportType === 'budget'" 
+          v-if="searchForm.reportType === 'budget'"
           class="budget-table-title "
         >
-          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span>
           {{ reportTypeOptions.find(option => option.value === searchForm.reportType)?.title || '' }}
         </div>
         <div
           v-if="searchForm.reportType === 'expense'"
           class="budget-table-title "
         >
-          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span>
           {{ reportTypeOptions.find(option => option.value === 'expense')?.title || '' }}
         </div>
         <div
           v-if="searchForm.reportType === 'lineExpense'"
           class="budget-table-title"
         >
-          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span>
           行銷各線實際支出表 <span class="text-light-blue-darken-2">({{ searchForm.month ? `${searchForm.month}月` : '( 請先選擇月份 )' }})</span>
         </div>
         <div
           v-if="searchForm.reportType === 'lineExpenseTotal'"
           class="budget-table-title"
         >
-          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span>
           行銷各線實際支出總表
         </div>
         <div
           v-if="searchForm.reportType === 'comparison'"
           class="budget-table-title"
         >
-          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度 
-          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span> 
+          <span class="text-orange-darken-2">{{ searchForm.year ? `${searchForm.year}` : '( 請先選擇年度 )' }}</span> 年度
+          <span class="text-pink-darken-1">{{ searchForm.theme ? getThemeName(searchForm.theme) : '( 請先選擇行銷主題 )' }}</span>
           {{ reportTypeOptions.find(option => option.value === 'comparison')?.title || '' }}
         </div>
 
@@ -422,7 +422,7 @@
                     <td class="quarter-col">
                       {{ formatQuarterValue(getQuarterTotal(platform.budget, 4)) }}
                     </td>
-                    <td 
+                    <td
                       class="total-col"
                       style="width: 180px"
                     >
@@ -484,7 +484,7 @@
                 <td class="quarter-col">
                   {{ formatQuarterValue(getQuarterlyTotal(4)) }}
                 </td>
-                <td 
+                <td
                   class="total-col highlight-total"
                   style="width: 180px"
                 >
@@ -723,7 +723,7 @@
           </table>
 
           <!-- 行銷預算與實際支出比較表 -->
-          
+
 
           <table
             v-if="searchForm.reportType === 'comparison'"
@@ -1039,7 +1039,7 @@
                     <td class="platform-col">
                       {{ platform.platformName }}
                     </td>
-                    
+
                     <!-- JAN -->
                     <td class="month-col">
                       {{ formatMonthValue(platform.budget?.JAN || 0) }}
@@ -1423,7 +1423,7 @@
           >
             <thead>
               <tr class="header-row">
-                <th 
+                <th
                   class="header-cell sticky-col"
                   style="width: 180px; left: 0; z-index: 2;"
                 >
@@ -1437,7 +1437,7 @@
                 >
                   {{ getLineName(line) }}
                 </th>
-                <th 
+                <th
                   class="header-cell sticky-col"
                   style="width: 180px; right: 0; z-index: 2;"
                 >
@@ -1450,7 +1450,7 @@
                 v-for="platform in reportData"
                 :key="platform.platformName"
               >
-                <td 
+                <td
                   class="platform-col sticky-col"
                   style="width: 180px; left: 0; z-index: 1;"
                 >
@@ -1464,7 +1464,7 @@
                 >
                   {{ formatMonthValue(platform.expenses[getLineName(line)] || 0) }}
                 </td>
-                <td 
+                <td
                   class="total-col sticky-col"
                   style="width: 180px; right: 0; z-index: 1;"
                 >
@@ -1473,7 +1473,7 @@
               </tr>
               <!-- 總計列 -->
               <tr class="monthly-total-row">
-                <td 
+                <td
                   class="sticky-col"
                   style="width: 180px; left: 0; z-index: 1;"
                 >
@@ -1487,12 +1487,12 @@
                 >
                   {{ formatMonthValue(reportData.reduce((sum, platform) => sum + (platform.expenses[getLineName(line)] || 0), 0)) }}
                 </td>
-                <td 
+                <td
                   class="total-col highlight-total sticky-col"
                   style="width: 180px; right: 0; z-index: 1;"
                 >
-                  {{ 
-                    reportData.reduce((sum, platform) => sum + (Number(platform.total) || 0), 0) > 0 
+                  {{
+                    reportData.reduce((sum, platform) => sum + (Number(platform.total) || 0), 0) > 0
                       ? formatMonthValue(reportData.reduce((sum, platform) => sum + (Number(platform.total) || 0), 0))
                       : '-'
                   }}
@@ -1780,7 +1780,7 @@
             >
               <v-select
                 v-model="downloadForm.year"
-                :items="downloadYearOptions" 
+                :items="downloadYearOptions"
                 label="年度"
                 variant="outlined"
                 density="compact"
@@ -1904,7 +1904,7 @@
                   <v-divider class="mt-2" />
                 </template>
               </v-autocomplete>
-              
+
               <v-divider class="mt-5 mb-4" />
               <div class="sub-title mb-2">
                 選擇月份：
@@ -1970,7 +1970,7 @@
                 color="deep-purple-darken-2"
                 :disabled="!downloadForm.selectedReports.length || (downloadForm.selectedReports.length === 1 && downloadForm.selectedReports[0] === 'charts')"
               />
-              <div 
+              <div
                 class="text-caption text-grey mt-2"
               >
                 統計圖表僅支援 PDF 格式
@@ -2025,7 +2025,7 @@ definePage({
   meta: {
     title: '行銷費用分析 | GInternational',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.USER, UserRole.MANAGER]
+    roles: [UserRole.ADMIN, UserRole.MARKETING, UserRole.MANAGER]
   }
 })
 
@@ -2091,7 +2091,7 @@ const loadThemeOptions = async () => {
 // 載入年度選項
 const loadYearOptions = async (theme) => {
   if (!theme) return
-  
+
   try {
     isLoading.value = true
     const [budgetYears, expenseYears] = await Promise.all([
@@ -2151,7 +2151,7 @@ const handleThemeChange = () => {
 const handleReportTypeChange = async () => {
   reportTypeError.value = ''
   showReport.value = false
-  
+
   if (searchForm.value.reportType === 'lineExpense') {
     if (lineOptions.value.length === 0) {
       await loadLineOptions()
@@ -2252,7 +2252,7 @@ watch([
       }
 
       if (!hasData) {
-        const reportTypeName = reportTypeOptions.value.find(option => 
+        const reportTypeName = reportTypeOptions.value.find(option =>
           option.value === newReportType
         )?.title || ''
         createSnackbar({
@@ -2384,7 +2384,7 @@ const generateReport = async () => {
   try {
     // 驗證所有必填欄位
     let hasError = false
-    
+
     // 清除所有錯誤訊息
     reportTypeError.value = ''
     themeError.value = ''
@@ -2528,7 +2528,7 @@ const generateReport = async () => {
 // 處理實際支出資料
 const processExpenseData = (expenses) => {
   const channelMap = new Map()
-  
+
   // 遍歷所有費用記錄
   expenses.forEach(expense => {
     const channelId = expense.channel._id
@@ -2545,7 +2545,7 @@ const processExpenseData = (expenses) => {
     }
 
     const channel = channelMap.get(channelId)
-    
+
     // 初始化平台
     if (!channel.platforms.has(platformId)) {
       channel.platforms.set(platformId, {
@@ -2562,7 +2562,7 @@ const processExpenseData = (expenses) => {
     channel.platforms.get(platformId).expense[monthKey] += totalAmount
   })
 
-  // 轉換成陣列格  
+  // 轉換成陣列格
   return Array.from(channelMap.values()).map(channel => ({
     channelName: channel.channelName,
     platforms: Array.from(channel.platforms.values())
@@ -2643,7 +2643,7 @@ const getQuarterlyTotal = (quarter) => {
     const monthTotal = getMonthlyTotal(month)
     return sum + (monthTotal === '' ? 0 : parseFloat(monthTotal.replace(/,/g, '')))
   }, 0)
-  
+
   return formatQuarterValue(total)
 }
 
@@ -2671,7 +2671,7 @@ const getGrandTotal = () => {
 // 匯出 Excel
 const loadXLSX = async () => {
   if (window.XLSX) return window.XLSX
-  
+
   await new Promise((resolve, reject) => {
     const script = document.createElement('script')
     script.src = 'https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js'
@@ -2679,7 +2679,7 @@ const loadXLSX = async () => {
     script.onerror = reject
     document.head.appendChild(script)
   })
-  
+
   return window.XLSX
 }
 
@@ -2687,10 +2687,10 @@ const exportToExcel = async () => {
   try {
     isExporting.value = true
     const XLSX = await loadXLSX()
-    
+
     // 建立工作表，修改標題格式
     const title = `${searchForm.value.year}年度 ${getThemeName(searchForm.value.theme)} ${reportTypeOptions.value.find(option => option.value === searchForm.value.reportType)?.title || ''}${searchForm.value.reportType === 'lineExpense' ? ` (${searchForm.value.month}月)` : ''}`
-    
+
     const ws = XLSX.utils.aoa_to_sheet([
       [title],
       []
@@ -2752,7 +2752,7 @@ const exportToExcel = async () => {
       // 添加數據行
       reportData.value.forEach(channel => {
         const platformCount = channel.platforms.length
-        
+
         channel.platforms.forEach((platform, index) => {
           const row = [
             index === 0 ? channel.channelName : '',
@@ -2811,7 +2811,7 @@ const exportToExcel = async () => {
           ]
 
           XLSX.utils.sheet_add_aoa(ws, [row], { origin: -1 })
-          
+
           if (index === 0 && platformCount > 1) {
             ws['!merges'].push({
               s: { r: currentRow, c: 0 },
@@ -2921,7 +2921,7 @@ const exportToExcel = async () => {
       // 添加數據行
       reportData.value.forEach(channel => {
         const platformCount = channel.platforms.length
-        
+
         channel.platforms.forEach((platform, index) => {
           let row
           if (searchForm.value.reportType === 'comparison') {
@@ -3006,7 +3006,7 @@ const exportToExcel = async () => {
           }
 
           XLSX.utils.sheet_add_aoa(ws, [row], { origin: -1 })
-          
+
           if (index === 0 && platformCount > 1) {
             ws['!merges'].push({
               s: { r: currentRow, c: 0 },
@@ -3235,11 +3235,11 @@ const exportToExcel = async () => {
     // 匯出檔案
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Report')
-    
+
     // 生成 blob 而不是直接匯出
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
     const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-    
+
     return blob
   } catch (error) {
     handleError(error)
@@ -3286,7 +3286,7 @@ const exportToPDF = async () => {
     container.style.backgroundColor = 'white'
     container.style.padding = '20px'
     container.style.boxSizing = 'border-box'
-    
+
     // 添加標題，修改標題格式
     const title = document.createElement('div')
     title.style.fontSize = '24px'
@@ -3296,13 +3296,13 @@ const exportToPDF = async () => {
     title.style.color = '#000'
     title.innerHTML = `
       <div style="margin-bottom: 10px;">
-        <span style="color: #F57C00;">${searchForm.value.year}</span>年度 
-        <span style="color: #D81B60;">${getThemeName(searchForm.value.theme)}</span> 
+        <span style="color: #F57C00;">${searchForm.value.year}</span>年度
+        <span style="color: #D81B60;">${getThemeName(searchForm.value.theme)}</span>
         ${reportTypeOptions.value.find(option => option.value === searchForm.value.reportType)?.title || ''}${searchForm.value.reportType === 'lineExpense' ? ` <span style="color: #0288D1;">(${searchForm.value.month}月)</span>` : ''}
       </div>
     `
     container.appendChild(title)
-    
+
     // 複製表格並調整樣式
     const tableClone = element.cloneNode(true)
     tableClone.style.width = '100%'
@@ -3318,11 +3318,11 @@ const exportToPDF = async () => {
       const thead = tableClone.querySelector('thead')
       const firstRow = thead.querySelector('tr:first-child')
       const secondRow = thead.querySelector('tr:last-child')
-      
+
       // 確保第一行的廣告渠道和平台欄位正確顯示
       const channelHeader = firstRow.querySelector('th:first-child')
       const platformHeader = firstRow.querySelector('th:nth-child(2)')
-      
+
       if (channelHeader && platformHeader) {
         channelHeader.setAttribute('rowspan', '2')
         platformHeader.setAttribute('rowspan', '2')
@@ -3365,7 +3365,7 @@ const exportToPDF = async () => {
       cell.style.whiteSpace = 'nowrap'
       cell.style.overflow = 'hidden'
       cell.style.textOverflow = 'ellipsis'
-      
+
       if (cell.classList.contains('header-cell-quarter')) {
         cell.style.backgroundColor = '#00ACC1'
       }
@@ -3399,7 +3399,7 @@ const exportToPDF = async () => {
       cell.style.whiteSpace = 'nowrap'
       cell.style.overflow = 'hidden'
       cell.style.textOverflow = 'ellipsis'
-      
+
       if (cell.classList.contains('quarter-col')) {
         cell.style.backgroundColor = '#FFE0B2'
         cell.style.fontWeight = 'bold'
@@ -3412,11 +3412,11 @@ const exportToPDF = async () => {
         cell.style.width = '100px'
         cell.style.backgroundColor = 'white'
       }
-      
+
       if (cell.parentElement.classList.contains('monthly-total-row')) {
         cell.style.backgroundColor = '#e9ecef'
         cell.style.fontWeight = 'bold'
-        
+
         // 確保月度總計列中的季度欄位保持橘色背景
         if (cell.classList.contains('quarter-col')) {
           cell.style.backgroundColor = '#FFE0B2'
@@ -3520,7 +3520,7 @@ const getThemeName = (themeId) => {
 
 const processBudgetData = (data) => {
   const channelGroups = {}
-  
+
   data.items.forEach(item => {
     if (!channelGroups[item.channel._id]) {
       channelGroups[item.channel._id] = {
@@ -3528,7 +3528,7 @@ const processBudgetData = (data) => {
         platforms: []
       }
     }
-    
+
     channelGroups[item.channel._id].platforms.push({
       platformName: item.platform.name,
       budget: item.monthlyBudget
@@ -3763,10 +3763,10 @@ const processLineExpenseData = (data) => {
       total: 0
     }]
   }
-  
+
   // 過濾掉 Total 平台的數據，因為它是總計
   const filteredData = data.filter(item => item.platformName !== 'Total')
-  
+
   // 如果過濾後沒有數據，也返回空的平台列表
   if (filteredData.length === 0) {
     return [{
@@ -3775,7 +3775,7 @@ const processLineExpenseData = (data) => {
       total: 0
     }]
   }
-  
+
   return filteredData.map(item => ({
     platformName: item.platformName,
     expenses: item.expenses || {},
@@ -3845,7 +3845,7 @@ const pieChartOption = computed(() => {
   // 計算總金額
   const total = reportData.value.reduce((sum, line) => {
     if (!line.expenses) return sum
-    return sum + Object.values(line.expenses).reduce((lineSum, value) => 
+    return sum + Object.values(line.expenses).reduce((lineSum, value) =>
       lineSum + (Number(value) || 0), 0
     )
   }, 0)
@@ -3854,7 +3854,7 @@ const pieChartOption = computed(() => {
   const pieData = reportData.value
     .filter(line => line.expenses)
     .map(line => {
-      const lineTotal = Object.values(line.expenses).reduce((sum, value) => 
+      const lineTotal = Object.values(line.expenses).reduce((sum, value) =>
         sum + (Number(value) || 0), 0
       )
       // 找到對應的 line option 以獲取 order
@@ -3952,8 +3952,8 @@ const barChartOption = computed(() => {
 
   const seriesData = reportData.value
     .filter(line => line.expenses)
-    .map(line => 
-      Object.values(line.expenses).reduce((sum, value) => 
+    .map(line =>
+      Object.values(line.expenses).reduce((sum, value) =>
         sum + (Number(value) || 0), 0
       )
     )
@@ -4068,7 +4068,7 @@ watch([() => reportData.value, () => showReport.value], ([newData, newShowReport
     nextTick(async () => {
       // 等待一段時間確保 DOM 已經渲染
       await new Promise(resolve => setTimeout(resolve, 100))
-      
+
       if (pieChart.value) {
         pieChart.value.resize()
         pieChart.value.setOption(pieChartOption.value)
@@ -4127,12 +4127,12 @@ const exportChartsToPDF = async () => {
     document.body.appendChild(barContainer)
 
     // 創建新的 ECharts 實例
-    const newPieChart = echarts.init(pieContainer, null, { 
+    const newPieChart = echarts.init(pieContainer, null, {
       renderer: 'canvas',
       devicePixelRatio: 4  // 增加這個設定
 
     })
-    const newBarChart = echarts.init(barContainer, null, { 
+    const newBarChart = echarts.init(barContainer, null, {
       renderer: 'canvas',
       devicePixelRatio: 4  // 增加這個設定
 
@@ -4333,7 +4333,7 @@ const downloadYearOptions = ref([])
 //     const budgetYears = budgetRes.data.success ? budgetRes.data.result : []
 //     const expenseYears = expenseRes.data.success ? expenseRes.data.result : []
 //     const allYears = [...new Set([...budgetYears, ...expenseYears])]
-    
+
 //     // 排序年度
 //     downloadYearOptions.value = allYears.sort((a, b) => a - b)
 
@@ -4364,7 +4364,7 @@ const downloadYearOptions = ref([])
 //       const message = []
 //       if (hasBudget) message.push('預算')
 //       if (hasExpense) message.push('實際支出')
-      
+
 //       createSnackbar({
 //         text: `「${getThemeName(themeId)}」有${message.join('及')}資料`,
 //         snackbarProps: { color: 'light-blue-darken-1' }
@@ -4387,7 +4387,7 @@ const handleDownloadReports = async () => {
     // 清除錯誤訊息
     downloadThemeError.value = ''
     downloadYearError.value = ''
-    
+
     let hasError = false
 
     // 驗證行銷主題
@@ -4413,7 +4413,7 @@ const handleDownloadReports = async () => {
 
     // 驗證檔案格式 - 只有當選擇了非圖表報表時才需要驗證
     if (
-      downloadForm.value.selectedReports.some(report => report !== 'charts') && 
+      downloadForm.value.selectedReports.some(report => report !== 'charts') &&
       downloadForm.value.fileFormats.length === 0
     ) {
       createSnackbar({
@@ -4432,7 +4432,7 @@ const handleDownloadReports = async () => {
         })
         hasError = true
       }
-      
+
       // 添加線別驗證
       if (downloadForm.value.selectedLines.length === 0) {
         createSnackbar({
@@ -4451,7 +4451,7 @@ const handleDownloadReports = async () => {
     // 以下是匯出邏輯
     isExporting.value = true
     const zip = new JSZip()
-    
+
     try {
       // 顯示進度遮罩
       showProgressOverlay.value = true
@@ -4461,7 +4461,7 @@ const handleDownloadReports = async () => {
       // 先將報表隱藏，避免渲染錯誤
       showReport.value = false
       reportData.value = []  // 清空報表數據
-      
+
       // 計算總任務數
       let totalTasks = 0
       let completedTasks = 0
@@ -4472,7 +4472,7 @@ const handleDownloadReports = async () => {
           totalTasks += 1
         } else if (reportType === 'lineExpense') {
           // 每個月份可能有 PDF 和 Excel
-          totalTasks += downloadForm.value.selectedMonths.length * 
+          totalTasks += downloadForm.value.selectedMonths.length *
             downloadForm.value.fileFormats.length
         } else {
           // 其他報表可能有 PDF 和 Excel
@@ -4493,14 +4493,14 @@ const handleDownloadReports = async () => {
       for (const reportType of downloadForm.value.selectedReports) {
         if (reportType === 'charts') {
           progressMessage.value = '正在生成統計圖表...'
-          
+
           tempSearchForm.reportType = 'lineExpenseTotal'
           searchForm.value = { ...tempSearchForm }
           reportData.value = []
-          
+
           await generateReport()
           await nextTick()
-          
+
           if (reportData.value && reportData.value.length > 0) {
             const pdfBlob = await generateChartsPDF()
             if (pdfBlob) {
@@ -4511,27 +4511,27 @@ const handleDownloadReports = async () => {
 
           completedTasks++
           downloadProgress.value = (completedTasks / totalTasks) * 100
-          
+
           await new Promise(resolve => setTimeout(resolve, 500))
           continue
         }
-        
+
         tempSearchForm.reportType = reportType
-        
+
         if (reportType === 'lineExpense') {
           tempSearchForm.line = downloadForm.value.selectedLines
-          
+
           // 分別處理每個月份
           for (const month of downloadForm.value.selectedMonths) {
             progressMessage.value = `正在處理 ${month} 月資料...`
-            
+
             tempSearchForm.month = month
             searchForm.value = { ...tempSearchForm }
             reportData.value = []
-            
+
             await generateReport()
             await nextTick()
-            
+
             if (downloadForm.value.fileFormats.includes('pdf')) {
               const pdfBlob = await exportToPDF()
               if (pdfBlob) {
@@ -4541,7 +4541,7 @@ const handleDownloadReports = async () => {
               completedTasks++
               downloadProgress.value = (completedTasks / totalTasks) * 100
             }
-            
+
             if (downloadForm.value.fileFormats.includes('excel')) {
               const excelBlob = await exportToExcel()
               if (excelBlob) {
@@ -4551,18 +4551,18 @@ const handleDownloadReports = async () => {
               completedTasks++
               downloadProgress.value = (completedTasks / totalTasks) * 100
             }
-            
+
             await new Promise(resolve => setTimeout(resolve, 500))
           }
         } else {
           progressMessage.value = `正在處理${reportTypeOptions.value.find(option => option.value === reportType)?.title || ''}...`
-          
+
           searchForm.value = { ...tempSearchForm }
           reportData.value = []
-          
+
           await generateReport()
           await nextTick()
-          
+
           if (reportData.value && reportData.value.length > 0) {
             if (downloadForm.value.fileFormats.includes('pdf')) {
               const pdfBlob = await exportToPDF()
@@ -4573,7 +4573,7 @@ const handleDownloadReports = async () => {
               completedTasks++
               downloadProgress.value = (completedTasks / totalTasks) * 100
             }
-            
+
             if (downloadForm.value.fileFormats.includes('excel')) {
               const excelBlob = await exportToExcel()
               if (excelBlob) {
@@ -4584,7 +4584,7 @@ const handleDownloadReports = async () => {
               downloadProgress.value = (completedTasks / totalTasks) * 100
             }
           }
-          
+
           await new Promise(resolve => setTimeout(resolve, 500))
         }
       }
@@ -4658,14 +4658,14 @@ const openDownloadDialog = () => {
       hasExpense: false
     }
   }
-  
+
   // 清空錯誤訊息
   downloadThemeError.value = ''
   downloadYearError.value = ''
-  
+
   // 清空年度選項
   downloadYearOptions.value = []
-  
+
   showDownloadDialog.value = true
 }
 
@@ -4706,7 +4706,7 @@ watch(() => downloadForm.value.theme, async (newTheme) => {
     hasBudget: false,
     hasExpense: false
   }
-  
+
   if (newTheme) {
     try {
       // 檢查選定主題的預算和實際支出資料
@@ -4717,7 +4717,7 @@ watch(() => downloadForm.value.theme, async (newTheme) => {
 
       const budgetYears = hasBudget.data.success ? hasBudget.data.result : []
       const expenseYears = hasExpense.data.success ? hasExpense.data.result : []
-      
+
       // 更新資料類型狀態
       downloadForm.value.availableDataTypes = {
         hasBudget: budgetYears.length > 0,
@@ -4726,7 +4726,7 @@ watch(() => downloadForm.value.theme, async (newTheme) => {
 
       // 合併兩個來源的年度並去重
       const allYears = [...new Set([...budgetYears, ...expenseYears])]
-      
+
       // 排序年度
       downloadYearOptions.value = allYears.sort((a, b) => b - a)
 
@@ -4832,11 +4832,11 @@ const generateChartsPDF = async () => {
     document.body.appendChild(barContainer)
 
     // 創建新的 ECharts 實例
-    const newPieChart = echarts.init(pieContainer, null, { 
+    const newPieChart = echarts.init(pieContainer, null, {
       renderer: 'canvas',
       devicePixelRatio: 4
     })
-    const newBarChart = echarts.init(barContainer, null, { 
+    const newBarChart = echarts.init(barContainer, null, {
       renderer: 'canvas',
       devicePixelRatio: 4
     })
@@ -5054,7 +5054,7 @@ const progressMessage = ref('')
 // 監聽資料類型變化，自動移除不可用的報表選項
 watch(() => downloadForm.value.availableDataTypes, (newTypes) => {
   if (!newTypes) return
-  
+
   // 移除不可用的報表選項
   downloadForm.value.selectedReports = downloadForm.value.selectedReports.filter(report => {
     switch (report) {
@@ -5148,7 +5148,7 @@ const handleDownloadThemeChange = (newTheme) => {
     .header-row {
       background-color: #607D8B;
       color: white;
-      
+
       .header-cell {
         padding: 12px 8px;
         text-align: center;
@@ -5184,7 +5184,7 @@ const handleDownloadThemeChange = (newTheme) => {
         min-width: 100px;
         vertical-align: middle;
         background-color: #00ACC1;
-        
+
         &:last-child {
           border-right: none;
         }
@@ -5248,10 +5248,10 @@ const handleDownloadThemeChange = (newTheme) => {
     .monthly-total-row {
       background-color: #e9ecef !important;
       font-weight: 600;
-      
+
       td {
         border-bottom: none;
-        
+
         &.month-col {
           background-color: #e9ecef !important;
         }
@@ -5353,7 +5353,7 @@ const handleDownloadThemeChange = (newTheme) => {
 //     overflow: hidden;
 //   }
 
-  
+
 // }
 
 .charts-container {

@@ -805,7 +805,7 @@ definePage({
   meta: {
     title: '實際支出管理 | GInternational',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.USER, UserRole.MANAGER]
+    roles: [UserRole.ADMIN, UserRole.MARKETING, UserRole.MANAGER]
   }
 })
 

@@ -248,6 +248,7 @@
             </v-list-item>
           </template>
           <v-divider
+            v-if="!user.isUser"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -605,18 +606,8 @@ const getRoleTitle = (roleValue) => {
 }
 
 const userItems = [
-  {
-    to: '/formGenerator',
-    text: '表單產生器',
-    icon: 'mdi-list-box-outline',
-    roles: ['ADMIN', 'MANAGER', 'USER']
-  },
-  {
-    to: '/marketingAnalysis',
-    text: '行銷費用分析',
-    icon: 'mdi-chart-multiple',
-    roles: ['ADMIN', 'MANAGER', 'USER']
-  },
+
+
   {
     to: '/employeeList',
     text: '公司員工列表',
@@ -631,21 +622,27 @@ const userItems = [
 
 const cogItems = [
   {
+    to: '/marketingAnalysis',
+    text: '行銷費用分析',
+    icon: 'mdi-chart-multiple',
+    roles: ['ADMIN', 'MANAGER']
+  },
+  {
     text: '行銷費用管理',
     icon: 'mdi-chart-bar',
-    roles: ['ADMIN', 'MANAGER', 'USER'],
+    roles: ['ADMIN', 'MANAGER', 'MARKETING'],
     children: [
       {
         to: '/marketingExpenseManagement',
         text: '實際支出管理',
         icon: 'mdi-cash-100',
-        roles: ['ADMIN', 'MANAGER', 'USER']
+        roles: ['ADMIN', 'MANAGER', 'MARKETING']
       },
       {
         to: '/marketingBudgetManagement',
         text: '行銷預算管理',
         icon: 'mdi-table-edit',
-        roles: ['ADMIN', 'MANAGER', 'USER']
+        roles: ['ADMIN', 'MANAGER', 'MARKETING']
       },
       {
         to: '/marketingCategoryManagement',
@@ -658,21 +655,27 @@ const cogItems = [
   {
     text: '人事管理',
     icon: 'mdi-account-group',
-    roles: ['ADMIN', 'MANAGER', 'IT'],
+    roles: ['ADMIN', 'MANAGER', 'HR', 'IT'],
     children: [
       {
         to: '/employeeManagement',
         text: '員工管理',
         icon: 'mdi-account-cog',
-        roles: ['ADMIN', 'MANAGER']
+        roles: ['ADMIN', 'MANAGER', 'HR']
       },
       {
         to: '/companyAndDepartmentManagement',
         text: '公司部門管理',
         icon: 'mdi-office-building-cog',
-        roles: ['ADMIN','MANAGER', 'IT']
+        roles: ['ADMIN','MANAGER', 'HR', 'IT']
       }
     ]
+  },
+  {
+    to: '/formGenerator',
+    text: '表單產生器',
+    icon: 'mdi-list-box-outline',
+    roles: ['ADMIN', 'MANAGER', 'SUPERVISOR']
   },
   {
     to: '/lineCategoryManagement',
@@ -684,13 +687,13 @@ const cogItems = [
     to: '/B2CStatisticsManagement',
     text: '直客詢問管理',
     icon: 'mdi-account-question',
-    roles: ['ADMIN', 'MANAGER', 'USER'],
+    roles: ['ADMIN', 'MANAGER', 'MARKETING'],
   },
   // {
-  //   to: '/marketingDesignRequest',
-  //   text: '行銷美編需求申請單管理',
+  //   to: '/marketingDesignRequestManagement',
+  //   text: '行銷美編需求申請管理',
   //   icon: 'mdi-form-select',
-  //   roles: ['ADMIN', 'MANAGER', 'USER'],
+  //   roles: ['ADMIN', 'MANAGER', 'DESIGNER', 'MARKETING'],
   // }
 ]
 
@@ -761,6 +764,14 @@ const filteredCogItems = computed(() => {
           return user.isUser
         case 'IT':
           return user.isIT
+        case 'DESIGNER':
+          return user.isDesigner
+        case 'MARKETING':
+          return user.isMarketing
+        case 'SUPERVISOR':
+          return user.isSupervisor
+        case 'HR':
+          return user.isHR
         default:
           return false
       }
@@ -779,6 +790,14 @@ const filteredCogItems = computed(() => {
               return user.isUser
             case 'IT':
               return user.isIT
+            case 'DESIGNER':
+              return user.isDesigner
+            case 'MARKETING':
+              return user.isMarketing
+            case 'SUPERVISOR':
+              return user.isSupervisor
+            case 'HR':
+              return user.isHR
             default:
               return false
           }
@@ -861,6 +880,14 @@ const filteredUserItems = computed(() => {
           return user.isUser
         default:
           return false
+        case 'DESIGNER':
+          return user.isDesigner
+        case 'MARKETING':
+          return user.isMarketing
+        case 'SUPERVISOR':
+          return user.isSupervisor
+        case 'HR':
+          return user.isHR
       }
     })
 
@@ -875,6 +902,14 @@ const filteredUserItems = computed(() => {
               return user.isManager
             case 'USER':
               return user.isUser
+            case 'DESIGNER':
+              return user.isDesigner
+            case 'MARKETING':
+              return user.isMarketing
+            case 'SUPERVISOR':
+              return user.isSupervisor
+            case 'HR':
+              return user.isHR
             default:
               return false
           }
@@ -906,8 +941,11 @@ const filteredITItems = computed(() => {
 
 // 修改 watch 函數
 watch(() => route.path, (newPath) => {
-  // 檢查新路徑是否包含特定關鍵字，但不重置整個數組
-  if (newPath.includes('/marketing')) {
+  // 只要不是 /marketingDesignRequestManagement 才展開『行銷費用管理』
+  if (
+    newPath.includes('/marketing') &&
+    newPath !== '/marketingDesignRequestManagement'
+  ) {
     if (!openedGroups.value.includes('行銷費用管理')) {
       openedGroups.value.push('行銷費用管理')
     }

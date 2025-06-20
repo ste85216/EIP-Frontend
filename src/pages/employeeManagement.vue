@@ -1323,9 +1323,9 @@
     <!-- 匯入 Excel 對話框 -->
     <v-dialog
       v-model="importDialog.open"
-      max-width="380"
+      max-width="400"
     >
-      <v-card class="rounded-lg px-4 pt-5 pb-4">
+      <v-card class="rounded-lg px-3 pt-4 pb-3">
         <v-card-title class="card-title mb-2">
           匯入員工資料
         </v-card-title>
@@ -1456,7 +1456,7 @@ definePage({
   meta: {
     title: '員工管理 | GInternational',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER]
+    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR]
   }
 })
 
@@ -1503,7 +1503,7 @@ const searchCriteria = ref({
   department: '',
   employmentType: '',
   jobTitle: '',
-  status: '在職',
+  status: '',
   dateType: '',
   dateRange: []
 })
@@ -1655,7 +1655,7 @@ const resetSearch = () => {
     department: '',
     employmentType: '',
     jobTitle: '',
-    status: '在職',
+    status: '', // 預設在職?
     dateType: '',
     dateRange: []
   }
@@ -2477,8 +2477,64 @@ const handleImportExcel = async () => {
         // 獲取第一個工作表
         const worksheet = workbook.Sheets[workbook.SheetNames[0]]
 
-        // 轉換為 JSON
-        const jsonData = XLSX.utils.sheet_to_json(worksheet)
+        // 在轉換前先處理特定欄位的格式，確保文字欄位不會被當作數字處理
+        const range = XLSX.utils.decode_range(worksheet['!ref'])
+
+        // 找出需要保持文字格式的欄位索引
+        const textFields = ['科威員編', '分機號碼', '列印編號', 'Email密碼']
+        const textColumnIndices = []
+
+        // 檢查標題列，找出文字欄位的索引
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const headerCell = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })]
+          if (headerCell && textFields.includes(headerCell.v)) {
+            textColumnIndices.push(C)
+          }
+        }
+
+        // 將指定欄位的數字類型轉換為文字類型
+        for (let R = range.s.r + 1; R <= range.e.r; ++R) { // 跳過標題列
+          for (const C of textColumnIndices) {
+            const cellRef = XLSX.utils.encode_cell({ r: R, c: C })
+            const cell = worksheet[cellRef]
+            if (cell) {
+              if (cell.t === 'n') { // 如果是數字類型
+                // 將數字轉換為字串，並補齊前導零（如果原本應該有的話）
+                let strValue = cell.v.toString()
+
+                // 對於科威員編、分機號碼、列印編號，如果是純數字且小於4位數，自動補零到4位
+                const headerCell = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })]
+                if (headerCell && ['科威員編', '分機號碼', '列印編號'].includes(headerCell.v)) {
+                  if (/^\d+$/.test(strValue) && strValue.length < 4) {
+                    strValue = strValue.padStart(4, '0')
+                  }
+                }
+
+                cell.t = 's' // 轉換為文字類型
+                cell.v = strValue
+                cell.w = strValue // 設定格式化顯示值
+              } else if (cell.t === 's' && cell.v) {
+                // 如果已經是文字，檢查是否需要補零
+                const headerCell = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })]
+                if (headerCell && ['科威員編', '分機號碼', '列印編號'].includes(headerCell.v)) {
+                  let strValue = cell.v.toString().trim()
+                  if (/^\d+$/.test(strValue) && strValue.length < 4) {
+                    strValue = strValue.padStart(4, '0')
+                    cell.v = strValue
+                    cell.w = strValue
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // 轉換為 JSON，使用格式化後的值
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+          raw: false, // 使用格式化的值而不是原始值
+          defval: '', // 空單元格的默認值
+          dateNF: 'yyyy/mm/dd' // 日期格式
+        })
 
         // 準備匯入資料
         const employees = jsonData.map(row => {

@@ -723,7 +723,7 @@ definePage({
   meta: {
     title: '行銷預算管理 | GInternational',
     login: true,
-    roles: [ UserRole.ADMIN, UserRole.MANAGER, UserRole.USER ]
+    roles: [ UserRole.ADMIN, UserRole.MANAGER, UserRole.MARKETING ]
   }
 })
 

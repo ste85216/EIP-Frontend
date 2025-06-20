@@ -806,9 +806,14 @@ const formatDate = (date) => {
 // 角色轉換
 const formatRole = (role) => {
   const roleMap = {
-    0: '一般用戶',
+    0: '一般使用者',
     1: '經理',
-    2: '管理者'
+    2: '管理者',
+    3: 'IT人員',
+    4: '美編人員',
+    5: '行銷人員',
+    6: '人資',
+    7: '總管'
   }
   return roleMap[role] || role
 }
@@ -1213,7 +1218,7 @@ const formatChanges = (item) => {
       }
 
       if (key === 'role') {
-        changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)}`)
+        changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)} → ${formatRole(newValue)}`)
       } else if (key === 'salesPerson') {
         const name = newValue?.name || newValue?.nickname || '(無)'
         changes.push(`${fieldTranslations[key]}: ${name}`)

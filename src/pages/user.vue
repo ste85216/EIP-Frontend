@@ -306,7 +306,7 @@
     <!-- 確認停用對話框 -->
     <ConfirmDeleteDialog
       v-model="showConfirmDialog"
-      :width="300"
+      :width="320"
       title="確認停用帳號"
       message="確定要停用此帳號嗎？停用後該使用者將無法登入系統。"
       confirm-button-text="停用"
@@ -454,7 +454,11 @@ const dialogWidth = computed(() => {
 const roles = ref([
   { value: UserRole.USER, title: roleNames[UserRole.USER] },    // 一般使用者
   { value: UserRole.MANAGER, title: roleNames[UserRole.MANAGER] },  // 經理
-  { value: UserRole.IT, title: roleNames[UserRole.IT] }  // IT人員
+  { value: UserRole.IT, title: roleNames[UserRole.IT] },  // IT人員
+  { value: UserRole.DESIGNER, title: roleNames[UserRole.DESIGNER] },  // 美編人員
+  { value: UserRole.MARKETING, title: roleNames[UserRole.MARKETING] },  // 行銷人員
+  { value: UserRole.HR, title: roleNames[UserRole.HR] },  // 人資
+  { value: UserRole.SUPERVISOR, title: roleNames[UserRole.SUPERVISOR] }  // 總管
 ])
 
 // ===== 響應式表格抬頭設定 =====
@@ -493,7 +497,7 @@ const performSearch = async () => {
     }
 
     const { data } = await apiAuth.get('/users/search', { params })
-    
+
     if (data.success) {
       tableItems.value = data.result.data
       tableItemsLength.value = data.result.totalItems
@@ -705,7 +709,7 @@ const updateUserStatus = async (user, newStatus) => {
       if (index !== -1) {
         tableItems.value[index].isActive = newStatus
       }
-      
+
       createSnackbar({
         text: `帳號已${newStatus ? '啟用' : '停用'}`,
         snackbarProps: { color: newStatus ? 'teal-lighten-1' : 'warning' }
@@ -740,4 +744,4 @@ const updateUserStatus = async (user, newStatus) => {
 .even-row {
   background-color: #fffaf0;
 }
-</style> 
+</style>

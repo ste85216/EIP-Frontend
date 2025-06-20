@@ -209,10 +209,10 @@
               <div>
                 《 預覽及匯出 》
                 <span class="text-grey font-weight-medium">
-                  (&nbsp; {{ 
-                    isViewing ? '查閱模式' : 
-                    isEditing ? '編輯模式' : 
-                    '新增模式' 
+                  (&nbsp; {{
+                    isViewing ? '查閱模式' :
+                    isEditing ? '編輯模式' :
+                    '新增模式'
                   }}&nbsp; )
                 </span>
               </div>
@@ -622,7 +622,7 @@
                       :cancel-text="'取消'"
                     />
                   </v-col>
-                  <v-col 
+                  <v-col
                     cols="3"
                     class="pb-0"
                   >
@@ -807,7 +807,7 @@
     <!-- 表單歷史紀錄確認刪除對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmDeleteDialog.open"
-      :dialog-width="'320'"
+      :dialog-width="'330'"
       title="確認刪除表單"
       :message="`確定要刪除表單「${confirmDeleteDialog.templateName} ${confirmDeleteDialog.formNumber}」嗎？此操作無法恢復。`"
       @confirm="confirmDelete"
@@ -998,16 +998,16 @@ import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWi
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 
 // 動態引入重量級組件
-const RayHuangQuotationTemplate = defineAsyncComponent(() => 
+const RayHuangQuotationTemplate = defineAsyncComponent(() =>
   import('@/components/templates/RayHuangQuotationTemplate/index.vue')
 )
-const RayHuangQuotationFormFields = defineAsyncComponent(() => 
+const RayHuangQuotationFormFields = defineAsyncComponent(() =>
   import('@/components/templates/RayHuangQuotationTemplate/RayHuangQuotationFormFields.vue')
 )
-const YstravelQuotationTemplate = defineAsyncComponent(() => 
+const YstravelQuotationTemplate = defineAsyncComponent(() =>
   import('@/components/templates/YstravelQuotationTemplate/index.vue')
 )
-const YstravelQuotationFormFields = defineAsyncComponent(() => 
+const YstravelQuotationFormFields = defineAsyncComponent(() =>
   import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue')
 )
 
@@ -1033,7 +1033,7 @@ const initDependencies = async () => {
     const html2pdfModule = await import('html2pdf.js')
     const jsPDFModule = await import('jspdf')
     const html2canvasModule = await import('html2canvas')
-    
+
     html2pdf.value = html2pdfModule.default
     jsPDF.value = jsPDFModule.jsPDF
     html2canvas.value = html2canvasModule.default
@@ -1050,7 +1050,7 @@ definePage({
   meta: {
     title: '表單產生器 | GInternational',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.USER]
+    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERVISOR]
   }
 })
 
@@ -1200,11 +1200,11 @@ const resetFormData = (templateType) => {
         }
       }
       break
-    
+
     case 'YstravelQuotationTemplate':
       formData.value = {
         date: new Date(),
-        
+
         // 客戶資訊
         customerName: '',
         customerAddress: '',
@@ -1214,13 +1214,13 @@ const resetFormData = (templateType) => {
         officePhone: '',
         fax: '',
         mobile: '',
-        
+
         // 旅遊資訊
         projectName: '',
         destination: '',
         departureDate: new Date(),
         returnDate: new Date(),
-        
+
         // 報價明細
         items: [
           {
@@ -1232,7 +1232,7 @@ const resetFormData = (templateType) => {
             remark: ''
           }
         ],
-        
+
         // 備註
         cancellationPolicy: '',
         validityPeriod: 7,
@@ -1243,7 +1243,7 @@ const resetFormData = (templateType) => {
         contract: null
       }
       break
-    
+
     default:
       formData.value = {
         includeContract: false,
@@ -1321,7 +1321,7 @@ const handleTemplateChange = async (templateId) => {
     previewReady.value = false
     currentTemplate.value = null
     enableValidation.value = false
-    
+
     // 獲取模板資訊
     const { data } = await apiAuth.get(`/formTemplates/${templateId}`)
     if (data.success) {
@@ -1332,7 +1332,7 @@ const handleTemplateChange = async (templateId) => {
         try {
           // 先獲取單號，確保有單號才繼續
           let formNumber = null
-          
+
           switch (template.componentName) {
             case 'RayHuangQuotationTemplate': {
               const response = await apiAuth.get('/forms/ray-huang-quotation/next-number', {params: {templateId}})
@@ -1358,11 +1358,11 @@ const handleTemplateChange = async (templateId) => {
 
           // 先重置表單數據
           resetFormData(template.componentName)
-          
+
           // 然後設置新的單號
-          formData.value = { 
+          formData.value = {
             ...formData.value,
-            formNumber 
+            formNumber
           }
 
           // 等待資料設置完成
@@ -1513,7 +1513,7 @@ const updateForm = async () => {
     isSaving.value = true;
     // 確保啟用驗證
     enableValidation.value = true
-    
+
     // 進行表單驗證
     const isValid = await formFieldsRef.value?.validate()
     if (!isValid) {
@@ -1986,7 +1986,7 @@ watch(selectedType, (newVal) => {
   currentTemplate.value = null
   previewReady.value = false
   formData.value = {}
-  
+
   if (newVal) {
     // 如果有選擇類型，載入對應的模板選項
     loadFormTemplateOptions()
@@ -2036,7 +2036,7 @@ onMounted(async () => {
   try {
     // 先載入模板
     await loadTemplates()
-    
+
     // 預先載入所有需要的組件
     await Promise.all([
       import('@/components/templates/RayHuangQuotationTemplate/index.vue'),
@@ -2201,7 +2201,7 @@ watch(
 watch(selectedType, (newVal) => {
   // 當表單類型改變時，清空表單模板的選擇
   selectedTemplate.value = null
-  
+
   if (newVal) {
     // 如果有選擇類型，載入對應的模板選項
     loadFormTemplateOptions()
@@ -2359,7 +2359,7 @@ const editHistory = async (history) => {
         color: 'teal-lighten-1',
       }
     });
-    
+
     closeHistoryDialog();
   } catch (error) {
     console.error('載入歷史資料失敗:', error);
@@ -2413,7 +2413,7 @@ const submitForm = async () => {
   try {
     // 確保啟用驗證
     enableValidation.value = true
-    
+
     // 進行表單驗證
     const isValid = await formFieldsRef.value?.validate()
     if (!isValid) {
@@ -2765,17 +2765,17 @@ const handleExportReport = async () => {
     if (reportDialog.value.dateRange && reportDialog.value.dateRange.length > 0) {
       const startDate = new Date(reportDialog.value.dateRange[0])
       startDate.setHours(0, 0, 0, 0)
-      
+
       const endDate = new Date(reportDialog.value.dateRange[reportDialog.value.dateRange.length - 1])
       endDate.setHours(23, 59, 59, 999)
-      
+
       params.startDate = startDate.toISOString()
       params.endDate = endDate.toISOString()
     }
 
     // 獲取報表資料
     const { data } = await apiAuth.get('/forms/report', { params })
-    
+
     if (data.success) {
       // 計算總金額和總成本
       const totalAmount = data.result.reduce((acc, curr) => {
@@ -2820,11 +2820,11 @@ const handleExportReport = async () => {
                   return sum + (Number(item.quantity) || 0) * (Number(item.price) || 0)
                 }, 0)
                 const total = Math.round(itemsTotal * 1.05)
-                
+
                 const cost = (form.formData.costs || []).reduce((sum, cost) => {
                   return sum + (Number(cost.costAmount) || 0)
                 }, 0)
-                
+
                 const income = total - cost
 
                 return `
@@ -2856,16 +2856,16 @@ const handleExportReport = async () => {
         margin: 10,
         filename: `${formTemplates.value.find(t => t._id === reportDialog.value.template)?.name} - 統計報表.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
+        html2canvas: {
           scale: 6,
           logging: false,
           useCORS: true,
           allowTaint: true,
           removeContainer: true
         },
-        jsPDF: { 
-          unit: 'mm', 
-          format: 'a4', 
+        jsPDF: {
+          unit: 'mm',
+          format: 'a4',
           orientation: 'landscape',
           compress: true
         }

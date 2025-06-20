@@ -366,7 +366,7 @@
           type="warning"
           color="red-darken-1"
           variant="tonal"
-          class="mb-0"
+          class="mb-0 font-weight-bold"
         >
           為了您的帳戶安全，建議修改預設密碼。<br>
           是否要立即修改密碼？
@@ -375,15 +375,16 @@
       <v-card-actions class="pa-0">
         <v-spacer />
         <v-btn
-          color="red-darken-1"
+          color="grey"
           variant="outlined"
           @click="showDefaultPasswordDialog = false"
         >
           稍後修改
         </v-btn>
         <v-btn
-          color="teal-darken-1"
-          variant="outlined"
+          color="red-darken-1"
+          variant="flat"
+          class="elevation-2 ms-2"
           @click="handleDefaultPasswordPrompt"
         >
           立即修改

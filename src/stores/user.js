@@ -23,6 +23,10 @@ export const useUserStore = defineStore('user', () => {
   const isManager = computed(() => role.value === UserRole.MANAGER)
   const isAdmin = computed(() => role.value === UserRole.ADMIN)
   const isIT = computed(() => role.value === UserRole.IT)
+  const isDesigner = computed(() => role.value === UserRole.DESIGNER)
+  const isMarketing = computed(() => role.value === UserRole.MARKETING)
+  const isHR = computed(() => role.value === UserRole.HR)
+  const isSupervisor = computed(() => role.value === UserRole.SUPERVISOR)
 
   // 登入
   const login = async (values) => {
@@ -211,6 +215,10 @@ export const useUserStore = defineStore('user', () => {
     isManager,
     isAdmin,
     isIT,
+    isDesigner,
+    isMarketing,
+    isHR,
+    isSupervisor,
 
     // 方法
     login,
@@ -227,4 +235,4 @@ export const useUserStore = defineStore('user', () => {
     key: 'ginternational',
     paths: ['token']
   }
-}) 
+})

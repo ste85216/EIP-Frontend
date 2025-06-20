@@ -2098,5 +2098,5 @@ onUnmounted(() => {
 
 <route lang="yaml">
   meta:
-    layout: B2CStatistics
+    layout: Ystravel
 </route>

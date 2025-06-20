@@ -833,7 +833,7 @@ definePage({
   meta: {
     title: '公司部門管理 | GInternational',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT]
+    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT, UserRole.HR]
   }
 })
 
