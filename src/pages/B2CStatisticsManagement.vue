@@ -1780,22 +1780,9 @@ const openSimpleDialog = async (item) => {
     return
   }
 
-  try {
-    isDialogLoading.value = true
-    simpleDialog.value = {
-      open: true,
-      id: item._id
-    }
-
-    await performSearch()
-    isDialogLoading.value = false
-  } catch (error) {
-    console.error('載入詢問資料失敗:', error)
-    createSnackbar({
-      text: error?.response?.data?.message || '載入詢問資料失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-    closeSimpleDialog()
+  simpleDialog.value = {
+    open: true,
+    id: item._id
   }
 }
 
