@@ -658,7 +658,9 @@ const modelOptions = [
   { title: '公司', value: 'companies' },
   { title: '部門', value: 'departments' },
   { title: '直客詢問紀錄', value: 'customerInquiries' },
-  { title: '線別分類', value: 'lineCategories' }
+  { title: '線別分類', value: 'lineCategories' },
+  { title: '行銷美編需求申請', value: 'designRequests' },
+  { title: '通知 EMAIL', value: 'notificationEmails' }
 ]
 
 // 表格標頭
@@ -769,7 +771,46 @@ const fieldTranslations = {
   customerTitle: '稱謂',
   lineLink: 'Line 連結',
   lineID: 'Line ID',
-  progressNotes: '進度 / 備註'
+  progressNotes: '進度 / 備註',
+  // 行銷美編需求申請欄位翻譯
+  designRequestNumber: '申請編號',
+  productType: '申請類型',
+  applicant: '申請人',
+  status: '狀態',
+  applicationDate: '申請日期',
+  assignedDesigner: '處理人員',
+  title: '標題',
+  style: '風格',
+  imageSubject: '圖片主題',
+  content: '內容',
+  requestedByDate: '希望交付日',
+  quantity: '數量',
+  useInfoBookletCover: '使用說資封面',
+  otherNote: '其他備註',
+  files: '檔案',
+  referenceImage: '參考圖片',
+  images: '圖片',
+  groupId: '團號',
+  useQuickTemplate: '使用快速版型',
+  quickTemplateNumber: '快速版型編號',
+  subtitle: '副標',
+  departureDate: '出發日期',
+  tripHighlights: '行程特色',
+  attractionImage: '指定景點圖片',
+  agentPrice: '同業價',
+  retailPrice: '直客價',
+  promotions: '優惠',
+  airlineHighlightNote: '航空公司特色備註',
+  useLogo: '使用Logo',
+  subtitleAndHighlights: '副標/特色',
+  itinerary: '行程',
+  groupName: '團體名稱',
+  printingTypes: '印刷類型',
+  infoBookletCover: '說資封面',
+  banner: '布條',
+  coachSign: '車頭牌',
+  other: '其他',
+  categories: '大分類'
 }
 
 // 行銷分類類型對應
@@ -818,6 +859,35 @@ const formatRole = (role) => {
   return roleMap[role] || role
 }
 
+// 申請類型轉換
+const getProductTypeText = (productType) => {
+  const productTypeMap = {
+    printing: '印刷相關',
+    infoBookletCover: '說資封面',
+    banner: '布條',
+    coachSign: '車頭牌',
+    seriesMap: 'Series地圖',
+    seriesMapModify: '修改Series地圖',
+    SPMap: 'SP地圖',
+    newDMSingle: '新DM(單支)',
+    newDMMultiple: '新DM(多支)',
+    modifyDM: '修改DM'
+  }
+  return productTypeMap[productType] || productType
+}
+
+// 狀態轉換
+const getStatusText = (status) => {
+  const statusMap = {
+    pending: '待處理',
+    in_progress: '處理中',
+    completed: '已完成',
+    cancelled: '已取消',
+    rejected: '已拒絕'
+  }
+  return statusMap[status] || status
+}
+
 const getModelDisplay = (model) => {
   const modelMap = {
     users: '使用者',
@@ -833,7 +903,9 @@ const getModelDisplay = (model) => {
     companies: '公司',
     departments: '部門',
     customerInquiries: '直客詢問紀錄',
-    lineCategories: '線別分類'
+    lineCategories: '線別分類',
+    designRequests: '行銷美編需求申請',
+    notificationEmails: '通知 EMAIL'
   }
   return modelMap[model] || model
 }
@@ -860,6 +932,25 @@ const formatTarget = (item) => {
     if (item.targetModel === 'hardwareCategories') {
       const { name, type } = item.changes.before
       return `${name} (${hardwareCategoryTypes[type]})`
+    }
+    if (item.targetModel === 'designRequests') {
+      // 先從 targetInfo 取，沒有就從 changes.after 裡面取
+      const info = item.targetInfo || {}
+      const after = item.changes?.after || {}
+      const name = info.name || after.designRequestNumber || '-'
+      const productType = info.productType || after.productType
+      const applicant = (info.applicant && info.applicant.name) || (after.applicant && after.applicant.name) || (typeof info.applicant === 'string' ? info.applicant : undefined) || '-'
+      const status = info.status || after.status
+      const productTypeText = getProductTypeText(productType)
+      const statusText = getStatusText(status)
+      return `${name} - ${productTypeText} (${applicant}) - ${statusText}`
+    }
+    if (item.targetModel === 'notificationEmails') {
+      const info = item.targetInfo || {}
+      const after = item.changes?.after || {}
+      const userName = info.name || (after.user && after.user.name) || '(無)'
+      const userId = info.userId || (after.user && (after.user.userId || after.user.adminId)) || ''
+      return `${userName}${userId ? ` (${userId})` : ''}`
     }
   }
 
@@ -888,6 +979,19 @@ const formatTarget = (item) => {
   if (item.targetModel === 'hardwareDevices') {
     const { type } = item.targetInfo || {}
     return `${name} - ${type || '未知類型'}`
+  }
+  if (item.targetModel === 'designRequests') {
+    // 只顯示申請編號
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    return info.name || after.designRequestNumber || '-'
+  }
+  if (item.targetModel === 'notificationEmails') {
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    const userName = info.name || (after.user && after.user.name) || '(無)'
+    const userId = info.userId || (after.user && (after.user.userId || after.user.adminId)) || ''
+    return `${userName}${userId ? ` (${userId})` : ''}`
   }
   return `${name}${userId ? ` (${userId})` : ''}`
 }
@@ -1139,6 +1243,132 @@ const formatChanges = (item) => {
       return changes
     }
 
+    // 針對行銷美編需求申請的特殊處理
+    if (item.targetModel === 'designRequests') {
+      const data = after
+      // 基本資訊
+      changes.push(`申請編號: ${data.designRequestNumber}`)
+      changes.push(`申請類型: ${getProductTypeText(data.productType)}`)
+      changes.push(`申請人: ${data.applicant?.name || (typeof data.applicant === 'string' ? data.applicant : '(無)')}`)
+      changes.push(`申請日期: ${formatDate(data.applicationDate)}`)
+      changes.push(`狀態: ${getStatusText(data.status)}`)
+      if (data.assignedDesigner) {
+        changes.push(`處理人員: ${data.assignedDesigner.name || (typeof data.assignedDesigner === 'string' ? data.assignedDesigner : '(無)')}`)
+      }
+      // 印刷類型
+      if (data.productType === 'printing' && data.printingTypes) {
+        const selectedTypes = Object.entries(data.printingTypes)
+          .filter(([, selected]) => selected)
+          .map(([type]) => getProductTypeText(type))
+        if (selectedTypes.length > 0) {
+          changes.push(`選擇的印刷類型: ${selectedTypes.join('、')}`)
+        }
+        // 展開各子類型
+        if (data.infoBookletCover && data.printingTypes.infoBookletCover) {
+          changes.push('說資封面資料:')
+          if (data.infoBookletCover.title) changes.push(` - 標題: ${data.infoBookletCover.title}`)
+          if (data.infoBookletCover.style) changes.push(` - 風格: ${data.infoBookletCover.style}`)
+          if (data.infoBookletCover.imageSubject) changes.push(` - 圖片主題: ${data.infoBookletCover.imageSubject}`)
+          if (data.infoBookletCover.content) changes.push(` - 內容: ${data.infoBookletCover.content}`)
+          if (data.infoBookletCover.requestedByDate) changes.push(` - 希望交付日: ${formatDate(data.infoBookletCover.requestedByDate)}`)
+        }
+        if (data.banner && data.printingTypes.banner) {
+          changes.push('布條資料:')
+          if (data.banner.title) changes.push(` - 標題: ${data.banner.title}`)
+          if (data.banner.style) changes.push(` - 風格: ${data.banner.style}`)
+          if (data.banner.imageSubject) changes.push(` - 圖片主題: ${data.banner.imageSubject}`)
+          if (data.banner.content) changes.push(` - 內容: ${data.banner.content}`)
+          if (data.banner.quantity) changes.push(` - 數量: ${data.banner.quantity}`)
+          if (data.banner.requestedByDate) changes.push(` - 希望交付日: ${formatDate(data.banner.requestedByDate)}`)
+        }
+        if (data.coachSign && data.printingTypes.coachSign) {
+          changes.push('車頭牌資料:')
+          if (data.coachSign.content) changes.push(` - 內容: ${data.coachSign.content}`)
+          if (data.coachSign.quantity) changes.push(` - 數量: ${data.coachSign.quantity}`)
+          if (typeof data.coachSign.useInfoBookletCover !== 'undefined') changes.push(` - 使用說資封面: ${formatBoolean(data.coachSign.useInfoBookletCover)}`)
+        }
+        if (data.otherNote && data.printingTypes.other) {
+          changes.push(`其他備註: ${data.otherNote}`)
+        }
+      }
+      // DM/地圖等其他類型
+      if (data.productType === 'newDMSingle') {
+        if (data.useQuickTemplate) changes.push(`使用快速版型: ${formatBoolean(data.useQuickTemplate)}`)
+        if (data.quickTemplateNumber) changes.push(`快速版型編號: ${data.quickTemplateNumber}`)
+        if (data.title) changes.push(`標題: ${data.title}`)
+        if (data.subtitle) changes.push(`副標: ${data.subtitle}`)
+        if (data.departureDate) changes.push(`出發日期: ${data.departureDate}`)
+        if (data.tripHighlights) changes.push(`行程特色: ${data.tripHighlights}`)
+        if (data.attractionImage) changes.push(`指定景點圖片: ${data.attractionImage}`)
+        if (data.agentPrice) changes.push(`同業價: ${data.agentPrice.toLocaleString()}`)
+        if (data.retailPrice) changes.push(`直客價: ${data.retailPrice.toLocaleString()}`)
+        if (data.promotions) changes.push(`優惠: ${data.promotions}`)
+        if (data.airlineHighlightNote) changes.push(`航空公司特色備註: ${data.airlineHighlightNote}`)
+        if (data.useLogo) changes.push(`使用Logo: ${data.useLogo}`)
+        if (data.note) changes.push(`備註: ${data.note}`)
+      }
+      if (data.productType === 'newDMMultiple') {
+        if (data.useQuickTemplate) changes.push(`使用快速版型: ${formatBoolean(data.useQuickTemplate)}`)
+        if (data.quickTemplateNumber) changes.push(`快速版型編號: ${data.quickTemplateNumber}`)
+        if (data.title) changes.push(`標題: ${data.title}`)
+        if (data.subtitleAndHighlights) changes.push(`副標/特色: ${data.subtitleAndHighlights}`)
+        if (data.attractionImage) changes.push(`指定景點圖片: ${data.attractionImage}`)
+        if (data.itinerary && data.itinerary.length > 0) {
+          changes.push(`行程數量: ${data.itinerary.length} 筆`)
+          // 顯示行程詳細資訊
+          data.itinerary.forEach((item, index) => {
+            changes.push(`行程 ${index + 1}:`)
+            if (item.groupName) changes.push(` - 團體名稱: ${item.groupName}`)
+            if (item.tripHighlights) changes.push(` - 行程特色: ${item.tripHighlights}`)
+            if (item.departureDate) changes.push(` - 出發日期: ${item.departureDate}`)
+            if (item.agentPrice) changes.push(` - 同業價: ${item.agentPrice.toLocaleString()}`)
+            if (item.retailPrice) changes.push(` - 直客價: ${item.retailPrice.toLocaleString()}`)
+          })
+        }
+        if (data.promotions) changes.push(`優惠: ${data.promotions}`)
+        if (data.airlineHighlightNote) changes.push(`航空公司特色備註: ${data.airlineHighlightNote}`)
+        if (data.useLogo) changes.push(`使用Logo: ${data.useLogo}`)
+        if (data.note) changes.push(`備註: ${data.note}`)
+      }
+      if (data.productType === 'seriesMap' || data.productType === 'SPMap') {
+        if (data.groupId) changes.push(`團號: ${data.groupId}`)
+        if (data.requestedByDate) changes.push(`希望交付日: ${formatDate(data.requestedByDate)}`)
+        if (data.note) changes.push(`備註: ${data.note}`)
+      }
+      // 檔案資訊
+      const fileFields = ['files', 'referenceImage', 'images']
+      fileFields.forEach(field => {
+        if (data[field] && Array.isArray(data[field]) && data[field].length > 0) {
+          const fileNames = data[field].map(f => typeof f === 'string' ? f.split('/').pop() : '').filter(Boolean)
+          changes.push(`${fieldTranslations[field]}: ${fileNames.join('、')}`)
+        }
+      })
+      return changes
+    }
+
+    // 針對通知 EMAIL 的特殊處理
+    if (item.targetModel === 'notificationEmails') {
+      const data = after
+      // 基本資訊
+      changes.push(`使用者: ${data.user?.name || (typeof data.user === 'string' ? data.user : '(無)')}`)
+      if (data.user?.userId || data.user?.adminId) {
+        changes.push(`使用者編號: ${data.user.userId || data.user.adminId}`)
+      }
+      if (data.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+        const categoryTexts = data.categories.map(cat => {
+          const categoryMap = {
+            printing: '印刷相關',
+            map: '地圖',
+            dm: 'DM'
+          }
+          return categoryMap[cat] || cat
+        })
+        changes.push(`大分類: ${categoryTexts.join('、')}`)
+      }
+      if (data.note) changes.push(`備註: ${data.note}`)
+      return changes
+    }
+
     Object.entries(after).forEach(([key, value]) => {
       if (!excludeFields.includes(key) && fieldTranslations[key]) {
         if (key === 'role') {
@@ -1202,6 +1432,179 @@ const formatChanges = (item) => {
     return changes
   }
 
+  // 處理行銷美編需求申請的修改操作（優先處理）
+  if (item.targetModel === 'designRequests' && item.action === '修改') {
+    changedFields.forEach(key => {
+      if (fieldTranslations[key]) {
+        const oldValue = before[key]
+        const newValue = after[key]
+        if (key === 'status') {
+          changes.push(`${fieldTranslations[key]}: ${getStatusText(oldValue)} → ${getStatusText(newValue)}`)
+        } else if (key === 'productType') {
+          changes.push(`${fieldTranslations[key]}: ${getProductTypeText(oldValue)} → ${getProductTypeText(newValue)}`)
+        } else if (key === 'applicationDate' || key === 'requestedByDate') {
+          changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
+        } else if (key === 'applicant' || key === 'assignedDesigner') {
+          // 處理申請人和處理人員的顯示
+          let oldName = '(無)'
+          let newName = '(無)'
+
+          // 處理舊值
+          if (oldValue) {
+            if (typeof oldValue === 'object' && oldValue.name) {
+              oldName = oldValue.name
+            } else if (typeof oldValue === 'string' && oldValue.length === 24) {
+              // 如果是 ObjectId 格式的字串，顯示為 (無)
+              oldName = '(無)'
+            } else if (typeof oldValue === 'string') {
+              oldName = oldValue
+            }
+          }
+
+          // 處理新值
+          if (newValue) {
+            if (typeof newValue === 'object' && newValue.name) {
+              newName = newValue.name
+            } else if (typeof newValue === 'string' && newValue.length === 24) {
+              // 如果是 ObjectId 格式的字串，顯示為 (無)
+              newName = '(無)'
+            } else if (typeof newValue === 'string') {
+              newName = newValue
+            }
+          }
+
+          changes.push(`${fieldTranslations[key]}: ${oldName} → ${newName}`)
+        } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+          changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
+        } else if (key === 'agentPrice' || key === 'retailPrice' || key === 'quantity') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.toLocaleString() || '(無)'} → ${newValue?.toLocaleString() || '(無)'}`)
+        } else if (key === 'printingTypes') {
+          // 顯示印刷類型異動
+          const oldTypes = oldValue ? Object.entries(oldValue).filter(([, v]) => v).map(([k]) => getProductTypeText(k)) : []
+          const newTypes = newValue ? Object.entries(newValue).filter(([, v]) => v).map(([k]) => getProductTypeText(k)) : []
+          changes.push(`${fieldTranslations[key]}: ${oldTypes.join('、') || '(無)'} → ${newTypes.join('、') || '(無)'}`)
+        } else if (key === 'files' || key === 'referenceImage' || key === 'images') {
+          // 顯示檔案異動
+          const oldFiles = Array.isArray(oldValue) ? oldValue.map(f => typeof f === 'string' ? f.split('/').pop() : '').filter(Boolean) : []
+          const newFiles = Array.isArray(newValue) ? newValue.map(f => typeof f === 'string' ? f.split('/').pop() : '').filter(Boolean) : []
+          changes.push(`${fieldTranslations[key]}: ${oldFiles.join('、') || '(無)'} → ${newFiles.join('、') || '(無)'}`)
+        } else if (key === 'itinerary') {
+          // 處理行程陣列異動
+          if (Array.isArray(oldValue) && Array.isArray(newValue)) {
+            const maxLength = Math.max(oldValue.length, newValue.length)
+            for (let i = 0; i < maxLength; i++) {
+              const oldItem = oldValue[i] || {}
+              const newItem = newValue[i] || {}
+
+              // 檢查該行程項目是否有變更
+              const itemChanged = Object.keys({ ...oldItem, ...newItem }).some(subKey => {
+                if (subKey === '_id') return false // 忽略 _id 欄位
+                return oldItem[subKey] !== newItem[subKey]
+              })
+
+              if (itemChanged) {
+                // 顯示行程項目的變更
+                const itemChanges = []
+                Object.keys({ ...oldItem, ...newItem }).forEach(subKey => {
+                  if (subKey === '_id') return // 忽略 _id 欄位
+                  const oldSub = oldItem[subKey]
+                  const newSub = newItem[subKey]
+                  if (oldSub !== newSub) {
+                    const subKeyLabel = fieldTranslations[subKey] || subKey
+                    if (subKey === 'agentPrice' || subKey === 'retailPrice') {
+                      itemChanges.push(`${subKeyLabel}: ${oldSub?.toLocaleString() || '(無)'} → ${newSub?.toLocaleString() || '(無)'}`)
+                    } else {
+                      itemChanges.push(`${subKeyLabel}: ${oldSub || '(無)'} → ${newSub || '(無)'}`)
+                    }
+                  }
+                })
+
+                if (itemChanges.length > 0) {
+                  changes.push(`行程-${i + 1}: ${itemChanges.join(', ')}`)
+                }
+              }
+            }
+          } else {
+            // 如果其中一個不是陣列，顯示整體變更
+            const oldText = Array.isArray(oldValue) ? `${oldValue.length} 筆行程` : '(無)'
+            const newText = Array.isArray(newValue) ? `${newValue.length} 筆行程` : '(無)'
+            changes.push(`${fieldTranslations[key]}: ${oldText} → ${newText}`)
+          }
+        } else if (typeof oldValue === 'object' && typeof newValue === 'object' && oldValue && newValue) {
+          // 巢狀物件（如 infoBookletCover、banner、coachSign）
+          const subKeys = Object.keys({ ...oldValue, ...newValue })
+          let hasChanges = false
+          subKeys.forEach(subKey => {
+            const oldSub = oldValue[subKey]
+            const newSub = newValue[subKey]
+            if (oldSub !== newSub) {
+              hasChanges = true
+              const subKeyLabel = fieldTranslations[subKey] || subKey
+              const parentKeyLabel = fieldTranslations[key] || key
+              if (subKey === 'requestedByDate') {
+                changes.push(`${parentKeyLabel}-${subKeyLabel}: ${formatDate(oldSub)} → ${formatDate(newSub)}`)
+              } else if (subKey === 'quantity' || subKey === 'agentPrice' || subKey === 'retailPrice') {
+                changes.push(`${parentKeyLabel}-${subKeyLabel}: ${oldSub?.toLocaleString() || '(無)'} → ${newSub?.toLocaleString() || '(無)'}`)
+              } else if (typeof oldSub === 'boolean' || typeof newSub === 'boolean') {
+                changes.push(`${parentKeyLabel}-${subKeyLabel}: ${formatBoolean(oldSub)} → ${formatBoolean(newSub)}`)
+              } else {
+                changes.push(`${parentKeyLabel}-${subKeyLabel}: ${oldSub || '(無)'} → ${newSub || '(無)'}`)
+              }
+            }
+          })
+
+          // 如果沒有具體的子欄位變更，但有整體物件變更，顯示為新增或移除
+          if (!hasChanges && JSON.stringify(oldValue) !== JSON.stringify(newValue)) {
+            const parentKeyLabel = fieldTranslations[key] || key
+            const oldText = Object.keys(oldValue).length > 0 ? '有資料' : '(無)'
+            const newText = Object.keys(newValue).length > 0 ? '有資料' : '(無)'
+            changes.push(`${parentKeyLabel}: ${oldText} → ${newText}`)
+          }
+        } else if ((oldValue && typeof oldValue === 'object') || (newValue && typeof newValue === 'object')) {
+          // 處理一個是物件，另一個不是物件的情況
+          const parentKeyLabel = fieldTranslations[key] || key
+          const oldText = oldValue && typeof oldValue === 'object' ? '有資料' : (oldValue || '(無)')
+          const newText = newValue && typeof newValue === 'object' ? '有資料' : (newValue || '(無)')
+          changes.push(`${parentKeyLabel}: ${oldText} → ${newText}`)
+        } else {
+          changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        }
+      }
+    })
+    return changes
+  }
+
+  // 處理通知 EMAIL 的修改操作
+  if (item.targetModel === 'notificationEmails' && item.action === '修改') {
+    changedFields.forEach(key => {
+      if (fieldTranslations[key]) {
+        const oldValue = before[key]
+        const newValue = after[key]
+
+        if (key === 'user') {
+          const oldUserName = oldValue?.name || '(無)'
+          const newUserName = newValue?.name || '(無)'
+          changes.push(`${fieldTranslations[key]}: ${oldUserName} → ${newUserName}`)
+        } else if (key === 'categories') {
+          const categoryMap = {
+            printing: '印刷相關',
+            map: '地圖',
+            dm: 'DM'
+          }
+          const oldCategories = Array.isArray(oldValue) ? oldValue.map(cat => categoryMap[cat] || cat) : []
+          const newCategories = Array.isArray(newValue) ? newValue.map(cat => categoryMap[cat] || cat) : []
+          changes.push(`${fieldTranslations[key]}: ${oldCategories.join('、') || '(無)'} → ${newCategories.join('、') || '(無)'}`)
+        } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+          changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
+        } else {
+          changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        }
+      }
+    })
+    return changes
+  }
+
+  // 通用修改處理（排除已特殊處理的類型）
   changedFields.forEach(key => {
     if (fieldTranslations[key]) {
       const oldValue = before[key]
@@ -1250,6 +1653,8 @@ const formatChanges = (item) => {
       return ['( 請查看詳細異動內容 )'];
     }
   }
+
+
 
   return changes
 }

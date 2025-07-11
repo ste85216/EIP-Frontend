@@ -1244,7 +1244,7 @@ definePage({
   meta: {
     title: '直客詢問統計表 - 管理介面 | GInternational',
     login: true,
-    roles: [UserRole.MARKETING, UserRole.ADMIN,UserRole.MANAGER]
+    roles: [UserRole.MARKETING, UserRole.ADMIN,UserRole.MANAGER,UserRole.HR]
   }
 })
 

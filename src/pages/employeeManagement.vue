@@ -539,6 +539,7 @@
       v-model="dialog.open"
       persistent
       :width="dialogWidth"
+      :no-click-animation="isSubmitting"
     >
       <v-card class="rounded-lg px-4 py-6">
         <div class="card-title px-4 py-3">
@@ -1183,6 +1184,8 @@
     <v-dialog
       v-model="exportDialog.open"
       max-width="320"
+      :persistent="isExporting"
+      :no-click-animation="isExporting"
     >
       <v-card class="rounded-lg px-4 pt-5 pb-4">
         <v-card-title class="card-title mb-2">
@@ -1324,6 +1327,8 @@
     <v-dialog
       v-model="importDialog.open"
       max-width="400"
+      :persistent="isImporting"
+      :no-click-animation="isImporting"
     >
       <v-card class="rounded-lg px-3 pt-4 pb-3">
         <v-card-title class="card-title mb-2">
@@ -1374,6 +1379,7 @@
     <v-dialog
       v-model="importResultDialog.open"
       max-width="600"
+      persistent
     >
       <v-card class="rounded-lg px-4 pt-5 pb-4">
         <v-card-title class="card-title">
@@ -1618,6 +1624,11 @@ const performSearch = async () => {
       status: searchCriteria.value.status
     }
 
+    // 當選擇顯示全部時，將頁碼設為1
+    if (tableItemsPerPage.value === -1) {
+      params.page = 1
+    }
+
     // 處理日期搜尋
     if (searchCriteria.value.dateType &&
         Array.isArray(searchCriteria.value.dateRange) &&
@@ -1666,7 +1677,12 @@ const resetSearch = () => {
 
 // 表格操作函數
 const handleTableOptionsChange = async (options) => {
-  tablePage.value = options.page
+  // 當選擇顯示全部時，將頁碼設為1
+  if (options.itemsPerPage === -1) {
+    tablePage.value = 1
+  } else {
+    tablePage.value = options.page
+  }
   tableItemsPerPage.value = options.itemsPerPage
   if (options.sortBy?.length > 0) {
     tableSortBy.value = options.sortBy
@@ -2481,7 +2497,7 @@ const handleImportExcel = async () => {
         const range = XLSX.utils.decode_range(worksheet['!ref'])
 
         // 找出需要保持文字格式的欄位索引
-        const textFields = ['科威員編', '分機號碼', '列印編號', 'Email密碼']
+        const textFields = ['科威員編', 'Email密碼']
         const textColumnIndices = []
 
         // 檢查標題列，找出文字欄位的索引
@@ -2499,12 +2515,12 @@ const handleImportExcel = async () => {
             const cell = worksheet[cellRef]
             if (cell) {
               if (cell.t === 'n') { // 如果是數字類型
-                // 將數字轉換為字串，並補齊前導零（如果原本應該有的話）
+                // 將數字轉換為字串
                 let strValue = cell.v.toString()
 
-                // 對於科威員編、分機號碼、列印編號，如果是純數字且小於4位數，自動補零到4位
+                // 對於科威員編，如果是純數字且小於4位數，自動補零到4位
                 const headerCell = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })]
-                if (headerCell && ['科威員編', '分機號碼', '列印編號'].includes(headerCell.v)) {
+                if (headerCell && headerCell.v === '科威員編') {
                   if (/^\d+$/.test(strValue) && strValue.length < 4) {
                     strValue = strValue.padStart(4, '0')
                   }
@@ -2516,7 +2532,7 @@ const handleImportExcel = async () => {
               } else if (cell.t === 's' && cell.v) {
                 // 如果已經是文字，檢查是否需要補零
                 const headerCell = worksheet[XLSX.utils.encode_cell({ r: range.s.r, c: C })]
-                if (headerCell && ['科威員編', '分機號碼', '列印編號'].includes(headerCell.v)) {
+                if (headerCell && headerCell.v === '科威員編') {
                   let strValue = cell.v.toString().trim()
                   if (/^\d+$/.test(strValue) && strValue.length < 4) {
                     strValue = strValue.padStart(4, '0')
@@ -2586,8 +2602,8 @@ const handleImportExcel = async () => {
             department: row['部門'],
             employmentType: row['聘僱類型'] || '正職',
             jobTitle: row['職稱'] || '',
-            extNumber: row['分機號碼']?.toString(),
-            printNumber: row['列印編號']?.toString(),
+            extNumber: row['分機號碼']?.toString().trim(),
+            printNumber: row['列印編號']?.toString().trim(),
             email: row['Email'],
             emailPassword: row['Email密碼'],
             employmentStatus: row['任職狀態'],
@@ -2712,7 +2728,7 @@ const getStatusDateClass = (item) => {
 
 const employmentTypeOptions = [
   { text: '正職', value: '正職' },
-  { text: '非正職', value: '非正職' },
+  { text: '兼職', value: '兼職' },
   { text: '實習生', value: '實習生' }
 ]
 
@@ -2752,7 +2768,8 @@ const jobTitleOptions = [  // 有順序之分
   { text: '助理工程師', value: '助理工程師' },
   { text: 'Indoor', value: 'Indoor' },
   { text: '工讀生', value: '工讀生' },
-  { text: '實習生', value: '實習生' }
+  { text: '實習生', value: '實習生' },
+  { text: '顧問', value: '顧問' }
 ]
 </script>
 

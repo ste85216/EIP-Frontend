@@ -670,12 +670,14 @@ import { debounce } from 'lodash'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
+import UserRole from '@/enums/UserRole'
 
 // 頁面定義
 definePage({
   meta: {
     title: '公司員工列表 | GInternational',
-    login: true
+    login: true,
+    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT]
   }
 })
 
@@ -732,7 +734,7 @@ const statusOptions = [
 // 聘僱類型選項
 const employmentTypeOptions = [
   { text: '正職', value: '正職' },
-  { text: '非正職', value: '非正職' },
+  { text: '兼職', value: '兼職' },
   { text: '實習生', value: '實習生' }
 ]
 

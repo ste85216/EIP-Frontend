@@ -931,7 +931,7 @@
                 <v-date-input
                   v-model="purchaseDate.value.value"
                   :error-messages="purchaseDate.errorMessage.value"
-                  label="*進貨日期"
+                  label="進貨日期"
                   variant="outlined"
                   density="compact"
                   clearable
@@ -1551,7 +1551,7 @@ const deviceSchema = computed(() => {
       .required('請選擇硬體類型'),
     purchaseDate: yup
       .date()
-      .required('請選擇進貨日期'),
+      .nullable(),
     deviceName: yup
       .string()
       .nullable(),

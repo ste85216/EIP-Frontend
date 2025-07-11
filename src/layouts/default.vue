@@ -192,6 +192,7 @@
             </v-list-item>
           </template>
           <v-divider
+            v-if="!user.isUser && !user.isDesigner"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -612,6 +613,7 @@ const userItems = [
     to: '/employeeList',
     text: '公司員工列表',
     icon: 'mdi-account-details',
+    roles: ['ADMIN', 'MANAGER', 'IT', 'HR']
   }
   // {
   //   to: '/orderTogether',
@@ -689,12 +691,12 @@ const cogItems = [
     icon: 'mdi-account-question',
     roles: ['ADMIN', 'MANAGER', 'MARKETING'],
   },
-  // {
-  //   to: '/marketingDesignRequestManagement',
-  //   text: '行銷美編需求申請管理',
-  //   icon: 'mdi-form-select',
-  //   roles: ['ADMIN', 'MANAGER', 'DESIGNER', 'MARKETING'],
-  // }
+  {
+    to: '/marketingDesignRequestManagement',
+    text: '行銷美編需求申請管理',
+    icon: 'mdi-form-select',
+    roles: ['ADMIN', 'MANAGER', 'DESIGNER', 'MARKETING'],
+  }
 ]
 
 const ITItems = [
