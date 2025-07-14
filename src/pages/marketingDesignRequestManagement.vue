@@ -2036,7 +2036,7 @@
                   class="mb-3"
                 />
                 <div class="text-grey-lighten-1">
-                  尚未設定任何通知
+                  尚未設定任何EMAIL
                 </div>
               </div>
               <v-list v-else>
@@ -2065,6 +2065,15 @@
                     <v-spacer />
                     <v-btn
                       icon
+                      color="light-blue-darken-4"
+                      variant="plain"
+                      size="small"
+                      @click="openEditEmailDialog(email)"
+                    >
+                      <v-icon>mdi-pencil</v-icon>
+                    </v-btn>
+                    <v-btn
+                      icon
                       color="red-darken-1"
                       variant="plain"
                       size="small"
@@ -2091,6 +2100,135 @@
               </v-list>
             </template>
           </div>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- 編輯通知設定對話框 -->
+    <v-dialog
+      v-model="editEmailDialog.show"
+      max-width="800"
+      persistent
+    >
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-darken-1">
+          <v-icon
+            icon="mdi-pencil"
+            size="20"
+            color="white"
+            class="me-3"
+          />
+          <span class="card-title text-white">編輯通知設定</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            @click="closeEditEmailDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="px-6 py-6">
+          <v-form ref="editEmailFormRef">
+            <v-row>
+              <v-col cols="12">
+                <div class="d-flex align-center mb-3">
+                  <v-icon
+                    icon="mdi-account-circle"
+                    size="18"
+                    color="blue-darken-1"
+                    class="me-2"
+                  />
+                  <span class="text-blue-darken-1 card-title">用戶資訊</span>
+                </div>
+                <v-card
+                  class="pa-4 elevation-0 notification-email-card mb-4"
+                >
+                  <div class="d-flex align-center">
+                    <v-icon
+                      icon="mdi-account"
+                      size="20"
+                      color="grey-darken-1"
+                      class="me-3"
+                    />
+                    <div>
+                      <div class="font-weight-bold text-grey-darken-3">
+                        {{ editEmailForm.userName }}
+                      </div>
+                      <div class="text-grey-darken-2">
+                        {{ editEmailForm.userEmail }}
+                      </div>
+                    </div>
+                  </div>
+                </v-card>
+              </v-col>
+
+              <v-col
+                cols="12"
+                class="pt-0 mb-3"
+              >
+                <v-card
+                  class="pa-4 elevation-0 notification-email-card"
+                >
+                  <div class="d-flex align-center mb-3">
+                    <v-icon
+                      icon="mdi-checkbox-multiple-marked-outline"
+                      size="18"
+                      color="grey-darken-1"
+                      class="me-2"
+                    />
+                    <span class="text-grey-darken-1 font-weight-bold">選擇需要通知的大分類</span>
+                  </div>
+
+                  <v-row>
+                    <v-col
+                      v-for="category in categoryOptions"
+                      :key="category.value"
+                      cols="12"
+                      sm="6"
+                      md="4"
+                    >
+                      <v-checkbox
+                        :model-value="editEmailForm.categories.includes(category.value)"
+                        :label="category.label"
+                        color="grey-darken-1"
+                        hide-details
+                        density="compact"
+                        @update:model-value="(checked) => toggleEditCategory(category.value, checked)"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-card>
+              </v-col>
+
+              <v-col cols="12">
+                <v-textarea
+                  v-model="editEmailForm.note"
+                  label="備註"
+                  variant="outlined"
+                  density="compact"
+                  rows="2"
+                  prepend-inner-icon="mdi-note-text"
+                />
+              </v-col>
+
+              <v-col
+                cols="12"
+                class="d-flex justify-end pt-0"
+              >
+                <v-btn
+                  color="blue-darken-1"
+                  variant="outlined"
+                  :loading="updatingEmail"
+                  @click="updateNotificationEmail"
+                >
+                  更新
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -2224,6 +2362,19 @@ const categoryOptions = [
   { value: 'map', label: '地圖相關' },
   { value: 'dm', label: 'DM相關' }
 ]
+
+// 編輯 EMAIL 對話框相關變數
+const editEmailDialog = reactive({ show: false })
+const editEmailForm = reactive({
+  id: '',
+  userName: '',
+  userEmail: '',
+  categories: [],
+  note: ''
+})
+const editEmailFormRef = ref(null)
+const updatingEmail = ref(false)
+const originalEditEmailData = ref({}) // 新增：記錄原始資料
 
 // 刪除 EMAIL 確認對話框相關變數
 const deleteEmailConfirmDialog = reactive({
@@ -3256,6 +3407,20 @@ const toggleCategory = (categoryValue, checked) => {
   }
 }
 
+// 切換編輯對話框中的大分類選擇
+const toggleEditCategory = (categoryValue, checked) => {
+  if (checked) {
+    if (!editEmailForm.categories.includes(categoryValue)) {
+      editEmailForm.categories.push(categoryValue)
+    }
+  } else {
+    const index = editEmailForm.categories.indexOf(categoryValue)
+    if (index > -1) {
+      editEmailForm.categories.splice(index, 1)
+    }
+  }
+}
+
 // 複製申請單資訊
 const copyRequestInfo = async () => {
   try {
@@ -3367,6 +3532,99 @@ const availableUsers = computed(() => {
   const usedUserIds = notificationEmails.value.map(e => e.user?._id)
   return users.value.filter(u => !usedUserIds.includes(u.value))
 })
+
+// 開啟編輯通知設定對話框
+const openEditEmailDialog = (email) => {
+  editEmailForm.id = email._id
+  editEmailForm.userName = email.user?.name || ''
+  editEmailForm.userEmail = email.user?.email || ''
+  editEmailForm.categories = [...(email.categories || [])]
+  editEmailForm.note = email.note || ''
+  editEmailDialog.show = true
+
+  // 新增：deep clone 一份原始資料
+  originalEditEmailData.value = JSON.parse(JSON.stringify({
+    id: email._id,
+    userName: email.user?.name || '',
+    userEmail: email.user?.email || '',
+    categories: [...(email.categories || [])],
+    note: email.note || ''
+  }))
+}
+
+// 關閉編輯通知設定對話框
+const closeEditEmailDialog = () => {
+  editEmailDialog.show = false
+  // 重置表單
+  editEmailForm.id = ''
+  editEmailForm.userName = ''
+  editEmailForm.userEmail = ''
+  editEmailForm.categories = []
+  editEmailForm.note = ''
+  // 重置原始資料
+  originalEditEmailData.value = {}
+  if (editEmailFormRef.value) {
+    editEmailFormRef.value.resetValidation()
+  }
+}
+
+// 更新通知設定
+const updateNotificationEmail = async () => {
+  // 驗證至少選擇一個大分類
+  if (!editEmailForm.categories || editEmailForm.categories.length === 0) {
+    createSnackbar({
+      text: '請至少選擇一個大分類',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    return
+  }
+
+  // 新增：比對資料
+  const currentData = {
+    id: editEmailForm.id,
+    userName: editEmailForm.userName,
+    userEmail: editEmailForm.userEmail,
+    categories: [...editEmailForm.categories].sort(), // 排序以確保比較準確
+    note: editEmailForm.note || ''
+  }
+
+  const originalData = {
+    id: originalEditEmailData.value.id,
+    userName: originalEditEmailData.value.userName,
+    userEmail: originalEditEmailData.value.userEmail,
+    categories: [...(originalEditEmailData.value.categories || [])].sort(), // 排序以確保比較準確
+    note: originalEditEmailData.value.note || ''
+  }
+
+  if (JSON.stringify(currentData) === JSON.stringify(originalData)) {
+    createSnackbar({ text: '資料未做任何變更', snackbarProps: { color: 'red-lighten-1' } })
+    return
+  }
+
+  updatingEmail.value = true
+  try {
+    const { data } = await apiAuth.put(`/notificationEmails/${editEmailForm.id}`, {
+      categories: editEmailForm.categories,
+      note: editEmailForm.note
+    })
+    if (data.success) {
+      createSnackbar({
+        text: '通知設定更新成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+      closeEditEmailDialog()
+      await fetchNotificationEmails()
+    }
+  } catch (error) {
+    console.error('更新通知設定失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '更新通知設定失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    updatingEmail.value = false
+  }
+}
 </script>
 
 <style scoped>
