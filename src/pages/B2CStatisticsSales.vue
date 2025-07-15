@@ -459,7 +459,7 @@
                                 <v-btn
                                   v-tooltip:top="'新增及查看紀錄'"
                                   icon
-                                  color="grey-darken-2"
+                                  color="blue-grey-darken-3"
                                   variant="plain"
                                   size="15"
                                   class="ms-1"
@@ -494,21 +494,26 @@
       persistent
       max-width="720"
     >
-      <v-card class="rounded-lg px-4 py-4">
-        <div class="card-title px-4 mt-2 mb-3 d-flex justify-space-between align-center">
-          <div>進度 / 備註 - 歷史紀錄</div>
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-blue-grey-darken-2">
+          <v-icon
+            size="20"
+            class="me-2"
+          >
+            mdi-history
+          </v-icon><span class="card-title text-white">進度 / 備註 - 歷史紀錄</span>
+          <v-spacer />
           <v-btn
             icon
             variant="text"
-            size="40"
+            color="white"
             @click="closeSimpleDialog"
           >
-            <v-icon size="20">
-              mdi-close
-            </v-icon>
+            <v-icon>mdi-close</v-icon>
           </v-btn>
-        </div>
-        <v-card-text class="pa-3">
+        </v-card-title>
+
+        <v-card-text class="px-6 py-7">
           <!-- 加入載入中動畫 -->
           <div
             v-if="isDialogLoading"
@@ -517,7 +522,7 @@
           >
             <v-progress-circular
               indeterminate
-              color="deep-purple-darken-2"
+              color="amber-darken-4"
               size="64"
               width="8"
             />
@@ -573,11 +578,26 @@
       v-model="confirmNoteDialog"
       max-width="340"
     >
-      <v-card class="rounded-lg pt-6 pb-4 px-6">
-        <div class="card-title mb-3">
-          確認新增
-        </div>
-        <v-card-text class="pa-0 mb-4">
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-teal-darken-2">
+          <v-icon
+            size="20"
+            class="me-2"
+          >
+            mdi-check-circle
+          </v-icon><span class="card-title text-white">確認新增</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            @click="confirmNoteDialog = false"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="px-6 pt-3 pb-0">
           <div class="mb-4">
             請確認是否要新增以下進度/備註？新增後將無法修改或刪除。
           </div>
@@ -589,7 +609,7 @@
             {{ progressNoteInput }}
           </v-card>
         </v-card-text>
-        <v-card-actions class="px-0">
+        <v-card-actions class="px-6 py-6">
           <v-spacer />
           <v-btn
             color="grey-darken-1"
@@ -602,6 +622,7 @@
             color="teal-darken-1"
             variant="outlined"
             :loading="isAddingNote"
+            class="ms-2"
             @click="addProgressNote"
           >
             確認
@@ -614,14 +635,34 @@
     <v-dialog
       v-model="isPasswordDialogOpen"
       persistent
-      max-width="320"
+      max-width="340"
       @update:model-value="handlePasswordDialogClose"
     >
-      <v-card class="pt-7 px-7 pb-5 rounded-lg">
-        <div class="card-title">
-          請輸入「{{ selectedCompanyName }}」密碼
-        </div>
-        <v-card-text class="pa-0 mt-8 mb-5">
+      <v-card class="rounded-lg pb-4">
+        <v-card-title class="d-flex align-center ps-6 pe-4 py-1 mb-2 bg-teal-darken-2">
+          <v-icon
+            size="20"
+            class="me-2"
+          >
+            mdi-lock-open
+          </v-icon>
+          <span class="card-title text-white">公司密碼</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            size="small"
+            @click="closePasswordDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="px-6 py-3">
+          <div class="mb-5">
+            請輸入<span class="text-teal-darken-1 font-weight-bold">「{{ selectedCompanyName }}」</span>密碼
+          </div>
           <form @submit.prevent="verifyCompanyPassword">
             <v-text-field
               v-model="companyPassword"
@@ -637,7 +678,7 @@
             />
           </form>
         </v-card-text>
-        <v-card-actions class="px-0">
+        <v-card-actions class="px-6">
           <v-spacer />
           <v-btn
             color="grey-darken-1"
@@ -663,13 +704,28 @@
     <!-- 業務輪流表對話框 -->
     <v-dialog
       v-model="salesRotationDialog.open"
-      max-width="880"
+      max-width="890"
     >
-      <v-card class="rounded-lg px-4 py-4">
-        <div class="card-title px-4 pt-3 pb-1">
-          業務輪流表
-        </div>
-        <v-card-text class="mt-3 px-5 pt-3">
+      <v-card class="rounded-lg pb-2">
+        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-blue-grey-darken-2">
+          <v-icon
+            size="20"
+            class="me-2"
+          >
+            mdi-account-switch
+          </v-icon><span class="card-title text-white">業務輪流表</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            @click="closeSalesRotationDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="px-7 py-7">
           <!-- 加入載入中動畫 -->
           <div
             v-if="isLoadingSalesRotation"
@@ -678,7 +734,7 @@
           >
             <v-progress-circular
               indeterminate
-              color="deep-purple-darken-2"
+              color="amber-darken-4"
               size="64"
               width="8"
             />
@@ -724,7 +780,7 @@
             </v-row>
           </div>
         </v-card-text>
-        <v-card-actions class="px-3">
+        <v-card-actions class="px-6 py-4">
           <v-spacer />
           <v-btn
             color="grey-darken-1"
@@ -2094,6 +2150,14 @@ onUnmounted(() => {
   padding: 4px 8px;
   margin-right: 8px;
 }
+
+/* 對話框標題樣式 */
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
 </style>
 
 <route lang="yaml">
