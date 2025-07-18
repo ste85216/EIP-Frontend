@@ -112,7 +112,7 @@
         <v-row>
           <v-col>
             <v-row>
-              <v-col cols="3">
+              <v-col cols="2">
                 <v-btn
                   prepend-icon="mdi-plus"
                   variant="outlined"
@@ -124,7 +124,7 @@
               </v-col>
               <!-- 篩選區塊 -->
               <v-col
-                cols="7"
+                cols="8"
                 class="pe-16"
               >
                 <v-row>
@@ -159,6 +159,7 @@
                   </v-col>
 
                   <v-col
+                    cols="4"
                     class="d-flex align-center"
                   >
                     <v-btn
@@ -183,8 +184,17 @@
                     <v-btn
                       prepend-icon="mdi-file-pdf-box"
                       color="red-lighten-1"
+                      class="me-4"
                       :size="buttonSize"
                       @click="openExportDialog"
+                    >
+                      匯出
+                    </v-btn>
+                    <v-btn
+                      prepend-icon="mdi-file-excel"
+                      color="teal-darken-1"
+                      :size="buttonSize"
+                      @click="openExportExcelDialog"
                     >
                       匯出
                     </v-btn>
@@ -244,7 +254,7 @@
                   <td>{{ getCategoryName(item.hardwareCategory) }}</td>
                   <td>{{ item.maintenanceContent }}</td>
                   <td>{{ item.maintenanceResult }}</td>
-                  <td>{{ item.reportUser }}</td>
+                  <td>{{ item.reportUserEmployee?.name || item.reportUser }}</td>
                   <td>{{ item.note }}</td>
                   <td class="text-center">
                     <v-btn
@@ -335,12 +345,16 @@
                 cols="12"
                 sm="4"
               >
-                <v-text-field
-                  v-model="reportUser.value.value"
-                  :error-messages="reportUser.errorMessage.value"
+                <v-autocomplete
+                  v-model="reportUserId.value.value"
+                  :items="employees"
+                  item-title="label"
+                  item-value="value"
                   label="報修人"
                   variant="outlined"
                   density="compact"
+                  clearable
+                  :error-messages="reportUserId.errorMessage.value"
                 />
               </v-col>
 
@@ -425,7 +439,7 @@
     >
       <v-card class="rounded-lg py-3 px-2">
         <v-card-title class="card-title px-6 py-3">
-          匯出報表
+          匯出PDF報表
         </v-card-title>
         <v-card-text class="px-5 pb-2">
           <v-form @submit.prevent="handleExportPDF">
@@ -456,6 +470,83 @@
                 variant="outlined"
                 type="submit"
                 :loading="isExporting"
+                class="ms-2"
+              >
+                匯出
+              </v-btn>
+            </v-card-actions>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
+    <!-- 匯出 Excel 對話框 -->
+    <v-dialog
+      v-model="exportExcelDialog.open"
+      persistent
+      width="360"
+    >
+      <v-card class="rounded-lg py-4 pb-0 px-2">
+        <v-card-title class="card-title px-6 py-3">
+          匯出Excel報表
+        </v-card-title>
+        <v-card-text class="px-5 pb-5">
+          <v-form @submit.prevent="handleExportExcel">
+            <v-date-input
+              v-model="exportExcelDialog.dateRange"
+              label="*維修日期區間"
+              variant="outlined"
+              density="compact"
+              multiple="range"
+              prepend-icon
+              clearable
+              class="mb-4"
+              :cancel-text="'取消'"
+              :ok-text="'確認'"
+              :error-messages="exportExcelDialog.dateError"
+            />
+            <v-select
+              v-model="exportExcelDialog.hardwareCategories"
+              :items="categories"
+              item-title="name"
+              item-value="_id"
+              variant="outlined"
+              density="compact"
+              label="*硬體類型"
+              clearable
+              multiple
+              class="mb-4"
+              :error-messages="exportExcelDialog.categoryError"
+            >
+              <template #selection="{ item, index }">
+                <span v-if="index === 0">{{ item.raw.name }}</span>
+                <span v-else-if="index === 1">...</span>
+              </template>
+              <template #prepend-item>
+                <v-list-item
+                  title="全選"
+                  color="deep-purple-darken-2"
+                  prepend-icon="mdi-checkbox-multiple-marked"
+                  :active="exportExcelDialog.hardwareCategories.length === categories.length"
+                  @click="selectAllHardwareCategories"
+                />
+                <v-divider class="mt-2" />
+              </template>
+            </v-select>
+            <v-card-actions class="pa-0">
+              <v-spacer />
+              <v-btn
+                color="grey"
+                variant="outlined"
+                @click="closeExportExcelDialog"
+              >
+                取消
+              </v-btn>
+              <v-btn
+                color="teal-darken-1"
+                variant="outlined"
+                type="submit"
+                :loading="isExportingExcel"
                 class="ms-2"
               >
                 匯出
@@ -499,8 +590,8 @@ const { smAndUp, mdAndUp } = useDisplay()
 // ===== 響應式變數 =====
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
 const dialogWidth = computed(() => {
-  if (mdAndUp.value) return '600'
-  if (smAndUp.value) return '400'
+  if (mdAndUp.value) return '1000'
+  if (smAndUp.value) return '600'
   return '100%'
 })
 
@@ -523,6 +614,7 @@ const { handleSubmit, resetForm } = useForm({
     maintenanceContent: '',
     maintenanceResult: '',
     reportUser: '',
+    reportUserId: '', // 新增
     note: ''
   },
   validateOnMount: false
@@ -541,8 +633,28 @@ const maintenanceDate = useField('maintenanceDate', undefined, {
 })
 const maintenanceContent = useField('maintenanceContent')
 const maintenanceResult = useField('maintenanceResult')
-const reportUser = useField('reportUser')
+const reportUserId = useField('reportUserId') // 新增
 const note = useField('note')
+
+// ===== 報修人員工選單 =====
+// 員工列表
+const employees = ref([])
+
+// 取得所有在職員工列表（用於報修人）
+const fetchEmployees = async () => {
+  try {
+    const { data } = await apiAuth.get('/employees/active')
+    if (data.success) {
+      employees.value = data.result
+    }
+  } catch (error) {
+    console.error('取得員工列表失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '取得員工列表失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
 
 // ===== 表格相關設定 =====
 const tableHeaders = [
@@ -786,7 +898,8 @@ onMounted(async () => {
     await loadCategories()
     await Promise.all([
       loadStats(),
-      tableLoadItems(true)
+      tableLoadItems(true),
+      fetchEmployees() // 新增這行
     ])
   } catch (error) {
     console.error('初始化資料載入失敗:', error)
@@ -830,6 +943,7 @@ const openDialog = (item) => {
         maintenanceContent: item.maintenanceContent,
         maintenanceResult: item.maintenanceResult,
         reportUser: item.reportUser || '',
+        reportUserId: item.reportUserEmployee?._id || '', // 新增
         note: item.note || ''
       }
     })
@@ -842,6 +956,7 @@ const openDialog = (item) => {
         maintenanceContent: '',
         maintenanceResult: '',
         reportUser: '',
+        reportUserId: '',
         note: ''
       }
     })
@@ -982,7 +1097,17 @@ const exportDialog = ref({
   error: ''  // 添加錯誤訊息欄位
 })
 
+// 將exportExcelDialog的search屬性移除
+const exportExcelDialog = ref({
+  open: false,
+  dateRange: [],
+  hardwareCategories: [],
+  dateError: '',
+  categoryError: ''
+})
+
 const isExporting = ref(false)
+const isExportingExcel = ref(false)
 
 // 監聽日期區間變化
 watch(() => exportDialog.value.dateRange, (newVal) => {
@@ -991,18 +1116,20 @@ watch(() => exportDialog.value.dateRange, (newVal) => {
   }
 })
 
-const openExportDialog = () => {
-  exportDialog.value.open = true
-  exportDialog.value.dateRange = []  // 改為空陣列，不使用外面的日期區間
-  exportDialog.value.error = ''
-}
+// 監聽Excel匯出對話框的變化
+watch(() => exportExcelDialog.value.dateRange, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    exportExcelDialog.value.dateError = ''
+  }
+})
 
-const closeExportDialog = () => {
-  exportDialog.value.open = false
-  exportDialog.value.dateRange = []
-  exportDialog.value.error = ''  // 重置錯誤訊息
-}
+watch(() => exportExcelDialog.value.hardwareCategories, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    exportExcelDialog.value.categoryError = ''
+  }
+})
 
+// handleExportExcel方法中移除search參數
 const handleExportPDF = async () => {
   // 驗證日期區間
   if (!exportDialog.value.dateRange || exportDialog.value.dateRange.length === 0) {
@@ -1110,6 +1237,158 @@ const handleExportPDF = async () => {
 const getTotalCount = computed(() => {
   return Object.values(categoryStats.value).reduce((total, count) => total + count, 0)
 })
+
+// 處理匯出 Excel
+const handleExportExcel = async () => {
+  try {
+    // 驗證
+    let hasError = false
+    exportExcelDialog.value.dateError = ''
+    exportExcelDialog.value.categoryError = ''
+
+    // 檢查日期區間（必填）
+    if (!exportExcelDialog.value.dateRange || exportExcelDialog.value.dateRange.length === 0) {
+      exportExcelDialog.value.dateError = '請選擇日期區間'
+      hasError = true
+    }
+
+    // 檢查硬體類型（必填）
+    if (!exportExcelDialog.value.hardwareCategories || exportExcelDialog.value.hardwareCategories.length === 0) {
+      exportExcelDialog.value.categoryError = '請選擇至少一個硬體類型'
+      hasError = true
+    }
+
+    if (hasError) return
+
+    isExportingExcel.value = true
+
+    // 準備查詢參數
+    const params = {
+      sortBy: 'maintenanceDate',
+      sortOrder: 'desc'
+    }
+
+    // 處理維修日期範圍
+    if (exportExcelDialog.value.dateRange && exportExcelDialog.value.dateRange.length > 0) {
+      const startDate = new Date(exportExcelDialog.value.dateRange[0])
+      startDate.setHours(0, 0, 0, 0)
+
+      // 如果只有一個日期，結束日期等於開始日期
+      const endDate = exportExcelDialog.value.dateRange.length > 1
+        ? new Date(exportExcelDialog.value.dateRange[exportExcelDialog.value.dateRange.length - 1])
+        : new Date(exportExcelDialog.value.dateRange[0])
+      endDate.setHours(23, 59, 59, 999)
+
+      params.maintenanceDateStart = startDate.toISOString()
+      params.maintenanceDateEnd = endDate.toISOString()
+    }
+
+    // 處理硬體類型
+    if (exportExcelDialog.value.hardwareCategories && exportExcelDialog.value.hardwareCategories.length > 0) {
+      params.hardwareCategories = exportExcelDialog.value.hardwareCategories
+    }
+
+    // 呼叫 API 取得資料
+    const { data } = await apiAuth.get('/hardware/maintenance-records/export-excel', { params })
+
+    if (data.success) {
+      // 載入 XLSX
+      const XLSX = await import('xlsx')
+
+      // 準備 Excel 資料
+      const excelData = data.result.map(record => ({
+        '維修單號': record.maintenanceRecordId || '',
+        '維修日期': formatDate(record.maintenanceDate),
+        '硬體類型': record.hardwareCategory?.name || '',
+        '問題內容': record.maintenanceContent || '',
+        '處理結果': record.maintenanceResult || '',
+        '報修人': record.reportUserEmployee?.name || record.reportUser || '',
+        '備註': record.note || ''
+      }))
+
+      // 創建工作表
+      const ws = XLSX.utils.json_to_sheet(excelData)
+
+      // 設定欄寬
+      const colWidths = {
+        '維修單號': 15,
+        '維修日期': 15,
+        '硬體類型': 15,
+        '問題內容': 40,
+        '處理結果': 40,
+        '報修人': 15,
+        '備註': 30
+      }
+
+      ws['!cols'] = Object.values(colWidths).map(width => ({ wch: width }))
+
+      // 創建工作簿
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, '硬體維修記錄')
+
+      // 生成檔案名稱
+      const fileName = `硬體維修記錄_${new Date().toISOString().split('T')[0]}.xlsx`
+
+      // 下載檔案
+      XLSX.writeFile(wb, fileName)
+
+      // 關閉對話框
+      closeExportExcelDialog()
+
+      createSnackbar({
+        text: 'Excel 匯出成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('匯出Excel失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '匯出Excel失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isExportingExcel.value = false
+  }
+}
+
+const closeExportDialog = () => {
+  exportDialog.value.open = false
+  exportDialog.value.dateRange = []
+  exportDialog.value.error = ''
+}
+
+const closeExportExcelDialog = () => {
+  exportExcelDialog.value.open = false
+  exportExcelDialog.value.dateRange = []
+  exportExcelDialog.value.hardwareCategories = []
+  exportExcelDialog.value.dateError = ''
+  exportExcelDialog.value.categoryError = ''
+}
+
+const openExportDialog = () => {
+  exportDialog.value.open = true
+  exportDialog.value.dateRange = []
+  exportDialog.value.error = ''
+}
+
+const openExportExcelDialog = () => {
+  exportExcelDialog.value.open = true
+  exportExcelDialog.value.dateRange = []
+  exportExcelDialog.value.hardwareCategories = []
+  exportExcelDialog.value.dateError = ''
+  exportExcelDialog.value.categoryError = ''
+}
+
+const selectAllHardwareCategories = () => {
+  if (exportExcelDialog.value.hardwareCategories.length === categories.value.length) {
+    // 已全選，則清空
+    exportExcelDialog.value.hardwareCategories = []
+  } else {
+    // 否則全選
+    exportExcelDialog.value.hardwareCategories = categories.value.map(category => category._id)
+  }
+  exportExcelDialog.value.categoryError = ''
+}
 </script>
 
 <style lang="scss" scoped>

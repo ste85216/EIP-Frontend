@@ -1133,7 +1133,7 @@ const resetFormData = (templateType) => {
         contract: {
           page1: {
             partyA: '',
-            partyB: '鋭皇國際股份有限公司',
+            partyB: '銳皇國際股份有限公司',
             projectName: '',
             totalAmount: '',
             estimatedWorkDays: 'X',
@@ -1190,7 +1190,7 @@ const resetFormData = (templateType) => {
               taxId: ''
             },
             partyB: {
-              companyName: '鋭皇國際股份有限公司',
+              companyName: '銳皇國際股份有限公司',
               representative: '陳淑貞',
               address: '10467 台北市中山區松江路 220 號 4 樓之 5',
               phone: '02-25623385',

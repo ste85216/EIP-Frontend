@@ -810,7 +810,8 @@ const fieldTranslations = {
   banner: '布條',
   coachSign: '車頭牌',
   other: '其他',
-  categories: '大分類'
+  categories: '大分類',
+  reportUserId: '報修人'
 }
 
 // 行銷分類類型對應
@@ -1609,6 +1610,12 @@ const formatChanges = (item) => {
     if (fieldTranslations[key]) {
       const oldValue = before[key]
       const newValue = after[key]
+
+      // 特殊處理報修人欄位
+      if (key === 'reportUserId') {
+        changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        return
+      }
 
       // 處理 progressNotes 欄位
       if (key === 'progressNotes' && Array.isArray(newValue)) {

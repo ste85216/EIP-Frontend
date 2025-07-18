@@ -118,7 +118,7 @@
           </div>
           <div class="company-info">
             <img
-              src="@/assets/image/鋭皇LOGO.png"
+              src="@/assets/image/銳皇LOGO.png"
               alt="Company Logo"
               class="company-logo"
             >
@@ -264,7 +264,7 @@
     >
       <div class="contract-header">
         <img
-          src="@/assets/image/鋭皇LOGO.png"
+          src="@/assets/image/銳皇LOGO.png"
           class="company-logo-contract"
         >
         <h1 class="contract-title">
@@ -359,7 +359,7 @@
               甲方同意以下列方式支付款項：<br>
               <div class="payment-options">
                 <div class="checkbox-line">
-                  <div 
+                  <div
                     class="custom-checkbox"
                     :class="{ 'checked': formData.contract?.page1?.paymentMethod?.singlePayment }"
                   >
@@ -384,7 +384,7 @@
                 <div class="payment-section">
                   <div class="d-flex align-start">
                     <div class="checkbox-line pt-2">
-                      <div 
+                      <div
                         class="custom-checkbox"
                         :class="{ 'checked': formData.contract?.page1?.paymentMethod?.deposit }"
                       >
@@ -430,7 +430,7 @@
               <div>
                 <div class="checkbox-options">
                   <div class="checkbox-line">
-                    <div 
+                    <div
                       class="custom-checkbox"
                       :class="{ 'checked': formData.contract?.page1?.paymentType?.cash }"
                     >
@@ -439,7 +439,7 @@
                     現金
                   </div>
                   <div class="checkbox-line">
-                    <div 
+                    <div
                       class="custom-checkbox"
                       :class="{ 'checked': formData.contract?.page1?.paymentType?.transfer }"
                     >
@@ -448,7 +448,7 @@
                     匯款（匯費由匯款方甲方自行吸收）
                   </div>
                   <div class="checkbox-line">
-                    <div 
+                    <div
                       class="custom-checkbox"
                       :class="{ 'checked': formData.contract?.page1?.paymentType?.check }"
                     >
@@ -532,7 +532,7 @@
               <div class="d-flex">
                 <div class="me-4">
                   3.
-                </div> 
+                </div>
                 <div>甲方對於本專案內容需求部分如有變更，超過附件範圍時，乙方得依甲方需求提出報價，完成之時間表雙方另議訂之。</div>
               </div>
               <div class="d-flex">
@@ -733,7 +733,7 @@
                   </div>
                 </div>
                 <div>
-                  <p class="mt-1 mb-2 font-weight-bold"> 
+                  <p class="mt-1 mb-2 font-weight-bold">
                     簽約日期
                   </p>
                   <p>
@@ -789,7 +789,7 @@
                   </div>
                 </div>
                 <div>
-                  <p class="mt-1 mb-2 font-weight-bold"> 
+                  <p class="mt-1 mb-2 font-weight-bold">
                     簽約日期
                   </p>
                   <p>
@@ -1141,7 +1141,7 @@ const totalAmount = computed(() => {
     margin-bottom: 4px;
     display: flex;
     align-items: center;
-    
+
     .underline-input {
       min-width: 320px;
       height: 26px;
@@ -1189,7 +1189,7 @@ const totalAmount = computed(() => {
       text-align: center;
     }
 
-    
+
   }
 }
 
@@ -1388,4 +1388,4 @@ const totalAmount = computed(() => {
     font-weight: 900;
   }
 }
-</style> 
+</style>

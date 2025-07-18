@@ -62,7 +62,7 @@
           flat
           to="/"
         >
-          回鋭皇系統
+          回銳皇系統
         </v-btn>
       </v-app-bar>
       <router-view />

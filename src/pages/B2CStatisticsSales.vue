@@ -823,7 +823,7 @@ const reminderShown = ref({
 })
 
 // API 與工具初始化
-const { apiAuth } = useApi()
+const { api } = useApi()
 const createSnackbar = useSnackbar()
 const { smAndUp, mdAndUp } = useDisplay()
 
@@ -984,7 +984,7 @@ const getCurrentItemProgressNotes = computed(() => {
 // 載入地區選項
 const loadPlaceOptions = async () => {
   try {
-    const { data } = await apiAuth.get('/lineCategories/all-second-level')
+    const { data } = await api.get('/lineCategories/all-second-level')
     if (data.success) {
       // 根據 order 排序
       placeOptions.value = data.result
@@ -1003,7 +1003,7 @@ const loadPlaceOptions = async () => {
 // 載入有詢問記錄的公司列表
 const loadAvailableCompanies = async () => {
   try {
-    const { data } = await apiAuth.get('/companies/with-inquiries')
+    const { data } = await api.get('/companies/with-inquiries')
     if (data.success) {
       // 根據 companyId 排序
       availableCompanies.value = data.result.sort((a, b) => {
@@ -1031,7 +1031,7 @@ const loadSearchSalesPersons = async () => {
       params.company = verifiedCompany.value
     }
 
-    const { data } = await apiAuth.get('/employees/suggestions', { params })
+    const { data } = await api.get('/employees/suggestions', { params })
     if (data.success) {
       searchSalesPersons.value = data.result
     }
@@ -1047,7 +1047,7 @@ const loadSearchSalesPersons = async () => {
 // 添加一個新的函數來獲取特定公司的業務列表
 const getCompanySalesPersons = async (companyId) => {
   try {
-    const { data } = await apiAuth.get('/employees/suggestions', {
+    const { data } = await api.get('/employees/suggestions', {
       params: {
         showInB2C: true,
         company: companyId
@@ -1124,7 +1124,7 @@ const verifyCompanyPassword = async () => {
 
   isVerifying.value = true
   try {
-    const { data } = await apiAuth.post(`/companies/${tempSelectedCompany.value}/verify-statistics-password`, {
+    const { data } = await api.post(`/companies/${tempSelectedCompany.value}/verify-statistics-password`, {
       statisticsPassword: companyPassword.value
     })
 
@@ -1320,7 +1320,7 @@ const performSearch = async () => {
     // 更新時間戳記
     updateVerificationTimestamp()
 
-    const { data } = await apiAuth.get(endpoint, { params })
+    const { data } = await api.get(endpoint, { params })
     if (data.success) {
       tableItems.value = data.result.data
       tableItemsLength.value = data.result.totalItems
@@ -1406,7 +1406,7 @@ const openSalesRotationDialog = async () => {
 
   try {
     // 載入公司業務列表
-    const { data } = await apiAuth.get('/employees/suggestions', {
+    const { data } = await api.get('/employees/suggestions', {
       params: {
         showInB2C: true,
         employmentStatus: '在職',
@@ -1508,7 +1508,7 @@ const addProgressNote = async () => {
 
   isAddingNote.value = true
   try {
-    const response = await apiAuth.post(`/customerInquiries/${simpleDialog.value.id}/progress-notes`, {
+    const response = await api.post(`/customerInquiries/public/${simpleDialog.value.id}/progress-notes`, {
       content: progressNoteInput.value
     })
 
@@ -1533,7 +1533,7 @@ const addProgressNote = async () => {
           source: currentItem.source || null
         }
 
-        const { data: updateResponse } = await apiAuth.patch(endpoint, updateData)
+        const { data: updateResponse } = await api.patch(endpoint, updateData)
 
         if (updateResponse.success) {
           // 更新本地資料，保留所有欄位
@@ -1651,7 +1651,7 @@ const updateSalesPerson = async (id, salesPersonId) => {
       customerEmail: currentItem.customerEmail || null
     }
 
-    const { data } = await apiAuth.patch(endpoint, updateData)
+    const { data } = await api.patch(endpoint, updateData)
     if (data.success) {
       // 立即更新表格中的項目，但保留其他欄位不變
       const updatedSalesPerson = companySalesPersons.find(sp => sp._id === salesPersonId)
@@ -1728,7 +1728,7 @@ const updateInquiryResult = async (id, result) => {
       customerTitle: currentItem.customerTitle || null  // 保留原有的稱謂
     }
 
-    const { data } = await apiAuth.patch(endpoint, updateData)
+    const { data } = await api.patch(endpoint, updateData)
     if (data.success) {
       // 立即更新表格中的項目，但保留其他欄位不變
       Object.assign(currentItem, {
@@ -1770,7 +1770,7 @@ const updateCustomerTitle = async (id, title) => {
 
     const endpoint = `/customerInquiries/public/${id}`
 
-    const { data } = await apiAuth.patch(endpoint, {
+    const { data } = await api.patch(endpoint, {
       customerTitle: title,
       progressAndNote: currentItem.progressAndNote || '',  // 保留原有的進度/備註
       inquiryResult: currentItem.inquiryResult || '',      // 保留原有的詢問結果
