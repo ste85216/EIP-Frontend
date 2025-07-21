@@ -440,11 +440,10 @@
                                 <v-text-field
                                   :model-value="item.quantity"
                                   label="數量"
-                                  type="number"
                                   variant="outlined"
                                   density="compact"
                                   clearable
-                                  @update:model-value="v => updateItemField(index, 'quantity', Number(v))"
+                                  @update:model-value="v => updateItemField(index, 'quantity', v === '' ? '' : Number(v))"
                                 />
                               </v-col>
                               <v-col
@@ -469,11 +468,10 @@
                                 <v-text-field
                                   :model-value="item.price"
                                   label="單價"
-                                  type="number"
                                   variant="outlined"
                                   density="compact"
                                   clearable
-                                  @update:model-value="v => updateItemField(index, 'price', Number(v))"
+                                  @update:model-value="v => updateItemField(index, 'price', v === '' ? '' : Number(v))"
                                 />
                               </v-col>
                             </v-row>
@@ -556,12 +554,11 @@
                             <v-text-field
                               :model-value="cost.costAmount"
                               label="成本費用"
-                              type="number"
                               variant="outlined"
                               density="compact"
                               class="mb-1"
                               clearable
-                              @update:model-value="v => updateCostField(index, 'costAmount', Number(v))"
+                              @update:model-value="v => updateCostField(index, 'costAmount', v === '' ? '' : Number(v))"
                             />
                           </v-col>
                           <v-col
@@ -1242,17 +1239,17 @@ const updateContractField = (field, value) => {
   if (!newValue.contract) {
     newValue.contract = {}
   }
-  
+
   const fields = field.split('.')
   let current = newValue.contract
-  
+
   for (let i = 0; i < fields.length - 1; i++) {
     if (!current[fields[i]]) {
       current[fields[i]] = {}
     }
     current = current[fields[i]]
   }
-  
+
   current[fields[fields.length - 1]] = value
   newValue.currentPage = currentPage.value
   emit('update:modelValue', newValue)
@@ -1331,9 +1328,9 @@ const addItem = () => {
     name: '',
     description: '',
     workDays: '',
-    quantity: 1,
+    quantity: '',
     unit: '份',
-    price: 0
+    price: ''
   })
   emit('update:modelValue', { ...props.modelValue, items: newItems })
 }
@@ -1415,7 +1412,7 @@ const updateItemField = (index, field, value) => {
       name: '',
       description: '',
       workDays: '',
-      quantity: 1,
+      quantity: '',
       unit: '份',
       price: ''
     }
@@ -1426,8 +1423,8 @@ const updateItemField = (index, field, value) => {
 
 const fillTotalAmount = () => {
   const totalAmount = Math.round(props.modelValue.items.reduce((total, item) => {
-    const quantity = Number(item?.quantity) || 0;
-    const price = Number(item?.price) || 0;
+    const quantity = item?.quantity === '' || item?.quantity === null || item?.quantity === undefined ? 0 : Number(item.quantity) || 0;
+    const price = item?.price === '' || item?.price === null || item?.price === undefined ? 0 : Number(item.price) || 0;
     return total + (quantity * price);
   }, 0) * 1.05);
   updateContractField('page1.totalAmount', totalAmount);
@@ -1440,7 +1437,7 @@ const addCost = () => {
   }
   newValue.costs.push({
     costName: '',
-    costAmount: 0,
+    costAmount: '',
     remark: ''
   })
   emit('update:modelValue', newValue)
@@ -1464,7 +1461,7 @@ const updateCostField = (index, field, value) => {
   if (!newValue.costs[index]) {
     newValue.costs[index] = {
       costName: '',
-      costAmount: 0,
+      costAmount: '',
       remark: ''
     }
   }
@@ -1479,4 +1476,4 @@ defineExpose({
 
 <style scoped>
 
-</style> 
+</style>

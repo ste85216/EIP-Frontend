@@ -156,7 +156,7 @@
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.unit }}</td>
                 <td>$ {{ formatAmount(item.price) }}</td>
-                <td>$ {{ formatAmount(item.quantity * item.price) }}</td>
+                <td>$ {{ (item.price === '' || item.price === null || item.price === undefined) ? '' : formatAmount((item.quantity === '' || item.quantity === null || item.quantity === undefined ? 0 : Number(item.quantity) || 0) * (item.price === '' || item.price === null || item.price === undefined ? 0 : Number(item.price) || 0)) }}</td>
               </tr>
             </tbody>
             <tfoot>
@@ -859,8 +859,8 @@ const formatAmount = (amount) => {
 const totalAmount = computed(() => {
   if (!props.formData?.items) return 0
   return props.formData.items.reduce((total, item) => {
-    const quantity = Number(item?.quantity) || 0
-    const price = Number(item?.price) || 0
+    const quantity = item?.quantity === '' || item?.quantity === null || item?.quantity === undefined ? 0 : Number(item.quantity) || 0
+    const price = item?.price === '' || item?.price === null || item?.price === undefined ? 0 : Number(item.price) || 0
     return total + (quantity * price)
   }, 0)
 })
@@ -969,6 +969,7 @@ const totalAmount = computed(() => {
   border-collapse: collapse;
   margin-bottom: 15px;
   font-size: 13px;
+  table-layout: fixed;
 }
 
 .items-table th {
@@ -1012,7 +1013,7 @@ const totalAmount = computed(() => {
 }
 
 .notes {
-  margin: 8px 0;
+  margin-top: 60px;
   .work-days {
     margin: 0 4px;
     width: 32px;
@@ -1057,7 +1058,7 @@ const totalAmount = computed(() => {
 
 .footer {
   text-align: center;
-  margin-top: 15px;
+  margin-top: 10px;
   color: #000080;
   font-size: 14px;
 }
@@ -1073,17 +1074,17 @@ const totalAmount = computed(() => {
 
 .items-table th:nth-child(2),
 .items-table td:nth-child(2) {
-  width: 120px;
+  width: 170px;
 }
 
 .items-table th:nth-child(3),
 .items-table td:nth-child(3) {
-  width: 120px;
+  width: 160px;
 }
 
 .items-table th:nth-child(4),
 .items-table td:nth-child(4) {
-  width: 70px;
+  width: 60px;
 }
 
 .items-table th:nth-child(5),
@@ -1098,12 +1099,12 @@ const totalAmount = computed(() => {
 
 .items-table th:nth-child(7),
 .items-table td:nth-child(7) {
-  width: 36px;
+  width: 60px;
 }
 
-.items-table th:nth-child(8)
+.items-table th:nth-child(8),
 .items-table td:nth-child(8) {
-  width: 36px;
+  width: 90px;
 }
 
 .contract-template {
