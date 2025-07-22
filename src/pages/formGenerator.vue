@@ -7,6 +7,7 @@
   >
     <v-row>
       <v-col
+        v-show="lgAndUp || !isFormCollapsed"
         cols="12"
         md="5"
         class="pe-7 pe-md-2"
@@ -20,8 +21,6 @@
               <v-row>
                 <v-col
                   cols="6"
-                  md="12"
-                  lg="6"
                   class="d-flex align-center"
                 >
                   <h3 class="d-inline me-2">
@@ -38,8 +37,6 @@
                 </v-col>
                 <v-col
                   cols="6"
-                  md="12"
-                  lg="6"
                   class="d-flex align-center justify-end gap-2"
                 >
                   <v-btn
@@ -196,7 +193,7 @@
         </v-row>
       </v-col>
       <v-col
-        clos="12"
+        cols="12"
         md="7"
         class="ps-md-4"
       >
@@ -204,7 +201,10 @@
           class="elevation-4 rounded-lg pt-4 pb-3 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-3 mb-4 bg-white"
           style="min-width: 900px; min-height: 216px;"
         >
-          <v-col cols="12">
+          <v-col
+            cols="12"
+            class="flex-shrink-0"
+          >
             <div class="card-title px-6 pt-6 text-grey-darken-3 d-flex justify-space-between">
               <div>
                 《 預覽及匯出 》
@@ -982,6 +982,20 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <!-- 漂浮的收合表單按鈕 -->
+    <v-btn
+      v-if="!lgAndUp"
+      icon
+      :color="isFormCollapsed ? 'light-blue-darken-2' : 'grey-darken-1'"
+      size="48"
+      class="floating-toggle-btn rounded-xl"
+      @click="toggleFormCollapse"
+    >
+      <span style="font-size: 14px;">
+        {{ isFormCollapsed ? '展開' : '收合' }}
+      </span>
+    </v-btn>
   </v-container>
 </template>
 
@@ -1054,13 +1068,21 @@ definePage({
   }
 })
 
-const { smAndUp } = useDisplay()
+const { smAndUp, lgAndUp } = useDisplay()
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 const user = useUserStore()
 
 // 基本響應式變數
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
+
+// 表單收合狀態
+const isFormCollapsed = ref(false)
+
+// 切換表單收合狀態
+const toggleFormCollapse = () => {
+  isFormCollapsed.value = !isFormCollapsed.value
+}
 const selectedTemplate = ref(null)
 const selectedType = ref(null)
 const templateOptions = ref([])
@@ -2933,6 +2955,21 @@ const formatDateTime = (date) => {
   }
   :deep(tbody tr:nth-child(even)) {
     background-color: #ffffff;
+  }
+}
+
+// 漂浮切換按鈕樣式
+.floating-toggle-btn {
+  position: fixed !important;
+  top: 120px;
+  left: 80px;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  opacity: 1 !important;
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
   }
 }
 </style>
