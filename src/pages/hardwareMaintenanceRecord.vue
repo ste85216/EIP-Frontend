@@ -645,7 +645,11 @@ const fetchEmployees = async () => {
   try {
     const { data } = await apiAuth.get('/employees/active')
     if (data.success) {
-      employees.value = data.result
+      // 轉換資料格式以符合 v-autocomplete 的需求
+      employees.value = data.result.map(employee => ({
+        label: `${employee.name} (${employee.employeeId})`,
+        value: employee._id
+      }))
     }
   } catch (error) {
     console.error('取得員工列表失敗:', error)

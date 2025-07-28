@@ -913,7 +913,12 @@ const getModelDisplay = (model) => {
 
 const formatOperator = (item) => {
   if (!item?.operatorInfo) return '-'
-  const { name, userId, adminId } = item.operatorInfo
+  const { name, userId, adminId, employeeCode } = item.operatorInfo
+
+  // 優先使用 employeeCode
+  if (employeeCode) {
+    return `${name} (${employeeCode})`
+  }
   if (adminId) {
     return `${name} (${adminId})`
   }
@@ -1237,6 +1242,38 @@ const formatChanges = (item) => {
           } else if (typeof value === 'boolean') {
             changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
           } else {
+            changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
+          }
+        }
+      })
+      return changes
+    }
+
+    // 針對硬體維修記錄的特殊處理
+    if (item.targetModel === 'hardwareMaintenanceRecords') {
+      Object.entries(after).forEach(([key, value]) => {
+        if (!excludeFields.includes(key) && fieldTranslations[key]) {
+          if (key === 'maintenanceDate') {
+            changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
+          } else if (key === 'hardwareCategory') {
+            changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+          } else if (key === 'reportUserId') {
+            // 處理報修人顯示
+            let reportUserName = '(無)'
+            if (value) {
+              if (typeof value === 'object' && value.name) {
+                // 如果是 populate 後的物件
+                reportUserName = value.name
+              } else if (typeof value === 'string' && value.length === 24) {
+                // 如果是 ObjectId 字串，顯示為 (無)
+                reportUserName = '(無)'
+              } else if (typeof value === 'string') {
+                // 如果是字串，可能是員工姓名
+                reportUserName = value
+              }
+            }
+            changes.push(`${fieldTranslations[key]}: ${reportUserName}`)
+          } else if (key === 'maintenanceContent' || key === 'maintenanceResult' || key === 'note') {
             changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
           }
         }
@@ -1613,7 +1650,31 @@ const formatChanges = (item) => {
 
       // 特殊處理報修人欄位
       if (key === 'reportUserId') {
-        changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        // 處理舊值
+        let oldName = '(無)'
+        if (oldValue) {
+          if (typeof oldValue === 'object' && oldValue.name) {
+            oldName = oldValue.name
+          } else if (typeof oldValue === 'string' && oldValue.length === 24) {
+            oldName = '(無)'
+          } else if (typeof oldValue === 'string') {
+            oldName = oldValue
+          }
+        }
+
+        // 處理新值
+        let newName = '(無)'
+        if (newValue) {
+          if (typeof newValue === 'object' && newValue.name) {
+            newName = newValue.name
+          } else if (typeof newValue === 'string' && newValue.length === 24) {
+            newName = '(無)'
+          } else if (typeof newValue === 'string') {
+            newName = newValue
+          }
+        }
+
+        changes.push(`${fieldTranslations[key]}: ${oldName} → ${newName}`)
         return
       }
 
