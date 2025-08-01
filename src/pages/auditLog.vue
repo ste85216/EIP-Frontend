@@ -811,7 +811,8 @@ const fieldTranslations = {
   coachSign: '車頭牌',
   other: '其他',
   categories: '大分類',
-  reportUserId: '報修人'
+  reportUserId: '報修人',
+  isB2CSupervisor: '業務主管'
 }
 
 // 行銷分類類型對應

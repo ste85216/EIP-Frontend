@@ -114,14 +114,9 @@ const currentStep = ref(0)
 // 定義導覽步驟
 const tourSteps = [
   {
-    icon: 'mdi-office-building',
-    title: '選擇公司',
-    description: '首先，請在「 直客詢問統計表 」標題右方選擇您的公司。選擇後系統會要求您輸入密碼進行驗證。'
-  },
-  {
-    icon: 'mdi-key',
-    title: '輸入密碼',
-    description: '輸入正確的密碼後，您將可以看到該公司的詢問記錄。請注意，登入有效期為 1 小時。'
+    icon: 'mdi-login-variant',
+    title: '員工登入',
+    description: '請點擊右上角的「 登入 」按鈕，使用您的公司 Google 帳號進行登入。登入成功後系統會自動載入您所屬公司的資料。'
   },
   {
     icon: 'mdi-magnify',
@@ -137,7 +132,6 @@ const tourSteps = [
     icon: 'mdi-calendar-month',
     title: '查看本月',
     description: '點擊「 查看本月 」按鈕可以快速查看當月份的所有詢問紀錄。'
-
   },
   {
     icon: 'mdi-table',
@@ -149,16 +143,15 @@ const tourSteps = [
     title: '詢問結果',
     description: '當詢問結果欲修改成「 不成交 」或是「 其他 」時，會跳出「 進度 / 備註 - 歷史紀錄 」 對話框，請新增一筆紀錄說明原因。'
   },
-
   {
     icon: 'mdi-timer-sand',
     title: '登入時效',
-    description: '右上角會顯示剩餘的登入時間。時效到期後需要重新驗證密碼。若有操作頁面功能或是重新整理頁面，時效會重新計算。'
+    description: '右上角會顯示剩餘的登入時間。時效到期後需要重新登入。若有操作頁面功能或是重新整理頁面，時效會重新計算。'
   },
   {
     icon: 'mdi-logout',
     title: '登出功能',
-    description: '如果要提前登出，可以點擊公司名稱旁的登出按鈕。'
+    description: '如果要提前登出，可以點擊右上角員工姓名旁的登出按鈕。'
   }
 ]
 

@@ -10,6 +10,32 @@
               行銷美編需求申請
             </h3>
             <v-spacer />
+            <!-- 倒數計時顯示器 -->
+            <div
+              v-if="currentEmployee && remainingTime > 0"
+              class="clock-container"
+            >
+              <div class="d-flex align-center">
+                <v-icon
+                  icon="mdi-timer-sand"
+                  size="18"
+                  class="me-2"
+                  color="orange-darken-4"
+                />
+                <div
+                  class="text-orange-darken-4"
+                  style="font-size: 15px; font-weight: 600; letter-spacing: 1px;"
+                >
+                  {{ Math.floor(remainingTime / 60) }}:{{ String(remainingTime % 60).padStart(2, '0') }}
+                </div>
+              </div>
+            </div>
+            <EmployeeLogin
+              ref="employeeLoginRef"
+              login-endpoint="/employees/marketing-google-login"
+              @login-success="handleEmployeeLogin"
+              @logout="handleEmployeeLogout"
+            />
           </div>
           <v-divider class="mt-5 mb-6" />
 
@@ -35,6 +61,7 @@
                     multiple="range"
                     :cancel-text="'取消'"
                     :ok-text="'確認'"
+                    :disabled="!currentEmployee"
                   />
                 </div>
               </v-col>
@@ -51,14 +78,15 @@
                     v-model="searchCriteria.applicant"
                     class="ms-4"
                     :items="employees"
-                    item-title="label"
-                    item-value="value"
+                    :item-title="item => item && item.name && item.employeeCode ? `${item.name} (${item.employeeCode})` : ''"
+                    item-value="_id"
                     variant="outlined"
                     density="compact"
                     clearable
                     placeholder="請選擇申請人"
                     hide-details
                     :filter="customFilter"
+                    :disabled="!currentEmployee"
                   />
                 </div>
               </v-col>
@@ -82,6 +110,7 @@
                     clearable
                     placeholder="請選擇大分類"
                     hide-details
+                    :disabled="!currentEmployee"
                     @update:model-value="handleProductCategoryChange"
                   />
                 </div>
@@ -106,6 +135,7 @@
                     clearable
                     placeholder="請選擇申請類型"
                     hide-details
+                    :disabled="!currentEmployee"
                   />
                 </div>
               </v-col>
@@ -134,6 +164,7 @@
                     clearable
                     placeholder="請選擇狀態"
                     hide-details
+                    :disabled="!currentEmployee"
                   />
                 </div>
               </v-col>
@@ -150,14 +181,15 @@
                     v-model="searchCriteria.assignedDesigner"
                     class="ms-4"
                     :items="marketingDesigners"
-                    item-title="label"
-                    item-value="value"
+                    :item-title="item => item && item.name && item.employeeCode ? `${item.name} (${item.employeeCode})` : ''"
+                    item-value="_id"
                     variant="outlined"
                     density="compact"
                     clearable
                     placeholder="請選擇處理人員"
                     hide-details
                     :filter="customFilter"
+                    :disabled="!currentEmployee"
                   />
                 </div>
               </v-col>
@@ -177,6 +209,7 @@
                       color="cyan-darken-2"
                       prepend-icon="mdi-magnify"
                       :loading="loading"
+                      :disabled="!currentEmployee"
                       block
                       @click="fetchTableData"
                     >
@@ -191,6 +224,7 @@
                       color="grey"
                       width="40"
                       block
+                      :disabled="!currentEmployee"
                       @click="resetSearch"
                     >
                       <v-icon>mdi-refresh</v-icon>
@@ -213,6 +247,7 @@
                   color="teal-darken-2"
                   prepend-icon="mdi-plus"
                   variant="outlined"
+                  :disabled="!currentEmployee"
                   @click="openDialog()"
                 >
                   新增申請
@@ -221,7 +256,7 @@
                 <v-col cols="2">
                   <div class="d-flex align-center">
                     <v-icon
-                      v-tooltip:start="'可搜尋申請編號、申請人、申請類型、狀態、處理人員'"
+                      v-tooltip:start="'可搜尋申請編號、申請詳細資訊'"
                       icon="mdi-information"
                       size="small"
                       color="blue-grey-darken-2"
@@ -236,6 +271,7 @@
                       append-inner-icon="mdi-magnify"
                       hide-details
                       clearable
+                      :disabled="!currentEmployee"
                     />
                   </div>
                 </v-col>
@@ -958,32 +994,10 @@
                   @update:model-value="handleProductTypeChange"
                 />
               </v-col>
-
-              <!-- 申請人選擇 -->
-              <v-col
-                cols="12"
-                sm="6"
-                lg="4"
-              >
-                <v-autocomplete
-                  v-model="formData.applicant"
-                  :items="employees"
-                  item-title="label"
-                  item-value="value"
-                  label="* 申請人"
-                  variant="outlined"
-                  density="compact"
-                  :readonly="dialog.isEdit"
-                  :rules="[v => !!v || '請選擇申請人']"
-                  clearable
-                  :menu-props="{ maxHeight: 400 }"
-                  :filter="customFilter"
-                />
-              </v-col>
             </v-row>
 
             <!-- 申請資訊區塊 -->
-            <template v-if="formData.productType && formData.applicant">
+            <template v-if="formData.productType">
               <v-row>
                 <v-col
                   cols="12"
@@ -1841,11 +1855,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, watch, computed } from 'vue'
+import { ref, reactive, onMounted, watch, computed, onUnmounted } from 'vue'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { debounce } from 'lodash'
+import EmployeeLogin from '@/components/EmployeeLogin.vue'
 
 // 頁面定義
 definePage({
@@ -1855,8 +1870,22 @@ definePage({
   }
 })
 
-const { api } = useApi()  // 只引入不需要驗證的 api
+const { api } = useApi()
 const createSnackbar = useSnackbar()
+
+// 員工登入相關變數
+const employeeLoginRef = ref(null)
+const currentEmployee = ref(null)
+
+// 倒數計時相關變數
+const autoLogoutTimer = ref(null)
+const countdownTimer = ref(null)
+const remainingTime = ref(0)
+const reminderShown = ref({
+  fiveMinutes: false,
+  oneMinute: false
+})
+const VERIFICATION_EXPIRY_HOURS = 1 // 1小時過期
 
 // 表格相關
 const loading = ref(false)
@@ -2004,13 +2033,32 @@ const resetSearch = () => {
   searchCriteria.productType = ''
   searchCriteria.status = ''
   searchCriteria.assignedDesigner = ''
-  fetchTableData()
+  // 只有在登入狀態下才觸發搜尋
+  if (currentEmployee.value) {
+    fetchTableData()
+  }
 }
 
 // 取得表格資料
 const fetchTableData = async () => {
-  if (loading.value) return
+  console.log('fetchTableData 被呼叫，loading:', loading.value, 'currentEmployee:', !!currentEmployee.value)
 
+  if (loading.value) {
+    console.log('正在載入中，跳過')
+    return
+  }
+
+  // 如果未登入，清空資料並返回
+  if (!currentEmployee.value) {
+    console.log('未登入，清空表格資料')
+    tableItems.value = []
+    totalItems.value = 0
+    loading.value = false
+    isSearching.value = false
+    return
+  }
+
+  console.log('開始載入表格資料')
   loading.value = true
   try {
     // 構建查詢參數
@@ -2053,21 +2101,36 @@ const fetchTableData = async () => {
       }
     }
 
-    console.log('搜尋參數:', params)
-    console.log('原始日期選擇:', searchCriteria.applicationDate)
+    // 使用員工專用 API 端點
+    const endpoint = '/marketing/design-requests/employee/all'
 
-    const { data } = await api.get('/marketing/design-requests/public', { params })
+    // 更新時間戳記
+    updateVerificationTimestamp()
+
+    console.log('發送 API 請求到:', endpoint, '參數:', params)
+    const { data } = await api.get(endpoint, { params })
+
+    console.log('API 回應:', data)
 
     if (data.success) {
       tableItems.value = data.result.data
       totalItems.value = data.result.totalItems
+      console.log('表格資料已更新:', tableItems.value.length, '筆資料')
+    } else {
+      console.error('API 回應失敗:', data)
     }
   } catch (error) {
     console.error('取得表格資料失敗:', error)
-    createSnackbar({
-      text: error?.response?.data?.message || '取得表格資料失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
+    console.error('錯誤狀態碼:', error?.response?.status)
+    console.error('錯誤詳情:', error?.response?.data)
+
+    // 如果是 401 錯誤，可能是登入狀態問題，不顯示錯誤訊息
+    if (error?.response?.status !== 401) {
+      createSnackbar({
+        text: error?.response?.data?.message || '取得表格資料失敗',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+    }
   } finally {
     loading.value = false
     isSearching.value = false
@@ -2076,7 +2139,10 @@ const fetchTableData = async () => {
 
 // 表格選項變更處理
 const handleTableOptionsChange = () => {
-  fetchTableData()
+  // 只有在登入狀態下才觸發搜尋
+  if (currentEmployee.value) {
+    fetchTableData()
+  }
 }
 
 // 取得申請類型選項
@@ -2124,7 +2190,7 @@ const handleProductCategoryChange = () => {
 
 // 申請類型變更處理
 const handleProductTypeChange = async (value) => {
-  if (!value || !formData.applicant) {
+  if (!value) {
     formFields.value = []
     productTypeConfig.value = null
     return
@@ -2250,14 +2316,7 @@ const handleProductTypeChange = async (value) => {
   }
 }
 
-// 新增 watch 監聽申請人變更
-watch(() => formData.applicant, (newValue) => {
-  if (!newValue || !formData.productType) {
-    formFields.value = []
-  } else {
-    handleProductTypeChange(formData.productType)
-  }
-})
+
 
 // 監聽印刷類型變更
 watch(() => formData.printingTypes, async (newValue) => {
@@ -2338,6 +2397,15 @@ const confirmSubmit = async () => {
 
 // 送出表單
 const handleSubmit = async () => {
+  // 檢查是否已登入
+  if (!currentEmployee.value) {
+    createSnackbar({
+      text: '請先登入後再提交申請',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    return
+  }
+
   submitting.value = true
   try {
     // 建立 FormData 物件處理檔案上傳
@@ -2347,6 +2415,9 @@ const handleSubmit = async () => {
     Object.keys(formData).forEach(key => {
       // 跳過 designRequestNumber，讓後端自動生成
       if (key === 'designRequestNumber') return
+
+      // 跳過 applicant，讓後端自動設置為登入員工
+      if (key === 'applicant') return
 
       if (Array.isArray(formData[key]) && formData[key][0] instanceof File) {
         // 處理檔案上傳（只有車頭牌被勾選時不傳送檔案）
@@ -2400,7 +2471,10 @@ const handleSubmit = async () => {
       }
     })
 
-    const { data } = await api.post('/marketing/design-requests', formDataToSend, {
+    // 使用員工專用 API 端點
+    const endpoint = '/marketing/design-requests/employee'
+
+    const { data } = await api.post(endpoint, formDataToSend, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -2434,13 +2508,12 @@ const resetForm = () => {
   form.value?.reset()
   formValid.value = false
   formData.productType = ''
-  formData.applicant = ''
   formFields.value = []
   productTypeConfig.value = null
 
   // 清除動態欄位
   const keysToDelete = Object.keys(formData).filter(key =>
-    key !== 'productType' && key !== 'applicant'
+    key !== 'productType'
   )
   keysToDelete.forEach(key => {
     delete formData[key]
@@ -2573,8 +2646,20 @@ const formatDate = (date) => {
 
 // 格式化時間
 const formatTime = (date) => {
-  const d = new Date(date)
-  return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+  if (!date) return ''
+  try {
+    const dateObj = new Date(date)
+    if (isNaN(dateObj.getTime())) return ''
+    return dateObj.toLocaleTimeString('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  } catch (e) {
+    console.error('Error formatting time:', e)
+    return ''
+  }
 }
 
 // 取得申請類型文字
@@ -2593,7 +2678,9 @@ const getProductTypeText = (type, row) => {
 // 自定義搜尋過濾器
 const customFilter = (item, queryText) => {
   const textToSearch = queryText.toLowerCase()
-  const itemText = item.raw.label.toLowerCase()
+  const itemText = item.raw && item.raw.name && item.raw.employeeCode
+    ? `${item.raw.name} ${item.raw.employeeCode}`.toLowerCase()
+    : ''
   return itemText.includes(textToSearch)
 }
 
@@ -2604,9 +2691,12 @@ const debouncedSearch = debounce(() => {
 }, 300)
 
 // 監聽快速搜尋變更
-watch(quickSearch, () => {
-  isSearching.value = true
-  debouncedSearch()
+watch(quickSearch, (newValue) => {
+  // 只有在登入狀態下且有搜尋值時才觸發搜尋
+  if (currentEmployee.value && newValue !== undefined) {
+    isSearching.value = true
+    debouncedSearch()
+  }
 })
 
 // 從檔案路徑中獲取檔名
@@ -2681,13 +2771,304 @@ const setNestedValue = (obj, path, value) => {
   target[lastKey] = value
 }
 
+// 檢查登出狀態的函數
+const checkAutoLogout = () => {
+  if (!currentEmployee.value) {
+    return
+  }
+
+  const authData = localStorage.getItem('employeeAuth')
+  if (!authData) {
+    return
+  }
+
+  const { timestamp } = JSON.parse(authData)
+  const now = new Date().getTime()
+  const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
+
+  if (now > expiryTime) {
+    // 清除驗證資訊
+    localStorage.removeItem('employeeAuth')
+    currentEmployee.value = null
+
+    // 通知 EmployeeLogin 組件登出
+    if (employeeLoginRef.value) {
+      employeeLoginRef.value.handleLogout()
+    }
+
+    // 清空表格資料
+    tableItems.value = []
+    totalItems.value = 0
+
+    // 顯示登出提示
+    createSnackbar({
+      text: '登入時效已到期，已自動登出',
+      snackbarProps: {
+        color: 'warning',
+        timeout: -1, // 不自動關閉
+        location: 'top'
+      }
+    })
+
+    // 清除定時器
+    if (autoLogoutTimer.value) {
+      clearInterval(autoLogoutTimer.value)
+      autoLogoutTimer.value = null
+    }
+  }
+}
+
+// 添加一個函數來設置定時器
+const setupAutoLogoutTimer = () => {
+  // 先清除舊的定時器
+  if (autoLogoutTimer.value) {
+    clearInterval(autoLogoutTimer.value)
+  }
+  // 設置新的定時器
+  autoLogoutTimer.value = setInterval(checkAutoLogout, 1000)
+}
+
+// 更新驗證時間戳記
+const updateVerificationTimestamp = () => {
+  const authData = localStorage.getItem('employeeAuth')
+  if (authData) {
+    const data = JSON.parse(authData)
+    // 更新時間戳記
+    data.timestamp = new Date().getTime()
+    localStorage.setItem('employeeAuth', JSON.stringify(data))
+
+    // 重置提醒狀態
+    reminderShown.value = {
+      fiveMinutes: false,
+      oneMinute: false
+    }
+
+    // 更新倒數計時
+    updateRemainingTime()
+  }
+}
+
+// 更新倒數計時
+const updateRemainingTime = () => {
+  const authData = localStorage.getItem('employeeAuth')
+  if (!authData) {
+    remainingTime.value = 0
+    return
+  }
+
+  const { timestamp } = JSON.parse(authData)
+  const now = new Date().getTime()
+  const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
+  const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000))
+  remainingTime.value = remaining
+
+  // 檢查是否需要顯示提醒
+  const remainingMinutes = Math.floor(remaining / 60)
+
+  // 5分鐘提醒
+  if (remainingMinutes === 5 && !reminderShown.value.fiveMinutes) {
+    createSnackbar({
+      text: '系統將在 5 分鐘後自動登出，請注意資料保存',
+      snackbarProps: {
+        color: 'warning',
+        timeout: 10000, // 顯示10秒
+        location: 'top'
+      }
+    })
+    reminderShown.value.fiveMinutes = true
+  }
+
+  // 1分鐘提醒
+  if (remainingMinutes === 1 && !reminderShown.value.oneMinute) {
+    createSnackbar({
+      text: '系統將在 1 分鐘後自動登出，請立即保存資料！',
+      snackbarProps: {
+        color: 'warning',
+        timeout: 10000, // 顯示10秒
+        location: 'top'
+      }
+    })
+    reminderShown.value.oneMinute = true
+  }
+}
+
+// Employee 登入處理函數
+const handleEmployeeLogin = async (employee) => {
+  currentEmployee.value = employee
+
+  // 確保 Authorization header 已設定
+  const authData = localStorage.getItem('employeeAuth')
+  if (authData) {
+    const { token } = JSON.parse(authData)
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+  }
+
+  // 重新載入員工列表
+  await Promise.all([
+    fetchEmployees(),
+    fetchMarketingDesigners()
+  ])
+
+  // 執行搜尋
+  await fetchTableData()
+
+  // 啟動倒數計時器
+  setupAutoLogoutTimer()
+  updateRemainingTime()
+  countdownTimer.value = setInterval(() => {
+    updateRemainingTime()
+  }, 1000)
+}
+
+// Employee 登出處理函數
+const handleEmployeeLogout = async () => {
+  currentEmployee.value = null
+
+  // 清空表格資料
+  tableItems.value = []
+  totalItems.value = 0
+
+  // 清空搜尋條件
+  resetSearch()
+
+  // 清除 API headers
+  delete api.defaults.headers.common['Authorization']
+
+  // 重新載入員工列表
+  await Promise.all([
+    fetchEmployees(),
+    fetchMarketingDesigners()
+  ])
+
+  // 清除定時器
+  if (autoLogoutTimer.value) {
+    clearInterval(autoLogoutTimer.value)
+    autoLogoutTimer.value = null
+  }
+  if (countdownTimer.value) {
+    clearInterval(countdownTimer.value)
+    countdownTimer.value = null
+  }
+
+  // 重置倒數計時
+  remainingTime.value = 0
+  reminderShown.value = {
+    fiveMinutes: false,
+    oneMinute: false
+  }
+}
+
+// 處理用戶活動，更新時間戳記
+const handleUserActivity = () => {
+  if (currentEmployee.value) {
+    updateVerificationTimestamp()
+  }
+}
+
 // 頁面載入時初始化
-onMounted(() => {
-  fetchProductTypes()
-  fetchProductCategories()
-  fetchEmployees()
-  fetchMarketingDesigners()
-  fetchTableData()
+onMounted(async () => {
+  try {
+    loading.value = true
+
+    // 等待 EmployeeLogin 組件初始化完成
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // 檢查 Employee 登入狀態
+    const authData = localStorage.getItem('employeeAuth')
+    if (authData) {
+      try {
+        const { token, employee, timestamp } = JSON.parse(authData)
+        const now = new Date().getTime()
+        const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
+
+        if (now <= expiryTime) {
+          console.log('恢復登入狀態:', employee)
+          // 恢復登入狀態
+          currentEmployee.value = employee
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+
+          // 載入資料
+          await Promise.all([
+            fetchProductTypes(),
+            fetchProductCategories(),
+            fetchEmployees(),
+            fetchMarketingDesigners()
+          ])
+
+          console.log('開始載入表格資料...')
+          // 確保 loading 為 false，這樣 fetchTableData 才能執行
+          loading.value = false
+          // 執行搜尋
+          await fetchTableData()
+          console.log('表格資料載入完成')
+
+          // 啟動倒數計時器
+          setupAutoLogoutTimer()
+          updateRemainingTime()
+          countdownTimer.value = setInterval(() => {
+            updateRemainingTime()
+          }, 1000)
+        } else {
+          // Token 已過期，清除資料
+          localStorage.removeItem('employeeAuth')
+          currentEmployee.value = null
+          await Promise.all([
+            fetchProductTypes(),
+            fetchProductCategories(),
+            fetchEmployees(),
+            fetchMarketingDesigners()
+          ])
+        }
+      } catch (error) {
+        console.error('解析登入資料失敗:', error)
+        localStorage.removeItem('employeeAuth')
+        currentEmployee.value = null
+        await Promise.all([
+          fetchProductTypes(),
+          fetchProductCategories(),
+          fetchEmployees(),
+          fetchMarketingDesigners()
+        ])
+      }
+    } else {
+      // 沒有登入資料，只載入基本資料
+      currentEmployee.value = null
+      await Promise.all([
+        fetchProductTypes(),
+        fetchProductCategories(),
+        fetchEmployees(),
+        fetchMarketingDesigners()
+      ])
+    }
+
+    // 添加用戶活動監聽器
+    document.addEventListener('click', handleUserActivity)
+    document.addEventListener('keydown', handleUserActivity)
+    document.addEventListener('scroll', handleUserActivity)
+  } catch (error) {
+    console.error('初始化失敗:', error)
+    createSnackbar({
+      text: '初始化失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    loading.value = false
+  }
+})
+
+// 清理定時器
+onUnmounted(() => {
+  if (autoLogoutTimer.value) {
+    clearInterval(autoLogoutTimer.value)
+  }
+  if (countdownTimer.value) {
+    clearInterval(countdownTimer.value)
+  }
+
+  // 移除事件監聽器
+  document.removeEventListener('click', handleUserActivity)
+  document.removeEventListener('keydown', handleUserActivity)
+  document.removeEventListener('scroll', handleUserActivity)
 })
 
 // 取得印刷相關子類型顯示文字
@@ -2827,6 +3208,13 @@ const getPrintingTypeText = (printingTypes) => {
 .upload-file-card {
   border: 1px solid #81D4FA;
   border-radius: 8px;
+}
+
+.clock-container {
+  border: 1px solid #E65100;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-right: 16px;
 }
 </style>
 

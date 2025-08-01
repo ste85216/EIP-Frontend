@@ -220,6 +220,15 @@
                               業務管理
                             </v-btn>
                             <v-btn
+                              prepend-icon="mdi-account-tie"
+                              variant="outlined"
+                              color="blue-grey-darken-2"
+                              class="me-4"
+                              @click="openSupervisorManageDialog"
+                            >
+                              業務主管
+                            </v-btn>
+                            <v-btn
                               prepend-icon="mdi-plus"
                               variant="outlined"
                               color="blue-grey-darken-2"
@@ -402,7 +411,7 @@
                                     {{ item.latestProgressNote.content }}
                                     <div
                                       v-if="item.latestProgressNote"
-                                      class="text-caption text-grey-darken-1"
+                                      class="text-caption text-grey-darken-1 "
                                     >
                                       <v-icon
                                         size="14"
@@ -424,7 +433,7 @@
                                   color="grey-darken-2"
                                   variant="plain"
                                   size="15"
-                                  class="ms-1"
+                                  class="ms-2"
                                   :ripple="false"
                                   @click="openSimpleDialog(item)"
                                 >
@@ -1090,6 +1099,122 @@
       </v-card>
     </v-dialog>
 
+    <!-- 業務主管對話框 -->
+    <v-dialog
+      v-model="supervisorManageDialog.open"
+      persistent
+      max-width="1374"
+    >
+      <v-card class="rounded-lg px-4 py-5">
+        <div class="card-title px-4 pt-2">
+          業務主管管理
+        </div>
+        <v-card-text class="mt-3 pa-3 pe-0">
+          <div class="px-1">
+            <v-autocomplete
+              v-model="tempSelectedSupervisor"
+              :items="filteredSupervisors"
+              :item-title="item => item ? `${item.name} (${item.nickname ? item.nickname + ' ' : ''}${item.employeeCode || ''}) - ${item.company?.name || ''}` : ''"
+              item-value="_id"
+              label="選擇業務主管"
+              variant="outlined"
+              density="compact"
+              class="pe-3"
+              hide-details
+              :loading="isLoadingSupervisors"
+              clearable
+              @update:search="searchSupervisors"
+              @update:model-value="addSelectedSupervisor"
+            >
+              <template #item="{ item, props }">
+                <v-list-item
+                  v-bind="props"
+                  :disabled="selectedSupervisors.includes(item.value)"
+                >
+                  <template #prepend>
+                    <v-icon
+                      v-if="selectedSupervisors.includes(item.value)"
+                      color="teal-lighten-1"
+                      icon="mdi-check-circle"
+                    />
+                  </template>
+                </v-list-item>
+              </template>
+            </v-autocomplete>
+          </div>
+
+          <!-- 已選擇的業務主管區塊 -->
+          <div class="mt-8 selected-employees-container">
+            <div class="sub-title mb-5 ps-1">
+              已選擇的業務主管：
+            </div>
+            <!-- 按公司分組顯示業務主管 -->
+            <div
+              v-for="(supervisors, companyName) in groupedSelectedSupervisors"
+              :key="companyName"
+              class="mb-6"
+            >
+              <div class="sub-title mb-4 text-blue-grey-darken-2">
+                【 {{ companyName }} 】
+              </div>
+              <div class="d-flex flex-wrap ps-1">
+                <v-card
+                  v-for="supervisor in supervisors"
+                  :key="supervisor._id"
+                  class="mb-2 me-3 sales-person-card"
+                  elevation="0"
+                  width="252"
+                >
+                  <v-card-text class="pa-2">
+                    <div class="d-flex justify-space-between align-center ps-2 pe-1 py-1">
+                      <div>
+                        <div class="text-subtitle-2 text-deep-purple-darken-2 d-flex align-center">
+                          <v-icon
+                            icon="mdi-account-tie"
+                            size="16"
+                            class="me-2"
+                            color="deep-purple-darken-2"
+                          />
+                          {{ supervisor.name }} ( <span class="text-grey-darken-2">{{ supervisor.employeeCode }}</span> )
+                        </div>
+                      </div>
+                      <v-btn
+                        icon
+                        size="small"
+                        color="red-lighten-1"
+                        variant="text"
+                        @click="removeSelectedSupervisor(supervisor._id)"
+                      >
+                        <v-icon>mdi-close</v-icon>
+                      </v-btn>
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions class="px-4 pb-4">
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            variant="outlined"
+            @click="closeSupervisorManageDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            :loading="isUpdatingSupervisors"
+            @click="updateSupervisors"
+          >
+            儲存
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- 匯出對話框 -->
     <v-dialog
       v-model="exportDialog.open"
@@ -1223,6 +1348,69 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <!-- 業務指派確認對話框 -->
+    <v-dialog
+      v-model="salesPersonAssignmentDialog.open"
+      persistent
+      max-width="340"
+    >
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-1 mb-2 d-flex justify-space-between align-center bg-teal-darken-2">
+          <div>
+            <v-icon
+              size="20"
+              class="me-2"
+            >
+              mdi-check-circle
+            </v-icon>確認業務指派
+          </div>
+          <v-btn
+            icon
+            variant="text"
+            size="40"
+            @click="closeSalesPersonAssignmentDialog"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 py-3">
+          <div class="d-flex justify-space-between align-center">
+            <div>
+              <div class="card-title text-grey-darken-2 mb-3">
+                被指派的業務：{{ salesPersonAssignmentDialog.salesPersonName }}
+              </div>
+              <div class="text-grey-darken-2">
+                請確認指派業務是否正確，確認後會發送Email給被指派的業務。
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+        <v-card-actions class="px-6 py-4 mb-2">
+          <v-spacer />
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            class="me-1"
+            :loading="salesPersonAssignmentDialog.isLoading"
+            :disabled="salesPersonAssignmentDialog.isLoading"
+            @click="confirmSalesPersonAssignment"
+          >
+            確認
+          </v-btn>
+          <v-btn
+            color="grey"
+            variant="outlined"
+            :disabled="salesPersonAssignmentDialog.isLoading"
+            @click="closeSalesPersonAssignmentDialog"
+          >
+            取消
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -1242,7 +1430,7 @@ import UserRole from '@/enums/UserRole'
 // 頁面定義
 definePage({
   meta: {
-    title: '直客詢問統計表 - 管理介面 | GInternational',
+    title: '直客詢問統計表管理 | GInternational',
     login: true,
     roles: [UserRole.MARKETING, UserRole.ADMIN,UserRole.MANAGER,UserRole.HR]
   }
@@ -1361,6 +1549,18 @@ const isLoadingEmployees = ref(false)
 const isSavingEmployees = ref(false)
 const tempSelectedEmployee = ref(null)
 
+// 業務主管對話框
+const supervisorManageDialog = ref({
+  open: false
+})
+
+const selectedSupervisors = ref([])
+const selectedSupervisorDetails = ref([])
+const allSupervisors = ref([])
+const isLoadingSupervisors = ref(false)
+const isUpdatingSupervisors = ref(false)
+const tempSelectedSupervisor = ref(null)
+
 // 匯出對話框
 const exportDialog = ref({
   open: false,
@@ -1378,6 +1578,18 @@ const isExporting = ref(false)
 // 更新狀態管理
 const updatingSalesPersons = ref(new Set())
 const updatingCustomerTitles = ref(new Set())
+
+// 業務指派確認對話框
+const salesPersonAssignmentDialog = ref({
+  open: false,
+  itemId: null,
+  salesPersonId: null,
+  salesPersonName: '',
+  customerName: '',
+  isEditMode: undefined,
+  processedValues: null,
+  isLoading: false
+})
 
 // 業務相關
 const companySalesPersonsMap = ref(new Map())
@@ -1466,6 +1678,13 @@ const filteredEmployees = computed(() => {
   }))
 })
 
+const filteredSupervisors = computed(() => {
+  return allSupervisors.value.map(supervisor => ({
+    ...supervisor,
+    disabled: selectedSupervisors.value.includes(supervisor._id)
+  }))
+})
+
 const groupedSelectedEmployees = computed(() => {
   const grouped = {}
   selectedEmployeeDetails.value.forEach(employee => {
@@ -1495,6 +1714,26 @@ const groupedSelectedEmployees = computed(() => {
       .sort(([, employeesA], [, employeesB]) => {
         const companyIdA = employeesA[0]?.company?.companyId || 'ZZZZ'
         const companyIdB = employeesB[0]?.company?.companyId || 'ZZZZ'
+        return companyIdA.localeCompare(companyIdB)
+      })
+  )
+})
+
+const groupedSelectedSupervisors = computed(() => {
+  const grouped = {}
+  selectedSupervisorDetails.value.forEach(supervisor => {
+    const companyName = supervisor.company?.name || '未分類'
+    if (!grouped[companyName]) {
+      grouped[companyName] = []
+    }
+    grouped[companyName].push(supervisor)
+  })
+
+  return Object.fromEntries(
+    Object.entries(grouped)
+      .sort(([, supervisorsA], [, supervisorsB]) => {
+        const companyIdA = supervisorsA[0]?.company?.companyId || 'ZZZZ'
+        const companyIdB = supervisorsB[0]?.company?.companyId || 'ZZZZ'
         return companyIdA.localeCompare(companyIdB)
       })
   )
@@ -1889,15 +2128,77 @@ const submitInquiry = handleSubmit(async (values) => {
         return
       }
 
+      // 檢查是否需要確認業務指派
+      const originalSalesPersonId = originalItem.salesPerson?._id?.toString()
+      const newSalesPersonId = processedValues.salesPerson || null
+
+      if (originalSalesPersonId !== newSalesPersonId && newSalesPersonId) {
+        // 有業務變更，需要確認
+        const selectedSalesPerson = dialogSalesPersons.value.find(sp => sp._id === newSalesPersonId)
+        if (selectedSalesPerson) {
+          // 開啟確認對話框
+          salesPersonAssignmentDialog.value = {
+            open: true,
+            itemId: dialog.value.id,
+            salesPersonId: newSalesPersonId,
+            salesPersonName: selectedSalesPerson.nickname || selectedSalesPerson.name,
+            customerName: processedValues.customerName || '未命名客戶',
+            isEditMode: true,
+            processedValues: processedValues
+          }
+          return
+        }
+      }
+
+      // 沒有業務變更或不需要確認，直接提交
+      await submitInquiryData(dialog.value.id, processedValues, true)
+    } else {
+      // 新增模式
+      if (processedValues.salesPerson) {
+        // 有選擇業務，需要確認
+        const selectedSalesPerson = dialogSalesPersons.value.find(sp => sp._id === processedValues.salesPerson)
+        if (selectedSalesPerson) {
+          // 開啟確認對話框
+          salesPersonAssignmentDialog.value = {
+            open: true,
+            itemId: null,
+            salesPersonId: processedValues.salesPerson,
+            salesPersonName: selectedSalesPerson.nickname || selectedSalesPerson.name,
+            customerName: processedValues.customerName || '未命名客戶',
+            isEditMode: false,
+            processedValues: processedValues
+          }
+          return
+        }
+      }
+
+      // 沒有選擇業務，直接提交
+      await submitInquiryData(null, processedValues, false)
+    }
+  } catch (error) {
+    createSnackbar({
+      text: error?.response?.data?.message || '操作失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+})
+
+// 實際提交資料的函數
+const submitInquiryData = async (id, processedValues, isEdit) => {
+  try {
+    if (isEdit) {
       // 編輯模式
       const { data } = await apiAuth.patch(
-        `/customerInquiries/${dialog.value.id}`,
-        processedValues
+        `/customerInquiries/${id}`,
+        {
+          ...processedValues,
+          sendEmailNotification: salesPersonAssignmentDialog.value.salesPersonId ? true : false
+        }
       )
 
       if (data.success) {
         dialog.value.submitted = true
-        const updatedItem = tableItems.value.find(item => item._id === dialog.value.id)
+        const updatedItem = tableItems.value.find(item => item._id === id)
         if (updatedItem) {
           Object.assign(updatedItem, {
             ...updatedItem,
@@ -1907,18 +2208,25 @@ const submitInquiry = handleSubmit(async (values) => {
         await performSearch()
         closeDialog()
         createSnackbar({
-          text: '詢問資料更新成功',
+          text: salesPersonAssignmentDialog.value.salesPersonId
+            ? '詢問資料更新成功，已發送通知給被指派的業務'
+            : '詢問資料更新成功',
           snackbarProps: { color: 'teal-lighten-1' }
         })
       }
     } else {
-      // 新增
-      const { data } = await apiAuth.post('/customerInquiries', processedValues)
+      // 新增模式
+      const { data } = await apiAuth.post('/customerInquiries', {
+        ...processedValues,
+        sendEmailNotification: salesPersonAssignmentDialog.value.salesPersonId ? true : false
+      })
       if (data.success) {
         await performSearch()
         closeDialog()
         createSnackbar({
-          text: '新增詢問成功',
+          text: salesPersonAssignmentDialog.value.salesPersonId
+            ? '新增詢問成功，已發送通知給被指派的業務'
+            : '新增詢問成功',
           snackbarProps: { color: 'teal-lighten-1' }
         })
       }
@@ -1928,8 +2236,11 @@ const submitInquiry = handleSubmit(async (values) => {
       text: error?.response?.data?.message || '操作失敗',
       snackbarProps: { color: 'red-lighten-1' }
     })
+  } finally {
+    // 重置loading狀態
+    salesPersonAssignmentDialog.value.isLoading = false
   }
-})
+}
 
 // URL插入功能
 const confirmInsertUrl = () => {
@@ -1973,7 +2284,9 @@ const updateSalesPerson = async (id, salesPersonId) => {
     }
 
     const companySalesPersons = companySalesPersonsMap.value.get(currentItem.company._id) || []
-    if (!companySalesPersons.some(sp => sp._id === salesPersonId)) {
+    const selectedSalesPerson = companySalesPersons.find(sp => sp._id === salesPersonId)
+
+    if (!selectedSalesPerson) {
       createSnackbar({
         text: '無法選擇其他公司的業務',
         snackbarProps: { color: 'red-lighten-1' }
@@ -1981,33 +2294,75 @@ const updateSalesPerson = async (id, salesPersonId) => {
       return
     }
 
-    updatingSalesPersons.value.add(id)
-
-    const updateData = {
-      salesPerson: salesPersonId,
-      inquiryResult: currentItem.inquiryResult || null,
-      customerTitle: currentItem.customerTitle || null,
-      customerPhone: currentItem.customerPhone || null,
-      customerLineId: currentItem.customerLineId || null,
-      customerEmail: currentItem.customerEmail || null
+    // 開啟確認對話框
+    salesPersonAssignmentDialog.value = {
+      open: true,
+      itemId: id,
+      salesPersonId: salesPersonId,
+      salesPersonName: selectedSalesPerson.nickname || selectedSalesPerson.name,
+      customerName: currentItem.customerName || '未命名客戶'
     }
+  } catch (error) {
+    createSnackbar({
+      text: error?.response?.data?.message || '更新失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
 
-    const { data } = await apiAuth.patch(`/customerInquiries/${id}`, updateData)
-    if (data.success) {
-      const updatedSalesPerson = companySalesPersons.find(sp => sp._id === salesPersonId)
-      Object.assign(currentItem, {
-        salesPerson: updatedSalesPerson,
-        customerTitle: currentItem.customerTitle,
-        customerPhone: currentItem.customerPhone,
-        customerLineId: currentItem.customerLineId,
-        customerEmail: currentItem.customerEmail,
-        inquiryResult: currentItem.inquiryResult
-      })
-      await performSearch()
-      createSnackbar({
-        text: '更新業務成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
+// 確認業務指派
+const confirmSalesPersonAssignment = async () => {
+  try {
+    // 設置loading狀態
+    salesPersonAssignmentDialog.value.isLoading = true
+
+    const { itemId, salesPersonId, isEditMode, processedValues } = salesPersonAssignmentDialog.value
+
+    if (isEditMode !== undefined) {
+      // 來自新增/編輯對話框
+      await submitInquiryData(itemId, processedValues, isEditMode)
+    } else {
+      // 來自v-data-table的業務指派
+      const currentItem = tableItems.value.find(item => item._id === itemId)
+
+      if (!currentItem) {
+        createSnackbar({
+          text: '找不到該項目',
+          snackbarProps: { color: 'red-lighten-1' }
+        })
+        return
+      }
+
+      updatingSalesPersons.value.add(itemId)
+
+      const updateData = {
+        salesPerson: salesPersonId,
+        inquiryResult: currentItem.inquiryResult || null,
+        customerTitle: currentItem.customerTitle || null,
+        customerPhone: currentItem.customerPhone || null,
+        customerLineId: currentItem.customerLineId || null,
+        customerEmail: currentItem.customerEmail || null,
+        sendEmailNotification: true // 添加email通知標記
+      }
+
+      const { data } = await apiAuth.patch(`/customerInquiries/${itemId}`, updateData)
+      if (data.success) {
+        const companySalesPersons = companySalesPersonsMap.value.get(currentItem.company._id) || []
+        const updatedSalesPerson = companySalesPersons.find(sp => sp._id === salesPersonId)
+        Object.assign(currentItem, {
+          salesPerson: updatedSalesPerson,
+          customerTitle: currentItem.customerTitle,
+          customerPhone: currentItem.customerPhone,
+          customerLineId: currentItem.customerLineId,
+          customerEmail: currentItem.customerEmail,
+          inquiryResult: currentItem.inquiryResult
+        })
+        await performSearch()
+        createSnackbar({
+          text: '更新業務成功，已發送通知給被指派的業務',
+          snackbarProps: { color: 'teal-lighten-1' }
+        })
+      }
     }
   } catch (error) {
     createSnackbar({
@@ -2015,11 +2370,26 @@ const updateSalesPerson = async (id, salesPersonId) => {
       snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
-    updatingSalesPersons.value.delete(id)
+    if (salesPersonAssignmentDialog.value.itemId) {
+      updatingSalesPersons.value.delete(salesPersonAssignmentDialog.value.itemId)
+    }
+    closeSalesPersonAssignmentDialog()
   }
 }
 
-
+// 關閉業務指派確認對話框
+const closeSalesPersonAssignmentDialog = () => {
+  salesPersonAssignmentDialog.value = {
+    open: false,
+    itemId: null,
+    salesPersonId: null,
+    salesPersonName: '',
+    customerName: '',
+    isEditMode: undefined,
+    processedValues: null,
+    isLoading: false
+  }
+}
 
 // 更新稱謂
 const updateCustomerTitle = async (id, title) => {
@@ -2472,6 +2842,215 @@ const saveEmployees = async () => {
   }
 }
 
+// 業務主管相關函數
+const openSupervisorManageDialog = async () => {
+  supervisorManageDialog.value.open = true
+  isLoadingSupervisors.value = true
+  tempSelectedSupervisor.value = null
+
+  try {
+    // 載入所有在職員工
+    await searchSupervisors('')
+
+    // 載入已選擇的業務主管
+    const { data } = await apiAuth.get('/employees/suggestions', {
+      params: {
+        employmentStatus: '在職'
+      }
+    })
+    if (data.success) {
+      // 過濾出業務主管
+      const supervisors = data.result.filter(emp => emp.isB2CSupervisor)
+
+      // 清空和重設資料
+      selectedSupervisors.value = []
+      selectedSupervisorDetails.value = []
+
+      // 按公司分組
+      const groupedByCompany = {}
+
+      // 處理每個業務主管資料
+      for (const supervisor of supervisors) {
+        const companyName = supervisor.company?.name || '未分類'
+        if (!groupedByCompany[companyName]) {
+          groupedByCompany[companyName] = []
+        }
+
+        // 添加到分組
+        groupedByCompany[companyName].push({
+          ...supervisor,
+          nickname: supervisor.nickname || ''
+        })
+      }
+
+      // 先設定已選擇的業務主管 ID
+      for (const companySupervisors of Object.values(groupedByCompany)) {
+        for (const supervisor of companySupervisors) {
+          selectedSupervisors.value.push(supervisor._id)
+        }
+      }
+
+      // 再設定詳細資料
+      for (const companySupervisors of Object.values(groupedByCompany)) {
+        for (const supervisor of companySupervisors) {
+          selectedSupervisorDetails.value.push(supervisor)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('載入業務主管資料失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '載入業務主管資料失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isLoadingSupervisors.value = false
+  }
+}
+
+const closeSupervisorManageDialog = () => {
+  supervisorManageDialog.value.open = false
+  selectedSupervisors.value = []
+  selectedSupervisorDetails.value = []
+  tempSelectedSupervisor.value = null
+}
+
+const searchSupervisors = async (searchTerm) => {
+  try {
+    const { data } = await apiAuth.get('/employees/suggestions', {
+      params: {
+        search: searchTerm,
+        employmentStatus: '在職'
+      }
+    })
+    if (data.success) {
+      // 過濾出非業務主管的員工（因為業務主管不應該被重複選擇）
+      allSupervisors.value = data.result.filter(emp => !emp.isB2CSupervisor)
+    }
+  } catch (error) {
+    console.error('載入業務主管列表失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '載入業務主管列表失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isLoadingSupervisors.value = false
+  }
+}
+
+const addSelectedSupervisor = async (supervisorId) => {
+  if (supervisorId && !selectedSupervisors.value.includes(supervisorId)) {
+    // 獲取完整的員工資料，包括公司資訊
+    const supervisor = allSupervisors.value.find(emp => emp._id === supervisorId)
+    if (supervisor) {
+      selectedSupervisors.value.push(supervisorId)
+      selectedSupervisorDetails.value.push({
+        ...supervisor,
+        nickname: supervisor.nickname || ''
+      })
+    }
+  }
+  // 清空臨時選擇的業務主管，以便下次選擇
+  tempSelectedSupervisor.value = null
+}
+
+const removeSelectedSupervisor = (supervisorId) => {
+  // 移除業務主管
+  selectedSupervisors.value = selectedSupervisors.value.filter(id => id !== supervisorId)
+  selectedSupervisorDetails.value = selectedSupervisorDetails.value.filter(emp => emp._id !== supervisorId)
+}
+
+const updateSupervisors = async () => {
+  isUpdatingSupervisors.value = true
+  try {
+    // 先取得所有原本的業務主管
+    const { data: originalData } = await apiAuth.get('/employees/suggestions', {
+      params: {
+        employmentStatus: '在職'
+      }
+    })
+
+    if (!originalData.success) {
+      throw new Error('無法取得原始業務主管資料')
+    }
+
+    // 找出原本的業務主管
+    const originalSupervisors = originalData.result.filter(emp => emp.isB2CSupervisor)
+    const originalSupervisorIds = originalSupervisors.map(emp => emp._id)
+
+    // 找出需要從業務主管中移除的員工
+    const supervisorsToRemove = originalSupervisorIds.filter(id => !selectedSupervisors.value.includes(id))
+
+    // 找出需要新增為業務主管的員工
+    const supervisorsToAdd = selectedSupervisors.value.filter(id => !originalSupervisorIds.includes(id))
+
+    // 檢查是否有任何變更
+    const hasChanges = supervisorsToRemove.length > 0 || supervisorsToAdd.length > 0
+
+    if (!hasChanges) {
+      createSnackbar({
+        text: '資料未做任何變更',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+      return
+    }
+
+    console.log('檢查變更:', {
+      移除的業務主管: supervisorsToRemove,
+      新增的業務主管: supervisorsToAdd
+    })
+
+    let hasError = false
+
+    // 如果有需要移除的業務主管，將他們的 isB2CSupervisor 設為 false
+    if (supervisorsToRemove.length > 0) {
+      try {
+        for (const supervisorId of supervisorsToRemove) {
+          await apiAuth.patch(`/employees/${supervisorId}`, {
+            isB2CSupervisor: false
+          })
+        }
+        console.log('已移除業務主管:', supervisorsToRemove)
+      } catch (error) {
+        hasError = true
+        throw error
+      }
+    }
+
+    // 新增業務主管
+    if (supervisorsToAdd.length > 0) {
+      try {
+        for (const supervisorId of supervisorsToAdd) {
+          await apiAuth.patch(`/employees/${supervisorId}`, {
+            isB2CSupervisor: true
+          })
+        }
+        console.log('已新增業務主管:', supervisorsToAdd)
+      } catch (error) {
+        hasError = true
+        throw error
+      }
+    }
+
+    // 只有當所有操作都成功時才顯示成功訊息並關閉對話框
+    if (!hasError) {
+      createSnackbar({
+        text: '業務主管設定更新成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+      closeSupervisorManageDialog()
+    }
+  } catch (error) {
+    console.error('更新業務主管設定失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '更新業務主管設定失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isUpdatingSupervisors.value = false
+  }
+}
+
 // 匯出功能
 const openExportDialog = () => {
   exportDialog.value = {
@@ -2707,8 +3286,31 @@ const getCustomerTitleColor = (title) => {
 }
 
 const getSalesPersonIndex = (salesPerson) => {
-  if (!salesPerson || typeof salesPerson.order !== 'number') return ''
-  return `${salesPerson.order + 1}.`
+  if (!salesPerson) return ''
+
+  // 如果是業務主管，不顯示序號
+  if (salesPerson.isB2CSupervisor) {
+    return ''
+  }
+
+  // 找到該業務所屬的公司
+  const companyId = salesPerson.company?._id || salesPerson.company
+
+  if (!companyId) {
+    // 如果找不到公司資訊，使用全局 order
+    return typeof salesPerson.order === 'number' ? `${salesPerson.order + 1}.` : ''
+  }
+
+  // 從公司業務列表中查找該業務的索引
+  const companySalesPersons = companySalesPersonsMap.value.get(companyId) || []
+  const index = companySalesPersons.findIndex(person => person._id === salesPerson._id)
+
+  if (index !== -1) {
+    return `${index + 1}.`
+  }
+
+  // 如果找不到，使用全局 order 作為備用
+  return typeof salesPerson.order === 'number' ? `${salesPerson.order + 1}.` : ''
 }
 
 const copyLineLink = async (lineLink) => {
@@ -3025,10 +3627,6 @@ const getInquiryResultTextClass = (result) => {
   &.grey-lighten-2 {
     background-color: #f5f5f5;
     color: #424242;
-  }
-
-  &.text-grey-darken-1 {
-    color: #1d1d1d;
   }
 }
 

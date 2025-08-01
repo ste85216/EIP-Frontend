@@ -2128,7 +2128,16 @@ const getCompanySalesPersons = async (companyId) => {
       }
     })
     if (data.success) {
-      companySalesPersonsMap.value.set(companyId, data.result)
+      // 按照 order 排序業務列表
+      const sortedSalesPersons = data.result.sort((a, b) => {
+        const orderA = typeof a.order === 'number' ? a.order : 9999
+        const orderB = typeof b.order === 'number' ? b.order : 9999
+        if (orderA !== orderB) {
+          return orderA - orderB
+        }
+        return a.name.localeCompare(b.name)
+      })
+      companySalesPersonsMap.value.set(companyId, sortedSalesPersons)
     }
   } catch (error) {
     console.error('載入業務列表失敗:', error)
@@ -2155,7 +2164,16 @@ const loadSearchSalesPersons = async () => {
 
     const { data } = await apiAuth.get('/employees/suggestions', { params })
     if (data.success) {
-      searchSalesPersons.value = data.result
+      // 按照 order 排序業務列表
+      const sortedSalesPersons = data.result.sort((a, b) => {
+        const orderA = typeof a.order === 'number' ? a.order : 9999
+        const orderB = typeof b.order === 'number' ? b.order : 9999
+        if (orderA !== orderB) {
+          return orderA - orderB
+        }
+        return a.name.localeCompare(b.name)
+      })
+      searchSalesPersons.value = sortedSalesPersons
     }
   } catch (error) {
     console.error('載入業務列表失敗:', error)
@@ -3943,8 +3961,31 @@ watch(() => searchCriteria.value.company, (newVal) => {
 
 // 添加一個新的計算屬性來獲取業務的序號
 const getSalesPersonIndex = (salesPerson) => {
-  if (!salesPerson || typeof salesPerson.order !== 'number') return ''
-  return `${salesPerson.order + 1}.`
+  if (!salesPerson) return ''
+
+  // 如果是業務主管，不顯示序號
+  if (salesPerson.isB2CSupervisor) {
+    return ''
+  }
+
+  // 找到該業務所屬的公司
+  const companyId = salesPerson.company?._id || salesPerson.company
+
+  if (!companyId) {
+    // 如果找不到公司資訊，使用全局 order
+    return typeof salesPerson.order === 'number' ? `${salesPerson.order + 1}.` : ''
+  }
+
+  // 從公司業務列表中查找該業務的索引
+  const companySalesPersons = companySalesPersonsMap.value.get(companyId) || []
+  const index = companySalesPersons.findIndex(person => person._id === salesPerson._id)
+
+  if (index !== -1) {
+    return `${index + 1}.`
+  }
+
+  // 如果找不到，使用全局 order 作為備用
+  return typeof salesPerson.order === 'number' ? `${salesPerson.order + 1}.` : ''
 }
 
 // 在 script setup 區域添加複製函數

@@ -156,8 +156,8 @@
                     v-model="searchCriteria.assignedDesigner"
                     class="ms-4"
                     :items="marketingDesigners"
-                    item-title="label"
-                    item-value="value"
+                    :item-title="item => item && item.name && item.employeeCode ? `${item.name} (${item.employeeCode})` : ''"
+                    item-value="_id"
                     variant="outlined"
                     density="compact"
                     clearable
@@ -226,7 +226,19 @@
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
                   <td>{{ item.designRequestNumber }}</td>
-                  <td>{{ formatDate(item.applicationDate) }}</td>
+                  <td>
+                    <div v-if="item.applicationDate">
+                      <div>{{ formatDate(item.applicationDate) }}</div>
+                      <div class="text-caption text-grey-darken-1">
+                        <v-icon
+                          size="14"
+                          style="padding-bottom: 2px;"
+                        >
+                          mdi-clock-outline
+                        </v-icon> {{ formatTime(item.applicationDate) }}
+                      </div>
+                    </div>
+                  </td>
                   <td>{{ item.applicant?.name }} ({{ item.applicant?.employeeCode }})</td>
                   <td>{{ getProductTypeText(item.productType, item) }}</td>
                   <td>
@@ -324,10 +336,10 @@
                       <v-list>
                         <v-list-item
                           v-for="designer in marketingDesigners"
-                          :key="designer.value"
-                          @click="updateAssignedDesigner(item._id, designer.value)"
+                          :key="designer._id"
+                          @click="updateAssignedDesigner(item._id, designer._id)"
                         >
-                          <v-list-item-title>{{ designer.label }}</v-list-item-title>
+                          <v-list-item-title>{{ designer.name }} ({{ designer.employeeCode }})</v-list-item-title>
                         </v-list-item>
                         <v-divider />
                         <v-list-item
@@ -2519,7 +2531,9 @@ const fetchMarketingDesigners = async () => {
 
 const customFilter = (item, queryText) => {
   const textToSearch = queryText.toLowerCase()
-  const itemText = item.raw.label.toLowerCase()
+  const itemText = item.raw && item.raw.name && item.raw.employeeCode
+    ? `${item.raw.name} ${item.raw.employeeCode}`.toLowerCase()
+    : ''
   return itemText.includes(textToSearch)
 }
 
@@ -3124,8 +3138,19 @@ const fetchViewProductTypeFields = async (productType) => {
 // 格式化時間
 const formatTime = (date) => {
   if (!date) return ''
-  const d = new Date(date)
-  return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit' })
+  try {
+    const dateObj = new Date(date)
+    if (isNaN(dateObj.getTime())) return ''
+    return dateObj.toLocaleTimeString('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    })
+  } catch (e) {
+    console.error('Error formatting time:', e)
+    return ''
+  }
 }
 
 // 取得欄位類型對應的圖標

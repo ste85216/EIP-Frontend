@@ -2963,7 +2963,7 @@ const formatDateTime = (date) => {
   position: fixed !important;
   top: 120px;
   left: 80px;
-  z-index: 1000;
+  z-index: 1;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   border-radius: 8px;
   opacity: 1 !important;

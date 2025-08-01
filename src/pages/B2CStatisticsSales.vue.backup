@@ -17,29 +17,8 @@
                       直客詢問統計表
                     </h3>
                     <v-spacer />
-                    <!-- 倒數計時顯示器 -->
-                    <div
-                      v-if="currentEmployee && remainingTime > 0"
-                      class="clock-container"
-                    >
-                      <div class="d-flex align-center">
-                        <v-icon
-                          icon="mdi-timer-sand"
-                          size="18"
-                          class="me-2"
-                          color="orange-darken-4"
-                        />
-                        <div
-                          class="text-orange-darken-4"
-                          style="font-size: 15px; font-weight: 600; letter-spacing: 1px;"
-                        >
-                          {{ Math.floor(remainingTime / 60) }}:{{ String(remainingTime % 60).padStart(2, '0') }}
-                        </div>
-                      </div>
-                    </div>
                     <EmployeeLogin
                       ref="employeeLoginRef"
-                      login-endpoint="/employees/google-login"
                       @login-success="handleEmployeeLogin"
                       @logout="handleEmployeeLogout"
                     />
@@ -48,7 +27,9 @@
                   <v-card-text class="pt-4 px-9">
                     <v-row class="mb-2">
                       <!-- 來源選擇 -->
-                      <v-col cols="2">
+                      <v-col
+                        cols="2"
+                      >
                         <div class="d-flex align-center">
                           <span class="text-label">來源 :</span>
                           <v-select
@@ -68,8 +49,10 @@
                       </v-col>
 
                       <!-- 業務選擇 -->
-                      <v-col cols="2">
-                        <div class="d-flex align-center">
+                      <v-col
+                        cols="2"
+                      >
+                        <div class="d-flex align-center ">
                           <span class="text-label">業務 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.salesPerson"
@@ -118,7 +101,9 @@
                       </v-col>
 
                       <!-- 地區 -->
-                      <v-col cols="2">
+                      <v-col
+                        cols="2"
+                      >
                         <div class="d-flex align-center">
                           <span class="text-label">地區 :</span>
                           <v-autocomplete
@@ -136,7 +121,9 @@
                       </v-col>
 
                       <!-- 詢問結果 -->
-                      <v-col cols="2">
+                      <v-col
+                        cols="2"
+                      >
                         <div class="d-flex align-center">
                           <span class="text-label">結果 :</span>
                           <v-select
@@ -154,7 +141,9 @@
                           />
                         </div>
                       </v-col>
-                      <v-col cols="2">
+                      <v-col
+                        cols="2"
+                      >
                         <v-row class="d-flex justify-end">
                           <v-col
                             cols="8"
@@ -190,7 +179,9 @@
                     </v-row>
                   </v-card-text>
                   <v-divider class="my-2" />
-                  <v-row class="px-1 px-md-7 mt-1 bg-white">
+                  <v-row
+                    class=" px-1 px-md-7 mt-1 bg-white"
+                  >
                     <!-- 標題和功能按鈕區 -->
                     <v-col
                       cols="12"
@@ -426,7 +417,7 @@
                                   color="blue-grey-darken-3"
                                   variant="plain"
                                   size="15"
-                                  class="ms-2"
+                                  class="ms-1"
                                   :ripple="false"
                                   @click="openSimpleDialog(item)"
                                 >
@@ -445,6 +436,11 @@
           </v-col>
         </v-row>
       </v-col>
+
+      <v-col
+        cols="12"
+        class="ps-lg-8 pe-lg-8 mb-6"
+      />
     </v-row>
 
     <!-- 簡化版編輯對話框 -->
@@ -460,8 +456,7 @@
             class="me-2"
           >
             mdi-history
-          </v-icon>
-          <span class="card-title text-white">進度 / 備註 - 歷史紀錄</span>
+          </v-icon><span class="card-title text-white">進度 / 備註 - 歷史紀錄</span>
           <v-spacer />
           <v-btn
             icon
@@ -545,8 +540,7 @@
             class="me-2"
           >
             mdi-check-circle
-          </v-icon>
-          <span class="card-title text-white">確認新增</span>
+          </v-icon><span class="card-title text-white">確認新增</span>
           <v-spacer />
           <v-btn
             icon
@@ -592,6 +586,76 @@
       </v-card>
     </v-dialog>
 
+    <!-- 密碼對話框 -->
+    <v-dialog
+      v-model="isPasswordDialogOpen"
+      persistent
+      max-width="340"
+      @update:model-value="handlePasswordDialogClose"
+    >
+      <v-card class="rounded-lg pb-4">
+        <v-card-title class="d-flex align-center ps-6 pe-4 py-1 mb-2 bg-teal-darken-2">
+          <v-icon
+            size="20"
+            class="me-2"
+          >
+            mdi-lock-open
+          </v-icon>
+          <span class="card-title text-white">公司密碼</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            size="small"
+            @click="closePasswordDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="px-6 py-3">
+          <div class="mb-5">
+            請輸入<span class="text-teal-darken-1 font-weight-bold">「{{ selectedCompanyName }}」</span>密碼
+          </div>
+          <form @submit.prevent="verifyCompanyPassword">
+            <v-text-field
+              v-model="companyPassword"
+              label="密碼"
+              :type="showPassword ? 'text' : 'password'"
+              :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+              variant="outlined"
+              density="compact"
+              hide-details
+              autocomplete="current-password"
+              @click:append-inner="showPassword = !showPassword"
+              @keyup.enter="verifyCompanyPassword"
+            />
+          </form>
+        </v-card-text>
+        <v-card-actions class="px-6">
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            variant="outlined"
+            @click="closePasswordDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            :loading="isVerifying"
+            :disabled="!companyPassword"
+            class="ms-2"
+            @click="verifyCompanyPassword"
+          >
+            確認
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- 業務輪流表對話框 -->
     <v-dialog
       v-model="salesRotationDialog.open"
@@ -604,8 +668,7 @@
             class="me-2"
           >
             mdi-account-switch
-          </v-icon>
-          <span class="card-title text-white">業務輪流表</span>
+          </v-icon><span class="card-title text-white">業務輪流表</span>
           <v-spacer />
           <v-btn
             icon
@@ -684,70 +747,6 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-
-    <!-- 業務指派確認對話框 -->
-    <v-dialog
-      v-model="salesPersonAssignmentDialog.open"
-      persistent
-      max-width="340"
-    >
-      <v-card class="rounded-lg">
-        <div class="card-title px-6 py-1 mb-2 d-flex justify-space-between align-center bg-teal-darken-2">
-          <div>
-            <v-icon
-              size="20"
-              class="me-2"
-            >
-              mdi-check-circle
-            </v-icon>確認業務指派
-          </div>
-          <v-btn
-            icon
-            variant="text"
-            size="40"
-            @click="closeSalesPersonAssignmentDialog"
-          >
-            <v-icon size="20">
-              mdi-close
-            </v-icon>
-          </v-btn>
-        </div>
-        <v-card-text class="px-6 py-3">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="card-title text-grey-darken-2 mb-3">
-                被指派的業務：{{ salesPersonAssignmentDialog.salesPersonName }}
-              </div>
-
-              <div class="text-grey-darken-2">
-                請確認指派業務是否正確，確認後會發送Email給被指派的業務。
-              </div>
-            </div>
-          </div>
-        </v-card-text>
-        <v-card-actions class="px-6 py-4 mb-2">
-          <v-spacer />
-          <v-btn
-            color="teal-darken-1"
-            variant="outlined"
-            class="me-1"
-            :loading="salesPersonAssignmentDialog.isLoading"
-            :disabled="salesPersonAssignmentDialog.isLoading"
-            @click="confirmSalesPersonAssignment"
-          >
-            確認
-          </v-btn>
-          <v-btn
-            color="grey"
-            variant="outlined"
-            :disabled="salesPersonAssignmentDialog.isLoading"
-            @click="closeSalesPersonAssignmentDialog"
-          >
-            取消
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
   </v-container>
   <TourGuide ref="tourGuide" />
 </template>
@@ -770,6 +769,10 @@ definePage({
   }
 })
 
+// Employee 登入相關
+const employeeLoginRef = ref(null)
+const currentEmployee = ref(null)
+
 // API 與工具初始化
 const { api } = useApi()
 const createSnackbar = useSnackbar()
@@ -777,19 +780,7 @@ const { smAndUp, mdAndUp } = useDisplay()
 
 // 響應式變數
 const isSearching = ref(false)
-const isCurrentMonthActive = ref(false)
-const employeeLoginRef = ref(null)
-const currentEmployee = ref(null)
-
-// 倒數計時相關變數
-const autoLogoutTimer = ref(null)
-const countdownTimer = ref(null)
-const remainingTime = ref(0)
-const reminderShown = ref({
-  fiveMinutes: false,
-  oneMinute: false
-})
-const VERIFICATION_EXPIRY_HOURS = 1 // 1小時過期
+const isCurrentMonthActive = ref(false) // 添加狀態追蹤是否正在顯示本月資料
 
 // 表格相關
 const tableHeaders = [
@@ -818,6 +809,7 @@ const tableSortBy = ref([{ key: 'inquiryDate', order: 'desc' }])
 // 搜尋相關響應式變數
 const quickSearch = ref('')
 const searchCriteria = ref({
+  company: null,
   source: null,
   salesPerson: null,
   dateRange: null,
@@ -844,8 +836,12 @@ const inquiryResultOptions = [
 // 地區選項
 const placeOptions = ref([])
 
-// 稱謂選項
+// 移除舊的登入相關變數，改用 Employee 登入系統
+
+// Add customerTitle options near other options
 const titleOptions = ['先生', '小姐', '其他']
+
+// 移除舊的計算屬性
 
 // 修改響應式表格標頭
 const filteredHeaders = computed(() => {
@@ -867,6 +863,8 @@ const filteredHeaders = computed(() => {
 
 // 對話框相關響應式變數
 const isDialogLoading = ref(false)
+
+// 添加新的變數
 const progressNoteInput = ref('')
 const isAddingNote = ref(false)
 const confirmNoteDialog = ref(false)
@@ -878,10 +876,7 @@ const progressNotesHeaders = [
 // 修改 simpleDialog 的結構
 const simpleDialog = ref({
   open: false,
-  id: null,
-  originalResult: null,
-  pendingResult: null,
-  requireNote: false
+  id: null
 })
 
 // 業務輪流表對話框相關響應式變數
@@ -894,21 +889,16 @@ const companySalesPersons = ref([])
 
 // 添加一個 Map 來存儲每個公司的業務列表
 const companySalesPersonsMap = ref(new Map())
-const searchSalesPersons = ref([])
+const searchSalesPersons = ref([]) // 用於搜尋區塊的業務列表
+
+// 在 script setup 區域添加
+const autoLogoutTimer = ref(null)
+
+// 移除舊的計時器相關程式碼
 
 const updatingSalesPersons = ref(new Set())
 const updatingInquiryResults = ref(new Set())
 const updatingCustomerTitles = ref(new Set())
-
-// 業務指派確認對話框
-const salesPersonAssignmentDialog = ref({
-  open: false,
-  itemId: null,
-  salesPersonId: null,
-  salesPersonName: '',
-  customerName: '',
-  isLoading: false
-})
 
 // 添加進度/備註錯誤計算屬性
 const progressNoteError = computed(() => {
@@ -929,6 +919,7 @@ const loadPlaceOptions = async () => {
   try {
     const { data } = await api.get('/lineCategories/all-second-level')
     if (data.success) {
+      // 根據 order 排序
       placeOptions.value = data.result
         .sort((a, b) => a.order - b.order)
         .map(item => item.name)
@@ -942,6 +933,8 @@ const loadPlaceOptions = async () => {
   }
 }
 
+// 移除舊的公司載入函數
+
 // 修改 loadSearchSalesPersons 函數
 const loadSearchSalesPersons = async () => {
   try {
@@ -954,38 +947,16 @@ const loadSearchSalesPersons = async () => {
       params.company = currentEmployee.value.company._id
     }
 
-    // 檢查是否有 Authorization header
-    if (!api.defaults.headers.common['Authorization']) {
-      // 如果沒有 header，嘗試從 localStorage 獲取
-      const authData = localStorage.getItem('employeeAuth')
-      if (authData) {
-        const { token } = JSON.parse(authData)
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      }
-    }
-
     const { data } = await api.get('/employees/suggestions', { params })
     if (data.success) {
-      // 按照 order 排序業務列表
-      const sortedSalesPersons = data.result.sort((a, b) => {
-        const orderA = typeof a.order === 'number' ? a.order : 9999
-        const orderB = typeof b.order === 'number' ? b.order : 9999
-        if (orderA !== orderB) {
-          return orderA - orderB
-        }
-        return a.name.localeCompare(b.name)
-      })
-      searchSalesPersons.value = sortedSalesPersons
+      searchSalesPersons.value = data.result
     }
   } catch (error) {
     console.error('載入業務列表失敗:', error)
-    // 如果是 401 錯誤，不顯示錯誤訊息，因為可能是未登入狀態
-    if (error?.response?.status !== 401) {
     createSnackbar({
       text: error?.response?.data?.message || '載入業務列表失敗',
       snackbarProps: { color: 'red-lighten-1' }
     })
-    }
   }
 }
 
@@ -999,16 +970,7 @@ const getCompanySalesPersons = async (companyId) => {
       }
     })
     if (data.success) {
-      // 按照 order 排序業務列表
-      const sortedSalesPersons = data.result.sort((a, b) => {
-        const orderA = typeof a.order === 'number' ? a.order : 9999
-        const orderB = typeof b.order === 'number' ? b.order : 9999
-        if (orderA !== orderB) {
-          return orderA - orderB
-        }
-        return a.name.localeCompare(b.name)
-      })
-      companySalesPersonsMap.value.set(companyId, sortedSalesPersons)
+      companySalesPersonsMap.value.set(companyId, data.result)
     }
   } catch (error) {
     console.error('載入業務列表失敗:', error)
@@ -1023,35 +985,38 @@ const handleDateRangeChange = (dates) => {
 
 // 處理業務選擇變更
 const handleSalesPersonChange = (value) => {
-  if (!value && currentEmployee.value) {
-    searchCriteria.value.salesPerson = null
+  if (!value && searchCriteria.value.company) {
+    searchCriteria.value.salesPerson = null;
   }
 }
 
+// 移除舊的公司選擇監聽器
+
+// 移除舊的密碼驗證相關函數
+
 // 檢查登出狀態的函數
 const checkAutoLogout = () => {
-  if (!currentEmployee.value) {
+  if (!verifiedCompany.value) {
     return
   }
 
-  const authData = localStorage.getItem('employeeAuth')
-  if (!authData) {
+  const verificationData = localStorage.getItem('companyVerification')
+  if (!verificationData) {
     return
   }
 
-  const { timestamp } = JSON.parse(authData)
+  const { companyId, timestamp } = JSON.parse(verificationData)
   const now = new Date().getTime()
   const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
 
   if (now > expiryTime) {
-    // 清除驗證資訊
-    localStorage.removeItem('employeeAuth')
-    currentEmployee.value = null
+    // 獲取公司名稱
+    const companyName = availableCompanies.value.find(company => company._id === companyId)?.name || ''
 
-    // 通知 EmployeeLogin 組件登出
-    if (employeeLoginRef.value) {
-      employeeLoginRef.value.handleLogout()
-    }
+    // 清除驗證資訊
+    localStorage.removeItem('companyVerification')
+    verifiedCompany.value = null
+    searchCriteria.value.company = null
 
     // 清空表格資料
     tableItems.value = []
@@ -1062,7 +1027,7 @@ const checkAutoLogout = () => {
 
     // 顯示登出提示
     createSnackbar({
-      text: '登入時效已到期，已自動登出',
+      text: `登入時效已到期，已自動登出「${companyName}」`,
       snackbarProps: {
         color: 'warning',
         timeout: -1, // 不自動關閉
@@ -1088,14 +1053,14 @@ const setupAutoLogoutTimer = () => {
   autoLogoutTimer.value = setInterval(checkAutoLogout, 1000)
 }
 
-// 更新驗證時間戳記
+// 在 script setup 區域添加新的函數
 const updateVerificationTimestamp = () => {
-  const authData = localStorage.getItem('employeeAuth')
-  if (authData) {
-    const data = JSON.parse(authData)
+  const verificationData = localStorage.getItem('companyVerification')
+  if (verificationData) {
+    const data = JSON.parse(verificationData)
     // 更新時間戳記
     data.timestamp = new Date().getTime()
-    localStorage.setItem('employeeAuth', JSON.stringify(data))
+    localStorage.setItem('companyVerification', JSON.stringify(data))
 
     // 重置提醒狀態
     reminderShown.value = {
@@ -1108,126 +1073,36 @@ const updateVerificationTimestamp = () => {
   }
 }
 
-// 更新倒數計時
-const updateRemainingTime = () => {
-  const authData = localStorage.getItem('employeeAuth')
-  if (!authData) {
-    remainingTime.value = 0
-    return
-  }
-
-  const { timestamp } = JSON.parse(authData)
-  const now = new Date().getTime()
-  const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
-  const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000))
-  remainingTime.value = remaining
-
-  // 檢查是否需要顯示提醒
-  const remainingMinutes = Math.floor(remaining / 60)
-
-  // 5分鐘提醒
-  if (remainingMinutes === 5 && !reminderShown.value.fiveMinutes) {
-    createSnackbar({
-      text: '系統將在 5 分鐘後自動登出，請注意資料保存',
-      snackbarProps: {
-        color: 'warning',
-        timeout: 10000, // 顯示10秒
-        location: 'top'
-      }
-    })
-    reminderShown.value.fiveMinutes = true
-  }
-
-  // 1分鐘提醒
-  if (remainingMinutes === 1 && !reminderShown.value.oneMinute) {
-    createSnackbar({
-      text: '系統將在 1 分鐘後自動登出，請立即保存資料！',
-      snackbarProps: {
-        color: 'warning',
-        timeout: 10000, // 顯示10秒
-        location: 'top'
-      }
-    })
-    reminderShown.value.oneMinute = true
-  }
-}
-
-// Employee 登入處理函數
-const handleEmployeeLogin = async (employee) => {
-  currentEmployee.value = employee
-
-  // 確保 Authorization header 已設定
-  const authData = localStorage.getItem('employeeAuth')
-  if (authData) {
-    const { token } = JSON.parse(authData)
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-  }
-
-  // 載入該公司的業務列表
-  await loadSearchSalesPersons()
-
-  // 執行搜尋
-  await performSearch()
-
-  // 啟動倒數計時器
-  setupAutoLogoutTimer()
-  updateRemainingTime()
-  countdownTimer.value = setInterval(() => {
-    updateRemainingTime()
-  }, 1000)
-}
-
-// Employee 登出處理函數
-const handleEmployeeLogout = () => {
-  currentEmployee.value = null
-
-  // 清空表格資料
-  tableItems.value = []
-  tableItemsLength.value = 0
-
-  // 清空搜尋條件
-  resetSearch()
-
-  // 清除 API headers
-  delete api.defaults.headers.common['Authorization']
-
-  // 清除定時器
-  if (autoLogoutTimer.value) {
-    clearInterval(autoLogoutTimer.value)
-    autoLogoutTimer.value = null
-  }
-  if (countdownTimer.value) {
-    clearInterval(countdownTimer.value)
-    countdownTimer.value = null
-  }
-
-  // 重置倒數計時
-  remainingTime.value = 0
-  reminderShown.value = {
-    fiveMinutes: false,
-    oneMinute: false
-  }
-}
-
-// 修改 performSearch 函數
+// 修改 performSearch 函數,加入更新時間戳記
 const performSearch = async () => {
-  if (!currentEmployee.value) {
+  // 檢查驗證狀態
+  const verificationData = localStorage.getItem('companyVerification')
+  if (!verificationData) {
     tableItems.value = []
     tableItemsLength.value = 0
     isSearching.value = false
     return
   }
 
-  try {
-    // 確保 Authorization header 已設定
-    if (!api.defaults.headers.common['Authorization']) {
-      const authData = localStorage.getItem('employeeAuth')
-      if (authData) {
-        const { token } = JSON.parse(authData)
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      }
-    }
+  const { companyId, timestamp } = JSON.parse(verificationData)
+  const now = new Date().getTime()
+  const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
 
+  if (now > expiryTime) {
+    localStorage.removeItem('companyVerification')
+    tableItems.value = []
+    tableItemsLength.value = 0
+    isSearching.value = false
+    return
+  }
+
+  // 如果驗證資料存在且有效，設定公司 ID
+  if (!searchCriteria.value.company) {
+    searchCriteria.value.company = companyId
+    verifiedCompany.value = companyId
+  }
+
+  try {
     const params = {
       page: tablePage.value,
       itemsPerPage: tableItemsPerPage.value,
@@ -1238,6 +1113,11 @@ const performSearch = async () => {
       inquiryPlace: searchCriteria.value.inquiryPlace,
       salesPerson: searchCriteria.value.salesPerson,
       inquiryResult: searchCriteria.value.inquiryResult
+    }
+
+    // 只有當有選擇公司時才加入 company 參數
+    if (searchCriteria.value.company) {
+      params.company = searchCriteria.value.company
     }
 
     if (Array.isArray(searchCriteria.value.dateRange) &&
@@ -1252,8 +1132,8 @@ const performSearch = async () => {
       params.dateEnd = endDate.toISOString()
     }
 
-    // 使用 Employee 專用 API 端點
-    const endpoint = '/customerInquiries/employee/all'
+    // 使用公共API端點
+    const endpoint = '/customerInquiries/public/all'
 
     // 更新時間戳記
     updateVerificationTimestamp()
@@ -1275,7 +1155,9 @@ const performSearch = async () => {
 }
 
 const resetSearch = () => {
+  // 一般使用者保留公司選擇
   searchCriteria.value = {
+    company: searchCriteria.value.company,
     source: null,
     salesPerson: null,
     dateRange: null,
@@ -1283,7 +1165,7 @@ const resetSearch = () => {
     inquiryResult: null
   }
   quickSearch.value = ''
-  isCurrentMonthActive.value = false
+  isCurrentMonthActive.value = false // 重置本月狀態
   performSearch()
 }
 
@@ -1309,31 +1191,50 @@ watch(quickSearch, () => {
   debouncedSearch()
 })
 
+// Employee 登入處理函數
+const handleEmployeeLogin = async (employee) => {
+  currentEmployee.value = employee
+
+  // 設定公司 ID
+  searchCriteria.value.company = employee.company._id
+
+  // 載入該公司的業務列表
+  await loadSearchSalesPersons()
+
+  // 執行搜尋
+  await performSearch()
+}
+
+// Employee 登出處理函數
+const handleEmployeeLogout = () => {
+  currentEmployee.value = null
+  searchCriteria.value.company = null
+
+  // 清空表格資料
+  tableItems.value = []
+  tableItemsLength.value = 0
+
+  // 清空搜尋條件
+  resetSearch()
+}
+
 // 開啟業務輪流表對話框
 const openSalesRotationDialog = async () => {
   salesRotationDialog.value.open = true
   isLoadingSalesRotation.value = true
 
   try {
-    // 載入公司業務列表（只顯示一般業務，不包括業務主管）
+    // 載入公司業務列表
     const { data } = await api.get('/employees/suggestions', {
       params: {
         showInB2C: true,
         employmentStatus: '在職',
-        company: currentEmployee.value.company._id
+        company: verifiedCompany.value // 添加公司過濾
       }
     })
     if (data.success) {
-      // 按照 order 排序業務列表
-      const sortedSalesPersons = data.result.sort((a, b) => {
-        const orderA = typeof a.order === 'number' ? a.order : 9999
-        const orderB = typeof b.order === 'number' ? b.order : 9999
-        if (orderA !== orderB) {
-          return orderA - orderB
-        }
-        return a.name.localeCompare(b.name)
-      })
-      companySalesPersons.value = sortedSalesPersons
+      // 過濾出屬於當前公司的業務
+      companySalesPersons.value = data.result.filter(emp => emp.company._id === verifiedCompany.value)
     }
   } catch (error) {
     console.error('載入業務列表失敗:', error)
@@ -1363,10 +1264,7 @@ const openSimpleDialog = async (item) => {
     isDialogLoading.value = true
     simpleDialog.value = {
       open: true,
-      id: item._id,
-      originalResult: null,
-      pendingResult: null,
-      requireNote: false
+      id: item._id
     }
 
     // 確保資料已載入
@@ -1405,11 +1303,23 @@ const closeSimpleDialog = () => {
   isDialogLoading.value = false
 }
 
+// 添加進度/備註驗證函數
+const validateProgressNote = (note) => {
+  if (!note || note.trim().length === 0) {
+    return '請輸入進度/備註內容'
+  }
+  if (note.length > 500) {
+    return '進度/備註內容不能超過500字'
+  }
+  return ''
+}
+
 // 添加新增進度/備註函數
 const addProgressNote = async () => {
-  if (!progressNoteInput.value?.trim()) {
+  const error = validateProgressNote(progressNoteInput.value)
+  if (error) {
     createSnackbar({
-      text: '請輸入進度/備註內容',
+      text: error,
       snackbarProps: { color: 'red-lighten-1' }
     })
     return
@@ -1417,7 +1327,7 @@ const addProgressNote = async () => {
 
   isAddingNote.value = true
   try {
-    const response = await api.post(`/customerInquiries/employee/${simpleDialog.value.id}/progress-notes`, {
+    const response = await api.post(`/customerInquiries/public/${simpleDialog.value.id}/progress-notes`, {
       content: progressNoteInput.value
     })
 
@@ -1425,7 +1335,7 @@ const addProgressNote = async () => {
       // 如果這是強制新增備註的情況（因為改為不成交或其他）
       if (simpleDialog.value.requireNote && simpleDialog.value.pendingResult) {
         // 更新詢問結果
-        const endpoint = `/customerInquiries/employee/${simpleDialog.value.id}`
+        const endpoint = `/customerInquiries/public/${simpleDialog.value.id}`
 
         const currentItem = tableItems.value.find(item => item._id === simpleDialog.value.id)
 
@@ -1462,10 +1372,15 @@ const addProgressNote = async () => {
       // 更新表格中的項目
       const index = tableItems.value.findIndex(item => item._id === simpleDialog.value.id)
       if (index !== -1) {
+        // 如果項目不存在 progressNotes，創建一個空陣列
         if (!tableItems.value[index].progressNotes) {
           tableItems.value[index].progressNotes = []
         }
+
+        // 添加新的進度/備註到陣列開頭
         tableItems.value[index].progressNotes.unshift(response.data.result)
+
+        // 更新最新進度/備註
         tableItems.value[index].latestProgressNote = response.data.result
       }
 
@@ -1482,7 +1397,21 @@ const addProgressNote = async () => {
         snackbarProps: { color: 'teal-lighten-1' }
       })
 
+      // 重新載入資料以確保顯示正確
       await performSearch()
+    } else {
+      createSnackbar({
+        text: response.data.message || '新增進度/備註失敗',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+
+      // 如果新增失敗且是強制新增備註的情況，恢復原始詢問結果
+      if (simpleDialog.value.requireNote) {
+        const currentItem = tableItems.value.find(item => item._id === simpleDialog.value.id)
+        if (currentItem) {
+          currentItem.inquiryResult = simpleDialog.value.originalResult
+        }
+      }
     }
   } catch (error) {
     console.error('新增進度/備註錯誤:', error)
@@ -1505,8 +1434,10 @@ const addProgressNote = async () => {
 
 const updateSalesPerson = async (id, salesPersonId) => {
   try {
+    // 找到當前項目
     const currentItem = tableItems.value.find(item => item._id === id)
 
+    // 檢查是否選擇相同的業務
     if (currentItem.salesPerson?._id === salesPersonId) {
       createSnackbar({
         text: '資料未做任何變更',
@@ -1515,10 +1446,9 @@ const updateSalesPerson = async (id, salesPersonId) => {
       return
     }
 
+    // 檢查選擇的業務是否屬於該公司
     const companySalesPersons = companySalesPersonsMap.value.get(currentItem.company._id) || []
-    const selectedSalesPerson = companySalesPersons.find(sp => sp._id === salesPersonId)
-
-    if (!selectedSalesPerson) {
+    if (!companySalesPersons.some(sp => sp._id === salesPersonId)) {
       createSnackbar({
         text: '無法選擇其他公司的業務',
         snackbarProps: { color: 'red-lighten-1' }
@@ -1526,56 +1456,23 @@ const updateSalesPerson = async (id, salesPersonId) => {
       return
     }
 
-    // 開啟確認對話框
-    salesPersonAssignmentDialog.value = {
-      open: true,
-      itemId: id,
-      salesPersonId: salesPersonId,
-      salesPersonName: selectedSalesPerson.nickname || selectedSalesPerson.name,
-      customerName: currentItem.customerName || '未命名客戶'
-    }
-  } catch (error) {
-    createSnackbar({
-      text: error?.response?.data?.message || '更新失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  }
-}
+    updatingSalesPersons.value.add(id)
 
-// 確認業務指派
-const confirmSalesPersonAssignment = async () => {
-  try {
-    // 設置loading狀態
-    salesPersonAssignmentDialog.value.isLoading = true
+    const endpoint = `/customerInquiries/public/${id}`
 
-    const { itemId, salesPersonId } = salesPersonAssignmentDialog.value
-    const currentItem = tableItems.value.find(item => item._id === itemId)
-
-    if (!currentItem) {
-      createSnackbar({
-        text: '找不到該項目',
-        snackbarProps: { color: 'red-lighten-1' }
-      })
-      return
-    }
-
-    updatingSalesPersons.value.add(itemId)
-
-    const endpoint = `/customerInquiries/employee/${itemId}`
-
+    // 保留所有原有的資料
     const updateData = {
       salesPerson: salesPersonId,
       inquiryResult: currentItem.inquiryResult || null,
       customerTitle: currentItem.customerTitle || null,
       customerPhone: currentItem.customerPhone || null,
       customerLineId: currentItem.customerLineId || null,
-      customerEmail: currentItem.customerEmail || null,
-      sendEmailNotification: true // 添加email通知標記
+      customerEmail: currentItem.customerEmail || null
     }
 
     const { data } = await api.patch(endpoint, updateData)
     if (data.success) {
-      const companySalesPersons = companySalesPersonsMap.value.get(currentItem.company._id) || []
+      // 立即更新表格中的項目，但保留其他欄位不變
       const updatedSalesPerson = companySalesPersons.find(sp => sp._id === salesPersonId)
       Object.assign(currentItem, {
         salesPerson: updatedSalesPerson,
@@ -1587,7 +1484,7 @@ const confirmSalesPersonAssignment = async () => {
       })
       await performSearch()
       createSnackbar({
-        text: '更新業務成功，已發送通知給被指派的業務',
+        text: '更新業務成功',
         snackbarProps: { color: 'teal-lighten-1' }
       })
     }
@@ -1597,20 +1494,7 @@ const confirmSalesPersonAssignment = async () => {
       snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
-    updatingSalesPersons.value.delete(salesPersonAssignmentDialog.value.itemId)
-    closeSalesPersonAssignmentDialog()
-  }
-}
-
-// 關閉業務指派確認對話框
-const closeSalesPersonAssignmentDialog = () => {
-  salesPersonAssignmentDialog.value = {
-    open: false,
-    itemId: null,
-    salesPersonId: null,
-    salesPersonName: '',
-    customerName: '',
-    isLoading: false
+    updatingSalesPersons.value.delete(id)
   }
 }
 
@@ -1654,19 +1538,21 @@ const updateInquiryResult = async (id, result) => {
 
     updatingInquiryResults.value.add(id)
 
-    const endpoint = `/customerInquiries/employee/${id}`
+    const endpoint = `/customerInquiries/public/${id}`
 
+    // 保留原有的進度/備註
     const updateData = {
       inquiryResult: result,
       salesPerson: currentItem.salesPerson?._id || null,
-      customerTitle: currentItem.customerTitle || null
+      customerTitle: currentItem.customerTitle || null  // 保留原有的稱謂
     }
 
     const { data } = await api.patch(endpoint, updateData)
     if (data.success) {
+      // 立即更新表格中的項目，但保留其他欄位不變
       Object.assign(currentItem, {
         inquiryResult: result,
-        customerTitle: currentItem.customerTitle
+        customerTitle: currentItem.customerTitle  // 確保稱謂保持不變
       })
       await performSearch()
       createSnackbar({
@@ -1687,8 +1573,10 @@ const updateInquiryResult = async (id, result) => {
 // 添加更新稱謂的函數
 const updateCustomerTitle = async (id, title) => {
   try {
+    // 找到當前項目
     const currentItem = tableItems.value.find(item => item._id === id)
 
+    // 檢查是否選擇相同的稱謂
     if (currentItem.customerTitle === title) {
       createSnackbar({
         text: '資料未做任何變更',
@@ -1699,15 +1587,17 @@ const updateCustomerTitle = async (id, title) => {
 
     updatingCustomerTitles.value.add(id)
 
-    const endpoint = `/customerInquiries/employee/${id}`
+    const endpoint = `/customerInquiries/public/${id}`
 
     const { data } = await api.patch(endpoint, {
       customerTitle: title,
-      inquiryResult: currentItem.inquiryResult || '',
-      salesPerson: currentItem.salesPerson?._id || null
+      progressAndNote: currentItem.progressAndNote || '',  // 保留原有的進度/備註
+      inquiryResult: currentItem.inquiryResult || '',      // 保留原有的詢問結果
+      salesPerson: currentItem.salesPerson?._id || null    // 保留原有的業務
     })
 
     if (data.success) {
+      // 立即更新表格中的項目
       currentItem.customerTitle = title
       await performSearch()
       createSnackbar({
@@ -1729,8 +1619,10 @@ const updateCustomerTitle = async (id, title) => {
 watch(() => tableItems.value, async (items) => {
   if (!items) return
 
+  // 獲取所有不重複的公司 ID
   const companyIds = new Set(items.map(item => item.company._id))
 
+  // 載入每個公司的業務列表
   for (const companyId of companyIds) {
     if (!companySalesPersonsMap.value.has(companyId)) {
       await getCompanySalesPersons(companyId)
@@ -1740,67 +1632,45 @@ watch(() => tableItems.value, async (items) => {
 
 // 添加一個新的計算屬性來獲取業務的序號
 const getSalesPersonIndex = (salesPerson) => {
-  if (!salesPerson) return ''
-
-  // 如果是業務主管，不顯示序號
-  if (salesPerson.isB2CSupervisor) {
-    return ''
-  }
-
-  // 找到該業務所屬的公司
-  const companyId = salesPerson.company?._id || salesPerson.company
-
-  if (!companyId) {
-    // 如果找不到公司資訊，使用全局 order
-    return typeof salesPerson.order === 'number' ? `${salesPerson.order + 1}.` : ''
+  if (!salesPerson || typeof salesPerson.order !== 'number') return ''
+  return `${salesPerson.order + 1}.`
 }
 
-  // 從公司業務列表中查找該業務的索引
-  const companySalesPersons = companySalesPersonsMap.value.get(companyId) || []
-  const index = companySalesPersons.findIndex(person => person._id === salesPerson._id)
-
-  if (index !== -1) {
-    return `${index + 1}.`
-  }
-
-  // 如果找不到，使用全局 order 作為備用
-  return typeof salesPerson.order === 'number' ? `${salesPerson.order + 1}.` : ''
-}
-
-// 日期格式化函數
+// Add new date/time formatting functions
 const formatDatePart = (dateString) => {
-  if (!dateString) return ''
+  if (!dateString) return '';
   try {
-    const dateObj = new Date(dateString)
-    if (isNaN(dateObj.getTime())) return ''
+    const dateObj = new Date(dateString);
+    if (isNaN(dateObj.getTime())) return '';
     return dateObj.toLocaleDateString('zh-TW', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
-    })
+    });
   } catch (e) {
-    console.error('Error formatting date part:', e)
-    return ''
+    console.error('Error formatting date part:', e);
+    return '';
   }
 }
 
 const formatTimePart = (dateString) => {
-  if (!dateString) return ''
+  if (!dateString) return '';
   try {
-    const dateObj = new Date(dateString)
-    if (isNaN(dateObj.getTime())) return ''
+    const dateObj = new Date(dateString);
+    if (isNaN(dateObj.getTime())) return '';
     return dateObj.toLocaleTimeString('zh-TW', {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: false
-    })
+      hour12: false // 使用24小時制
+    });
   } catch (e) {
-    console.error('Error formatting time part:', e)
-    return ''
+    console.error('Error formatting time part:', e);
+    return '';
   }
 }
 
+// 添加日期格式化函數
 const formatProgressNoteTime = (timestamp) => {
   if (!timestamp) return ''
   const date = new Date(timestamp)
@@ -1809,6 +1679,8 @@ const formatProgressNoteTime = (timestamp) => {
 
 const formatInquiryContent = (content) => {
   if (!content) return ''
+
+  // 將網址按鈕的 HTML 轉換為實際的按鈕
   return content.replace(
     /<a href="([^"]+)" target="_blank" class="url-button">↗<\/a>/g,
     (match, url) => {
@@ -1831,14 +1703,60 @@ const getCustomerTitleColor = (title) => {
   }
 }
 
+// 更新倒數計時
+const updateRemainingTime = () => {
+  const verificationData = localStorage.getItem('companyVerification')
+  if (!verificationData) {
+    remainingTime.value = 0
+    return
+  }
+
+  const { timestamp } = JSON.parse(verificationData)
+  const now = new Date().getTime()
+  const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
+  const remaining = Math.max(0, Math.floor((expiryTime - now) / 1000))
+  remainingTime.value = remaining
+
+  // 檢查是否需要顯示提醒
+  const remainingMinutes = Math.floor(remaining / 60)
+
+  // 5分鐘提醒
+  if (remainingMinutes === 5 && !reminderShown.value.fiveMinutes) {
+    createSnackbar({
+      text: '系統將在 5 分鐘後自動登出，請注意資料保存',
+      snackbarProps: {
+        color: 'warning',
+        timeout: 10000, // 顯示10秒
+        location: 'top'
+      }
+    })
+    reminderShown.value.fiveMinutes = true
+  }
+
+  // 1分鐘提醒
+  if (remainingMinutes === 1 && !reminderShown.value.oneMinute) {
+    createSnackbar({
+      text: '系統將在 1 分鐘後自動登出，請立即保存資料！',
+      snackbarProps: {
+        color: 'warning',
+        timeout: 10000, // 顯示10秒
+        location: 'top'
+      }
+    })
+    reminderShown.value.oneMinute = true
+  }
+}
+
 // 添加本月按鈕的函數
 const setCurrentMonth = () => {
   if (isCurrentMonthActive.value) {
+    // 設定本月日期範圍
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     searchCriteria.value.dateRange = [startOfMonth, endOfMonth]
   } else {
+    // 清空日期範圍
     searchCriteria.value.dateRange = null
   }
   performSearch()
@@ -1850,9 +1768,10 @@ const toggleCurrentMonth = () => {
   setCurrentMonth()
 }
 
-// 監聽日期範圍變化
+// 監聽日期範圍變化，如果用戶手動更改日期則重置本月狀態
 watch(() => searchCriteria.value.dateRange, (newDateRange) => {
   if (newDateRange && isCurrentMonthActive.value) {
+    // 檢查是否還是本月的日期範圍
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
@@ -1865,12 +1784,13 @@ watch(() => searchCriteria.value.dateRange, (newDateRange) => {
       isCurrentMonthActive.value = false
     }
   } else if (!newDateRange && isCurrentMonthActive.value) {
+    // 如果日期被清空且當前是本月狀態，重置狀態
     isCurrentMonthActive.value = false
   }
-})
+});
 
-// 監聽登入狀態變化
-watch(() => currentEmployee.value, (newVal) => {
+// 監聽驗證狀態變化
+watch(() => verifiedCompany.value, (newVal) => {
   if (newVal) {
     updateRemainingTime()
   } else {
@@ -1878,99 +1798,38 @@ watch(() => currentEmployee.value, (newVal) => {
   }
 })
 
-// 處理用戶活動，更新時間戳記
-const handleUserActivity = () => {
-  if (currentEmployee.value) {
-    updateVerificationTimestamp()
-  }
-}
+// 添加定時器
+let countdownTimer = null
 
 // 初始化
 onMounted(async () => {
   try {
     tableLoading.value = true
+    await Promise.all([
+      loadSearchSalesPersons(),
+      loadAvailableCompanies(),
+      loadPlaceOptions()
+    ])
 
-    // 等待 EmployeeLogin 組件初始化完成
-    await new Promise(resolve => setTimeout(resolve, 100))
+    // 檢查驗證狀態
+    const verificationData = localStorage.getItem('companyVerification')
+    if (verificationData) {
+      const { companyId, timestamp } = JSON.parse(verificationData)
+      const now = new Date().getTime()
+      const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
 
-    // 檢查 Employee 登入狀態
-    const authData = localStorage.getItem('employeeAuth')
-    if (authData) {
-      try {
-        const { token, employee, timestamp } = JSON.parse(authData)
-        const now = new Date().getTime()
-        const expiryTime = timestamp + (VERIFICATION_EXPIRY_HOURS * 60 * 60 * 1000)
+      if (now <= expiryTime) {
+        searchCriteria.value.company = companyId
+        verifiedCompany.value = companyId
+        await performSearch()
 
-        if (now <= expiryTime) {
-          // 檢查員工是否有B2C權限
-          if (!employee.showInB2C && !employee.isB2CSupervisor) {
-            // 沒有B2C權限，清除登入狀態並顯示錯誤訊息
-            localStorage.removeItem('employeeAuth')
-            currentEmployee.value = null
-            createSnackbar({
-              text: '此員工帳號未開放使用「 直客詢問統計表 」功能，如有疑問請聯絡管理者',
-              snackbarProps: {
-                color: 'red-lighten-1',
-                timeout: -1 // 不自動關閉
-              }
-            })
-            await Promise.all([
-              loadSearchSalesPersons(),
-              loadPlaceOptions()
-            ])
-            return
-          }
-
-          // 有權限，恢復登入狀態
-          currentEmployee.value = employee
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
-          // 載入資料
-          await Promise.all([
-            loadSearchSalesPersons(),
-            loadPlaceOptions()
-          ])
-
-          // 執行搜尋
-          await performSearch()
-
-          // 啟動倒數計時器
-          setupAutoLogoutTimer()
-          updateRemainingTime()
-          countdownTimer.value = setInterval(() => {
-            updateRemainingTime()
-          }, 1000)
-        } else {
-          // Token 已過期，清除資料
-          localStorage.removeItem('employeeAuth')
-          currentEmployee.value = null
-          await Promise.all([
-            loadSearchSalesPersons(),
-            loadPlaceOptions()
-          ])
-        }
-      } catch (error) {
-        console.error('解析登入資料失敗:', error)
-        localStorage.removeItem('employeeAuth')
-        currentEmployee.value = null
-        await Promise.all([
-          loadSearchSalesPersons(),
-          loadPlaceOptions()
-        ])
+        // 啟動定時檢查
+        setupAutoLogoutTimer()
+      } else {
+        localStorage.removeItem('companyVerification')
+        verifiedCompany.value = null
       }
-    } else {
-      // 沒有登入資料，只載入基本資料
-      currentEmployee.value = null
-      await Promise.all([
-        loadSearchSalesPersons(),
-        loadPlaceOptions()
-      ])
     }
-
-    // 添加用戶活動監聽器
-    document.addEventListener('click', handleUserActivity)
-    document.addEventListener('keydown', handleUserActivity)
-    document.addEventListener('scroll', handleUserActivity)
   } catch (error) {
     console.error('初始化失敗:', error)
     createSnackbar({
@@ -1980,27 +1839,35 @@ onMounted(async () => {
   } finally {
     tableLoading.value = false
   }
+
+  // 重置提醒狀態
+  reminderShown.value = {
+    fiveMinutes: false,
+    oneMinute: false
+  }
+
+  // 初始化倒數計時
+  updateRemainingTime()
+  countdownTimer = setInterval(() => {
+    updateRemainingTime()
+  }, 1000)
 })
 
-// 清理定時器
+// 添加 onUnmounted 清理定時器
 onUnmounted(() => {
   if (autoLogoutTimer.value) {
     clearInterval(autoLogoutTimer.value)
   }
-  if (countdownTimer.value) {
-    clearInterval(countdownTimer.value)
+  // 清除倒數計時器
+  if (countdownTimer) {
+    clearInterval(countdownTimer)
   }
-
-  // 移除事件監聽器
-  document.removeEventListener('click', handleUserActivity)
-  document.removeEventListener('keydown', handleUserActivity)
-  document.removeEventListener('scroll', handleUserActivity)
 })
 </script>
 
 <style lang="scss" scoped>
 .white-space-pre-wrap {
-  padding: 12px 0;
+  padding: 4px 0;
   white-space: pre-wrap;
   word-wrap: break-word;
   max-width: 300px;
@@ -2096,14 +1963,20 @@ onUnmounted(() => {
   }
 }
 
-
-
 .clock-container {
   border: 1px solid #E65100;
   border-radius: 4px;
   padding: 4px 8px;
-  margin-right: 16px;
+  margin-right: 8px;
 }
+
+/* 對話框標題樣式 */
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
+
 </style>
 
 <route lang="yaml">

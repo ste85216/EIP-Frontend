@@ -1054,7 +1054,7 @@
       persistent
       max-width="320"
     >
-      <v-card class="rounded-lg px-8 pt-6 pb-4">
+      <v-card class="rounded-lg px-6 pt-6 pb-4">
         <div class="card-title mb-2">
           離職日期
         </div>
@@ -1075,7 +1075,7 @@
           <v-btn
             color="grey"
             variant="outlined"
-            size="small"
+            class="me-1"
             @click="handleLeaveCancel"
           >
             取消
@@ -1083,7 +1083,6 @@
           <v-btn
             color="teal-darken-1"
             variant="outlined"
-            size="small"
             @click="handleLeaveConfirm"
           >
             確認
@@ -1098,7 +1097,7 @@
       persistent
       max-width="320"
     >
-      <v-card class="rounded-lg px-8 pt-6 pb-4">
+      <v-card class="rounded-lg px-6 pt-6 pb-4">
         <div class="card-title mb-2">
           留停開始日期
         </div>
@@ -1119,7 +1118,7 @@
           <v-btn
             color="grey"
             variant="outlined"
-            size="small"
+            class="me-1"
             @click="handleSuspensionCancel"
           >
             取消
@@ -1127,7 +1126,6 @@
           <v-btn
             color="teal-darken-1"
             variant="outlined"
-            size="small"
             @click="handleSuspensionConfirm"
           >
             確認
@@ -1142,7 +1140,7 @@
       persistent
       max-width="320"
     >
-      <v-card class="rounded-lg px-8 pt-6 pb-4">
+      <v-card class="rounded-lg px-6 pt-6 pb-4">
         <div class="card-title mb-2">
           留停復職日期
         </div>
@@ -1163,7 +1161,7 @@
           <v-btn
             color="grey"
             variant="outlined"
-            size="small"
+            class="me-1"
             @click="handleReinstatementCancel"
           >
             取消
@@ -1171,7 +1169,6 @@
           <v-btn
             color="teal-darken-1"
             variant="outlined"
-            size="small"
             @click="handleReinstatementConfirm"
           >
             確認
