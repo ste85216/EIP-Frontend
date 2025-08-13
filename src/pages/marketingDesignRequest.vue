@@ -2,7 +2,7 @@
 <template>
   <v-container max-width="2400">
     <!-- 頁面標題和功能按鈕區 -->
-    <v-row class="pt-md-5 px-5 px-lg-10 px-xxl-0">
+    <v-row class="pt-md-6 px-5 px-lg-10 px-xxl-0">
       <v-col cols="12">
         <v-card class="elevation-4 rounded-lg py-7 px-0">
           <div class="d-flex align-center px-7">

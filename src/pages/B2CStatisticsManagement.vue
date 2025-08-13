@@ -1391,22 +1391,22 @@
         <v-card-actions class="px-6 py-4 mb-2">
           <v-spacer />
           <v-btn
-            color="teal-darken-1"
+            color="grey"
             variant="outlined"
             class="me-1"
+            :disabled="salesPersonAssignmentDialog.isLoading"
+            @click="closeSalesPersonAssignmentDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
             :loading="salesPersonAssignmentDialog.isLoading"
             :disabled="salesPersonAssignmentDialog.isLoading"
             @click="confirmSalesPersonAssignment"
           >
             確認
-          </v-btn>
-          <v-btn
-            color="grey"
-            variant="outlined"
-            :disabled="salesPersonAssignmentDialog.isLoading"
-            @click="closeSalesPersonAssignmentDialog"
-          >
-            取消
           </v-btn>
         </v-card-actions>
       </v-card>

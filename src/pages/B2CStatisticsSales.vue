@@ -718,7 +718,6 @@
               <div class="card-title text-grey-darken-2 mb-3">
                 被指派的業務：{{ salesPersonAssignmentDialog.salesPersonName }}
               </div>
-
               <div class="text-grey-darken-2">
                 請確認指派業務是否正確，確認後會發送Email給被指派的業務。
               </div>
@@ -728,22 +727,22 @@
         <v-card-actions class="px-6 py-4 mb-2">
           <v-spacer />
           <v-btn
-            color="teal-darken-1"
+            color="grey"
             variant="outlined"
             class="me-1"
+            :disabled="salesPersonAssignmentDialog.isLoading"
+            @click="closeSalesPersonAssignmentDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
             :loading="salesPersonAssignmentDialog.isLoading"
             :disabled="salesPersonAssignmentDialog.isLoading"
             @click="confirmSalesPersonAssignment"
           >
             確認
-          </v-btn>
-          <v-btn
-            color="grey"
-            variant="outlined"
-            :disabled="salesPersonAssignmentDialog.isLoading"
-            @click="closeSalesPersonAssignmentDialog"
-          >
-            取消
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -2096,7 +2095,12 @@ onUnmounted(() => {
   }
 }
 
-
+/* 對話框標題樣式 */
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
 
 .clock-container {
   border: 1px solid #E65100;
@@ -2110,3 +2114,7 @@ onUnmounted(() => {
   meta:
     layout: Ystravel
 </route>
+
+
+
+

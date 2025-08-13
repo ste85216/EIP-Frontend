@@ -192,7 +192,7 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="!user.isUser && !user.isDesigner"
+            v-if="!user.isUser && !user.isDesigner && !user.isSupervisor"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -394,12 +394,19 @@
             :class="{ 'loaded': isBackgroundLoaded }"
             to="/profile"
           >
-            <!-- 添加 skeleton
+            <!-- 添加 skeleton -->
             <v-skeleton-loader
               v-if="!isBackgroundLoaded"
               class="position-absolute w-100 h-100 pa-0 ma-0"
-            /> -->
+            />
 
+            <!-- 添加隱藏的圖片用於預加載 -->
+            <img
+              src="/src/assets/image/bg_profile_purpleflower.webp"
+              alt="background"
+              style="display: none;"
+              @load="handleImageLoad"
+            >
             <div class="card-blur pt-2 pb-4 px-2">
               <v-card-title class="ps-5 pb-3">
                 <v-avatar
@@ -492,10 +499,131 @@
               <v-list-item-title>{{ userItem.text }}</v-list-item-title>
             </v-list-item>
           </template>
+
+          <!-- 行銷費用管理選單 -->
+          <v-divider
+            v-if="!user.isUser && !user.isDesigner && !user.isSupervisor"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
+          />
+          <template
+            v-for="cogItem in filteredCogItems"
+            :key="cogItem.text"
+          >
+            <!-- 有子選單的項目 -->
+            <v-list-group
+              v-if="cogItem.children"
+              v-model="openedGroups"
+              :value="cogItem.text"
+              :persistent="true"
+              fluid
+            >
+              <template #activator="{ props }">
+                <v-list-item
+                  v-bind="props"
+                  color="grey-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ cogItem.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ cogItem.text }}</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <v-list-item
+                v-for="child in cogItem.children"
+                :key="child.to"
+                :to="child.to"
+                color="grey-darken-3"
+                base-color="deep-purple-darken-4"
+              >
+                <template #prepend>
+                  <v-icon>{{ child.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ child.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list-group>
+
+            <!-- 沒有子選單的項目 -->
+            <v-list-item
+              v-else
+              :to="cogItem.to"
+              color="grey-darken-3"
+              class="mt-2"
+            >
+              <template #prepend>
+                <v-icon>{{ cogItem.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ cogItem.text }}</v-list-item-title>
+            </v-list-item>
+          </template>
+
+          <!-- IT功能選單 -->
+          <v-divider
+            v-if="!user.isUser"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
+          />
+          <template
+            v-for="itItem in filteredITItems"
+            :key="itItem.text"
+          >
+            <!-- 有子選單的項目 -->
+            <v-list-group
+              v-if="itItem.children"
+              v-model="openedGroups"
+              :value="itItem.text"
+              :persistent="true"
+              fluid
+            >
+              <template #activator="{ props }">
+                <v-list-item
+                  v-bind="props"
+                  color="grey-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ itItem.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ itItem.text }}</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <v-list-item
+                v-for="child in itItem.children"
+                :key="child.to"
+                :to="child.to"
+                color="grey-darken-3"
+                base-color="deep-purple-darken-4"
+              >
+                <template #prepend>
+                  <v-icon>{{ child.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ child.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list-group>
+
+            <!-- 沒有子選單的項目 -->
+            <v-list-item
+              v-else
+              :to="itItem.to"
+              color="grey-darken-3"
+              class="mt-2"
+            >
+              <template #prepend>
+                <v-icon>{{ itItem.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ itItem.text }}</v-list-item-title>
+            </v-list-item>
+          </template>
+
           <!-- 管理者功能選單 -->
           <v-divider
-            v-if="user.isAdmin"
-            class="mt-4"
+            v-if="user.isAdmin || user.isIT"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
           />
           <template v-if="user.isLogin">
             <template
@@ -526,6 +654,7 @@
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
+                  base-color="blue-grey-darken-1"
                 >
                   <template #prepend>
                     <v-icon>{{ child.icon }}</v-icon>
@@ -549,7 +678,23 @@
             </template>
           </template>
         </div>
-        <v-divider class="mt-4" />
+        <div>
+          <v-list-item
+            v-if="!user.isLogin"
+            to="/login"
+          >
+            <template #prepend>
+              <v-icon>mdi-account-arrow-left</v-icon>
+            </template>
+            <v-list-item-title>登入</v-list-item-title>
+          </v-list-item>
+        </div>
+        <v-divider
+          v-if="mdAndUp"
+          class="mt-4 mb-2"
+          color="grey-darken-3"
+          opacity="0.3"
+        />
         <div>
           <v-list-item
             v-if="user.isLogin"

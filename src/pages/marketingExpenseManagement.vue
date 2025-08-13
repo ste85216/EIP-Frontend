@@ -348,7 +348,7 @@
       :width="dialogWidth"
       :fullscreen="!smAndUp"
     >
-      <v-card class="rounded-lg px-4 py-6">
+      <v-card class="rounded-lg">
         <div
           v-if="isLoadingEdit"
           class="d-flex justify-center align-center"
@@ -366,11 +366,30 @@
             :disabled="isSubmitting"
             @submit.prevent="submit"
           >
-            <div class="card-title px-8 py-3">
+            <div class="card-title px-8 py-4 bg-blue-grey-darken-2 d-flex align-center">
+              <v-icon
+                size="20"
+                color="white"
+                class="me-2"
+              >
+                mdi-list-box-outline
+              </v-icon>
               {{ dialog.id ? '編輯實際支出' : '新增實際支出' }}
+              <v-spacer />
+              <v-btn
+                icon
+                color="white"
+                variant="plain"
+                class="opacity-100"
+                :ripple="false"
+                size="20"
+                @click="closeDialog"
+              >
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
             </div>
 
-            <v-card-text class="mt-2 mb-4 pa-3">
+            <v-card-text class="mt-6 mb-4 px-6">
               <v-row>
                 <v-col
                   cols="3"
@@ -596,7 +615,7 @@
               </v-row>
             </v-card-text>
 
-            <v-card-actions class="px-5">
+            <v-card-actions class="px-7 mb-4">
               <v-hover>
                 <template #default="{ isHovering, props }">
                   <v-btn
@@ -616,6 +635,7 @@
               <v-btn
                 color="grey-darken-1"
                 variant="outlined"
+                class="me-1"
                 :size="buttonSize"
                 :loading="isSubmitting"
                 @click="closeDialog"
@@ -642,38 +662,63 @@
     <!-- 輸入總金額對話框 -->
     <v-dialog
       v-model="amountDialog.open"
-      max-width="320"
+      max-width="340"
       persistent
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-6 pt-6 pb-4">
-          請輸入總金額
+        <div class="card-title px-6 py-2 mb-2 d-flex justify-space-between align-center bg-teal-darken-2">
+          <div>
+            <v-icon
+              size="20"
+              class="me-2"
+            >
+              mdi-calculator
+            </v-icon>平均帶入各線別
+          </div>
+          <v-btn
+            icon
+            variant="plain"
+            size="36"
+            class="opacity-100"
+            :ripple="false"
+            @click="amountDialog.open = false"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="px-6 pb-0">
-          <amount-input
-            v-model="amountDialog.amount"
-            label="總金額"
-            variant="outlined"
-            density="compact"
-            hide-details
-            class="mb-2"
-            autofocus
-            @keyup.enter="confirmAmount"
-          />
+        <v-card-text class="px-6 py-3">
+          <div class="d-flex justify-space-between align-center">
+            <div>
+              <div class="text-grey-darken-2 mb-4">
+                請輸入要分配給各線別的<span class="text-pink-lighten-1 font-weight-bold">總金額</span>，系統會自動平均分配給未填寫金額的線別。
+              </div>
+              <amount-input
+                v-model="amountDialog.amount"
+                label="總金額"
+                variant="outlined"
+                density="compact"
+                hide-details
+                autofocus
+                @keyup.enter="confirmAmount"
+              />
+            </div>
+          </div>
         </v-card-text>
-        <v-card-actions class="px-6 pt-2 pb-6 pt-4">
+        <v-card-actions class="px-6 py-4 mb-2">
           <v-spacer />
           <v-btn
-            color="grey-darken-1"
+            color="grey"
             variant="outlined"
+            class="me-1"
             @click="amountDialog.open = false"
           >
             取消
           </v-btn>
           <v-btn
-            color="teal-darken-2"
+            color="teal-darken-1"
             variant="outlined"
-            class="ms-2"
             :disabled="!amountDialog.amount || amountDialog.amount <= 0"
             @click="confirmAmount"
           >
@@ -696,41 +741,66 @@
     <!-- 新增多個線別對話框 -->
     <v-dialog
       v-model="addDetailsDialog.open"
-      max-width="320"
+      max-width="340"
       persistent
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-6 pt-6 pb-4">
-          批量新增線別
+        <div class="card-title px-6 py-2 mb-2 d-flex justify-space-between align-center bg-grey-darken-3">
+          <div>
+            <v-icon
+              size="20"
+              class="me-2"
+            >
+              mdi-plus-circle
+            </v-icon>批量新增線別
+          </div>
+          <v-btn
+            icon
+            variant="plain"
+            size="36"
+            class="opacity-100"
+            :ripple="false"
+            @click="addDetailsDialog.open = false"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="px-6 pb-0">
-          <v-text-field
-            v-model="addDetailsDialog.count"
-            label="要新增的線別數量"
-            type="number"
-            variant="outlined"
-            density="compact"
-            hide-details
-            class="mb-2"
-            min="1"
-            :rules="[value => !value || value < 1 ? '數量必須大於0' : true]"
-            autofocus
-            @keyup.enter="confirmAddDetails"
-          />
+        <v-card-text class="px-6 py-3">
+          <div class="d-flex justify-space-between align-center">
+            <div>
+              <div class="text-grey-darken-2 mb-4">
+                請輸入欲新增的線別數量，系統會自動新增指定數量的空白線別項目。
+              </div>
+              <v-text-field
+                v-model="addDetailsDialog.count"
+                label="線別數量"
+                type="number"
+                variant="outlined"
+                density="compact"
+                hide-details
+                min="1"
+                :rules="[value => !value || value < 1 ? '數量必須大於0' : true]"
+                autofocus
+                @keyup.enter="confirmAddDetails"
+              />
+            </div>
+          </div>
         </v-card-text>
-        <v-card-actions class="px-6 pt-4 pb-6">
+        <v-card-actions class="px-6 py-4 mb-2">
           <v-spacer />
           <v-btn
-            color="grey-darken-1"
+            color="grey"
             variant="outlined"
+            class="me-1"
             @click="addDetailsDialog.open = false"
           >
             取消
           </v-btn>
           <v-btn
-            color="teal-darken-2"
+            color="teal-darken-1"
             variant="outlined"
-            class="ms-2"
             :disabled="!addDetailsDialog.count || addDetailsDialog.count < 1"
             @click="confirmAddDetails"
           >
@@ -741,24 +811,114 @@
     </v-dialog>
 
     <!-- 確認清除所有金額對話框 -->
-    <ConfirmDeleteDialog
+    <v-dialog
       v-model="confirmClearAmountsDialog"
-      :width="300"
-      title="確認清除所有金額"
-      message="確定要清除所有線別的金額嗎？此操作無法復原。"
-      confirm-button-text="清除"
-      @confirm="confirmClearAllAmounts"
-    />
+      persistent
+      max-width="320"
+    >
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-2 mb-2 d-flex justify-space-between align-center bg-red-lighten-1">
+          <div>
+            <v-icon
+              size="20"
+              class="me-2"
+            >
+              mdi-delete-sweep
+            </v-icon>確認清除所有金額
+          </div>
+          <v-btn
+            icon
+            variant="plain"
+            size="36"
+            class="opacity-100"
+            :ripple="false"
+            @click="confirmClearAmountsDialog = false"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 py-3">
+          <div class="text-grey-darken-2 mb-4">
+            確定要清除所有線別的金額嗎？此操作無法復原。
+          </div>
+        </v-card-text>
+        <v-card-actions class="px-6 pt-2 pb-4 mb-2">
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="outlined"
+            class="me-1"
+            @click="confirmClearAmountsDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="red-lighten-1"
+            variant="outlined"
+            @click="confirmClearAllAmounts"
+          >
+            清除
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- 確認刪除所有線別對話框 -->
-    <ConfirmDeleteDialog
+    <v-dialog
       v-model="confirmClearDetailsDialog"
-      :width="300"
-      title="確認刪除所有線別"
-      message="確定要刪除所有線別嗎？此操作無法復原。"
-      confirm-button-text="刪除"
-      @confirm="confirmClearAllDetails"
-    />
+      persistent
+      max-width="320"
+    >
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-2 mb-2 d-flex justify-space-between align-center bg-red-lighten-1">
+          <div>
+            <v-icon
+              size="20"
+              class="me-2"
+            >
+              mdi-delete
+            </v-icon>確認刪除所有線別
+          </div>
+          <v-btn
+            icon
+            variant="plain"
+            size="36"
+            class="opacity-100"
+            :ripple="false"
+            @click="confirmClearDetailsDialog = false"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 py-3">
+          <div class="text-grey-darken-2 mb-4">
+            確定要刪除所有線別嗎？此操作無法復原。
+          </div>
+        </v-card-text>
+        <v-card-actions class="px-6 pt-2 pb-4 mb-2">
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="outlined"
+            class="me-1"
+            @click="confirmClearDetailsDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="red-lighten-1"
+            variant="outlined"
+            @click="confirmClearAllDetails"
+          >
+            刪除
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -776,7 +936,6 @@ import { useRouter } from 'vue-router'
 import * as yup from 'yup'
 import { debounce } from 'lodash'
 import { formatNumber } from '@/utils/format'
-import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 import AmountInput from '../components/AmountInput.vue'
 
 // 自定義日期格式化函數

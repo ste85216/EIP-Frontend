@@ -61,7 +61,7 @@
                               size="18"
                             />
                           </template>
-                          輸入使用者編號、管理者編號或姓名查詢
+                          輸入使用者編號、管理者編號、員工編號或姓名查詢
                         </v-tooltip>
                       </template>
                     </v-autocomplete>
@@ -916,14 +916,17 @@ const formatOperator = (item) => {
   if (!item?.operatorInfo) return '-'
   const { name, userId, adminId, employeeCode } = item.operatorInfo
 
-  // 優先使用 employeeCode
+  // 優先使用 employeeCode（員工）
   if (employeeCode) {
-    return `${name} (${employeeCode})`
+    return `${name} (${employeeCode}) 【員工】`
   }
+
+  // 系統使用者
   if (adminId) {
-    return `${name} (${adminId})`
+    return `${name} (${adminId}) 【系統】`
   }
-  return `${name}${userId ? ` (${userId})` : ''}`
+
+  return `${name}${userId ? ` (${userId})` : ''} 【系統】`
 }
 
 const formatTarget = (item) => {
@@ -1423,6 +1426,14 @@ const formatChanges = (item) => {
           } else if (item.targetModel === 'hardwareCategories') {
             changes.push(`${fieldTranslations[key]}: ${hardwareCategoryTypes[value] || '(無)'}`)
           }
+        } else if (key === 'progressNotes') {
+          // 處理 progressNotes 欄位
+          if (Array.isArray(value) && value.length > 0) {
+            const lastNote = value[value.length - 1]
+            changes.push(`${fieldTranslations[key]}: ${lastNote.content || '(無)'}`)
+          } else {
+            changes.push(`${fieldTranslations[key]}: 無`)
+          }
         } else if (key === 'inquiryDate' || key === 'maintenanceDate' || key === 'hireDate' || key === 'resignationDate' || key === 'unpaidLeaveStartDate' || key === 'reinstatementDate' || key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate') {
           changes.push(`${fieldTranslations[key]}: ${formatDate(value)}`)
         } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments' || item.targetModel === 'customerInquiries')) {
@@ -1643,6 +1654,58 @@ const formatChanges = (item) => {
     return changes
   }
 
+  // 處理 customerInquiries 的修改操作
+  if (item.targetModel === 'customerInquiries' && item.action === '修改') {
+    changedFields.forEach(key => {
+      if (fieldTranslations[key]) {
+        const oldValue = before[key]
+        const newValue = after[key]
+
+        // 跳過 updatedAt，因為這是自動更新的時間戳
+        if (key === 'updatedAt') {
+          return
+        }
+
+        // 檢查值是否真的有意義的變更
+        const oldDisplayValue = oldValue || '(無)'
+        const newDisplayValue = newValue || '(無)'
+
+        // 如果兩個值都是 '(無)' 或都是空字串，則跳過
+        if ((oldDisplayValue === '(無)' && newDisplayValue === '(無)') ||
+            (oldDisplayValue === '' && newDisplayValue === '')) {
+          return
+        }
+
+        if (key === 'customerTitle') {
+          changes.push(`${fieldTranslations[key]}: ${oldDisplayValue} → ${newDisplayValue}`)
+        } else if (key === 'inquiryResult') {
+          changes.push(`${fieldTranslations[key]}: ${oldDisplayValue} → ${newDisplayValue}`)
+        } else if (key === 'inquiryDate') {
+          changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
+        } else if (key === 'salesPerson') {
+          const oldName = oldValue?.name || oldValue?.nickname || '(無)'
+          const newName = newValue?.name || newValue?.nickname || '(無)'
+          changes.push(`${fieldTranslations[key]}: ${oldName} → ${newName}`)
+        } else if (key === 'company') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+        } else if (key === 'progressNotes') {
+          // 處理 progressNotes 欄位
+          if (Array.isArray(newValue)) {
+            const newLast = newValue[newValue.length - 1]
+            changes.push(`${fieldTranslations[key]}: ${newLast ? newLast.content : '無'}`)
+          } else {
+            changes.push(`${fieldTranslations[key]}: ${newValue || '(無)'}`)
+          }
+        } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+          changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
+        } else {
+          changes.push(`${fieldTranslations[key]}: ${oldDisplayValue} → ${newDisplayValue}`)
+        }
+      }
+    })
+    return changes
+  }
+
   // 通用修改處理（排除已特殊處理的類型）
   changedFields.forEach(key => {
     if (fieldTranslations[key]) {
@@ -1680,24 +1743,28 @@ const formatChanges = (item) => {
       }
 
       // 處理 progressNotes 欄位
-      if (key === 'progressNotes' && Array.isArray(newValue)) {
-        const newLast = newValue[newValue.length - 1]
-        changes.push(
-          `${fieldTranslations[key]}: ` +
-          (newLast ? newLast.content : '無')
-        )
+      if (key === 'progressNotes') {
+        // 處理陣列類型的 progressNotes
+        if (Array.isArray(newValue)) {
+          const newLast = newValue[newValue.length - 1]
+          changes.push(`${fieldTranslations[key]}: ${newLast ? newLast.content : '無'}`)
+        } else {
+          // 其他情況，顯示為物件變更
+          changes.push(`${fieldTranslations[key]}: ${newValue || '(無)'}`)
+        }
         return
       }
 
       if (key === 'role') {
         changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)} → ${formatRole(newValue)}`)
       } else if (key === 'salesPerson') {
-        const name = newValue?.name || newValue?.nickname || '(無)'
-        changes.push(`${fieldTranslations[key]}: ${name}`)
+        const oldName = oldValue?.name || oldValue?.nickname || '(無)'
+        const newName = newValue?.name || newValue?.nickname || '(無)'
+        changes.push(`${fieldTranslations[key]}: ${oldName} → ${newName}`)
       } else if (key === 'inquiryDate' || key === 'maintenanceDate' || key === 'hireDate' || key === 'resignationDate' || key === 'unpaidLeaveStartDate' || key === 'reinstatementDate' || key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate') {
-        changes.push(`${fieldTranslations[key]}: ${formatDate(newValue)}`)
+        changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
       } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments' || item.targetModel === 'customerInquiries')) {
-        changes.push(`${fieldTranslations[key]}: ${newValue?.name || '(無)'}`)
+        changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
       } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
         changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
       } else if (key === 'type') {
@@ -1707,11 +1774,11 @@ const formatChanges = (item) => {
           changes.push(`${fieldTranslations[key]}: ${hardwareCategoryTypes[oldValue] || '(無)'} → ${hardwareCategoryTypes[newValue] || '(無)'}`)
         }
       } else if (key === 'department') {
-        changes.push(`${fieldTranslations[key]}: ${newValue?.name || '(無)'}`)
+        changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
       } else if (['hireDate', 'resignationDate', 'unpaidLeaveStartDate', 'reinstatementDate'].includes(key)) {
-        changes.push(`${fieldTranslations[key]}: ${formatDate(newValue)}`)
+        changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
       } else {
-        changes.push(`${fieldTranslations[key]}: ${newValue || '(無)'}`)
+        changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
       }
     }
   })
@@ -1728,31 +1795,63 @@ const formatChanges = (item) => {
   return changes
 }
 
-// 修改 loadAllUsers 函數
+// 修改 loadAllUsers 函數，同時載入系統使用者和員工
 const loadAllUsers = async () => {
   operatorLoading.value = true
   try {
-    const { data } = await apiAuth.get('/users/suggestions', {
-      params: {
-        search: '',
-        itemsPerPage: 9999
-      }
+    // 並行載入系統使用者和員工
+    const [usersResponse, employeesResponse] = await Promise.all([
+      apiAuth.get('/users/suggestions', {
+        params: {
+          search: '',
+          itemsPerPage: 9999
+        }
+      }),
+      apiAuth.get('/employees/suggestions', {
+        params: {
+          search: '',
+          itemsPerPage: 9999
+        }
+      })
+    ])
+
+    const suggestions = []
+
+    // 添加 SYSTEM 用戶
+    suggestions.push({
+      _id: '000000000000000000000000',
+      name: 'SYSTEM',
+      userId: 'SYSTEM',
+      type: 'system'
     })
-    if (data.success) {
-      // 添加 SYSTEM 用戶到建議列表
-      operatorSuggestions.value = [
-        {
-          _id: '000000000000000000000000',
-          name: 'SYSTEM',
-          userId: 'SYSTEM'
-        },
-        ...data.result
-      ]
+
+    // 添加系統使用者
+    if (usersResponse.data.success) {
+      usersResponse.data.result.forEach(user => {
+        suggestions.push({
+          ...user,
+          type: 'system'
+        })
+      })
     }
+
+    // 添加員工
+    if (employeesResponse.data.success) {
+      employeesResponse.data.result.forEach(employee => {
+        suggestions.push({
+          _id: employee.employeeCode, // 使用員工編號作為 ID
+          name: employee.name,
+          employeeCode: employee.employeeCode,
+          type: 'employee'
+        })
+      })
+    }
+
+    operatorSuggestions.value = suggestions
   } catch (error) {
-    console.error('載入使用者失敗:', error)
+    console.error('載入操作人員失敗:', error)
     createSnackbar({
-      text: error?.response?.data?.message || '載入使用者失敗',
+      text: error?.response?.data?.message || '載入操作人員失敗',
       snackbarProps: { color: 'red-lighten-1' }
     })
     operatorSuggestions.value = []
@@ -1761,7 +1860,7 @@ const loadAllUsers = async () => {
   }
 }
 
-// 修改 handleOperatorSearch 函數
+// 修改 handleOperatorSearch 函數，同時搜尋系統使用者和員工
 const handleOperatorSearch = debounce(async (text) => {
   if (!text) {
     await loadAllUsers()
@@ -1769,24 +1868,57 @@ const handleOperatorSearch = debounce(async (text) => {
   }
   operatorLoading.value = true
   try {
-    const { data } = await apiAuth.get('/users/suggestions', {
-      params: {
-        search: text,
-        itemsPerPage: 9999
-      }
-    })
-    if (data.success) {
-      // 如果搜尋文字包含 SYSTEM（不分大小寫），則加入 SYSTEM 用戶
-      const systemUser = {
+    // 並行搜尋系統使用者和員工
+    const [usersResponse, employeesResponse] = await Promise.all([
+      apiAuth.get('/users/suggestions', {
+        params: {
+          search: text,
+          itemsPerPage: 9999
+        }
+      }),
+      apiAuth.get('/employees/suggestions', {
+        params: {
+          search: text,
+          itemsPerPage: 9999
+        }
+      })
+    ])
+
+    const suggestions = []
+
+    // 如果搜尋文字包含 SYSTEM（不分大小寫），則加入 SYSTEM 用戶
+    if (text.toUpperCase().includes('SYSTEM')) {
+      suggestions.push({
         _id: '000000000000000000000000',
         name: 'SYSTEM',
-        userId: 'SYSTEM'
-      }
-
-      operatorSuggestions.value = text.toUpperCase().includes('SYSTEM')
-        ? [systemUser, ...data.result]
-        : data.result
+        userId: 'SYSTEM',
+        type: 'system'
+      })
     }
+
+    // 添加系統使用者搜尋結果
+    if (usersResponse.data.success) {
+      usersResponse.data.result.forEach(user => {
+        suggestions.push({
+          ...user,
+          type: 'system'
+        })
+      })
+    }
+
+    // 添加員工搜尋結果
+    if (employeesResponse.data.success) {
+      employeesResponse.data.result.forEach(employee => {
+        suggestions.push({
+          _id: employee.employeeCode, // 使用員工編號作為 ID
+          name: employee.name,
+          employeeCode: employee.employeeCode,
+          type: 'employee'
+        })
+      })
+    }
+
+    operatorSuggestions.value = suggestions
   } catch (error) {
     console.error('搜尋操作人員失敗:', error)
     createSnackbar({
@@ -1976,13 +2108,21 @@ onMounted(async () => {
   ])
 })
 
-// 修改 formatUserDisplay 函數
+// 修改 formatUserDisplay 函數，支援系統使用者和員工
 const formatUserDisplay = (user) => {
   if (!user) return ''
-  if (user.adminId) {
-    return `${user.name} (${user.adminId})`
+
+  // 如果是員工類型
+  if (user.type === 'employee' || user.employeeCode) {
+    return `${user.name} (${user.employeeCode}) 【員工】`
   }
-  return `${user.name} (${user.userId || ''})`
+
+  // 如果是系統使用者
+  if (user.adminId) {
+    return `${user.name} (${user.adminId}) 【系統】`
+  }
+
+  return `${user.name} (${user.userId || ''}) 【系統】`
 }
 
 // 監聽資料類型變更
@@ -2020,23 +2160,55 @@ const deleteOperatorLoading = ref(false)
 const confirmOperatorName = ref('')
 const confirmNameError = ref('')
 
-// 初始化時載入所有使用者
+// 初始化時載入所有操作人員（系統使用者和員工）
 const loadAllUsersForDelete = async () => {
   deleteOperatorLoading.value = true
   try {
-    const { data } = await apiAuth.get('/users/suggestions', {
-      params: {
-        search: '',
-        itemsPerPage: 9999
-      }
-    })
-    if (data.success) {
-      deleteOperatorSuggestions.value = data.result
+    // 並行載入系統使用者和員工
+    const [usersResponse, employeesResponse] = await Promise.all([
+      apiAuth.get('/users/suggestions', {
+        params: {
+          search: '',
+          itemsPerPage: 9999
+        }
+      }),
+      apiAuth.get('/employees/suggestions', {
+        params: {
+          search: '',
+          itemsPerPage: 9999
+        }
+      })
+    ])
+
+    const suggestions = []
+
+    // 添加系統使用者
+    if (usersResponse.data.success) {
+      usersResponse.data.result.forEach(user => {
+        suggestions.push({
+          ...user,
+          type: 'system'
+        })
+      })
     }
+
+    // 添加員工
+    if (employeesResponse.data.success) {
+      employeesResponse.data.result.forEach(employee => {
+        suggestions.push({
+          _id: employee.employeeCode, // 使用員工編號作為 ID
+          name: employee.name,
+          employeeCode: employee.employeeCode,
+          type: 'employee'
+        })
+      })
+    }
+
+    deleteOperatorSuggestions.value = suggestions
   } catch (error) {
-    console.error('載入使用者失敗:', error)
+    console.error('載入操作人員失敗:', error)
     createSnackbar({
-      text: error?.response?.data?.message || '載入使用者失敗',
+      text: error?.response?.data?.message || '載入操作人員失敗',
       snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
@@ -2044,19 +2216,51 @@ const loadAllUsersForDelete = async () => {
   }
 }
 
-// 搜尋操作人員
+// 搜尋操作人員（系統使用者和員工）
 const searchOperatorsForDelete = debounce(async (search) => {
   deleteOperatorLoading.value = true
   try {
-    const { data } = await apiAuth.get('/users/suggestions', {
-      params: {
-        search,
-        itemsPerPage: 9999
-      }
-    })
-    if (data.success) {
-      deleteOperatorSuggestions.value = data.result
+    // 並行搜尋系統使用者和員工
+    const [usersResponse, employeesResponse] = await Promise.all([
+      apiAuth.get('/users/suggestions', {
+        params: {
+          search,
+          itemsPerPage: 9999
+        }
+      }),
+      apiAuth.get('/employees/suggestions', {
+        params: {
+          search,
+          itemsPerPage: 9999
+        }
+      })
+    ])
+
+    const suggestions = []
+
+    // 添加系統使用者搜尋結果
+    if (usersResponse.data.success) {
+      usersResponse.data.result.forEach(user => {
+        suggestions.push({
+          ...user,
+          type: 'system'
+        })
+      })
     }
+
+    // 添加員工搜尋結果
+    if (employeesResponse.data.success) {
+      employeesResponse.data.result.forEach(employee => {
+        suggestions.push({
+          _id: employee.employeeCode, // 使用員工編號作為 ID
+          name: employee.name,
+          employeeCode: employee.employeeCode,
+          type: 'employee'
+        })
+      })
+    }
+
+    deleteOperatorSuggestions.value = suggestions
   } catch (error) {
     console.error('搜尋操作人員失敗:', error)
     createSnackbar({

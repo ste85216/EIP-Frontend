@@ -1,7 +1,6 @@
 <template>
   <v-container
     fluid
-    min-width="1600"
   >
     <!-- 添加進度遮罩 -->
     <v-overlay
@@ -493,28 +492,6 @@
               </tr>
             </tbody>
           </table>
-
-          <!-- 預算資訊提示 -->
-          <div
-            v-if="searchForm.reportType === 'budget'"
-            class="d-flex justify-end align-center mt-6 px-2"
-          >
-            <v-chip
-              color="blue-darken-3"
-              class="me-4"
-              label
-              variant="outlined"
-            >
-              年度總預算: {{ formatMonthValue(budgetInfo?.annualTotalBudget || 0) }}
-            </v-chip>
-            <v-chip
-              :color="(budgetInfo?.annualTotalBudget || 0) - getGrandTotal() >= 0 ? 'teal-darken-2' : 'error'"
-              label
-              variant="outlined"
-            >
-              預算差異: {{ formatMonthValue((budgetInfo?.annualTotalBudget || 0) - getGrandTotal()) }}
-            </v-chip>
-          </div>
 
           <!-- 行銷實際支出表 -->
           <table
@@ -1691,6 +1668,28 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- 預算資訊提示 - 移到外層右下方 -->
+        <div
+          v-if="searchForm.reportType === 'budget'"
+          class="d-flex justify-end align-center mt-4 px-2"
+        >
+          <v-chip
+            color="blue-darken-3"
+            class="me-4"
+            label
+            variant="outlined"
+          >
+            年度總預算: {{ formatMonthValue(budgetInfo?.annualTotalBudget || 0) }}
+          </v-chip>
+          <v-chip
+            :color="(budgetInfo?.annualTotalBudget || 0) - getGrandTotal() >= 0 ? 'teal-darken-2' : 'error'"
+            label
+            variant="outlined"
+          >
+            預算差異: {{ formatMonthValue((budgetInfo?.annualTotalBudget || 0) - getGrandTotal()) }}
+          </v-chip>
         </div>
       </v-col>
     </v-row>

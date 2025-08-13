@@ -280,10 +280,29 @@
     v-model="showPasswordDialog"
     max-width="320"
   >
-    <v-card class="rounded-lg pb-2 px-1 pt-1">
-      <div class="card-title ps-6 py-6">
-        修改密碼
-      </div>
+    <v-card class="rounded-lg pb-1">
+      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-darken-2 mb-4">
+        <v-icon
+          class="me-2"
+          size="20"
+        >
+          mdi-lock
+        </v-icon>
+        <span class="card-title text-white">修改密碼</span>
+        <v-spacer />
+        <v-btn
+          icon
+          variant="plain"
+          color="white"
+          :size="buttonSize"
+          :ripple="false"
+          @click="closePasswordDialog"
+        >
+          <v-icon>
+            mdi-close
+          </v-icon>
+        </v-btn>
+      </v-card-title>
       <v-card-text class="pb-0">
         <v-form @submit.prevent="handlePasswordChange">
           <v-text-field
@@ -334,6 +353,7 @@
           color="grey-darken-1"
           variant="outlined"
           :size="buttonSize"
+          class="me-2"
           @click="closePasswordDialog"
         >
           取消
@@ -397,11 +417,28 @@
     v-model="showUserListDialog"
     max-width="400"
   >
-    <v-card class="px-6 pt-6 pb-5 rounded-lg">
-      <div class="card-title">
-        使用者清單
-      </div>
-      <v-card-text class="px-0 pb-2">
+    <v-card class=" rounded-lg">
+      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-deep-purple-darken-2 mb-2">
+        <v-icon
+          class="me-2"
+          size="20"
+        >
+          mdi-account-group
+        </v-icon>
+        <span class="card-title text-white">使用者清單</span>
+        <v-spacer />
+        <v-btn
+          icon
+          variant="plain"
+          color="white"
+          :size="buttonSize"
+          :ripple="false"
+          @click="showUserListDialog = false"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+      <v-card-text class="px-5 pb-2">
         <div
           v-if="isLoadingUsers"
           class="d-flex justify-center align-center py-8"
@@ -429,7 +466,7 @@
           </v-list-item>
         </v-list>
       </v-card-text>
-      <v-card-actions>
+      <v-card-actions class="px-5 mb-2">
         <v-spacer />
         <v-btn
           color="grey-darken-1"
