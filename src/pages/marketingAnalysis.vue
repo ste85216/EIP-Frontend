@@ -1,7 +1,5 @@
 <template>
-  <v-container
-    fluid
-  >
+  <v-container fluid>
     <!-- 添加進度遮罩 -->
     <v-overlay
       v-model="showProgressOverlay"
@@ -39,22 +37,33 @@
     <v-row>
       <v-row class="mt-0">
         <v-col
-          cols="10"
+          cols="12"
+          lg="10"
+          class="pb-0 pb-lg-4"
         >
           <v-row
-            class="elevation-4 rounded-lg py-4 pt-sm-8 px-1 px-sm-8 mt-2 mt-sm-6 ms-sm-6 me-sm-1 mb-4 bg-white"
+            class="elevation-4 rounded-lg py-3 pt-sm-8 px-4 px-lg-8 mx-3 mt-2 mt-sm-6 ms-lg-6 me-lg-1 mb-4 bg-white"
           >
-            <v-col cols="2">
+            <v-col
+              cols="12"
+              md="2"
+            >
               <h3>行銷費用分析</h3>
             </v-col>
             <v-col
-              cols="10"
-              class="ps-10"
+              cols="12"
+              md="10"
+              class="ps-md-10"
             >
               <v-row>
                 <v-col cols="12">
                   <v-row>
-                    <v-col>
+                    <v-col
+                      cols="12"
+                      sm="6"
+                      md="auto"
+                      class="search-field"
+                    >
                       <v-autocomplete
                         v-model="searchForm.theme"
                         :items="themeOptions"
@@ -68,7 +77,12 @@
                         @update:model-value="handleThemeChange"
                       />
                     </v-col>
-                    <v-col>
+                    <v-col
+                      cols="12"
+                      sm="6"
+                      md="auto"
+                      class="search-field"
+                    >
                       <v-select
                         v-model="searchForm.year"
                         :items="yearOptions"
@@ -81,7 +95,12 @@
                         @update:model-value="handleYearChange"
                       />
                     </v-col>
-                    <v-col>
+                    <v-col
+                      cols="12"
+                      sm="6"
+                      md="auto"
+                      class="search-field"
+                    >
                       <v-select
                         v-model="searchForm.reportType"
                         :items="reportTypeOptions"
@@ -96,6 +115,10 @@
                     </v-col>
                     <v-col
                       v-if="searchForm.reportType === 'lineExpense'"
+                      cols="12"
+                      sm="6"
+                      md="auto"
+                      class="search-field"
                     >
                       <v-select
                         v-model="searchForm.month"
@@ -112,6 +135,10 @@
                     </v-col>
                     <v-col
                       v-if="searchForm.reportType === 'lineExpense'"
+                      cols="12"
+                      sm="6"
+                      md="auto"
+                      class="search-field"
                     >
                       <v-select
                         v-if="searchForm.reportType === 'lineExpense'"
@@ -143,7 +170,11 @@
                         </template>
                       </v-select>
                     </v-col>
-                    <v-col cols="3">
+                    <v-col
+                      cols="12"
+                      sm="6"
+                      md="3"
+                    >
                       <v-row class="d-flex justify-space-between">
                         <v-col
                           cols="3"
@@ -179,9 +210,13 @@
             </v-col>
           </v-row>
         </v-col>
-        <v-col cols="2">
+        <v-col
+          cols="12"
+          lg="2"
+          class="pt-0 pt-lg-4"
+        >
           <v-row
-            class="elevation-4 rounded-lg pt-sm-3 pb-4 px-4 mt-2 mt-sm-6 me-sm-6 ms-sm-1 mb-4 bg-white"
+            class="elevation-4 rounded-lg pt-3 pb-3 px-4 mx-3 mt-2 mt-lg-5 me-lg-6 ms-lg-1 mb-4 bg-white"
           >
             <v-col
               cols="12"
@@ -210,7 +245,7 @@
     <!-- 報表呈現區塊 -->
     <v-row
       v-if="showReport"
-      class="elevation-4 rounded-lg py-4 py-sm-8 px-sm-8 mt-6 mx-sm-3 mb-4 bg-white"
+      class="elevation-4 rounded-lg py-4 py-md-8 px-2 px-md-8 mt-5 mt-lg-6 mx-0 mx-lg-3 mb-4 bg-white"
     >
       <v-col cols="12">
         <div class="d-flex justify-end align-center mb-4 sticky-buttons">
@@ -220,6 +255,7 @@
               class="me-4"
               prepend-icon="mdi-microsoft-excel"
               :loading="isExporting"
+              :size="buttonSize"
               @click="handleExportExcel"
             >
               匯出 EXCEL
@@ -228,6 +264,7 @@
               color="red-darken-1"
               prepend-icon="mdi-file-pdf-box"
               :loading="isExporting"
+              :size="buttonSize"
               @click="handleExportPDF"
             >
               匯出 PDF
@@ -1677,7 +1714,7 @@
         >
           <v-chip
             color="blue-darken-3"
-            class="me-4"
+            class="me-4 budget-info-chip"
             label
             variant="outlined"
           >
@@ -1686,6 +1723,7 @@
           <v-chip
             :color="(budgetInfo?.annualTotalBudget || 0) - getGrandTotal() >= 0 ? 'teal-darken-2' : 'error'"
             label
+            class="budget-info-chip"
             variant="outlined"
           >
             預算差異: {{ formatMonthValue((budgetInfo?.annualTotalBudget || 0) - getGrandTotal()) }}
@@ -1697,10 +1735,13 @@
     <!-- 在總表下方添加圖表容器 -->
     <v-row
       v-if="searchForm.reportType === 'lineExpenseTotal' && showReport"
-      class="elevation-4 rounded-lg py-sm-8 px-4 mt-2 mt-sm-6 mx-sm-3 mb-4 bg-white"
+      class="elevation-4 rounded-lg py-lg-8 px-4 mt-6 mx-0 mt-lg-6 mx-lg-3 mb-4 bg-white"
     >
-      <v-col cols="12">
-        <div class="d-flex justify-end mb-4 pe-4">
+      <v-col
+        cols="12"
+        class="pt-6 pt-lg-4"
+      >
+        <div class="d-flex justify-end mb-4 pe-lg-4">
           <v-btn
             color="red-darken-1"
             prepend-icon="mdi-file-chart"
@@ -1714,7 +1755,7 @@
           <v-row>
             <v-col
               cols="12"
-              md="6"
+              lg="6"
               class="d-flex justify-center align-center pa-0"
             >
               <div class="chart-box rounded-lg py-4 px-0 bg-white">
@@ -1728,7 +1769,7 @@
             </v-col>
             <v-col
               cols="12"
-              md="6"
+              lg="6"
               class="d-flex justify-center align-center pa-0"
             >
               <div class="chart-box rounded-lg py-4 px-0 bg-white">
@@ -1750,14 +1791,15 @@
       v-model="showDownloadDialog"
       max-width="640"
     >
-      <v-card class="rounded-lg px-5 pt-6 pb-4">
+      <v-card class="rounded-lg px-3 px-sm-5 pt-6 pb-4">
         <v-card-title class="card-title mb-2">
           批次匯出報表
         </v-card-title>
         <v-card-text class="pa-4">
           <v-row>
             <v-col
-              cols="6"
+              cols="12"
+              sm="6"
               class="pb-1"
             >
               <v-autocomplete
@@ -1774,7 +1816,8 @@
               />
             </v-col>
             <v-col
-              cols="6"
+              cols="12"
+              sm="6"
               class="pb-1"
             >
               <v-select
@@ -1809,6 +1852,7 @@
                     color="deep-purple-darken-2"
                     hide-details
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasBudget"
+                    class="checkbox-small-label"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1820,6 +1864,7 @@
                     hide-details
                     color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
+                    class="checkbox-small-label"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1831,6 +1876,7 @@
                     hide-details
                     color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasBudget || !downloadForm.availableDataTypes.hasExpense"
+                    class="checkbox-small-label"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1843,6 +1889,7 @@
                     hide-details
                     color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
+                    class="checkbox-small-label"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1854,6 +1901,7 @@
                     hide-details
                     color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
+                    class="checkbox-small-label"
                   />
                 </v-col>
                 <v-col cols="6">
@@ -1865,6 +1913,7 @@
                     hide-details
                     color="deep-purple-darken-2"
                     :disabled="!downloadForm.year || !downloadForm.availableDataTypes.hasExpense"
+                    class="checkbox-small-label"
                   />
                 </v-col>
               </v-row>
@@ -1920,6 +1969,7 @@
                     hide-details
                     density="compact"
                     :disabled="!downloadForm.selectedReports.includes('lineExpense')"
+                    class="checkbox-small-label"
                     @change="handleSelectAllMonths"
                   />
                 </v-col>
@@ -1927,7 +1977,8 @@
                   v-for="month in monthOptions"
                   :key="month.value"
                   class="pb-0"
-                  cols="2"
+                  cols="4"
+                  sm="2"
                 >
                   <v-checkbox
                     v-model="downloadForm.selectedMonths"
@@ -1937,6 +1988,7 @@
                     density="compact"
                     hide-details
                     :disabled="!downloadForm.selectedReports.includes('lineExpense')"
+                    class="checkbox-small-label"
                   />
                 </v-col>
               </v-row>
@@ -1957,7 +2009,7 @@
                 hide-details
                 density="compact"
                 color="deep-purple-darken-2"
-                class="mb-2"
+                class="mb-2 checkbox-small-label"
                 :disabled="!downloadForm.selectedReports.length"
               />
               <v-checkbox
@@ -1967,6 +2019,7 @@
                 hide-details
                 density="compact"
                 color="deep-purple-darken-2"
+                class="checkbox-small-label"
                 :disabled="!downloadForm.selectedReports.length || (downloadForm.selectedReports.length === 1 && downloadForm.selectedReports[0] === 'charts')"
               />
               <div
@@ -1982,6 +2035,7 @@
           <v-btn
             color="grey"
             variant="outlined"
+            :size="buttonSize"
             @click="showDownloadDialog = false"
           >
             取消
@@ -1989,6 +2043,7 @@
           <v-btn
             color="teal-darken-1"
             variant="outlined"
+            :size="buttonSize"
             :loading="isExporting"
             class="ms-2"
             @click="handleDownloadReports"
@@ -2015,6 +2070,11 @@ import VChart from 'vue-echarts'
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import JSZip from 'jszip'
+import { useDisplay } from 'vuetify'
+
+const { mdAndUp } = useDisplay()
+
+const buttonSize = computed(() => mdAndUp.value ? 'default' : 'small')
 
 // 重命名 VChart 為 ECharts
 const ECharts = VChart
@@ -5355,6 +5415,24 @@ const handleDownloadThemeChange = (newTheme) => {
 
 // }
 
+
+.budget-info-chip {
+    font-size: 12px;
+  }
+
+  @media screen and (min-width: 960px) {
+    .search-field {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  @media screen and (min-width: 600px) {
+    .budget-info-chip {
+      font-size: 14px;
+    }
+  }
+
 .charts-container {
   width: 100%;
   display: flex;
@@ -5369,6 +5447,7 @@ const handleDownloadThemeChange = (newTheme) => {
     height: 100% !important;
   }
 
+
   @media screen and (min-width: 2321px) {
     .chart-box {
       min-height: 840px;
@@ -5378,6 +5457,15 @@ const handleDownloadThemeChange = (newTheme) => {
   @media screen and (max-width: 2320px) {
     .chart-box {
       min-height: 580px;
+    }
+  }
+}
+
+// 小螢幕 checkbox label 樣式
+.checkbox-small-label {
+  @media screen and (max-width: 959px) {
+    :deep(.v-label) {
+      font-size: 13px !important;
     }
   }
 }
