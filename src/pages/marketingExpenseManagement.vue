@@ -10,93 +10,136 @@
             cols="12"
             class="mt-1 ps-lg-6 pe-lg-0"
           >
-            <v-card class="elevation-4 rounded-lg py-6 px-4 px-sm-4 px-xl-4">
-              <v-card-title class="font-weight-bold d-flex align-center">
+            <v-card class="elevation-4 rounded-lg py-4 py-sm-6 px-4 px-sm-4 px-md-4 px-xl-4">
+              <v-card-title class="font-weight-bold d-flex align-center px-3">
                 搜尋條件
               </v-card-title>
               <v-card-text class="pa-2">
                 <v-row>
                   <v-col
                     cols="12"
-                    sm="6"
                     lg="12"
                   >
-                    <v-autocomplete
-                      v-model="searchCriteria.theme"
-                      :items="themeOptions"
-                      label="行銷主題"
-                      item-title="name"
-                      item-value="_id"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      class="mb-6"
-                    />
-                    <v-autocomplete
-                      v-model="searchCriteria.channel"
-                      :items="channelOptions"
-                      label="廣告渠道"
-                      item-title="name"
-                      item-value="_id"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      class="mb-6"
-                      @update:model-value="handleChannelChange"
-                    />
-                    <v-autocomplete
-                      v-model="searchCriteria.platform"
-                      :items="getFilteredPlatformOptions(searchCriteria.channel)"
-                      :label="searchCriteria.channel ? '平台' : '平台 ( 請先選擇廣告渠道 )'"
-                      item-title="name"
-                      item-value="_id"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      class="mb-6"
-                      :disabled="!searchCriteria.channel"
-                    />
-                    <v-autocomplete
-                      v-model="searchCriteria.detail"
-                      :items="detailOptions"
-                      label="線別"
-                      item-title="name"
-                      item-value="_id"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      class="mb-6"
-                    />
-                    <v-date-input
-                      v-model="searchCriteria.createdDateRange"
-                      label="建立日期"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      multiple="range"
-                      prepend-icon
-                      clearable
-                      :cancel-text="'取消'"
-                      :ok-text="'確認'"
-                      class="mb-6"
-                    />
-                    <v-date-input
-                      v-model="searchCriteria.invoiceDateRange"
-                      label="發票日期"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      multiple="range"
-                      prepend-icon
-                      clearable
-                      :cancel-text="'取消'"
-                      :ok-text="'確認'"
-                      class="mb-6"
-                    />
+                    <v-row>
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                        class="pb-0"
+                      >
+                        <v-autocomplete
+                          v-model="searchCriteria.theme"
+                          :items="themeOptions"
+                          label="行銷主題"
+                          item-title="name"
+                          item-value="_id"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                          class="mb-3"
+                        />
+                      </v-col>
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                        class="pb-0"
+                      >
+                        <v-autocomplete
+                          v-model="searchCriteria.channel"
+                          :items="channelOptions"
+                          label="廣告渠道"
+                          item-title="name"
+                          item-value="_id"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                          class="mb-3"
+                          @update:model-value="handleChannelChange"
+                        />
+                      </v-col>
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                        class="pb-0"
+                      >
+                        <v-autocomplete
+                          v-model="searchCriteria.platform"
+                          :items="getFilteredPlatformOptions(searchCriteria.channel)"
+                          :label="searchCriteria.channel ? '平台' : '平台 ( 請先選擇廣告渠道 )'"
+                          item-title="name"
+                          item-value="_id"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                          class="mb-3"
+                          :disabled="!searchCriteria.channel"
+                        />
+                      </v-col>
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                        class="pb-0"
+                      >
+                        <v-autocomplete
+                          v-model="searchCriteria.detail"
+                          :items="detailOptions"
+                          label="線別"
+                          item-title="name"
+                          item-value="_id"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                          class="mb-3"
+                        />
+                      </v-col>
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                        class="pb-0"
+                      >
+                        <v-date-input
+                          v-model="searchCriteria.createdDateRange"
+                          label="建立日期"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          multiple="range"
+                          prepend-icon
+                          clearable
+                          :cancel-text="'取消'"
+                          :ok-text="'確認'"
+                          class="mb-3"
+                        />
+                      </v-col>
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                        class="pb-0"
+                      >
+                        <v-date-input
+                          v-model="searchCriteria.invoiceDateRange"
+                          label="發票日期"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          multiple="range"
+                          prepend-icon
+                          clearable
+                          :cancel-text="'取消'"
+                          :ok-text="'確認'"
+                          class="mb-3"
+                        />
+                      </v-col>
+                    </v-row>
                     <v-row class="d-flex justify-space-between">
                       <v-col cols="3">
                         <v-btn
@@ -130,12 +173,15 @@
           </v-col>
         </v-row>
       </v-col>
-      <v-col>
-        <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-1 mx-0 mx-sm-4 ms-md-4 me-md-4 mb-4 bg-white">
+      <v-col
+        cols="12"
+        lg="10"
+      >
+        <v-row class="elevation-4 rounded-lg py-4 py-lg-8 px-1 px-sm-2 px-md-3 px-lg-7 mt-1 mx-0 mx-lg-4 mb-4 bg-white">
           <!-- 標題區塊 -->
           <v-col
             cols="12"
-            class="ps-3 pb-6 d-flex align-center"
+            class="ps-3 pb-2 pb-lg-6 d-flex align-center"
           >
             <h3 class="d-inline">
               實際支出管理
@@ -143,11 +189,15 @@
           </v-col>
 
           <!-- 表格區塊 -->
-          <v-col cols="12">
+          <v-col
+            cols="12"
+            class="pb-0 pb-lg-4"
+          >
             <div class="d-flex align-center mb-4">
               <v-btn
                 color="blue-grey-darken-1"
                 variant="outlined"
+                :size="buttonSize"
                 prepend-icon="mdi-plus"
                 @click="openDialog()"
               >
@@ -162,7 +212,7 @@
                   icon="mdi-information"
                   size="small"
                   color="blue-grey-darken-2"
-                  class="me-2"
+                  class="ms-2 me-2"
                 />
                 <v-text-field
                   v-model="searchText"
@@ -392,11 +442,17 @@
             <v-card-text class="mt-6 mb-4 px-6">
               <v-row>
                 <v-col
-                  cols="3"
-                  class="px-8"
+                  cols="12"
+                  lg="3"
+                  class="px-4 px-lg-8 mb-4 mb-lg-0"
                 >
                   <v-row class="border rounded-lg px-4 pt-2">
-                    <v-col cols="12">
+                    <v-col
+                      cols="12"
+                      sm="6"
+                      lg="12"
+                      class="pb-0"
+                    >
                       <v-date-input
                         v-model="invoiceDate.value.value"
                         :error-messages="invoiceDate.errorMessage.value"
@@ -409,7 +465,12 @@
                       />
                     </v-col>
 
-                    <v-col cols="12">
+                    <v-col
+                      cols="12"
+                      sm="6"
+                      lg="12"
+                      class="pb-0"
+                    >
                       <v-autocomplete
                         v-model="theme.value.value"
                         :error-messages="theme.errorMessage.value"
@@ -423,7 +484,12 @@
                       />
                     </v-col>
 
-                    <v-col cols="12">
+                    <v-col
+                      cols="12"
+                      sm="6"
+                      lg="12"
+                      class="pb-0"
+                    >
                       <v-autocomplete
                         v-model="channel.value.value"
                         :error-messages="channel.errorMessage.value"
@@ -438,7 +504,12 @@
                       />
                     </v-col>
 
-                    <v-col cols="12">
+                    <v-col
+                      cols="12"
+                      sm="6"
+                      lg="12"
+                      class="pb-0"
+                    >
                       <v-autocomplete
                         v-model="platform.value.value"
                         :error-messages="platform.errorMessage.value"
@@ -453,7 +524,10 @@
                       />
                     </v-col>
 
-                    <v-col cols="12">
+                    <v-col
+                      cols="12"
+                      class="pb-0"
+                    >
                       <v-textarea
                         v-model="note.value.value"
                         :error-messages="note.errorMessage.value"
@@ -468,87 +542,194 @@
                   </v-row>
                 </v-col>
                 <v-col
-                  cols="9"
-                  class="px-8"
+                  cols="12"
+                  lg="9"
+                  class="px-4 px-lg-8"
                 >
-                  <v-row class="border rounded-lg px-4 pt-2">
+                  <v-row class="border rounded-lg px-1 px-sm-4 pt-2">
                     <v-col cols="12">
                       <div class="d-flex align-center justify-space-between mb-4">
-                        <div class="sub-title">
-                          線別費用明細
-                        </div>
-                        <div class="d-flex gap-2 align-center">
-                          <v-btn
-                            size="small"
-                            prepend-icon="mdi-delete-sweep"
-                            variant="outlined"
-                            color="red-lighten-1"
-                            :disabled="!hasAnyAmount"
-                            @click="clearAllAmounts"
+                        <v-row>
+                          <v-col
+                            cols="12"
+                            sm="10"
+                            md="2"
                           >
-                            清除所有金額
-                          </v-btn>
-                          <v-btn
-                            size="small"
-                            prepend-icon="mdi-delete-alert"
-                            variant="outlined"
-                            color="red-darken-2"
-                            class="ms-2"
-                            :disabled="detailsList.length <= 1"
-                            @click="clearAllDetails"
+                            <div class="sub-title">
+                              線別費用明細
+                            </div>
+                          </v-col>
+                          <v-col
+                            md="10"
+                            class="py-0 py-md-2"
                           >
-                            刪除所有線別
-                          </v-btn>
-                          <v-btn
-                            size="small"
-                            prepend-icon="mdi-calculator"
-                            variant="outlined"
-                            color="teal-darken-2"
-                            class="ms-2"
-                            :disabled="detailsList.length === 0"
-                            @click="openAmountDialog"
-                          >
-                            平均帶入各線別
-                          </v-btn>
+                            <!-- 大螢幕按鈕組 -->
+                            <div class="d-none d-md-flex align-center">
+                              <v-spacer v-if="mdAndUp" />
+                              <v-btn
+                                size="small"
+                                prepend-icon="mdi-delete-sweep"
+                                variant="outlined"
+                                color="red-lighten-1"
+                                :disabled="!hasAnyAmount"
+                                @click="clearAllAmounts"
+                              >
+                                清除所有金額
+                              </v-btn>
+                              <v-btn
+                                size="small"
+                                prepend-icon="mdi-delete-alert"
+                                variant="outlined"
+                                color="red-darken-2"
+                                class="ms-2"
+                                :disabled="detailsList.length <= 1"
+                                @click="clearAllDetails"
+                              >
+                                刪除所有線別
+                              </v-btn>
+                              <v-btn
+                                size="small"
+                                prepend-icon="mdi-calculator"
+                                variant="outlined"
+                                color="teal-darken-2"
+                                class="ms-2"
+                                :disabled="detailsList.length === 0"
+                                @click="openAmountDialog"
+                              >
+                                平均帶入各線別
+                              </v-btn>
 
-                          <v-btn
-                            size="small"
-                            prepend-icon="mdi-plus"
-                            variant="outlined"
-                            color="blue-darken-4"
-                            class="ms-2"
-                            @click="addAllDetails"
-                          >
-                            新增所有線別
-                          </v-btn>
+                              <v-btn
+                                size="small"
+                                prepend-icon="mdi-plus"
+                                variant="outlined"
+                                color="blue-darken-4"
+                                class="ms-2"
+                                @click="addAllDetails"
+                              >
+                                新增所有線別
+                              </v-btn>
 
-                          <v-btn
-                            size="small"
-                            prepend-icon="mdi-plus"
-                            variant="outlined"
-                            class="ms-2"
-                            @click="openAddDetailsDialog"
-                          >
-                            批量新增線別
-                          </v-btn>
+                              <v-btn
+                                size="small"
+                                prepend-icon="mdi-plus"
+                                variant="outlined"
+                                class="ms-2"
+                                @click="openAddDetailsDialog"
+                              >
+                                批量新增線別
+                              </v-btn>
 
-                          <v-btn
-                            v-tooltip="'新增線別'"
-                            icon
-                            size="20"
-                            color="grey-darken-2"
-                            elevation="1"
-                            class="ms-2"
-                            @click="addDetail"
-                          >
-                            <v-icon size="14">
-                              mdi-plus
-                            </v-icon>
-                          </v-btn>
-                        </div>
+                              <v-btn
+                                v-tooltip="'新增線別'"
+                                icon
+                                size="20"
+                                color="grey-darken-2"
+                                elevation="1"
+                                class="ms-2"
+                                @click="addDetail"
+                              >
+                                <v-icon size="14">
+                                  mdi-plus
+                                </v-icon>
+                              </v-btn>
+                            </div>
+
+                            <!-- 小螢幕按鈕組 -->
+                            <div class="d-flex d-md-none gap-1 align-center">
+                              <v-btn
+                                v-tooltip="'清除所有金額'"
+                                icon
+                                size="28"
+                                variant="outlined"
+                                color="red-lighten-1"
+                                class="me-2"
+                                :disabled="!hasAnyAmount"
+                                @click="clearAllAmounts"
+                              >
+                                <v-icon size="16">
+                                  mdi-delete-sweep
+                                </v-icon>
+                              </v-btn>
+
+                              <v-btn
+                                v-tooltip="'刪除所有線別'"
+                                icon
+                                size="28"
+                                variant="outlined"
+                                color="red-darken-2"
+                                class="me-2"
+                                :disabled="detailsList.length <= 1"
+                                @click="clearAllDetails"
+                              >
+                                <v-icon size="16">
+                                  mdi-delete-alert
+                                </v-icon>
+                              </v-btn>
+
+                              <v-btn
+                                v-tooltip="'平均帶入各線別'"
+                                icon
+                                size="28"
+                                variant="outlined"
+                                class="me-2"
+                                color="teal-darken-2"
+                                :disabled="detailsList.length === 0"
+                                @click="openAmountDialog"
+                              >
+                                <v-icon size="16">
+                                  mdi-calculator
+                                </v-icon>
+                              </v-btn>
+
+                              <v-btn
+                                v-tooltip="'新增所有線別'"
+                                icon
+                                size="28"
+                                variant="outlined"
+                                class="me-2"
+                                color="blue-darken-4"
+                                @click="addAllDetails"
+                              >
+                                <v-icon size="16">
+                                  mdi-plus
+                                </v-icon>
+                              </v-btn>
+
+                              <v-btn
+                                v-tooltip="'批量新增線別'"
+                                icon
+                                size="28"
+                                variant="outlined"
+                                class="me-2"
+                                @click="openAddDetailsDialog"
+                              >
+                                <v-icon size="16">
+                                  mdi-plus
+                                </v-icon>
+                              </v-btn>
+
+                              <v-btn
+                                v-tooltip="'新增線別'"
+                                icon
+                                size="28"
+                                color="grey-darken-2"
+                                elevation="1"
+                                @click="addDetail"
+                              >
+                                <v-icon size="16">
+                                  mdi-plus
+                                </v-icon>
+                              </v-btn>
+                            </div>
+                          </v-col>
+                        </v-row>
                       </div>
                     </v-col>
-                    <v-col cols="12">
+                    <v-col
+                      cols="12"
+                      class="pe-0"
+                    >
                       <div class="details-grid">
                         <div
                           v-for="(detail, index) in detailsList"
@@ -591,10 +772,10 @@
                                   icon
                                   color="error"
                                   variant="plain"
-                                  size="32"
+                                  :size="detailButtonSize"
                                   @click="removeDetail(index)"
                                 >
-                                  <v-icon size="18">
+                                  <v-icon :size="detailButtonIconSize">
                                     mdi-delete
                                   </v-icon>
                                 </v-btn>
@@ -975,8 +1156,10 @@ const createSnackbar = useSnackbar()
 const router = useRouter()
 
 // ===== 響應式設定與螢幕斷點 =====
-const { smAndUp } = useDisplay()
+const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
+const detailButtonSize = computed(() => smAndUp.value ? '32' : '16')
+const detailButtonIconSize = computed(() => smAndUp.value ? '18' : '14')
 const dialogWidth = computed(() => smAndUp.value ? '1520' : '100%')
 
 // ===== 基礎狀態管理 =====
@@ -1036,18 +1219,51 @@ const dialog = ref({
 })
 
 // ===== 表格設定 =====
-const headers = [
-  { title: '發票日期', key: 'invoiceDate', align: 'start', sortable: true },
-  { title: '行銷主題', key: 'theme.name', align: 'start', sortable: true },
-  { title: '廣告渠道', key: 'channel.name', align: 'start', sortable: true },
-  { title: '平台', key: 'platform.name', align: 'start', sortable: true },
-  { title: '線別', key: 'details', align: 'start', maxWidth: '150', sortable: true },
-  { title: '總金額', key: 'totalExpense', align: 'start', sortable: true },
-  { title: '備註', key: 'note', align: 'start', width: '130', sortable: true },
-  { title: '建立者', key: 'creator.name', align: 'start', sortable: true },
-  { title: '建立日期', key: 'createdAt', align: 'start', sortable: true },
-  { title: '操作', key: 'actions', align: 'center', sortable: false }
-]
+const headers = computed(() => {
+  if (!smAndUp.value) {
+    // sm以下：只顯示發票日期、行銷主題和操作
+    return [
+      { title: '發票日期', key: 'invoiceDate', align: 'start', sortable: true },
+      { title: '行銷主題', key: 'theme.name', align: 'start', sortable: true },
+      { title: '操作', key: 'actions', align: 'center', sortable: false }
+    ]
+  } else if (!mdAndUp.value) {
+    // sm~md：顯示發票日期、行銷主題、平台、總金額、操作
+    return [
+      { title: '發票日期', key: 'invoiceDate', align: 'start', sortable: true },
+      { title: '行銷主題', key: 'theme.name', align: 'start', sortable: true },
+      { title: '平台', key: 'platform.name', align: 'start', sortable: true },
+      { title: '總金額', key: 'totalExpense', align: 'start', sortable: true },
+      { title: '操作', key: 'actions', align: 'center', sortable: false }
+    ]
+  } else if (!lgAndUp.value) {
+    // md~lg：顯示除了備註和建立日期外的所有欄位
+    return [
+      { title: '發票日期', key: 'invoiceDate', align: 'start', sortable: true },
+      { title: '行銷主題', key: 'theme.name', align: 'start', sortable: true },
+      { title: '廣告渠道', key: 'channel.name', align: 'start', sortable: true },
+      { title: '平台', key: 'platform.name', align: 'start', sortable: true },
+      { title: '線別', key: 'details', align: 'start', maxWidth: '150', sortable: true },
+      { title: '總金額', key: 'totalExpense', align: 'start', sortable: true },
+      { title: '建立者', key: 'creator.name', align: 'start', sortable: true },
+      { title: '操作', key: 'actions', align: 'center', sortable: false }
+    ]
+  } else {
+    // lg以上：顯示所有欄位
+    return [
+      { title: '發票日期', key: 'invoiceDate', align: 'start', sortable: true },
+      { title: '行銷主題', key: 'theme.name', align: 'start', sortable: true },
+      { title: '廣告渠道', key: 'channel.name', align: 'start', sortable: true },
+      { title: '平台', key: 'platform.name', align: 'start', sortable: true },
+      { title: '線別', key: 'details', align: 'start', maxWidth: '150', sortable: true },
+      { title: '總金額', key: 'totalExpense', align: 'start', sortable: true },
+      { title: '備註', key: 'note', align: 'start', width: '130', sortable: true },
+      { title: '建立者', key: 'creator.name', align: 'start', sortable: true },
+      { title: '建立日期', key: 'createdAt', align: 'start', sortable: true },
+      { title: '操作', key: 'actions', align: 'center', sortable: false }
+    ]
+  }
+})
 
 const items = ref([])
 const totalItems = ref(0)
@@ -1775,11 +1991,20 @@ onMounted(async () => {
   padding-right: 8px;
 }
 
+@media (max-width: 959px) {
+  .details-grid {
+    grid-template-columns: 1fr; // 小螢幕時，變成單欄
+  }
+}
+
 .detail-item {
   background-color: #f6f6f6;
   border: 1px solid #b9b9b9;
   border-radius: 8px;
   padding: 8px;
+  @media (max-width: 959px) {
+    padding: 8px 6px;
+  }
 
   :deep(.v-field) {
     background-color: #fff;
@@ -1826,6 +2051,12 @@ onMounted(async () => {
     justify-content: center;
     font-size: 10px;
     margin-right: 8px;
+    @media (max-width: 959px) {
+      min-width: 14px;
+      height: 14px;
+      font-size: 8px;
+      margin-right: 4px;
+    }
   }
 }
 

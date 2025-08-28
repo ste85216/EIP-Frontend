@@ -11,6 +11,7 @@
     :variant="variant"
     :error="error"
     :error-messages="errorMessages"
+    :clearable="clearable"
     class="amount-input"
     @input="handleInput"
     @blur="handleBlur"
@@ -18,6 +19,7 @@
     @keydown="handleKeyDown"
     @compositionstart="handleCompositionStart"
     @compositionend="handleCompositionEnd"
+    @update:model-value="handleModelValueUpdate"
   />
 </template>
 
@@ -64,6 +66,10 @@ const props = defineProps({
   rules: {
     type: Array,
     default: () => []
+  },
+  clearable: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -97,7 +103,7 @@ const formatNumber = (value) => {
   // 移除所有非數字字符
   const cleanValue = value.toString().replace(/[^\d]/g, '')
   if (!cleanValue) return ''
-  
+
   // 將數字轉換為帶千分位的格式
   return new Intl.NumberFormat('zh-TW', {
     maximumFractionDigits: 0,
@@ -128,10 +134,10 @@ const handleInput = (event) => {
 
   const currentValue = event.target.value
   const unformattedCurrent = unformatNumber(currentValue)
-  
+
   // 更新原始值
   rawValue.value = unformattedCurrent
-  
+
   // 發出更新事件
   emit('update:modelValue', unformattedCurrent ? Number(unformattedCurrent) : '')
 }
@@ -143,7 +149,7 @@ const handleKeyDown = (event) => {
     'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab',
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
   ]
-  
+
   // 如果不是允許的按鍵，則阻止輸入
   if (!allowedKeys.includes(event.key) && !event.ctrlKey && !event.metaKey) {
     event.preventDefault()
@@ -157,7 +163,7 @@ const handleBlur = () => {
     emit('update:modelValue', '')
     return
   }
-  
+
   // 否則確保值為數字
   const numValue = Number(rawValue.value)
   if (!isNaN(numValue)) {
@@ -171,6 +177,15 @@ const handleFocus = (event) => {
   // 選中所有文字
   event.target.select()
 }
+
+// 處理 model-value 更新事件（主要用於處理 clearable 功能）
+const handleModelValueUpdate = (value) => {
+  // 如果值為空或 null，清空原始值並發出更新事件
+  if (!value || value === '') {
+    rawValue.value = ''
+    emit('update:modelValue', '')
+  }
+}
 </script>
 
 <style lang="scss" scoped>
@@ -178,4 +193,4 @@ const handleFocus = (event) => {
   font-variant-numeric: tabular-nums;
   min-width: 106px;
 }
-</style> 
+</style>

@@ -1791,11 +1791,32 @@
       v-model="showDownloadDialog"
       max-width="640"
     >
-      <v-card class="rounded-lg px-3 px-sm-5 pt-6 pb-4">
-        <v-card-title class="card-title mb-2">
+      <v-card class="rounded-lg">
+        <div class="card-title px-8 py-4 bg-deep-orange-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-file-export
+          </v-icon>
           批次匯出報表
-        </v-card-title>
-        <v-card-text class="pa-4">
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="showDownloadDialog = false"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="mt-6 mb-4 px-6">
           <v-row>
             <v-col
               cols="12"
@@ -2030,7 +2051,7 @@
             </v-col>
           </v-row>
         </v-card-text>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="px-6 pb-5">
           <v-spacer />
           <v-btn
             color="grey"

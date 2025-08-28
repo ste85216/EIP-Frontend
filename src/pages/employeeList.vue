@@ -677,7 +677,7 @@ definePage({
   meta: {
     title: '公司員工列表 | GInternational',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT]
+    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT, UserRole.HR]
   }
 })
 

@@ -203,10 +203,10 @@
             <v-row>
               <v-col
                 cols="12"
-                class="px-5"
+                class="px-3 px-lg-5"
               >
                 <v-card
-                  class="elevation-4 rounded-lg py-5 px-4 px-sm-2 px-xl-4"
+                  class="elevation-4 rounded-lg py-3 py-sm-5 px-2 px-sm-4"
                 >
                   <v-card-title class="font-weight-bold d-flex justify-space-between mb-2">
                     <span>匯入 / 匯出 Excel</span>
@@ -232,6 +232,7 @@
                           prepend-icon="mdi-file-import"
                           color="light-blue-darken-2"
                           block
+                          :size="buttonSize"
                           class="me-4"
                           @click="openImportDialog"
                         >
@@ -245,6 +246,7 @@
                           prepend-icon="mdi-file-export"
                           color="deep-orange-darken-1"
                           block
+                          :size="buttonSize"
                           @click="openExportDialog"
                         >
                           匯出
@@ -265,7 +267,7 @@
         lg="10"
         class="px-6 ps-lg-4 pe-lg-8 mb-6"
       >
-        <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-4 px-md-8 mt-1 bg-white">
+        <v-row class="elevation-4 rounded-lg py-4 py-lg-6 px-1 px-sm-4 px-lg-6 mt-1 bg-white">
           <!-- 標題和功能按鈕區 -->
           <v-col
             cols="12"
@@ -282,7 +284,11 @@
                 class="d-flex align-center"
               >
                 <v-row class="d-flex justify-space-between">
-                  <v-col cols="4">
+                  <v-col
+                    cols="5"
+                    sm="4"
+                    class="pe-0 pe-sm-4"
+                  >
                     <v-btn
                       prepend-icon="mdi-account-plus"
                       variant="outlined"
@@ -294,8 +300,8 @@
                     </v-btn>
                   </v-col>
                   <v-col
-                    cols="3"
-                    xl="2"
+                    cols="7"
+                    sm="4"
                     class="d-flex align-center"
                   >
                     <v-icon
@@ -338,8 +344,15 @@
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                  <!-- 科威員編 -->
                   <td>{{ item.employeeCode }}</td>
-                  <td>{{ item.employeeId }}</td>
+
+                  <!-- 系統編號 (只在 lg 以上顯示) -->
+                  <td v-if="lgAndUp">
+                    {{ item.employeeId }}
+                  </td>
+
+                  <!-- 姓名 -->
                   <td>
                     <v-menu
                       location="end"
@@ -400,22 +413,37 @@
                       </v-card>
                     </v-menu>
                   </td>
-                  <td>
+
+                  <!-- 公司 (只在 sm 以上顯示) -->
+                  <td v-if="smAndUp">
                     {{ item.company?.name }}
                   </td>
-                  <td>
+
+                  <!-- 部門 (只在 sm 以上顯示) -->
+                  <td v-if="smAndUp">
                     {{ item.department?.name }}
                   </td>
-                  <td>
+
+                  <!-- 聘僱類型 (只在 md 以上顯示) -->
+                  <td v-if="mdAndUp">
                     {{ item.employmentType }}
                   </td>
-                  <td>
+
+                  <!-- 職稱 (只在 sm 以上顯示) -->
+                  <td v-if="smAndUp">
                     {{ item.jobTitle }}
                   </td>
-                  <td>
+
+                  <!-- Email (只在 md 以上顯示) -->
+                  <td v-if="mdAndUp">
                     {{ item.email }}
                   </td>
-                  <td class="pa-2">
+
+                  <!-- 狀態 (只在 md 以上顯示) -->
+                  <td
+                    v-if="mdAndUp"
+                    class="pa-2"
+                  >
                     <v-menu
                       location="end"
                       transition="fade-transition"
@@ -460,7 +488,9 @@
                       </v-card>
                     </v-menu>
                   </td>
-                  <td>
+
+                  <!-- 備註 (只在 lg 以上顯示) -->
+                  <td v-if="lgAndUp">
                     <template v-if="item.note">
                       <v-menu
                         location="top"
@@ -504,6 +534,8 @@
                     </template>
                     <template v-else />
                   </td>
+
+                  <!-- 操作 -->
                   <td class="text-center">
                     <v-btn
                       icon
@@ -541,11 +573,30 @@
       :width="dialogWidth"
       :no-click-animation="isSubmitting"
     >
-      <v-card class="rounded-lg px-4 py-6">
-        <div class="card-title px-4 py-3">
+      <v-card class="rounded-lg">
+        <div class="card-title px-8 py-4 bg-blue-grey-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-account-plus
+          </v-icon>
           {{ dialog.id ? '編輯員工資料' : '新增員工' }}
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="mt-3 pa-3">
+        <v-card-text class="mt-6 mb-0 px-6">
           <!-- 加入載入中動畫 -->
           <div
             v-if="isDialogLoading"
@@ -572,7 +623,8 @@
               >
                 <v-row>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -581,7 +633,8 @@
                     />
                   </v-col>
                   <v-col
-                    cols="2"
+                    cols="6"
+                    sm="2"
                     class="d-flex align-center justify-center"
                   >
                     <v-icon
@@ -592,7 +645,8 @@
                     </v-icon> 基本資料
                   </v-col>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -682,7 +736,8 @@
               >
                 <v-row>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -691,7 +746,8 @@
                     />
                   </v-col>
                   <v-col
-                    cols="2"
+                    cols="6"
+                    sm="2"
                     class="d-flex align-center justify-center"
                   >
                     <v-icon
@@ -702,7 +758,8 @@
                     </v-icon> 任職資料
                   </v-col>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -889,7 +946,8 @@
               >
                 <v-row>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -898,7 +956,8 @@
                     />
                   </v-col>
                   <v-col
-                    cols="2"
+                    cols="6"
+                    sm="2"
                     class="d-flex align-center justify-center"
                   >
                     <v-icon
@@ -909,7 +968,8 @@
                     </v-icon> 日期資料
                   </v-col>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -1054,11 +1114,32 @@
       persistent
       max-width="320"
     >
-      <v-card class="rounded-lg px-6 pt-6 pb-4">
-        <div class="card-title mb-2">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-red-lighten-1 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-calendar-remove
+          </v-icon>
           離職日期
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="handleLeaveCancel"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="px-0 pb-0">
+        <v-card-text class="px-6 pt-7 pb-0">
           <v-date-input
             v-model="leaveDialog.date"
             label="離職日期"
@@ -1070,19 +1151,21 @@
             :error-messages="leaveDialog.error"
           />
         </v-card-text>
-        <v-card-actions class="px-0">
+        <v-card-actions class="px-6 pb-5">
           <v-spacer />
           <v-btn
             color="grey"
             variant="outlined"
             class="me-1"
+            :size="buttonSize"
             @click="handleLeaveCancel"
           >
             取消
           </v-btn>
           <v-btn
-            color="teal-darken-1"
+            color="red-lighten-1"
             variant="outlined"
+            :size="buttonSize"
             @click="handleLeaveConfirm"
           >
             確認
@@ -1097,11 +1180,32 @@
       persistent
       max-width="320"
     >
-      <v-card class="rounded-lg px-6 pt-6 pb-4">
-        <div class="card-title mb-2">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-amber-darken-4 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-calendar-clock
+          </v-icon>
           留停開始日期
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="handleSuspensionCancel"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="px-0 pb-0">
+        <v-card-text class="px-6 pt-7 pb-0">
           <v-date-input
             v-model="suspensionDialog.date"
             label="留職停薪開始日期"
@@ -1113,19 +1217,21 @@
             :error-messages="suspensionDialog.error"
           />
         </v-card-text>
-        <v-card-actions class="px-0">
+        <v-card-actions class="px-6 pb-5">
           <v-spacer />
           <v-btn
             color="grey"
             variant="outlined"
             class="me-1"
+            :size="buttonSize"
             @click="handleSuspensionCancel"
           >
             取消
           </v-btn>
           <v-btn
-            color="teal-darken-1"
+            color="amber-darken-4"
             variant="outlined"
+            :size="buttonSize"
             @click="handleSuspensionConfirm"
           >
             確認
@@ -1140,11 +1246,32 @@
       persistent
       max-width="320"
     >
-      <v-card class="rounded-lg px-6 pt-6 pb-4">
-        <div class="card-title mb-2">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-teal-darken-1 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-calendar-check
+          </v-icon>
           留停復職日期
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="handleReinstatementCancel"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="px-0 pb-0">
+        <v-card-text class="px-6 pt-7 pb-0">
           <v-date-input
             v-model="reinstatementDialog.date"
             label="留停復職日期"
@@ -1156,12 +1283,13 @@
             :error-messages="reinstatementDialog.error"
           />
         </v-card-text>
-        <v-card-actions class="px-0">
+        <v-card-actions class="px-6 pb-5">
           <v-spacer />
           <v-btn
             color="grey"
             variant="outlined"
             class="me-1"
+            :size="buttonSize"
             @click="handleReinstatementCancel"
           >
             取消
@@ -1169,6 +1297,7 @@
           <v-btn
             color="teal-darken-1"
             variant="outlined"
+            :size="buttonSize"
             @click="handleReinstatementConfirm"
           >
             確認
@@ -1468,7 +1597,7 @@ const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 const user = useUserStore()
 const router = useRouter()
-const { smAndUp, mdAndUp } = useDisplay()
+const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 
 // 響應式變數
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
@@ -1476,7 +1605,7 @@ const dialogWidth = computed(() => mdAndUp.value ? '1200' : '100%')
 
 // 表格相關
 const tableHeaders = [
-  { title: '科威員編', key: 'employeeCode', align: 'start', sortable: true },
+  { title: '科威員編', key: 'employeeCode', minWidth: '80px', align: 'start', sortable: true },
   { title: '系統編號', key: 'employeeId', minWidth: '120px', align: 'start', sortable: true },
   { title: '姓名', key: 'name', minWidth: '90px', align: 'start', sortable: true },
   { title: '公司', key: 'company.name', minWidth: '90px', align: 'start', sortable: true },
@@ -1542,16 +1671,24 @@ const dateTypeOptions = [
 // 響應式表格標頭
 const filteredHeaders = computed(() => {
   if (!smAndUp.value) {
+    // sm以下：只顯示科威員編、姓名和操作
     return tableHeaders.filter(header =>
-      ['employeeId', 'name', 'employmentStatus', 'actions'].includes(header.key)
+      ['employeeCode', 'name', 'actions'].includes(header.key)
     )
-  }
-  if (!mdAndUp.value) {
+  } else if (!mdAndUp.value) {
+    // sm~md：顯示科威員編、姓名、公司、部門、職稱、操作
     return tableHeaders.filter(header =>
-      !['employeeCode'].includes(header.key)
+      ['employeeCode', 'name', 'company.name', 'department.name', 'jobTitle', 'actions'].includes(header.key)
     )
+  } else if (!lgAndUp.value) {
+    // md~lg：顯示除了系統編號和備註外的所有欄位
+    return tableHeaders.filter(header =>
+      !['employeeId', 'note'].includes(header.key)
+    )
+  } else {
+    // lg以上：顯示所有欄位
+    return tableHeaders
   }
-  return tableHeaders
 })
 
 // API 相關函數
@@ -2808,7 +2945,6 @@ const jobTitleOptions = [  // 有順序之分
 }
 
 .status-cell {
-  padding: 4px;
   border-radius: 4px;
   min-height: 32px;
 }
