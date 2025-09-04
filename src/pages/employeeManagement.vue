@@ -301,7 +301,10 @@
                   </v-col>
                   <v-col
                     cols="7"
-                    sm="4"
+                    sm="5"
+                    md="4"
+                    lg="3"
+                    xl="2"
                     class="d-flex align-center"
                   >
                     <v-icon
@@ -1313,15 +1316,36 @@
       :persistent="isExporting"
       :no-click-animation="isExporting"
     >
-      <v-card class="rounded-lg px-4 pt-5 pb-4">
-        <v-card-title class="card-title mb-2">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-deep-orange-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-file-export
+          </v-icon>
           匯出員工資料
-        </v-card-title>
-        <v-card-text class="pa-4">
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeExportDialog"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 pt-7 pb-0">
           <v-row>
             <v-col
               cols="12"
-              class="px-1"
+              class="px-1 py-0 py-sm-2"
             >
               <v-radio-group
                 v-model="exportDialog.type"
@@ -1330,12 +1354,12 @@
                 <v-radio
                   label="所有員工資料"
                   value="all"
-                  color="deep-purple-darken-2"
+                  color="deep-orange-darken-2"
                 />
                 <v-radio
                   label="單一公司資料"
                   value="company"
-                  color="deep-purple-darken-2"
+                  color="deep-orange-darken-2"
                 />
               </v-radio-group>
             </v-col>
@@ -1427,20 +1451,22 @@
             </v-col>
           </v-row>
         </v-card-text>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="px-6 pb-5">
           <v-spacer />
           <v-btn
             color="grey"
             variant="outlined"
+            class="me-1"
+            :size="buttonSize"
             @click="closeExportDialog"
           >
             取消
           </v-btn>
           <v-btn
-            color="teal-darken-1"
+            color="deep-orange-darken-2"
             variant="outlined"
+            :size="buttonSize"
             :loading="isExporting"
-            class="ms-2"
             @click="handleExportExcel"
           >
             匯出
@@ -1452,19 +1478,39 @@
     <!-- 匯入 Excel 對話框 -->
     <v-dialog
       v-model="importDialog.open"
-      max-width="400"
+      max-width="360"
       :persistent="isImporting"
       :no-click-animation="isImporting"
     >
-      <v-card class="rounded-lg px-3 pt-4 pb-3">
-        <v-card-title class="card-title mb-2">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-light-blue-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-file-import
+          </v-icon>
           匯入員工資料
-        </v-card-title>
-        <v-card-text class="pa-4">
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeImportDialog"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 pt-7 pb-0">
           <v-row>
             <v-col
               cols="12"
-              class="pb-0"
             >
               <v-file-input
                 v-model="importDialog.file"
@@ -1479,20 +1525,22 @@
             </v-col>
           </v-row>
         </v-card-text>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="px-6 pb-5">
           <v-spacer />
           <v-btn
             color="grey"
             variant="outlined"
+            class="me-1"
+            :size="buttonSize"
             @click="closeImportDialog"
           >
             取消
           </v-btn>
           <v-btn
-            color="teal-darken-1"
+            color="light-blue-darken-2"
             variant="outlined"
+            :size="buttonSize"
             :loading="isImporting"
-            class="ms-2"
             @click="handleImportExcel"
           >
             匯入
@@ -1507,11 +1555,32 @@
       max-width="600"
       persistent
     >
-      <v-card class="rounded-lg px-4 pt-5 pb-4">
-        <v-card-title class="card-title">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-light-blue-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-file-check
+          </v-icon>
           匯入結果
-        </v-card-title>
-        <v-card-text class="pa-4">
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeImportResultDialog"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 pt-7 pb-0">
           <v-row>
             <v-col
               v-if="importResultDialog.success.length > 0"
@@ -1554,11 +1623,12 @@
             </v-col>
           </v-row>
         </v-card-text>
-        <v-card-actions class="pa-4">
+        <v-card-actions class="px-6 pb-5">
           <v-spacer />
           <v-btn
             color="grey"
             variant="outlined"
+            :size="buttonSize"
             @click="closeImportResultDialog"
           >
             關閉

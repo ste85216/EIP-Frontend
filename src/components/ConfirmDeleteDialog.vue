@@ -6,17 +6,38 @@
     @click:outside="() => emit('update:modelValue', false)"
     @keydown.esc="() => emit('update:modelValue', false)"
   >
-    <v-card class="rounded-lg pb-2">
-      <v-card-title class="font-weight-bold mt-4 ms-2">
+    <v-card class="rounded-lg">
+      <div class="card-title px-6 py-3 bg-red-lighten-1 d-flex align-center">
+        <v-icon
+          size="20"
+          color="white"
+          class="me-2"
+        >
+          mdi-delete-alert
+        </v-icon>
         {{ title }}
-      </v-card-title>
-      <v-card-text>
-        <div v-html="message" />
-      </v-card-text>
-      <v-card-actions class="mx-5 mb-2">
         <v-spacer />
         <v-btn
-          :size="cancelButtonSize"
+          icon
+          color="white"
+          variant="plain"
+          class="opacity-100"
+          :ripple="false"
+          size="20"
+          @click="cancel"
+        >
+          <v-icon size="20">
+            mdi-close
+          </v-icon>
+        </v-btn>
+      </div>
+      <v-card-text class="px-6 pt-6 pb-3">
+        <div v-html="message" />
+      </v-card-text>
+      <v-card-actions class="px-6 pb-5">
+        <v-spacer />
+        <v-btn
+          :size="buttonSize"
           :color="cancelButtonColor"
           variant="outlined"
           class="me-1"
@@ -25,7 +46,7 @@
           {{ cancelButtonText }}
         </v-btn>
         <v-btn
-          :size="confirmButtonSize"
+          :size="buttonSize"
           :color="confirmButtonColor"
           variant="outlined"
           @click="confirm"
@@ -38,7 +59,10 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
+import { useDisplay } from 'vuetify'
+
+const { smAndUp } = useDisplay()
 
 const props = defineProps({
   dialogWidth: {
@@ -79,6 +103,9 @@ const props = defineProps({
     default: 'default' // 確認按紐預設大小
   }
 })
+
+// 計算按鈕大小，與其他頁面保持一致
+const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
 
 const emit = defineEmits(['update:modelValue', 'confirm'])
 

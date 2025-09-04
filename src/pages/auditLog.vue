@@ -258,21 +258,49 @@
                 />
               </v-col>
             </v-row>
+
+            <!-- 添加 TAB 切換 -->
+            <v-row class="mt-4">
+              <v-col cols="12">
+                <v-tabs
+                  v-model="activeTab"
+                  grow
+                  color="light-blue-darken-2"
+                  @update:model-value="handleTabChange"
+                >
+                  <v-tab
+                    value="all"
+                  >
+                    <v-icon class="me-2">
+                      mdi-format-list-bulleted
+                    </v-icon>
+                    全部
+                  </v-tab>
+                  <v-tab value="employee">
+                    <v-icon class="me-2">
+                      mdi-account-tie
+                    </v-icon>
+                    員工
+                  </v-tab>
+                  <v-tab value="system">
+                    <v-icon class="me-2">
+                      mdi-desktop-classic
+                    </v-icon>
+                    系統
+                  </v-tab>
+                </v-tabs>
+              </v-col>
+            </v-row>
           </v-col>
           <v-col cols="12">
-            <v-data-table-server
-              v-model:items-per-page="tableItemsPerPage"
-              v-model:sort-by="tableSortBy"
-              :items="tableItems"
+            <v-data-table
+              :items="filteredTableItems"
               :headers="filteredHeaders"
               :loading="tableLoading"
-              :items-length="tableItemsLength"
               :items-per-page-options="[10, 20, 50, 100]"
-              :page="tablePage"
               hover
               density="compact"
               class="rounded-ts-lg rounded-te-lg"
-              @update:options="handleTableOptionsChange"
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
@@ -328,7 +356,7 @@
                   </td>
                 </tr>
               </template>
-            </v-data-table-server>
+            </v-data-table>
           </v-col>
         </v-row>
       </v-col>
@@ -618,10 +646,7 @@ const targetSearchInput = ref('')
 // 表格相關
 const tableLoading = ref(false)
 const tableItems = ref([])
-const tablePage = ref(1)
-const tableItemsPerPage = ref(10)
 const tableItemsLength = ref(0)
-const tableSortBy = ref([{ key: 'createdAt', order: 'desc' }])
 
 // 搜尋條件
 const searchCriteria = ref({
@@ -812,7 +837,9 @@ const fieldTranslations = {
   other: '其他',
   categories: '大分類',
   reportUserId: '報修人',
-  isB2CSupervisor: '業務主管'
+  isB2CSupervisor: '業務主管',
+  departmentNote: '部門備註',
+  newElectronicInfo: '新電子說資'
 }
 
 // 行銷分類類型對應
@@ -873,7 +900,8 @@ const getProductTypeText = (productType) => {
     SPMap: 'SP地圖',
     newDMSingle: '新DM(單支)',
     newDMMultiple: '新DM(多支)',
-    modifyDM: '修改DM'
+    modifyDM: '修改DM',
+    newElectronicInfo: '新電子說資'
   }
   return productTypeMap[productType] || productType
 }
@@ -1953,7 +1981,7 @@ const resetSearch = () => {
   }
   clearOperatorSearch()
   clearTargetSearch()
-  performSearch(true)
+  performSearch()
 }
 
 // 新增 quickSearchText 和 isLoading
@@ -1962,33 +1990,20 @@ const isLoading = ref(false)
 
 // 使用 lodash 的 debounce 來優化搜尋
 const debouncedSearch = debounce(() => {
-  performSearch(true)
+  performSearch()
 }, 300)
 
 // 監聽 quickSearchText 的變化
 watch(quickSearchText, () => {
   isLoading.value = true
-  // 重置表格分頁到第一頁
-  tablePage.value = 1
   debouncedSearch()
 })
 
-const performSearch = async (resetPage = true) => {
-  if (resetPage) {
-    tablePage.value = 1
-  }
+const performSearch = async () => {
   tableLoading.value = true
   try {
     const params = {
-      page: tablePage.value,
-      itemsPerPage: tableItemsPerPage.value
-    }
-
-    // 處理排序
-    if (tableSortBy.value.length > 0) {
-      const sortItem = tableSortBy.value[0]
-      params.sortBy = sortItem.key
-      params.sortOrder = sortItem.order === 'desc' ? -1 : 1
+      itemsPerPage: 9999 // 載入所有資料，由前端過濾
     }
 
     // 處理搜尋條件
@@ -2022,9 +2037,7 @@ const performSearch = async (resetPage = true) => {
 
     // 處理操作對象
     if (searchCriteria.value.targetId) {
-      // console.log('處理操作對象:', searchCriteria.value.targetId)
       if (searchCriteria.value.targetModel === 'formTemplates') {
-        // 如果是表單模板，使用 _id
         params.targetId = searchCriteria.value.targetId._id
       } else {
         params.targetId = searchCriteria.value.targetId._id
@@ -2057,17 +2070,7 @@ const performSearch = async (resetPage = true) => {
   }
 }
 
-const handleTableOptionsChange = async (options) => {
-  const isPageChange = tablePage.value !== options.page
-  tablePage.value = options.page
-  tableItemsPerPage.value = options.itemsPerPage
-  if (options.sortBy?.length > 0) {
-    tableSortBy.value = options.sortBy
-  }
 
-  // 如果是改變每頁筆數或排序，需要重置到第一頁
-  await performSearch(!isPageChange)
-}
 
 const showDetail = (item) => {
   // 如果資料已被刪除（不是刪除操作本身），且不是創建操作，顯示提示訊息
@@ -2150,6 +2153,9 @@ watch(
     }
   }
 )
+
+// 新增 TAB 相關變數
+const activeTab = ref('all')
 
 // 新增刪除相關變數
 const deleteDialog = ref(false)
@@ -2403,6 +2409,35 @@ const deleteLog = async () => {
     })
   }
 }
+
+// 處理 TAB 切換
+const handleTabChange = () => {
+  // 重新搜尋
+  performSearch()
+}
+
+// 過濾表格資料
+const filteredTableItems = computed(() => {
+  if (activeTab.value === 'all') {
+    return tableItems.value
+  }
+
+  return tableItems.value.filter(item => {
+    if (activeTab.value === 'employee') {
+      // 檢查是否為員工操作
+      return item.operatorInfo?.employeeCode ||
+             (item.operatorInfo?.type === 'employee') ||
+             (item.operatorInfo && !item.operatorInfo.adminId && !item.operatorInfo.userId)
+    } else if (activeTab.value === 'system') {
+      // 檢查是否為系統操作
+      return item.operatorInfo?.adminId ||
+             item.operatorInfo?.userId ||
+             (item.operatorInfo?.type === 'system') ||
+             item.operatorInfo?.name === 'SYSTEM'
+    }
+    return true
+  })
+})
 
 // 在 script setup 部分添加
 const hoveredItemId = ref(null)

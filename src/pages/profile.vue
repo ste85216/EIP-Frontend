@@ -49,7 +49,7 @@
         </v-row>
       </v-col>
       <v-col xl="9">
-        <v-row class="elevation-4 rounded-lg pt-8 pb-6 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 ms-xl-0 me-xl-10 mb-4 bg-white">
+        <v-row class="elevation-4 rounded-lg pt-3 pt-sm-8 pb-6 px-2 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 ms-xl-0 me-xl-10 mb-4 bg-white">
           <v-col
             cols="12"
             class="d-flex justify-space-between"
@@ -65,15 +65,14 @@
             </h3>
             <div>
               <v-row>
-                <v-col
-                  v-if="mdAndUp"
-                >
+                <v-col>
                   <v-btn
+                    v-if="mdAndUp"
+                    :size="buttonSize"
                     class="me-4"
                     color="deep-purple-darken-2"
                     prepend-icon="mdi-account"
                     variant="outlined"
-                    height="36"
                     @click="showUserListDialog = true"
                   >
                     使用者清單
@@ -82,19 +81,7 @@
                     color="light-blue-darken-4"
                     prepend-icon="mdi-pencil"
                     variant="outlined"
-                    height="36"
-                    @click="showPasswordDialog = true"
-                  >
-                    修改密碼
-                  </v-btn>
-                </v-col>
-                <v-col v-if="!mdAndUp">
-                  <v-btn
-                    color="blue-darken-3"
-                    prepend-icon="mdi-pencil"
-                    variant="outlined"
-                    size="small"
-                    height="32"
+                    :size="buttonSize"
                     @click="showPasswordDialog = true"
                   >
                     修改密碼
@@ -102,14 +89,6 @@
                 </v-col>
               </v-row>
             </div>
-          </v-col>
-          <v-col
-            v-if="!mdAndUp"
-            cols="12"
-          >
-            <span class="text-subtitle-2 opacity-80 font-weight-regular">
-              <span class="text-red-darken-2">* </span>若有需要修改 請聯絡管理者 ( 密碼可自行修改 )
-            </span>
           </v-col>
           <v-col>
             <v-divider class="mb-5" />
@@ -359,7 +338,7 @@
           取消
         </v-btn>
         <v-btn
-          color="teal-darken-1"
+          color="blue-darken-2"
           variant="outlined"
           :size="buttonSize"
           :loading="isChangingPassword"

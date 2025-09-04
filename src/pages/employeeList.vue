@@ -222,8 +222,10 @@
                     </h3>
                   </v-col>
                   <v-col
-                    cols="3"
-                    xl="2"
+                    cols="7"
+                    sm="4"
+                    md="3"
+                    lg="2"
                     class="d-flex align-center"
                   >
                     <v-icon
@@ -259,7 +261,7 @@
               :loading="tableLoading"
               :items-length="tableItemsLength"
               :page="tablePage"
-              :items-per-page-options="[15, 50, 100]"
+              :items-per-page-options="[10, 15, 50, 100]"
               hover
               density="compact"
               class="rounded-ts-lg rounded-te-lg"
@@ -267,10 +269,17 @@
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                  <!-- 科威員編 -->
                   <td>
                     {{ item.employeeCode }}
                   </td>
-                  <td>{{ item.employeeId }}</td>
+
+                  <!-- 系統編號 (只在 lg 以上顯示) -->
+                  <td v-if="lgAndUp">
+                    {{ item.employeeId }}
+                  </td>
+
+                  <!-- 姓名 -->
                   <td>
                     <v-menu
                       location="end"
@@ -331,22 +340,37 @@
                       </v-card>
                     </v-menu>
                   </td>
-                  <td>
+
+                  <!-- 公司 (只在 sm 以上顯示) -->
+                  <td v-if="smAndUp">
                     {{ item.company?.name }}
                   </td>
-                  <td>
+
+                  <!-- 部門 (只在 sm 以上顯示) -->
+                  <td v-if="smAndUp">
                     {{ item.department?.name }}
                   </td>
-                  <td>
+
+                  <!-- 聘僱類型 (只在 md 以上顯示) -->
+                  <td v-if="mdAndUp">
                     {{ item.employmentType }}
                   </td>
-                  <td>
+
+                  <!-- 職稱 (只在 sm 以上顯示) -->
+                  <td v-if="smAndUp">
                     {{ item.jobTitle }}
                   </td>
-                  <td>
+
+                  <!-- Email (只在 md 以上顯示) -->
+                  <td v-if="mdAndUp">
                     {{ item.email }}
                   </td>
-                  <td class="pa-2">
+
+                  <!-- 狀態 (只在 md 以上顯示) -->
+                  <td
+                    v-if="mdAndUp"
+                    class="pa-2"
+                  >
                     <v-menu
                       location="end"
                       transition="fade-transition"
@@ -391,7 +415,9 @@
                       </v-card>
                     </v-menu>
                   </td>
-                  <td>
+
+                  <!-- 備註 (只在 lg 以上顯示) -->
+                  <td v-if="lgAndUp">
                     <template v-if="item.note">
                       <v-menu
                         location="top"
@@ -435,6 +461,8 @@
                     </template>
                     <template v-else />
                   </td>
+
+                  <!-- 設備 -->
                   <td class="text-center">
                     <v-btn
                       icon
@@ -684,7 +712,7 @@ definePage({
 // API 與工具初始化
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
-const { smAndUp, mdAndUp } = useDisplay()
+const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 
 // 表格相關
 const tableHeaders = [
@@ -705,7 +733,7 @@ const tableHeaders = [
 const tableLoading = ref(false)
 const tableItems = ref([])
 const tablePage = ref(1)
-const tableItemsPerPage = ref(15)
+const tableItemsPerPage = ref(10)
 const tableItemsLength = ref(0)
 const tableSortBy = ref([{ key: 'employeeCode', order: 'asc' }])
 
@@ -718,7 +746,7 @@ const searchCriteria = ref({
   department: '',
   employmentType: '',
   jobTitle: '',
-  status: '在職',
+  status: '',
   dateType: '',
   dateRange: []
 })
@@ -744,18 +772,39 @@ const jobTitleOptions = [
   { text: '總經理', value: '總經理' },
   { text: '副總經理', value: '副總經理' },
   { text: '協理', value: '協理' },
+  { text: '總監', value: '總監' },
+  { text: '部長', value: '部長' },
   { text: '經理', value: '經理' },
+  { text: '票務經理', value: '票務經理' },
   { text: '專案經理', value: '專案經理' },
   { text: '副理', value: '副理' },
-  { text: '部長', value: '部長' },
-  { text: '財務', value: '財務' },
   { text: '主任', value: '主任' },
-  { text: '業務', value: '業務' },
-  { text: '業務助理', value: '業務助理' },
+  { text: '業務代表', value: '業務代表' },
   { text: 'OP', value: 'OP' },
-  { text: 'IT', value: 'IT' },
-  { text: '顧問', value: '顧問' },
-  { text: '其他', value: '其他' }
+  { text: '線控', value: '線控' },
+  { text: '線控助理', value: '線控助理' },
+  { text: '日本線控', value: '日本線控' },
+  { text: '日本手配', value: '日本手配' },
+  { text: '財務', value: '財務' },
+  { text: '美編', value: '美編' },
+  { text: '行銷', value: '行銷' },
+  { text: '網頁設計', value: '網頁設計' },
+  { text: '工程師', value: '工程師' },
+  { text: '人事行政專員', value: '人事行政專員' },
+  { text: '行政專員', value: '行政專員' },
+  { text: '總務專員', value: '總務專員' },
+  { text: '財務助理', value: '財務助理' },
+  { text: '業務助理', value: '業務助理' },
+  { text: 'OP助理', value: 'OP助理' },
+  { text: '團體機位助理', value: '團體機位助理' },
+  { text: '美編助理', value: '美編助理' },
+  { text: '外務', value: '外務' },
+  { text: '旅遊經理人', value: '旅遊經理人' },
+  { text: '助理工程師', value: '助理工程師' },
+  { text: 'Indoor', value: 'Indoor' },
+  { text: '工讀生', value: '工讀生' },
+  { text: '實習生', value: '實習生' },
+  { text: '顧問', value: '顧問' }
 ]
 
 // 日期類型選項
@@ -769,16 +818,24 @@ const dateTypeOptions = [
 // 響應式表格標頭
 const filteredHeaders = computed(() => {
   if (!smAndUp.value) {
+    // sm以下：只顯示科威員編、姓名和設備
     return tableHeaders.filter(header =>
-      ['employeeId', 'name', 'employmentStatus'].includes(header.key)
+      ['employeeCode', 'name', 'devices'].includes(header.key)
     )
-  }
-  if (!mdAndUp.value) {
+  } else if (!mdAndUp.value) {
+    // sm~md：顯示科威員編、姓名、公司、部門、職稱、設備
     return tableHeaders.filter(header =>
-      !['employeeCode'].includes(header.key)
+      ['employeeCode', 'name', 'company.name', 'department.name', 'jobTitle', 'devices'].includes(header.key)
     )
+  } else if (!lgAndUp.value) {
+    // md~lg：顯示除了系統編號和備註外的所有欄位
+    return tableHeaders.filter(header =>
+      !['employeeId', 'note'].includes(header.key)
+    )
+  } else {
+    // lg以上：顯示所有欄位
+    return tableHeaders
   }
-  return tableHeaders
 })
 
 // 設備對話框相關
@@ -894,7 +951,7 @@ const resetSearch = () => {
     department: '',
     employmentType: '',
     jobTitle: '',
-    status: '在職',
+    status: '',
     dateType: '',
     dateRange: []
   }
@@ -1061,9 +1118,9 @@ const getStatusDateClass = (item) => {
 
 <style lang="scss" scoped>
 .v-table :deep(thead) {
+  height: 48px !important;
   background-color: #455a64 !important;
   color: #fff !important;
-  height: 48px !important;
 }
 
 .odd-row {
@@ -1091,7 +1148,7 @@ const getStatusDateClass = (item) => {
     display: flex;
     align-items: center;
   }
-  .menu-card-text{
+  .menu-card-text {
     font-size: 13px;
   }
 }
@@ -1114,7 +1171,6 @@ const getStatusDateClass = (item) => {
 }
 
 .status-cell {
-  padding: 4px;
   border-radius: 4px;
   min-height: 32px;
 }

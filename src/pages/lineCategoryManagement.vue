@@ -4,82 +4,166 @@
       <!-- 標題區塊 -->
       <v-col
         cols="12"
-        class="ps-3 pb-3 d-flex align-center"
+        class="ps-3 pb-3"
       >
-        <h3 class="d-inline">
-          線別分類管理
-        </h3>
-        <v-btn
-          v-if="!isOrderingMode"
-          color="blue-grey-darken-2"
-          variant="outlined"
-          class="ms-6"
-          prepend-icon="mdi-plus"
-          @click="openDialog('大分類')"
-        >
-          新增大分類
-        </v-btn>
-        <v-btn
-          v-if="!isOrderingMode"
-          color="red-lighten-1"
-          variant="outlined"
-          class="ms-4"
-          prepend-icon="mdi-sort"
-          @click="isOrderingMode = true"
-        >
-          變更順序
-        </v-btn>
-        <!-- 排序模式的按鈕 -->
-        <div
-          v-if="isOrderingMode"
-          class="ms-4"
-        >
-          <v-btn
-            color="red-darken-2"
-            variant="outlined"
-            class="me-2"
-            prepend-icon="mdi-close"
-            :disabled="isSaving"
-            @click="cancelOrdering"
+        <v-row>
+          <v-col
+            cols="12"
+            lg="9"
+            xl="10"
           >
-            取消
-          </v-btn>
-          <v-btn
-            v-if="hasUnsavedChanges"
-            color="teal-darken-1"
-            variant="outlined"
-            prepend-icon="mdi-content-save"
-            :loading="isSaving"
-            :disabled="isSaving"
-            @click="saveChanges"
+            <v-row>
+              <v-col
+                cols="12"
+                sm="4"
+                lg="12"
+                class="d-flex align-center"
+              >
+                <h3>
+                  線別分類管理
+                </h3>
+                <v-btn
+                  v-if="!isOrderingMode&&lgAndUp"
+                  color="blue-grey-darken-2"
+                  variant="outlined"
+                  prepend-icon="mdi-plus"
+                  class="ms-6"
+                  :size="buttonSize"
+                  @click="openDialog('大分類')"
+                >
+                  新增大分類
+                </v-btn>
+                <v-btn
+                  v-if="!isOrderingMode&&lgAndUp"
+                  color="red-lighten-1"
+                  variant="outlined"
+                  class="ms-4"
+                  prepend-icon="mdi-sort"
+                  :size="buttonSize"
+                  @click="isOrderingMode = true"
+                >
+                  變更順序
+                </v-btn>
+                <!-- 排序模式的按鈕 -->
+                <div
+                  v-if="isOrderingMode&&lgAndUp"
+                >
+                  <v-btn
+                    color="red-darken-2"
+                    variant="outlined"
+                    class="ms-6"
+                    :size="buttonSize"
+                    prepend-icon="mdi-close"
+                    :disabled="isSaving"
+                    @click="cancelOrdering"
+                  >
+                    取消
+                  </v-btn>
+                  <v-btn
+                    v-if="hasUnsavedChanges&&lgAndUp"
+                    color="teal-darken-1"
+                    variant="outlined"
+                    :size="buttonSize"
+                    prepend-icon="mdi-content-save"
+                    class="ms-4"
+                    :loading="isSaving"
+                    :disabled="isSaving"
+                    @click="saveChanges"
+                  >
+                    保存變更
+                  </v-btn>
+                </div>
+              </v-col>
+              <v-col
+                v-if="!lgAndUp"
+                cols="12"
+                sm="8"
+                lg="10"
+                class="d-flex justify-sm-end justify-lg-start"
+              >
+                <v-btn
+                  v-if="!isOrderingMode"
+                  color="blue-grey-darken-2"
+                  variant="outlined"
+                  prepend-icon="mdi-plus"
+                  :size="buttonSize"
+                  @click="openDialog('大分類')"
+                >
+                  新增大分類
+                </v-btn>
+                <v-btn
+                  v-if="!isOrderingMode"
+                  color="red-lighten-1"
+                  variant="outlined"
+                  class="ms-4"
+                  prepend-icon="mdi-sort"
+                  :size="buttonSize"
+                  @click="isOrderingMode = true"
+                >
+                  變更順序
+                </v-btn>
+                <!-- 排序模式的按鈕 -->
+                <div
+                  v-if="isOrderingMode"
+                >
+                  <v-btn
+                    color="red-darken-2"
+                    variant="outlined"
+                    class="me-2"
+                    :size="buttonSize"
+                    prepend-icon="mdi-close"
+                    :disabled="isSaving"
+                    @click="cancelOrdering"
+                  >
+                    取消
+                  </v-btn>
+                  <v-btn
+                    v-if="hasUnsavedChanges"
+                    color="teal-darken-1"
+                    variant="outlined"
+                    :size="buttonSize"
+                    prepend-icon="mdi-content-save"
+                    :loading="isSaving"
+                    :disabled="isSaving"
+                    @click="saveChanges"
+                  >
+                    保存變更
+                  </v-btn>
+                </div>
+              </v-col>
+            </v-row>
+          </v-col>
+          <v-col
+            cols="12"
+            lg="3"
+            xl="2"
+            class="pb-0 pb-sm-4"
           >
-            保存變更
-          </v-btn>
-        </div>
-        <div
-          style="width: 260px;"
-          class="ms-auto d-flex align-center"
-        >
-          <v-icon
-            v-tooltip:start="'可搜尋各分類名稱'"
-            icon="mdi-information"
-            size="small"
-            color="blue-grey-darken-2"
-            class="me-2"
-          />
-          <v-text-field
-            v-model="quickSearchText"
-            label="快速搜尋"
-            append-inner-icon="mdi-magnify"
-            :loading="isLoading"
-            base-color="#666"
-            color="blue-grey-darken-3"
-            variant="outlined"
-            density="compact"
-            hide-details
-            clearable
-          />
-        </div>
+            <div
+              class="ms-sm-auto d-flex align-center"
+            >
+              <v-icon
+                v-tooltip:start="'可搜尋各分類名稱'"
+                icon="mdi-information"
+                size="small"
+                color="blue-grey-darken-2"
+                class="me-2"
+              />
+              <v-text-field
+                v-model="quickSearchText"
+                label="快速搜尋"
+                append-inner-icon="mdi-magnify"
+                :loading="isLoading"
+                base-color="#666"
+                color="blue-grey-darken-3"
+                variant="outlined"
+                density="compact"
+                hide-details
+                clearable
+              />
+            </div>
+          </v-col>
+        </v-row>
       </v-col>
 
       <!-- 分類顯示區塊 -->
@@ -305,36 +389,45 @@
       </v-col>
     </v-row>
 
-    <!-- 新增/編輯對話框 (結構不變，樣式可能微調) -->
+    <!-- 新增/編輯對話框 -->
     <v-dialog
       v-model="dialog.open"
       persistent
       :width="dialogWidth"
-      :fullscreen="!smAndUp"
     >
-      <v-form
-        ref="form"
-        :disabled="isSubmitting"
-        @submit.prevent="submit"
-      >
-        <v-card class="rounded-lg px-4 pt-7 pb-6">
-          <div class="card-title px-4 pb-2 d-flex align-center justify-space-between">
-            <span>{{ dialog.id ? '編輯分類' : `新增${dialog.type}` }}</span>
+      <v-card class="rounded-lg">
+        <v-form
+          ref="form"
+          :disabled="isSubmitting"
+          @submit.prevent="submit"
+        >
+          <div class="card-title px-6 py-4 bg-blue-grey-darken-2 d-flex align-center">
+            <v-icon
+              size="20"
+              color="white"
+              class="me-2"
+            >
+              mdi-folder-multiple-outline
+            </v-icon>
+            {{ dialog.id ? '編輯分類' : `新增${dialog.type}` }}
+            <v-spacer />
             <!-- 新增模式下的批量操作按鈕 -->
             <div
               v-if="!dialog.id"
-              class="d-flex align-center"
+              class="d-flex align-center me-4"
             >
               <v-btn
                 v-tooltip:start="'批量新增項目'"
                 icon
-                color="grey-darken-1"
-                size="22"
-                class="me-2"
+                color="white"
+                variant="plain"
+                size="20"
+                class="me-2 opacity-100"
+                :ripple="false"
                 @click="openBatchDialog"
               >
                 <v-icon
-                  size="14"
+                  size="16"
                 >
                   mdi-plus-box-multiple-outline
                 </v-icon>
@@ -342,19 +435,34 @@
               <v-btn
                 v-tooltip:start="'新增項目'"
                 icon
-                color="grey-darken-1"
-                size="22"
+                color="white"
+                variant="plain"
+                size="20"
+                class="opacity-100"
+                :ripple="false"
                 @click="addNewItem"
               >
                 <v-icon
-                  size="14"
+                  size="16"
                 >
                   mdi-plus
                 </v-icon>
               </v-btn>
             </div>
+            <v-btn
+              icon
+              color="white"
+              variant="plain"
+              class="opacity-100"
+              :ripple="false"
+              size="20"
+              @click="closeDialog"
+            >
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
           </div>
-          <v-card-text class="mt-3 pa-3">
+
+          <v-card-text class="mt-6 mb-4 px-6">
             <v-row>
               <!-- 父級分類選擇器 -->
               <v-col
@@ -443,7 +551,7 @@
             </v-row>
           </v-card-text>
 
-          <v-card-actions class="px-3 pt-4">
+          <v-card-actions class="px-6 mb-4">
             <v-hover>
               <template #default="{ isHovering, props }">
                 <v-btn
@@ -463,6 +571,7 @@
             <v-btn
               color="grey-darken-1"
               variant="outlined"
+              class="me-1"
               :size="buttonSize"
               :loading="isSubmitting"
               @click="closeDialog"
@@ -481,8 +590,8 @@
               送出
             </v-btn>
           </v-card-actions>
-        </v-card>
-      </v-form>
+        </v-form>
+      </v-card>
     </v-dialog>
 
     <!-- 確認刪除對話框 (保持不變) -->
@@ -495,21 +604,43 @@
       @confirm="deleteCategory"
     />
 
-    <!-- 批量新增對話框 (保持不變) -->
+    <!-- 批量新增對話框 -->
     <v-dialog
       v-model="batchDialog.open"
       persistent
-      width="300"
+      max-width="340"
     >
-      <v-card class="rounded-lg px-3 pt-6 pb-4">
-        <v-form @submit.prevent="handleBatchAdd">
-          <div class="card-title px-4 pb-2">
-            批量新增項目
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-2 mb-2 d-flex justify-space-between align-center bg-grey-darken-3">
+          <div>
+            <v-icon
+              size="20"
+              class="me-2"
+            >
+              mdi-plus-box-multiple-outline
+            </v-icon>批量新增項目
           </div>
-          <v-card-text class="mt-3 pa-3">
+          <v-btn
+            icon
+            variant="plain"
+            size="36"
+            class="opacity-100"
+            :ripple="false"
+            @click="closeBatchDialog"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-form @submit.prevent="handleBatchAdd">
+          <v-card-text class="px-6 py-3">
+            <div class="text-grey-darken-2 mb-4">
+              請輸入要總共需要多少項目，系統會自動新增指定數量的空白項目。
+            </div>
             <v-text-field
               v-model="batchDialog.count"
-              label="請輸入要總共需要多少項目"
+              label="項目數量"
               type="number"
               min="1"
               max="10"
@@ -517,14 +648,17 @@
               density="compact"
               :error-messages="batchDialog.error"
               hide-details="auto"
+              autofocus
               @keyup.enter="handleBatchAdd"
             />
           </v-card-text>
-          <v-card-actions class="px-3 pt-4">
+          <v-card-actions class="px-6 py-4 mb-2">
             <v-spacer />
             <v-btn
-              color="grey-darken-1"
+              color="grey"
               variant="outlined"
+              class="me-1"
+              :size="buttonSize"
               @click="closeBatchDialog"
             >
               取消
@@ -532,7 +666,7 @@
             <v-btn
               color="teal-darken-1"
               variant="outlined"
-              class="ms-1"
+              :size="buttonSize"
               type="submit"
             >
               確定
@@ -574,7 +708,7 @@ const createSnackbar = useSnackbar()
 const router = useRouter()
 
 // ===== 響應式設定與螢幕斷點 =====
-const { smAndUp } = useDisplay()
+const { smAndUp, lgAndUp } = useDisplay()
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
 
 // ===== 基礎狀態管理 =====

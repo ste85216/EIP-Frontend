@@ -2,7 +2,7 @@
 <template>
   <v-container max-width="2400">
     <!-- 搜尋條件區塊 -->
-    <v-row class="pt-md-5 px-2 px-xxl-4">
+    <v-row class="pt-md-5 px-0 px-md-2 px-xxl-4">
       <v-col cols="12">
         <v-row>
           <v-col cols="12">
@@ -11,8 +11,8 @@
                 cols="12"
                 class="mt-1 px-lg-6 px-xl-4"
               >
-                <v-card class="elevation-4 rounded-lg py-7 px-0">
-                  <div class="d-flex align-center px-10 py-3">
+                <v-card class="elevation-4 rounded-lg py-3 py-sm-7 px-0">
+                  <div class="d-flex align-center px-6 px-sm-10 py-3">
                     <h3 class="me-4">
                       直客詢問統計表管理
                     </h3>
@@ -21,17 +21,21 @@
                       to="/B2CStatisticsSales"
                       variant="plain"
                       :ripple="false"
+                      class="px-0"
                       color="blue-grey-darken-2"
                     >
                       業務頁面 >
                     </v-btn>
                   </div>
-                  <v-divider class="mt-5 mb-6" />
-                  <v-card-text class="pt-4 px-10">
+                  <v-divider class="mt-2 mt-sm-5 mb-2 mb-sm-6" />
+                  <v-card-text class="pt-4 px-6 px-sm-10 pb-1 pb-sm-4">
                     <v-row class="mb-2">
                       <!-- 公司選擇 -->
                       <v-col
-                        cols="2"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
                       >
                         <div class="d-flex align-center">
                           公司 :
@@ -53,7 +57,10 @@
 
                       <!-- 來源選擇 -->
                       <v-col
-                        cols="2"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
                       >
                         <div class="d-flex align-center">
                           <span class="text-label">來源 :</span>
@@ -74,7 +81,10 @@
 
                       <!-- 業務選擇 -->
                       <v-col
-                        cols="2"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
                       >
                         <div class="d-flex align-center">
                           <span class="text-label">業務 :</span>
@@ -96,7 +106,10 @@
 
                       <!-- 日期區間 -->
                       <v-col
-                        cols="2"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
                       >
                         <div class="d-flex align-center">
                           <span class="text-label">日期 :</span>
@@ -119,7 +132,10 @@
 
                       <!-- 地區 -->
                       <v-col
-                        cols="2"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
                       >
                         <div class="d-flex align-center">
                           <span class="text-label">地區 :</span>
@@ -137,7 +153,10 @@
                       </v-col>
 
                       <v-col
-                        cols="2"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
                       >
                         <div class="d-flex align-center">
                           <span class="text-label">結果 :</span>
@@ -155,14 +174,18 @@
                           />
                         </div>
                       </v-col>
-                      <v-col />
                       <v-col
-                        cols="2"
+                        v-if="smAndUp"
+                      />
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
                       >
                         <v-row class="d-flex justify-end">
                           <v-col
-                            cols="7"
-                            class="ps-0"
+                            cols="9"
                           >
                             <v-btn
                               color="cyan-darken-2"
@@ -192,16 +215,140 @@
                   </v-card-text>
                   <v-divider class="my-2" />
                   <v-row
-                    class=" px-1 px-md-9 mt-1 bg-white"
+                    class="mt-1 bg-white px-4 px-sm-9"
                   >
                     <!-- 標題和功能按鈕區 -->
                     <v-col
                       cols="12"
-                      class="ps-4 pb-sm-4"
+                      class="px-4 pb-sm-4"
                     >
                       <v-row>
-                        <v-col class="d-flex justify-space-between align-center">
-                          <div class="d-flex justify-space-between align-center">
+                        <!-- 小螢幕按鈕列 (lg以下顯示) -->
+                        <v-col
+                          v-if="!lgAndUp"
+                          class="d-flex justify-space-between align-center"
+                        >
+                          <v-row>
+                            <v-col
+                              cols="6"
+                              sm="4"
+                              md="3"
+                            >
+                              <v-btn
+                                prepend-icon="mdi-microsoft-excel"
+                                color="teal-darken-2"
+                                :size="buttonSize"
+                                block
+                                @click="openExportDialog"
+                              >
+                                匯出 EXCEL
+                              </v-btn>
+                            </v-col>
+                            <v-col
+                              cols="6"
+                              sm="4"
+                              md="3"
+                            >
+                              <v-btn
+                                prepend-icon="mdi-account-cog"
+                                variant="outlined"
+                                color="blue-grey-darken-2"
+                                :size="buttonSize"
+                                block
+                                @click="openEmployeeManageDialog"
+                              >
+                                業務管理
+                              </v-btn>
+                            </v-col>
+                            <v-col
+                              cols="6"
+                              sm="4"
+                              md="3"
+                            >
+                              <v-btn
+                                prepend-icon="mdi-account-tie"
+                                variant="outlined"
+                                color="blue-grey-darken-2"
+                                :size="buttonSize"
+                                block
+                                @click="openSupervisorManageDialog"
+                              >
+                                業務主管
+                              </v-btn>
+                            </v-col>
+                            <v-col
+                              cols="6"
+                              sm="4"
+                              md="3"
+                            >
+                              <v-btn
+                                prepend-icon="mdi-plus"
+                                variant="outlined"
+                                color="blue-grey-darken-2"
+                                :size="buttonSize"
+                                block
+                                @click="openDialog(null)"
+                              >
+                                新增詢問
+                              </v-btn>
+                            </v-col>
+                            <v-col
+                              cols="1"
+                              class="d-flex align-center justify-center pe-0"
+                            >
+                              <v-btn
+                                v-tooltip="isCurrentMonthActive ? '取消本月篩選' : '查看本月'"
+                                icon
+                                :color="isCurrentMonthActive ? 'orange-darken-2' : 'cyan-darken-2'"
+                                variant="text"
+                                size="34"
+                                @click="toggleCurrentMonth"
+                              >
+                                <v-icon
+                                  size="20"
+                                  style="padding-top: 2px;"
+                                >
+                                  {{ isCurrentMonthActive ? 'mdi-calendar-remove' : 'mdi-calendar-month' }}
+                                </v-icon>
+                              </v-btn>
+                            </v-col>
+                            <v-col
+                              cols="11"
+                              sm="7"
+                              md="11"
+                              class="d-flex align-center"
+                            >
+                              <v-icon
+                                v-tooltip:start="'可搜尋客戶姓名、電話、Email、Line ID、詢問內容、進度 / 備註'"
+                                icon="mdi-information"
+                                size="small"
+                                color="blue-grey-darken-2"
+                                class="me-2"
+                              />
+                              <v-text-field
+                                v-model="quickSearch"
+                                :loading="isSearching"
+                                density="compact"
+                                variant="outlined"
+                                label="快速搜尋"
+                                append-inner-icon="mdi-magnify"
+                                hide-details
+                                clearable
+                              />
+                            </v-col>
+                          </v-row>
+                        </v-col>
+
+                        <!-- 大螢幕兩欄佈局 (lg以上顯示) -->
+                        <v-row
+                          v-if="lgAndUp"
+                          class="my-3 px-3"
+                        >
+                          <!-- 左側按鈕區 -->
+                          <v-col
+                            cols="9"
+                            xxl="10"
+                          >
                             <v-btn
                               prepend-icon="mdi-microsoft-excel"
                               color="teal-darken-2"
@@ -243,7 +390,6 @@
                               :color="isCurrentMonthActive ? 'orange-darken-2' : 'cyan-darken-2'"
                               variant="text"
                               size="34"
-                              class="me-4"
                               @click="toggleCurrentMonth"
                             >
                               <v-icon
@@ -253,10 +399,13 @@
                                 {{ isCurrentMonthActive ? 'mdi-calendar-remove' : 'mdi-calendar-month' }}
                               </v-icon>
                             </v-btn>
-                          </div>
+                          </v-col>
+
+                          <!-- 右側搜尋區 -->
                           <v-col
-                            cols="2"
-                            class="d-flex align-center pe-1"
+                            cols="3"
+                            xxl="2"
+                            class="d-flex align-center "
                           >
                             <v-icon
                               v-tooltip:start="'可搜尋客戶姓名、電話、Email、Line ID、詢問內容、進度 / 備註'"
@@ -276,7 +425,7 @@
                               clearable
                             />
                           </v-col>
-                        </v-col>
+                        </v-row>
                       </v-row>
                     </v-col>
 
@@ -489,11 +638,30 @@
       persistent
       :width="dialogWidth"
     >
-      <v-card class="rounded-lg px-4 py-6">
-        <div class="card-title px-4 py-3">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-4 bg-blue-grey-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-pencil
+          </v-icon>
           {{ dialog.id ? '編輯詢問資料' : '新增詢問' }}
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="mt-3 pa-3">
+        <v-card-text class="mt-6 mb-2 px-6">
           <!-- 加入載入中動畫 -->
           <div
             v-if="isDialogLoading"
@@ -520,7 +688,9 @@
               >
                 <v-row>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="4"
+                    md="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -529,7 +699,9 @@
                     />
                   </v-col>
                   <v-col
-                    cols="2"
+                    cols="6"
+                    sm="4"
+                    md="2"
                     class="d-flex align-center justify-center"
                   >
                     <v-icon
@@ -540,7 +712,9 @@
                     </v-icon> 客戶資料
                   </v-col>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="4"
+                    md="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -633,7 +807,9 @@
               >
                 <v-row>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="4"
+                    md="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -642,7 +818,9 @@
                     />
                   </v-col>
                   <v-col
-                    cols="2"
+                    cols="6"
+                    sm="4"
+                    md="2"
                     class="d-flex align-center justify-center"
                   >
                     <v-icon
@@ -653,7 +831,9 @@
                     </v-icon> 基本資料
                   </v-col>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="4"
+                    md="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -761,7 +941,9 @@
               >
                 <v-row>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="4"
+                    md="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -770,7 +952,9 @@
                     />
                   </v-col>
                   <v-col
-                    cols="2"
+                    cols="6"
+                    sm="4"
+                    md="2"
                     class="d-flex align-center justify-center"
                   >
                     <v-icon
@@ -781,7 +965,9 @@
                     </v-icon> 詢問相關
                   </v-col>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="4"
+                    md="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -804,7 +990,7 @@
                   hide-details
                   rows="8"
                 />
-                <div class="d-flex align-end mb-2">
+                <div class="d-flex align-end my-2">
                   <v-text-field
                     v-model="urlInput"
                     label="請輸入欲插入的網址"
@@ -833,6 +1019,8 @@
               <v-btn
                 color="grey-darken-1"
                 variant="outlined"
+                class="me-1"
+                :size="buttonSize"
                 @click="closeDialog"
               >
                 取消
@@ -841,7 +1029,8 @@
                 color="teal-darken-1"
                 variant="outlined"
                 type="submit"
-                class="ms-2"
+                class="ms-1"
+                :size="buttonSize"
                 :loading="isSubmitting"
               >
                 {{ dialog.id ? '修改' : '新增' }}
@@ -858,21 +1047,29 @@
       persistent
       max-width="720"
     >
-      <v-card class="rounded-lg px-4 py-4">
-        <div class="card-title px-4 mt-2 mb-3 d-flex justify-space-between align-center">
-          <div>進度 / 備註 - 歷史紀錄</div>
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-blue-grey-darken-2">
+          <v-icon
+            size="20"
+            class="me-2"
+          >
+            mdi-history
+          </v-icon>
+          <span class="card-title text-white">進度 / 備註 - 歷史紀錄</span>
+          <v-spacer />
           <v-btn
             icon
             variant="text"
-            size="40"
+            color="white"
             @click="closeSimpleDialog"
           >
             <v-icon size="20">
               mdi-close
             </v-icon>
           </v-btn>
-        </div>
-        <v-card-text class="pa-3">
+        </v-card-title>
+
+        <v-card-text class="px-6 py-7">
           <!-- 加入載入中動畫 -->
           <div
             v-if="isDialogLoading"
@@ -924,12 +1121,31 @@
       persistent
       max-width="1374"
     >
-      <v-card class="rounded-lg px-4 py-5">
-        <div class="card-title px-4 pt-2">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-4 bg-blue-grey-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-account-cog
+          </v-icon>
           業務管理
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeEmployeeManageDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="mt-3 pa-3 pe-0">
-          <div class="px-1">
+        <v-card-text class="mt-6 mb-4 px-6">
+          <div>
             <v-autocomplete
               v-model="tempSelectedEmployee"
               :items="filteredEmployees"
@@ -938,7 +1154,6 @@
               label="選擇業務"
               variant="outlined"
               density="compact"
-              class="pe-3"
               hide-details
               :loading="isLoadingEmployees"
               clearable
@@ -963,8 +1178,8 @@
           </div>
 
           <!-- 已選擇的業務區塊 -->
-          <div class="mt-8 selected-employees-container">
-            <div class="sub-title mb-5 ps-1">
+          <div class="mt-4 mt-md-8 selected-employees-container">
+            <div class="sub-title mb-5">
               已選擇的業務：
             </div>
             <!-- 按公司分組顯示業務 -->
@@ -1078,11 +1293,13 @@
             </div>
           </div>
         </v-card-text>
-        <v-card-actions class="px-4 mt-4">
+        <v-card-actions class="px-7 mb-4">
           <v-spacer />
           <v-btn
             color="grey-darken-1"
             variant="outlined"
+            class="me-1"
+            :size="buttonSize"
             @click="closeEmployeeManageDialog"
           >
             取消
@@ -1090,6 +1307,8 @@
           <v-btn
             color="teal-darken-1"
             variant="outlined"
+            class="ms-1"
+            :size="buttonSize"
             :loading="isSavingEmployees"
             @click="saveEmployees"
           >
@@ -1105,12 +1324,31 @@
       persistent
       max-width="1374"
     >
-      <v-card class="rounded-lg px-4 py-5">
-        <div class="card-title px-4 pt-2">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-4 bg-blue-grey-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-account-tie
+          </v-icon>
           業務主管管理
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeSupervisorManageDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="mt-3 pa-3 pe-0">
-          <div class="px-1">
+        <v-card-text class="mt-6 mb-4 px-6">
+          <div>
             <v-autocomplete
               v-model="tempSelectedSupervisor"
               :items="filteredSupervisors"
@@ -1119,7 +1357,6 @@
               label="選擇業務主管"
               variant="outlined"
               density="compact"
-              class="pe-3"
               hide-details
               :loading="isLoadingSupervisors"
               clearable
@@ -1194,11 +1431,13 @@
             </div>
           </div>
         </v-card-text>
-        <v-card-actions class="px-4 pb-4">
+        <v-card-actions class="px-7 mb-4">
           <v-spacer />
           <v-btn
             color="grey-darken-1"
             variant="outlined"
+            class="me-1"
+            :size="buttonSize"
             @click="closeSupervisorManageDialog"
           >
             取消
@@ -1206,6 +1445,8 @@
           <v-btn
             color="teal-darken-1"
             variant="outlined"
+            class="ms-1"
+            :size="buttonSize"
             :loading="isUpdatingSupervisors"
             @click="updateSupervisors"
           >
@@ -1219,19 +1460,38 @@
     <v-dialog
       v-model="exportDialog.open"
       persistent
-      max-width="320"
+      max-width="340"
     >
-      <v-card class="rounded-lg px-4 pt-6 pb-4">
-        <div class="card-title px-4 mt-1">
-          匯出 Excel
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-2 mb-2 d-flex justify-space-between align-center bg-teal-darken-2">
+          <div>
+            <v-icon
+              size="20"
+              class="me-2"
+            >
+              mdi-microsoft-excel
+            </v-icon>匯出 Excel
+          </div>
+          <v-btn
+            icon
+            variant="plain"
+            size="36"
+            class="opacity-100"
+            :ripple="false"
+            @click="closeExportDialog"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
         </div>
-        <v-card-text class="mt-3 pa-2">
+        <v-card-text class="px-6 py-3">
           <v-form @submit.prevent="handleExportExcel">
             <v-row>
               <!-- 匯出類型 -->
               <v-col
                 cols="12"
-                class="pb-0"
+                class="pb-0 px-1"
               >
                 <v-radio-group
                   v-model="exportDialog.type"
@@ -1241,12 +1501,12 @@
                   <v-radio
                     label="所有公司資料"
                     value="all"
-                    color="deep-purple-darken-2"
+                    color="teal-darken-1"
                   />
                   <v-radio
                     label="單一公司資料"
                     value="company"
-                    color="deep-purple-darken-2"
+                    color="teal-darken-1"
                   />
                 </v-radio-group>
               </v-col>
@@ -1255,7 +1515,7 @@
               <v-col
                 v-if="exportDialog.type === 'company'"
                 cols="12"
-                class="px-5 pb-0"
+                class="px-3 pb-0"
               >
                 <v-select
                   v-model="exportDialog.company"
@@ -1273,7 +1533,7 @@
               <!-- 日期區間 -->
               <v-col
                 cols="12"
-                class="px-5 pb-0"
+                class="px-3 pb-0"
               >
                 <v-date-input
                   v-model="exportDialog.dateRange"
@@ -1293,7 +1553,7 @@
               <!-- 來源選擇 -->
               <v-col
                 cols="12"
-                class="px-5 pb-0"
+                class="px-3 pb-0"
               >
                 <v-select
                   v-model="exportDialog.sources"
@@ -1325,11 +1585,13 @@
               </v-col>
             </v-row>
 
-            <v-card-actions class="pa-0 px-2 mt-4">
+            <v-card-actions class="px-0 pt-4 pb-0 pb-sm-2 mb-2">
               <v-spacer />
               <v-btn
-                color="grey-darken-1"
+                color="grey"
                 variant="outlined"
+                class="me-1"
+                :size="buttonSize"
                 @click="closeExportDialog"
               >
                 取消
@@ -1338,7 +1600,7 @@
                 color="teal-darken-1"
                 variant="outlined"
                 type="submit"
-                class="ms-2"
+                :size="buttonSize"
                 :loading="isExporting"
               >
                 匯出
@@ -1439,12 +1701,13 @@ definePage({
 // API 與工具初始化
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
-const { mdAndUp } = useDisplay()
+const { mdAndUp, smAndUp, lgAndUp } = useDisplay()
 
 // 響應式變數
 const dialogWidth = computed(() => mdAndUp.value ? '880' : '100%')
 const isSearching = ref(false)
 const isCurrentMonthActive = ref(false)
+const buttonSize = computed(() => !smAndUp.value ? 'small' : 'default')
 
 // 表格相關
 const tableHeaders = [
@@ -1459,9 +1722,9 @@ const tableHeaders = [
   { title: 'Line ID', key: 'customerLineId', align: 'start', sortable: true },
   { title: 'Email', key: 'customerEmail', align: 'start', sortable: true },
   { title: '業務', key: 'salesPerson.name', align: 'start', sortable: true },
-  { title: '詢問結果', key: 'inquiryResult', width: '110px', align: 'start', sortable: true },
+  { title: '詢問結果', key: 'inquiryResult', minWidth: '110px', align: 'start', sortable: true },
   { title: '最新進度 / 備註', key: 'latestProgressNote.content', width: '220px', align: 'start', sortable: true },
-  { title: '操作', key: 'actions', width: '100px', align: 'center', sortable: false }
+  { title: '操作', key: 'actions', minWidth: '100px', align: 'center', sortable: false }
 ]
 
 // 表格相關響應式變數
@@ -3144,11 +3407,9 @@ const handleExportExcel = async () => {
 
     if (exportDialog.value.type === 'company') {
       params.companies = exportDialog.value.company
-    } else {
-      if (searchCriteria.value.company) {
-        params.companies = searchCriteria.value.company
-      }
     }
+    // 注意：當選擇「所有公司資料」時，不應該傳送 companies 參數
+    // 這樣後端就會返回所有公司的資料
 
     const { data } = await apiAuth.get('/customerInquiries/export', { params })
 

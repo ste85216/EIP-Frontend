@@ -343,6 +343,23 @@
                       尚未指派
                     </v-chip>
                   </td>
+                  <td>
+                    <div
+                      v-if="item.departmentNote"
+                      class="department-note-display"
+                    >
+                      <div
+                        class="department-note-text"
+                        v-html="formatDepartmentNote(item.departmentNote)"
+                      />
+                    </div>
+                    <div
+                      v-else
+                      class="department-note-display"
+                    >
+                      <span class="text-grey-lighten-1">( 無 )</span>
+                    </div>
+                  </td>
                   <td class="text-center">
                     <v-btn
                       icon
@@ -369,6 +386,12 @@
     >
       <v-card class="rounded-lg pb-2 dialog">
         <v-card-title class="d-flex align-center px-6 py-1 bg-light-blue-darken-2">
+          <v-icon
+            icon="mdi-text-box-outline"
+            size="18"
+            color="white"
+            class="me-2"
+          />
           <span class="card-title">申請單詳細資訊</span>
           <v-spacer />
           <v-btn
@@ -540,6 +563,37 @@
                     </div>
                     <div class="text-body-2">
                       {{ formData.assignedDesigner?.name || '尚未指派' }}
+                    </div>
+                  </v-card>
+                </v-col>
+                <v-col
+                  cols="12"
+                  sm="6"
+                  md="4"
+                >
+                  <v-card
+                    class="info-item-card pa-3"
+                    variant="outlined"
+                  >
+                    <div class="d-flex align-center mb-2">
+                      <v-icon
+                        icon="mdi-note-text"
+                        size="16"
+                        color="blue-grey-darken-1"
+                        class="me-2"
+                      />
+                      <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">部門備註</span>
+                    </div>
+                    <div class="text-body-2">
+                      <span
+                        v-if="formData.departmentNote"
+                        style="white-space: pre-line;"
+                        v-html="formatDepartmentNote(formData.departmentNote)"
+                      />
+                      <span
+                        v-else
+                        class="text-grey-lighten-1"
+                      >( 無 )</span>
                     </div>
                   </v-card>
                 </v-col>
@@ -920,6 +974,12 @@
     >
       <v-card class="rounded-lg add-dialog">
         <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-teal-darken-2 ">
+          <v-icon
+            icon="mdi-text-box-outline"
+            size="18"
+            color="white"
+            class="me-2"
+          />
           <span class="card-title">新增申請單</span>
           <v-spacer />
           <v-btn
@@ -1749,16 +1809,6 @@
                     />
                     <span class="text-body-2 text-grey-darken-1">{{ notice }}</span>
                   </div>
-                  <!-- 新增一點固定注意事項 -->
-                  <div class="d-flex align-center mb-2">
-                    <v-icon
-                      icon="mdi-alert-octagon-outline"
-                      size="small"
-                      color="orange-darken-2"
-                      class="me-2"
-                    />
-                    <span class="text-body-2 text-grey-darken-1">申請內容若有需做更改，請聯絡行銷美編部，謝謝。</span>
-                  </div>
                 </v-card-text>
               </v-card>
             </div>
@@ -1905,6 +1955,7 @@ const tableHeaders = [
   { title: '申請類型', key: 'productType', sortable: false },
   { title: '狀態', key: 'status', sortable: true },
   { title: '處理人員', key: 'assignedDesigner.name', sortable: false },
+  { title: '部門備註', key: 'departmentNote', width: 300, align: 'center', sortable: false },
   { title: '查看', key: 'actions', align: 'center', sortable: false }
 ]
 
@@ -1961,7 +2012,8 @@ const filteredProductTypeOptions = computed(() => {
   const categoryMap = {
     'printing': ['printing'],
     'map': ['seriesMap', 'seriesMapModify', 'SPMap'],
-    'dm': ['newDMSingle', 'newDMMultiple', 'modifyDM']
+    'dm': ['newDMSingle', 'newDMMultiple', 'modifyDM'],
+    'electronic': ['newElectronicInfo']
   }
 
   const allowedTypes = categoryMap[searchCriteria.productCategory] || []
@@ -2023,6 +2075,17 @@ const isSearching = ref(false)
 
 // 新增 basePath 變數，取得 Vite 的 base 路徑
 const basePath = import.meta.env.BASE_URL || '/'
+
+// 格式化部門備註內容
+const formatDepartmentNote = (content) => {
+  if (!content) return ''
+  return content.replace(
+    /<a href="([^"]+)" target="_blank" class="url-button">連結<\/a>/g,
+    (match, url) => {
+      return `<a href="${url}" target="_blank" class="url-button">連結</a>`
+    }
+  )
+}
 
 // 重置搜尋條件
 const resetSearch = () => {
@@ -2725,6 +2788,8 @@ const truncateFileName = (name, length = 15) => {
   return `${name.substring(0, length)}...`
 }
 
+
+
 // 取得檔案上傳錯誤訊息
 const getFileUploadErrorMessage = (label) => {
   if (!label) return '請上傳檔案'
@@ -3088,7 +3153,7 @@ const getPrintingTypeText = (printingTypes) => {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 :deep(.v-data-table) {
   thead {
     height: 48px;
@@ -3215,6 +3280,39 @@ const getPrintingTypeText = (printingTypes) => {
   border-radius: 4px;
   padding: 4px 8px;
   margin-right: 16px;
+}
+
+/* 部門備註顯示樣式 */
+.department-note-display {
+  text-align: center;
+}
+
+
+.department-note-text {
+  margin: 8px 0;
+  background: #fcfdff;
+  border: 1px solid #B0BEC5;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #546E7A;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  transition: all 0.1s ease;
+  :deep(.url-button) {
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin: 0 2px;
+    font-size: 11px;
+    transition: background-color 0.2s;
+    background-color: #4077ad;
+    color: white;
+    text-decoration: none;
+    &:hover {
+    background-color: #1565c0;
+    }
+  }
 }
 </style>
 

@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <v-container max-width="2400">
     <v-row class="pt-md-6 px-lg-10 px-xxl-6">
@@ -23,6 +24,7 @@
               variant="plain"
               :ripple="false"
               color="blue-grey-darken-2"
+              class="pe-0"
             >
               申請頁面 >
             </v-btn>
@@ -241,7 +243,7 @@
                   </td>
                   <td>{{ item.applicant?.name }} ({{ item.applicant?.employeeCode }})</td>
                   <td>{{ getProductTypeText(item.productType, item) }}</td>
-                  <td>
+                  <td class="text-center">
                     <v-menu
                       max-height="320"
                       :disabled="isCompletedOrCancelled(item.status)"
@@ -359,6 +361,49 @@
                     </v-menu>
                   </td>
                   <td class="text-center">
+                    <div
+                      v-if="item.departmentNote"
+                      class="department-note-cell"
+                    >
+                      <div
+                        v-if="!isCompletedOrCancelled(item.status)"
+                        class="department-note-text clickable"
+                        @click="openDepartmentNoteDialog(item)"
+                        v-html="formatDepartmentNote(item.departmentNote)"
+                      />
+                      <div
+                        v-else
+                        class="department-note-text disabled"
+                        v-html="formatDepartmentNote(item.departmentNote)"
+                      />
+                    </div>
+                    <div
+                      v-else
+                      class="department-note-cell"
+                    >
+                      <v-btn
+                        v-if="!isCompletedOrCancelled(item.status)"
+                        color="grey"
+                        variant="outlined"
+                        size="small"
+                        class="px-3"
+                        @click="openDepartmentNoteDialog(item)"
+                      >
+                        新增備註
+                      </v-btn>
+                      <v-btn
+                        v-else
+                        color="grey"
+                        variant="outlined"
+                        size="small"
+                        class="px-3 disabled-btn"
+                        disabled
+                      >
+                        新增備註
+                      </v-btn>
+                    </div>
+                  </td>
+                  <td class="text-center">
                     <v-btn
                       icon
                       color="blue-grey-darken-2"
@@ -396,11 +441,19 @@
     >
       <v-card class="rounded-lg edit-dialog">
         <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-light-blue-darken-2">
+          <v-icon
+            icon="mdi-pencil"
+            size="18"
+            color="white"
+            class="me-2"
+          />
           <span class="card-title">編輯申請單</span>
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            :ripple="false"
+            class="opacity-100"
             @click="closeEditDialog"
           >
             <v-icon>mdi-close</v-icon>
@@ -1059,7 +1112,7 @@
             取消
           </v-btn>
           <v-btn
-            color="light-blue-darken-1"
+            color="teal-darken-1"
             variant="outlined"
             class="ms-2"
             :loading="submitting"
@@ -1193,6 +1246,12 @@
     >
       <v-card class="rounded-lg pb-2">
         <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+          <v-icon
+            icon="mdi-text-box-outline"
+            size="18"
+            color="white"
+            class="me-2"
+          />
           <span class="card-title">申請單詳細資訊</span>
           <v-spacer />
           <v-btn
@@ -1207,8 +1266,10 @@
           </v-btn>
           <v-btn
             icon
-            variant="text"
+            variant="plain"
             color="white"
+            :ripple="false"
+            class="opacity-100"
             @click="closeViewDialog"
           >
             <v-icon>mdi-close</v-icon>
@@ -1897,7 +1958,7 @@
       persistent
     >
       <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
           <v-icon
             icon="mdi-email-multiple"
             size="20"
@@ -1908,8 +1969,10 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
             color="white"
+            :ripple="false"
+            class="opacity-100"
             @click="closeNotificationEmailDialog"
           >
             <v-icon>mdi-close</v-icon>
@@ -2254,6 +2317,104 @@
       cancel-button-text="取消"
       @confirm="confirmDeleteNotificationEmail"
     />
+
+    <!-- 部門備註編輯對話框 -->
+    <v-dialog
+      v-model="departmentNoteDialog.show"
+      max-width="600"
+      persistent
+    >
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+          <v-icon
+            icon="mdi-pencil"
+            size="20"
+            color="white"
+            class="me-3"
+          />
+          <span class="card-title text-white">編輯部門備註</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            @click="closeDepartmentNoteDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="px-6 py-6">
+          <v-row>
+            <v-col cols="12">
+              <v-icon
+                icon="mdi-identifier"
+                size="18"
+                color="blue-grey-darken-2"
+                class="me-2"
+              />
+              <span class="text-blue-grey-darken-2 font-weight-bold">申請編號：{{ departmentNoteDialog.designRequestNumber }}</span>
+            </v-col>
+
+            <v-col cols="12">
+              <v-textarea
+                v-model="departmentNoteDialog.newNote"
+                label="部門備註"
+                variant="outlined"
+                density="compact"
+                rows="6"
+                placeholder="請輸入部門備註內容"
+                hide-details
+                auto-grow
+              />
+              <div class="d-flex align-end my-2">
+                <v-text-field
+                  v-model="departmentNoteUrlInput"
+                  label="請輸入欲插入的網址"
+                  variant="underlined"
+                  density="compact"
+                  class="me-2 mt-2"
+                  hide-details
+                  clearable
+                  @keydown.enter.prevent
+                />
+                <v-btn
+                  color="success"
+                  variant="outlined"
+                  size="small"
+                  :disabled="!departmentNoteUrlInput"
+                  @click="confirmInsertDepartmentNoteUrl"
+                >
+                  確認
+                </v-btn>
+              </div>
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-card-actions class="px-6 pb-6">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            :size="buttonSize"
+            color="grey-darken-1"
+            @click="closeDepartmentNoteDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            class="ms-2"
+            variant="outlined"
+            :size="buttonSize"
+            :loading="updatingDepartmentNote"
+            @click="confirmUpdateDepartmentNote"
+          >
+            儲存
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -2309,8 +2470,9 @@ const tableHeaders = [
   { title: '申請日期', key: 'applicationDate', sortable: true },
   { title: '申請人', key: 'applicant.name', sortable: false },
   { title: '申請類型', key: 'productType', sortable: false },
-  { title: '狀態', key: 'status', sortable: true },
+  { title: '狀態', key: 'status', align: 'center', sortable: true },
   { title: '處理人員', key: 'assignedDesigner.name', align: 'center', sortable: false },
+  { title: '部門備註', key: 'departmentNote', width: 300, align: 'center', sortable: false },
   { title: '操作', key: 'actions', align: 'center', sortable: false }
 ]
 const statusOptions = [
@@ -2372,7 +2534,8 @@ const addingEmail = ref(false)
 const categoryOptions = [
   { value: 'printing', label: '印刷相關' },
   { value: 'map', label: '地圖相關' },
-  { value: 'dm', label: 'DM相關' }
+  { value: 'dm', label: 'DM相關' },
+  { value: 'electronic', label: '電子說資' }
 ]
 
 // 編輯 EMAIL 對話框相關變數
@@ -2395,6 +2558,19 @@ const deleteEmailConfirmDialog = reactive({
   emailName: '',
   message: ''
 })
+
+// 部門備註編輯對話框相關變數
+const departmentNoteDialog = reactive({
+  show: false,
+  designRequestId: null,
+  designRequestNumber: '',
+  currentNote: '',
+  newNote: ''
+})
+const updatingDepartmentNote = ref(false)
+
+// URL插入相關變數
+const departmentNoteUrlInput = ref('')
 
 // 計算屬性：過濾顯示的欄位
 const visibleViewFormFields = computed(() => {
@@ -3193,6 +3369,8 @@ const truncateFileName = (name, length = 15) => {
   return `${name.substring(0, length)}...`
 }
 
+
+
 // 下載檔案
 const downloadFile = async (filePath) => {
   if (!filePath) {
@@ -3413,7 +3591,8 @@ const getCategoryLabel = (category) => {
   const categoryMap = {
     'printing': '印刷相關',
     'map': '地圖相關',
-    'dm': 'DM相關'
+    'dm': 'DM相關',
+    'electronic': '電子說資'
   }
   return categoryMap[category] || category
 }
@@ -3650,9 +3829,101 @@ const updateNotificationEmail = async () => {
     updatingEmail.value = false
   }
 }
+
+// 部門備註相關函數
+const openDepartmentNoteDialog = (item) => {
+  // 檢查狀態是否為已完成或已取消，如果是則不允許編輯
+  if (isCompletedOrCancelled(item.status)) {
+    createSnackbar({
+      text: `狀態為「${getStatusText(item.status)}」的申請單無法編輯部門備註`,
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    return
+  }
+
+  departmentNoteDialog.designRequestId = item._id
+  departmentNoteDialog.designRequestNumber = item.designRequestNumber
+  departmentNoteDialog.currentNote = item.departmentNote || ''
+  departmentNoteDialog.newNote = item.departmentNote || ''
+  departmentNoteDialog.show = true
+}
+
+const closeDepartmentNoteDialog = () => {
+  departmentNoteDialog.show = false
+  departmentNoteDialog.designRequestId = null
+  departmentNoteDialog.designRequestNumber = ''
+  departmentNoteDialog.currentNote = ''
+  departmentNoteDialog.newNote = ''
+  departmentNoteUrlInput.value = ''
+}
+
+// URL插入功能
+const confirmInsertDepartmentNoteUrl = () => {
+  if (!departmentNoteUrlInput.value) return
+
+  const textarea = document.querySelector('textarea')
+  const start = textarea.selectionStart
+  const end = textarea.selectionEnd
+  const text = departmentNoteDialog.newNote
+  const before = text.substring(0, start)
+  const after = text.substring(end)
+
+  const buttonHtml = ` <a href="${departmentNoteUrlInput.value}" target="_blank" class="url-button">連結</a>`
+  departmentNoteDialog.newNote = before + buttonHtml + after
+
+  departmentNoteUrlInput.value = ''
+}
+
+// 格式化部門備註內容
+const formatDepartmentNote = (content) => {
+  if (!content) return ''
+  return content.replace(
+    /<a href="([^"]+)" target="_blank" class="url-button">連結<\/a>/g,
+    (match, url) => {
+      return `<a href="${url}" target="_blank" class="url-button">連結</a>`
+    }
+  )
+}
+
+const confirmUpdateDepartmentNote = async () => {
+  // 檢查是否有變更
+  if (departmentNoteDialog.newNote === departmentNoteDialog.currentNote) {
+    createSnackbar({ text: '資料未做任何變更', snackbarProps: { color: 'red-lighten-1' } })
+    return
+  }
+
+  updatingDepartmentNote.value = true
+  try {
+    const { data } = await apiAuth.patch(`/marketing/design-requests/${departmentNoteDialog.designRequestId}/department-note`, {
+      departmentNote: departmentNoteDialog.newNote
+    })
+
+    if (data.success) {
+      // 更新本地資料
+      const currentItem = tableItems.value.find(item => item._id === departmentNoteDialog.designRequestId)
+      if (currentItem) {
+        currentItem.departmentNote = departmentNoteDialog.newNote
+      }
+
+      createSnackbar({
+        text: '部門備註更新成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+      closeDepartmentNoteDialog()
+    }
+  } catch (error) {
+    console.error('更新部門備註失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '更新部門備註失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    updatingDepartmentNote.value = false
+  }
+}
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .text-label {
   color: #455a64;
   font-size: 14px;
@@ -3855,5 +4126,52 @@ const updateNotificationEmail = async () => {
     background-color: #f5f5f5;
     color: #424242;
   }
+}
+
+/* 部門備註樣式 */
+.department-note-cell {
+  transition: all 0.2s ease;
+}
+
+.department-note-text {
+  margin: 8px 0;
+  background: #fcfdff;
+  border: 1px solid #B0BEC5;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  color: #546E7A;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  transition: all 0.1s ease;
+  :deep(.url-button) {
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin: 0 2px;
+    font-size: 11px;
+    transition: background-color 0.2s;
+    background-color: #4077ad;
+    color: white;
+    text-decoration: none;
+    &:hover {
+    background-color: #1565c0;
+    }
+  }
+}
+
+.department-note-text.clickable {
+  cursor: pointer;
+}
+
+.department-note-text.clickable:hover {
+  background: #ECEFF1;
+  border-color: #B0BEC5;
+}
+
+.department-note-text.disabled {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #9e9e9e;
 }
 </style>

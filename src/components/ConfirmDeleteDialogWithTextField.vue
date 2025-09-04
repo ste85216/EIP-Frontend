@@ -5,28 +5,50 @@
     max-width="360"
     persistent
   >
-    <v-card class="rounded-lg pb-2">
-      <v-card-title class="font-weight-bold mt-4 ms-2">
+    <v-card class="rounded-lg">
+      <div class="card-title px-6 py-3 bg-red-lighten-1 d-flex align-center">
+        <v-icon
+          size="20"
+          color="white"
+          class="me-2"
+        >
+          mdi-delete-alert
+        </v-icon>
         {{ title }}
-      </v-card-title>
-      <v-card-text class="ms-1 pb-0">
+        <v-spacer />
+        <v-btn
+          icon
+          color="white"
+          variant="plain"
+          class="opacity-100"
+          :ripple="false"
+          size="20"
+          @click="cancel"
+        >
+          <v-icon size="20">
+            mdi-close
+          </v-icon>
+        </v-btn>
+      </div>
+      <v-card-text class="px-6 pt-6 pb-0">
         <div v-html="message" />
         <v-text-field
           v-model="inputName"
           :error-messages="errorMessage"
-          class="mt-8"
+          class="mt-6"
           :label="`請輸入${labelText}`"
           variant="outlined"
           density="compact"
           clearable
         />
       </v-card-text>
-      <v-card-actions class="me-4 mb-2">
+      <v-card-actions class="px-6 pb-5">
         <v-spacer />
         <v-btn
           :size="buttonSize"
           :color="cancelButtonColor"
           variant="outlined"
+          class="me-1"
           @click="cancel"
         >
           {{ cancelButtonText }}
