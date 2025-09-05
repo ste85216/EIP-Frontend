@@ -265,7 +265,7 @@
                 <v-tabs
                   v-model="activeTab"
                   grow
-                  color="light-blue-darken-2"
+                  color="blue-grey-darken-1"
                   @update:model-value="handleTabChange"
                 >
                   <v-tab
@@ -1429,7 +1429,8 @@ const formatChanges = (item) => {
           const categoryMap = {
             printing: '印刷相關',
             map: '地圖',
-            dm: 'DM'
+            dm: 'DM',
+            electronic: '電子說資'
           }
           return categoryMap[cat] || cat
         })
@@ -1667,7 +1668,8 @@ const formatChanges = (item) => {
           const categoryMap = {
             printing: '印刷相關',
             map: '地圖',
-            dm: 'DM'
+            dm: 'DM',
+            electronic: '電子說資'
           }
           const oldCategories = Array.isArray(oldValue) ? oldValue.map(cat => categoryMap[cat] || cat) : []
           const newCategories = Array.isArray(newValue) ? newValue.map(cat => categoryMap[cat] || cat) : []
@@ -1914,8 +1916,8 @@ const handleOperatorSearch = debounce(async (text) => {
 
     const suggestions = []
 
-    // 如果搜尋文字包含 SYSTEM（不分大小寫），則加入 SYSTEM 用戶
-    if (text.toUpperCase().includes('SYSTEM')) {
+    // 如果搜尋文字為空或包含 SYSTEM 的任何字母，則加入 SYSTEM 用戶
+    if (!text || text.toUpperCase().split('').some(char => 'SYSTEM'.includes(char))) {
       suggestions.push({
         _id: '000000000000000000000000',
         name: 'SYSTEM',
@@ -2003,7 +2005,7 @@ const performSearch = async () => {
   tableLoading.value = true
   try {
     const params = {
-      itemsPerPage: 9999 // 載入所有資料，由前端過濾
+      itemsPerPage: 9999999999 // 載入所有資料，由前端過濾
     }
 
     // 處理搜尋條件
@@ -2188,6 +2190,14 @@ const loadAllUsersForDelete = async () => {
 
     const suggestions = []
 
+    // 添加 SYSTEM 用戶
+    suggestions.push({
+      _id: '000000000000000000000000',
+      name: 'SYSTEM',
+      userId: 'SYSTEM',
+      type: 'system'
+    })
+
     // 添加系統使用者
     if (usersResponse.data.success) {
       usersResponse.data.result.forEach(user => {
@@ -2243,6 +2253,16 @@ const searchOperatorsForDelete = debounce(async (search) => {
     ])
 
     const suggestions = []
+
+    // 如果搜尋文字為空或包含 SYSTEM 的任何字母，則加入 SYSTEM 用戶
+    if (!search || search.toUpperCase().split('').some(char => 'SYSTEM'.includes(char))) {
+      suggestions.push({
+        _id: '000000000000000000000000',
+        name: 'SYSTEM',
+        userId: 'SYSTEM',
+        type: 'system'
+      })
+    }
 
     // 添加系統使用者搜尋結果
     if (usersResponse.data.success) {

@@ -3217,6 +3217,20 @@ const getPrintingTypeText = (printingTypes) => {
   border-radius: 6px;
   margin-top: 4px;
   border: 1px solid rgba(0, 0, 0, 0.1);
+  :deep(.url-button) {
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin: 0 2px;
+    font-size: 11px;
+    transition: background-color 0.2s;
+    background-color: #4077ad;
+    color: white;
+    text-decoration: none;
+    &:hover {
+    background-color: #1565c0;
+    }
+  }
 }
 
 .sub-card-title {
