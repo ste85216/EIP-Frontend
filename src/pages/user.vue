@@ -335,7 +335,7 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '使用者管理 | GInternational',
+    title: '使用者管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN]
   }

@@ -1738,7 +1738,7 @@ import { useForm, useField } from 'vee-validate'
 // 頁面定義
 definePage({
   meta: {
-    title: '直客詢問統計表 | GInternational',
+    title: '直客詢問統計表 | Ystravel',
     login: false,
   }
 })

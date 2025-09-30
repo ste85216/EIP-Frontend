@@ -831,7 +831,7 @@ import { useUserStore } from '@/stores/user'
 
 definePage({
   meta: {
-    title: '公司部門管理 | GInternational',
+    title: '公司部門管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT, UserRole.HR]
   }

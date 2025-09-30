@@ -2103,7 +2103,7 @@ const ECharts = VChart
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '行銷費用分析 | GInternational',
+    title: '行銷費用分析 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.MARKETING, UserRole.MANAGER]
   }

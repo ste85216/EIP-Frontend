@@ -1,37 +1,52 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <v-container max-width="2400">
-    <v-row class="pt-md-6 px-lg-10 px-xxl-6">
+    <v-row class="pt-md-5 px-lg-10 px-xxl-6">
       <v-col cols="12">
-        <v-card class="elevation-4 rounded-lg py-10 px-0">
-          <div class="d-flex align-center px-9">
-            <h3 class="me-4">
+        <v-card class="elevation-4 rounded-lg py-3 py-sm-7 px-0">
+          <v-row class="d-flex align-center justify-space-between px-9 px-sm-10 py-5">
+            <h3
+              class="d-inline-block"
+              style="min-width: 160px;"
+            >
               行銷美編需求申請管理
             </h3>
-            <v-spacer />
-            <v-btn
-              v-if="userStore.isAdmin || userStore.isManager"
-              color="blue-grey-darken-2"
-              prepend-icon="mdi-email-multiple"
-              variant="outlined"
-              class="me-4"
-              @click="openNotificationEmailDialog"
-            >
-              通知設定管理
-            </v-btn>
-            <v-btn
-              to="/marketingDesignRequest"
-              variant="plain"
-              :ripple="false"
-              color="blue-grey-darken-2"
-              class="pe-0"
-            >
-              申請頁面 >
-            </v-btn>
-          </div>
-          <v-divider class="mt-5 mb-6" />
+            <span>
+              <v-btn
+                v-if="userStore.isAdmin || userStore.isManager"
+                icon="mdi-email-multiple"
+                color="blue-grey-darken-2"
+                variant="text"
+                :size="smAndUp ? 'default' : 'small'"
+                class="d-sm-none"
+                @click="openNotificationEmailDialog"
+              />
+              <v-btn
+                v-if="userStore.isAdmin || userStore.isManager"
+                prepend-icon="mdi-email-multiple"
+                color="blue-grey-darken-2"
+                variant="outlined"
+                :size="smAndUp ? 'default' : 'small'"
+                class="d-none d-sm-inline-flex me-4"
+                @click="openNotificationEmailDialog"
+              >
+                通知設定管理
+              </v-btn>
+              <v-btn
+                to="/marketingDesignRequest"
+                variant="plain"
+                :ripple="false"
+                color="blue-grey-darken-2"
+                class="px-0"
+                :size="smAndUp ? 'default' : 'small'"
+              >
+                申請頁面 >
+              </v-btn>
+            </span>
+          </v-row>
+          <v-divider class="mt-2 mt-sm-5 mb-2 mb-sm-6" />
           <!-- 搜尋條件區塊 -->
-          <v-card-text class="pt-3 px-10 pb-2">
+          <v-card-text class="pt-4 px-6 px-sm-10 pb-1 pb-sm-4">
             <v-row class="mb-2">
               <!-- 申請日期 -->
               <v-col
@@ -158,8 +173,8 @@
                     v-model="searchCriteria.assignedDesigner"
                     class="ms-4"
                     :items="marketingDesigners"
-                    :item-title="item => item && item.name && item.employeeCode ? `${item.name} (${item.employeeCode})` : ''"
-                    item-value="_id"
+                    item-title="label"
+                    item-value="value"
                     variant="outlined"
                     density="compact"
                     clearable
@@ -338,10 +353,10 @@
                       <v-list>
                         <v-list-item
                           v-for="designer in marketingDesigners"
-                          :key="designer._id"
-                          @click="updateAssignedDesigner(item._id, designer._id)"
+                          :key="designer.value"
+                          @click="updateAssignedDesigner(item._id, designer.value)"
                         >
-                          <v-list-item-title>{{ designer.name }} ({{ designer.employeeCode }})</v-list-item-title>
+                          <v-list-item-title>{{ designer.label }}</v-list-item-title>
                         </v-list-item>
                         <v-divider />
                         <v-list-item
@@ -408,6 +423,7 @@
                       icon
                       color="blue-grey-darken-2"
                       variant="plain"
+                      :size="buttonSize"
                       :ripple="false"
                       @click="openViewDialog(item)"
                     >
@@ -417,6 +433,7 @@
                       icon
                       color="light-blue-darken-4"
                       variant="plain"
+                      :size="buttonSize"
                       :ripple="false"
                       :disabled="isCompletedOrCancelled(item.status)"
                       :class="{ 'disabled-btn': isCompletedOrCancelled(item.status) }"
@@ -1161,7 +1178,6 @@
     >
       <v-card
         class="lightbox-card"
-        style="background: rgba(0,0,0,0.95);"
       >
         <v-btn
           icon
@@ -2423,6 +2439,7 @@ import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
+import { useDisplay } from 'vuetify'
 import UserRole from '@/enums/UserRole'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
@@ -2432,7 +2449,7 @@ import { useUserStore } from '@/stores/user'
 // 頁面定義
 definePage({
   meta: {
-    title: '行銷美編需求申請管理 | GInternational',
+    title: '行銷美編需求申請管理 | Ystravel',
     login: true,
     roles: [UserRole.MARKETING, UserRole.ADMIN, UserRole.DESIGNER, UserRole.MANAGER]
   }
@@ -2441,6 +2458,9 @@ definePage({
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 const userStore = useUserStore()
+const { smAndUp } = useDisplay()
+const buttonSize = computed(() => !smAndUp.value ? 'small' : 'default')
+
 
 // 圖片預覽對話框
 const imagePreviewDialog = reactive({
@@ -2469,7 +2489,7 @@ const tableHeaders = [
   { title: '申請編號', key: 'designRequestNumber', sortable: true },
   { title: '申請日期', key: 'applicationDate', sortable: true },
   { title: '申請人', key: 'applicant.name', sortable: false },
-  { title: '申請類型', key: 'productType', sortable: false },
+  { title: '申請類型', key: 'productType', minWidth: 100, sortable: false },
   { title: '狀態', key: 'status', align: 'center', sortable: true },
   { title: '處理人員', key: 'assignedDesigner.name', align: 'center', sortable: false },
   { title: '部門備註', key: 'departmentNote', width: 300, align: 'center', sortable: false },
@@ -2690,7 +2710,13 @@ const handleProductCategoryChange = () => {
 const fetchEmployees = async () => {
   try {
     const { data } = await apiAuth.get('/employees/active')
-    if (data.success) employees.value = data.result
+    if (data.success) {
+      // 將員工資料轉換為 v-autocomplete 需要的格式
+      employees.value = data.result.map(employee => ({
+        label: `${employee.name} (${employee.employeeCode})`,
+        value: employee._id
+      }))
+    }
   } catch {
     // 忽略錯誤
   }
@@ -2699,7 +2725,14 @@ const fetchEmployees = async () => {
 const fetchMarketingDesigners = async () => {
   try {
     const { data } = await apiAuth.get('/employees/marketing-design')
-    if (data.success) marketingDesigners.value = data.result
+    if (data.success) {
+      // 將行銷美編人員資料轉換為 v-autocomplete 需要的格式
+      marketingDesigners.value = data.result.map(employee => ({
+        label: `${employee.name} (${employee.employeeCode})`,
+        value: employee._id,
+        ...employee // 保留原始資料以備其他用途
+      }))
+    }
   } catch {
     // 忽略錯誤
   }

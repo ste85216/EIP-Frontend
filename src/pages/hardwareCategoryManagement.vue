@@ -427,7 +427,7 @@ import { debounce } from 'lodash'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '硬體類別管理 | GInternational',
+    title: '硬體類別管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.IT]
   }

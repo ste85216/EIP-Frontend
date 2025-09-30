@@ -278,7 +278,7 @@
                           NT$ {{ item.price }}
                         </span>
                       </div>
-                      <p 
+                      <p
                         class="text-body-2 text-grey-darken-1"
                       >
                         {{ item.description || '暫無描述' }}
@@ -838,7 +838,7 @@ import UserRole from '@/enums/UserRole'
 // 頁面定義
 definePage({
   meta: {
-    title: '訂餐趣 | GInternational',
+    title: '訂餐趣 | Ystravel',
     login: true
   }
 })
@@ -1089,7 +1089,7 @@ const openItemDialog = (item) => {
 // 加入購物車
 const addToCart = () => {
   const { item, quantity, options, note } = itemDialog.value
-  
+
   cartItems.value.push({
     _id: item._id,
     name: item.name,
@@ -1293,7 +1293,7 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .categories-list {
   border: 1px solid rgba(0, 0, 0, 0.12);
-  
+
   :deep(.v-list-item--active) {
     .v-list-item-title {
       color: white;

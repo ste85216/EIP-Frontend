@@ -1656,7 +1656,7 @@ import { useForm, useField } from 'vee-validate'
 // 頁面定義
 definePage({
   meta: {
-    title: '員工管理 | GInternational',
+    title: '員工管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR]
   }
@@ -2873,7 +2873,7 @@ const handleImportExcel = async () => {
 // 在 script setup 部分添加以下函數
 const downloadExampleFile = () => {
   const link = document.createElement('a')
-  link.href = 'https://yst001.com/GInternational/uploads/example/example_employeeList.xlsx'
+  link.href = 'https://eip.ystravel.com.tw/GInternational/uploads/example/example_employeeList.xlsx'
   link.download = 'example_employeeList.xlsx'
   link.style.display = 'none'
   document.body.appendChild(link)

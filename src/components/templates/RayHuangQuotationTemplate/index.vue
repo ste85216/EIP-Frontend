@@ -1099,7 +1099,7 @@ const totalAmount = computed(() => {
 
 .items-table th:nth-child(7),
 .items-table td:nth-child(7) {
-  width: 60px;
+  width: 70px;
 }
 
 .items-table th:nth-child(8),

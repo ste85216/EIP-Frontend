@@ -1430,7 +1430,7 @@ import { useForm, useField } from 'vee-validate'
 // 頁面定義
 definePage({
   meta: {
-    title: '硬體設備管理 | GInternational',
+    title: '硬體設備管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.IT]
   }
@@ -2649,7 +2649,7 @@ const loadXLSX = async () => {
 // 在 script setup 部分添加以下函數
 const downloadExampleFile = () => {
   const link = document.createElement('a')
-  link.href = 'https://yst001.com/GInternational/uploads/example/example_deviceList.xlsx'
+  link.href = 'https://eip.ystravel.com.tw/GInternational/uploads/example/example_deviceList.xlsx'
   link.download = 'example_deviceList.xlsx'
   link.style.display = 'none'
   document.body.appendChild(link)

@@ -43,7 +43,7 @@
             科威系統
           </v-btn>
           <v-btn
-            href="https://7029.tw/finalcall/"
+            href="https://finalcall.ystravel.com.tw/"
             target="_blank"
             variant="plain"
             class="opacity-100 custom-btn"
@@ -57,12 +57,12 @@
           class="ms-6 me-xl-3 me-xxl-7 rounded-0"
           variant="outlined"
           prepend-icon="mdi-arrow-left"
-          color="deep-purple-darken-4"
+          color="blue-grey-darken-2"
           :ripple="false"
           flat
           to="/"
         >
-          回銳皇系統
+          回永信系統
         </v-btn>
       </v-app-bar>
       <router-view />

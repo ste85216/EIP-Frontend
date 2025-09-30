@@ -15,6 +15,46 @@
   font-family: '微軟正黑體' !important;
 }
 
+.page-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.block-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.block-card {
+  &:hover {
+    border: 1px solid #aaa !important;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.05);
+  }
+  .list-item {
+    background-color: #f9f9f9 !important;
+    &:hover {
+      border: 1px solid #ccc !important;
+      background-color: #eee !important;
+      transition: all 0.1s ease;
+      box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+.expand-panel-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.sub-description {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+
 h6 {
   font-size: 16px;
 }
@@ -37,7 +77,7 @@ h6 {
 }
 
 // 一般輸入框樣式
-.v-field:not(.v-textarea .v-field):not(.v-autocomplete .v-field) {
+.v-field:not(.v-textarea .v-field):not(.v-autocomplete .v-field):not(.v-combobox .v-field):not(.v-select .v-field) {
   .v-field__input {
     font-size: 13px;
     height: 36px !important;
@@ -46,6 +86,12 @@ h6 {
 
   .v-field__field {
     height: 36px !important;
+  }
+}
+
+.v-select .v-field {
+  .v-field__input {
+    font-size: 13px;
   }
 }
 
@@ -123,11 +169,27 @@ h3 {
     font-size: 18px;
   }
 
+  .page-title {
+    font-size: 18px;
+  }
+
+  .block-title {
+    font-size: 17px;
+  }
+
+  .sub-description {
+    font-size: 14px;
+  }
+
+  .expand-panel-title {
+    font-size: 17px;
+  }
+
   .v-navigation-drawer .v-list-item-title {
     font-size: 16px;
   }
 
-  .v-field:not(.v-textarea .v-field):not(.v-autocomplete .v-field) {
+  .v-field:not(.v-textarea .v-field):not(.v-autocomplete .v-field):not(.v-combobox .v-field):not(.v-select .v-field) {
     .v-field__input {
         font-size: 14px;
         height: 40px !important;
@@ -137,6 +199,12 @@ h3 {
     .v-field__field {
         height: 40px !important;
       }
+  }
+
+  .v-select .v-field {
+    .v-field__input {
+      font-size: 14px !important;
+    }
   }
 
   .v-textarea {
@@ -184,6 +252,22 @@ h3 {
 }
 
 @include rwd.md {
+  .page-title {
+    font-size: 24px;
+  }
+
+  .block-title {
+    font-size: 20px;
+  }
+
+  .sub-description {
+    font-size: 16px;
+  }
+
+  .expand-panel-title {
+    font-size: 18px;
+  }
+
   .v-data-table {
     th {
       font-size: 14px;

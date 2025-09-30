@@ -1915,7 +1915,7 @@ import EmployeeLogin from '@/components/EmployeeLogin.vue'
 // 頁面定義
 definePage({
   meta: {
-    title: '行銷美編需求申請 | GInternational',
+    title: '行銷美編需求申請 | Ystravel',
     login: false  // 不需要登入
   }
 })

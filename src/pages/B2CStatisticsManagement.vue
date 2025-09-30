@@ -9,9 +9,9 @@
             <v-row>
               <v-col
                 cols="12"
-                class="mt-1 px-lg-6 px-xl-4"
+                class="px-lg-6 px-xl-4"
               >
-                <v-card class="elevation-4 rounded-lg py-3 py-sm-7 px-0">
+                <v-card class="elevation-4 rounded-lg py-2 py-sm-7 px-0">
                   <div class="d-flex align-center px-6 px-sm-10 py-3">
                     <h3 class="me-4">
                       直客詢問統計表管理
@@ -1692,7 +1692,7 @@ import UserRole from '@/enums/UserRole'
 // 頁面定義
 definePage({
   meta: {
-    title: '直客詢問統計表管理 | GInternational',
+    title: '直客詢問統計表管理 | Ystravel',
     login: true,
     roles: [UserRole.MARKETING, UserRole.ADMIN,UserRole.MANAGER,UserRole.HR]
   }

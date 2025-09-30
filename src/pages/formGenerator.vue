@@ -1062,7 +1062,7 @@ const initDependencies = async () => {
 
 definePage({
   meta: {
-    title: '表單產生器 | GInternational',
+    title: '表單產生器 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERVISOR]
   }

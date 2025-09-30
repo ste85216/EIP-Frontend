@@ -313,7 +313,7 @@ import { useRouter } from 'vue-router'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '管理者管理 | GInternational',
+    title: '管理者管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN]
   }

@@ -16,6 +16,7 @@ export const useUserStore = defineStore('user', () => {
   const note = ref('')
   const avatar = ref('')
   const isDefaultPasswordChanged = ref(true)
+  const _id = ref('')
 
   // 計算屬性
   const isLogin = computed(() => token.value.length > 0)
@@ -27,6 +28,64 @@ export const useUserStore = defineStore('user', () => {
   const isMarketing = computed(() => role.value === UserRole.MARKETING)
   const isHR = computed(() => role.value === UserRole.HR)
   const isSupervisor = computed(() => role.value === UserRole.SUPERVISOR)
+
+  // 頭像相關工具函數
+  const isDefaultAvatar = (avatarUrl) => {
+    if (!avatarUrl) return false
+    return avatarUrl.includes('avatar_purple_robot') || avatarUrl.includes('avatar_robot')
+  }
+
+  const getInitials = (name) => {
+    if (!name) return '??'
+    // 移除空格並取前兩個字
+    const cleanName = name.replace(/\s/g, '')
+    return cleanName.substring(0, 2).toUpperCase()
+  }
+
+  const getAvatarColor = (name) => {
+    if (!name) return 'grey'
+
+    // 顏色列表
+    const colors = [
+      'red',
+      'pink',
+      'purple',
+      'deep-purple',
+      'indigo',
+      'blue',
+      'light-blue',
+      'cyan',
+      'teal',
+      'green-darken-1',
+      'amber-darken-1',
+      'orange',
+      'deep-orange',
+      'brown',
+      'blue-grey'
+    ]
+
+    // 根據姓名的字符碼總和來選擇顏色
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    }
+
+    const colorIndex = Math.abs(hash) % colors.length
+    return colors[colorIndex]
+  }
+
+  // 取得用戶頭像資訊（統一處理）
+  const getUserAvatarInfo = (user) => {
+    if (!user) return { isDefault: true, color: 'grey', initials: '??', avatar: null }
+
+    const isDefault = isDefaultAvatar(user.avatar)
+    return {
+      isDefault,
+      color: isDefault ? getAvatarColor(user.name) : undefined,
+      initials: isDefault ? getInitials(user.name) : null,
+      avatar: !isDefault ? user.avatar : null
+    }
+  }
 
   // 登入
   const login = async (values) => {
@@ -43,6 +102,7 @@ export const useUserStore = defineStore('user', () => {
         note.value = data.result.note
         avatar.value = data.result.avatar
         isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
+        _id.value = data.result._id
         await profile()
         return '登入成功'
       } else {
@@ -69,6 +129,7 @@ export const useUserStore = defineStore('user', () => {
         note.value = response.data.result.note
         avatar.value = response.data.result.avatar
         isDefaultPasswordChanged.value = response.data.result.isDefaultPasswordChanged
+        _id.value = response.data.result._id
         return '登入成功'
       } else {
         throw new Error(response.data.message)
@@ -93,6 +154,7 @@ export const useUserStore = defineStore('user', () => {
       note.value = data.result.note
       avatar.value = data.result.avatar
       isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
+      _id.value = data.result._id
     } catch (error) {
       console.log(error)
       logout()
@@ -195,6 +257,7 @@ export const useUserStore = defineStore('user', () => {
     adminId.value = ''
     note.value = ''
     avatar.value = ''
+    _id.value = ''
   }
 
   return {
@@ -208,6 +271,7 @@ export const useUserStore = defineStore('user', () => {
     note,
     avatar,
     isDefaultPasswordChanged,
+    _id,
 
     // 計算屬性
     isLogin,
@@ -219,6 +283,12 @@ export const useUserStore = defineStore('user', () => {
     isMarketing,
     isHR,
     isSupervisor,
+
+    // 頭像相關工具函數
+    isDefaultAvatar,
+    getInitials,
+    getAvatarColor,
+    getUserAvatarInfo,
 
     // 方法
     login,

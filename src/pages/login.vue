@@ -16,12 +16,17 @@
         <v-row class="px-4">
           <v-col
             cols="12"
-            class="pt-10 pb-6 pe-8 ps-6 d-flex justify-center"
+            class="pt-10 pb-6 pe-8 ps-6 d-flex justify-center align-center"
           >
             <v-img
-              src="/src/assets/image/GInternational_Logo_horizontal.png"
-              max-width="248"
+              src="/src/assets/image/Ys_favicon_nobg.png"
+              height="32"
+              max-width="64"
             />
+            <span
+              style="font-size: 24px; font-weight: 600; letter-spacing: 1.5px;"
+              class="text-decoration-none text-grey-darken-3"
+            >永信旅遊生活事業</span>
           </v-col>
 
           <v-col cols="12">
@@ -77,7 +82,7 @@
             <v-btn
               block
               elevation="2"
-              color="purple-lighten-1"
+              color="orange-darken-2"
               type="submit"
               :loading="isSubmitting"
               :disabled="isSubmitting"
@@ -121,7 +126,7 @@
                 <v-btn
                   block
                   elevation="2"
-                  color="pink-lighten-1"
+                  color="blue-grey-darken-1"
                   :loading="isSubmitting"
                   :disabled="isSubmitting"
                   @click="signIn"
@@ -160,7 +165,7 @@ import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
-    title: '登入 | GInternational'
+    title: '登入 | Ystravel'
   }
 })
 
@@ -305,9 +310,18 @@ onMounted(async () => {
 #background {
   width: 100%;
   height: 100%;
-  background-image: url(/src/assets/image/bg_login_low.webp);
+  background-image: url(/src/assets/image/bg_login_4.jpg);
   background-size: cover;
-  background-position: center;
+  background-position: bottom;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%,rgba(255,255,255,0.25) 20% , rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
+  }
 }
 
 .login-wrapper {

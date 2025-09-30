@@ -881,7 +881,6 @@
                 variant="outlined"
                 density="compact"
                 hide-details
-                autofocus
                 @keyup.enter="confirmAmount"
               />
             </div>
@@ -963,7 +962,6 @@
                 hide-details
                 min="1"
                 :rules="[value => !value || value < 1 ? '數量必須大於0' : true]"
-                autofocus
                 @keyup.enter="confirmAddDetails"
               />
             </div>
@@ -1143,7 +1141,7 @@ const formatToDate = (dateString) => {
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '實際支出管理 | GInternational',
+    title: '實際支出管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.MARKETING, UserRole.MANAGER]
   }

@@ -14,13 +14,16 @@
       />
       <router-link
         to="/"
-        class="d-flex"
+        class="d-flex align-center text-decoration-none text-grey-darken-4"
       >
         <v-img
-          src="/src/assets/image/GInternational_Logo_horizontal.png"
-          width="190"
+          src="/src/assets/image/Ys_favicon.png"
+          width="44"
           style="margin-left: 2px;"
         />
+        <span
+          style="font-size: 24px; font-weight: 600; margin-left: 6px; letter-spacing: 1.5px;"
+        >永信旅遊生活事業</span>
       </router-link>
       <v-spacer />
       <!-- <v-icon
@@ -40,7 +43,7 @@
         prepend-icon="mdi-account-arrow-right"
         variant="outlined"
         rounded="0"
-        color="deep-purple-darken-4"
+        color="blue-grey-darken-2"
         class="me-6"
         @click="logout"
       >
@@ -169,7 +172,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
-                base-color="blue-grey-darken-1"
+                base-color="blue-darken-2"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -226,7 +229,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
-                base-color="deep-purple-darken-4"
+                base-color="orange-darken-4"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -284,7 +287,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
-                base-color="deep-purple-darken-4"
+                base-color="orange-darken-4"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -340,7 +343,7 @@
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
-                  base-color="blue-grey-darken-1"
+                  base-color="orange-darken-4"
                 >
                   <template #prepend>
                     <v-icon>{{ child.icon }}</v-icon>
@@ -536,7 +539,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
-                base-color="deep-purple-darken-4"
+                base-color="orange-darken-4"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -595,7 +598,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
-                base-color="deep-purple-darken-4"
+                base-color="orange-darken-4"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -654,7 +657,7 @@
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
-                  base-color="blue-grey-darken-1"
+                  base-color="blue-darken-2"
                 >
                   <template #prepend>
                     <v-icon>{{ child.icon }}</v-icon>
@@ -759,12 +762,13 @@ const userItems = [
     text: '公司員工列表',
     icon: 'mdi-account-details',
     roles: ['ADMIN', 'MANAGER', 'IT', 'HR']
+  },
+  {
+    to: '/projectAndTaskManagement',
+    text: '專案與任務管理',
+    icon: 'mdi-chart-box-outline',
+    roles: ['ADMIN', 'MANAGER', 'MARKETING', 'DESIGNER', 'SUPERVISOR', 'USER', 'IT']
   }
-  // {
-  //   to: '/orderTogether',
-  //   text: '訂餐趣',
-  //   icon: 'mdi-food-fork-drink',
-  // }
 ]
 
 const cogItems = [
@@ -1025,8 +1029,6 @@ const filteredUserItems = computed(() => {
           return user.isManager
         case 'USER':
           return user.isUser
-        default:
-          return false
         case 'DESIGNER':
           return user.isDesigner
         case 'MARKETING':
@@ -1035,6 +1037,10 @@ const filteredUserItems = computed(() => {
           return user.isSupervisor
         case 'HR':
           return user.isHR
+        case 'IT':
+          return user.isIT
+        default:
+          return false
       }
     })
 
@@ -1057,6 +1063,8 @@ const filteredUserItems = computed(() => {
               return user.isSupervisor
             case 'HR':
               return user.isHR
+            case 'IT':
+              return user.isIT
             default:
               return false
           }
@@ -1170,15 +1178,9 @@ watch(() => user.avatar, (newAvatar) => {
 
 <style lang="scss" scoped>
 .card-bg {
-  background: url(/src/assets/image/bg_profile.png);
+  background: url(/src/assets/image/bg_profile.jpg);
   background-size: cover;
   transition: opacity 0.3s ease;
-}
-
-
-
-.card-blur {
-  background: linear-gradient(135deg, rgb(105, 55, 105) 20%, rgba(255,255,255,0));
 }
 
 </style>

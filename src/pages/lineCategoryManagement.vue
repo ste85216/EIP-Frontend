@@ -648,7 +648,6 @@
               density="compact"
               :error-messages="batchDialog.error"
               hide-details="auto"
-              autofocus
               @keyup.enter="handleBatchAdd"
             />
           </v-card-text>
@@ -695,7 +694,7 @@ import { debounce } from 'lodash'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '線別分類管理 | GInternational',
+    title: '線別分類管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.MANAGER]
   }

@@ -70,7 +70,7 @@
                     v-if="mdAndUp"
                     :size="buttonSize"
                     class="me-4"
-                    color="deep-purple-darken-2"
+                    color="blue-grey-darken-2"
                     prepend-icon="mdi-account"
                     variant="outlined"
                     @click="showUserListDialog = true"
@@ -102,7 +102,7 @@
             </div>
           </v-col> -->
           <v-col cols="12">
-            <v-row class="text-deep-purple-darken-2">
+            <v-row class="text-blue-grey-darken-2">
               <v-col
                 class="py-0 mb-6"
                 cols="12"
@@ -397,7 +397,7 @@
     max-width="400"
   >
     <v-card class=" rounded-lg">
-      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-deep-purple-darken-2 mb-2">
+      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-grey-darken-2 mb-2">
         <v-icon
           class="me-2"
           size="20"
@@ -424,7 +424,7 @@
         >
           <v-progress-circular
             indeterminate
-            color="deep-purple-darken-2"
+            color="blue-grey-darken-2"
             :size="52"
             :width="4"
           />
@@ -478,7 +478,7 @@ const buttonSize = computed(() => mdAndUp.value ? 'default' : 'small')
 
 definePage({
   meta: {
-    title: '個人資料管理 | GInternational',
+    title: '個人資料管理 | Ystravel',
     login: true
   }
 })

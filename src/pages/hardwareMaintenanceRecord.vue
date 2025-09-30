@@ -576,7 +576,7 @@ import html2pdf from 'html2pdf.js'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '硬體維修記錄 | GInternational',
+    title: '硬體維修記錄 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN, UserRole.IT]
   }

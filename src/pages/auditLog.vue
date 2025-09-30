@@ -622,7 +622,7 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 
 definePage({
   meta: {
-    title: '異動紀錄 | GInternational',
+    title: '異動紀錄 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN]
   }
@@ -670,6 +670,7 @@ const actionOptions = [
 ]
 
 const modelOptions = [
+  { title: '全部', value: '' },
   { title: '使用者', value: 'users' },
   { title: '表單', value: 'forms' },
   { title: '表單模板', value: 'formTemplates' },
@@ -1983,7 +1984,9 @@ const resetSearch = () => {
   }
   clearOperatorSearch()
   clearTargetSearch()
-  performSearch()
+  // 清空表格資料
+  tableItems.value = []
+  tableItemsLength.value = 0
 }
 
 // 新增 quickSearchText 和 isLoading
@@ -2015,9 +2018,6 @@ const performSearch = async () => {
     if (searchCriteria.value.action) {
       params.action = searchCriteria.value.action
     }
-    if (searchCriteria.value.targetModel) {
-      params.targetModel = searchCriteria.value.targetModel
-    }
 
     // 處理日期範圍
     if (searchCriteria.value.dateRange && searchCriteria.value.dateRange.length > 0) {
@@ -2035,6 +2035,11 @@ const performSearch = async () => {
     // 處理快速搜尋
     if (quickSearchText.value) {
       params.quickSearch = quickSearchText.value
+    }
+
+    // 處理資料類型篩選 - 如果選擇「全部」則不傳送 targetModel 參數
+    if (searchCriteria.value.targetModel && searchCriteria.value.targetModel !== '') {
+      params.targetModel = searchCriteria.value.targetModel
     }
 
     // 處理操作對象
@@ -2107,10 +2112,7 @@ const shouldShowBudgetTable = computed(() => {
 
 // 初始載入
 onMounted(async () => {
-  await Promise.all([
-    performSearch(),
-    loadAllUsers()
-  ])
+  await loadAllUsers()
 })
 
 // 修改 formatUserDisplay 函數，支援系統使用者和員工

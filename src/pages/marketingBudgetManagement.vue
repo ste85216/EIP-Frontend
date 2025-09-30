@@ -721,7 +721,7 @@ import AmountInput from '../components/AmountInput.vue'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '行銷預算管理 | GInternational',
+    title: '行銷預算管理 | Ystravel',
     login: true,
     roles: [ UserRole.ADMIN, UserRole.MANAGER, UserRole.MARKETING ]
   }
