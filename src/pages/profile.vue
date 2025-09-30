@@ -394,7 +394,7 @@
 
   <v-dialog
     v-model="showUserListDialog"
-    max-width="400"
+    max-width="900"
   >
     <v-card class=" rounded-lg">
       <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-grey-darken-2 mb-2">
@@ -429,21 +429,38 @@
             :width="4"
           />
         </div>
-        <v-list v-else>
-          <v-list-item
+        <v-row v-else>
+          <v-col
             v-for="users in userList"
             :key="users.id"
-            class="mb-2 py-2 border rounded-lg"
+            cols="12"
+            sm="6"
+            md="4"
+            class="mb-2"
           >
-            <template #prepend>
-              <v-avatar size="40">
-                <v-img :src="users.avatar" />
-              </v-avatar>
-            </template>
-            <v-list-item-title>{{ users.name }} <span class="subtitle text-grey">( {{ getRoleTitle(users.role) }} )</span></v-list-item-title>
-            <v-list-item-subtitle>{{ users.email }}</v-list-item-subtitle>
-          </v-list-item>
-        </v-list>
+            <v-card
+              class="py-2 px-3 border rounded-lg"
+              elevation="0"
+            >
+              <div class="d-flex align-center">
+                <v-avatar
+                  size="40"
+                  class="me-3"
+                >
+                  <v-img :src="users.avatar" />
+                </v-avatar>
+                <div class="text-truncate">
+                  <div class="font-weight-medium">
+                    {{ users.name }} <span class="text-subtitle-2 font-weight-regular text-grey">( {{ getRoleTitle(users.role) }} )</span>
+                  </div>
+                  <div class="text-caption text-medium-emphasis">
+                    {{ users.email }}
+                  </div>
+                </div>
+              </div>
+            </v-card>
+          </v-col>
+        </v-row>
       </v-card-text>
       <v-card-actions class="px-5 mb-2">
         <v-spacer />
@@ -515,12 +532,16 @@ const fetchUserList = async () => {
     try {
       isLoadingUsers.value = true
       const { data } = await apiAuth.get('/users/public/all')
-      // 定義角色優先順序
+      // 定義角色優先順序（1.經理 2.行銷人員 3.美編人員 4.總管 5.人資 6.IT 7.一般使用者 8.管理者）
       const roleOrder = {
-        2: 0, // ADMIN
-        1: 1, // MANAGER
-        3: 2, // IT
-        0: 3  // USER
+        1: 0, // MANAGER 經理
+        5: 1, // MARKETING 行銷人員
+        4: 2, // DESIGNER 美編人員
+        7: 3, // SUPERVISOR 總管
+        6: 4, // HR 人資
+        3: 5, // IT IT人員
+        0: 6, // USER 一般使用者
+        2: 7  // ADMIN 管理者
       }
 
       // 根據角色排序

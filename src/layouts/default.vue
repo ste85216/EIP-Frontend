@@ -23,7 +23,7 @@
         />
         <span
           style="font-size: 24px; font-weight: 600; margin-left: 6px; letter-spacing: 1.5px;"
-        >永信旅遊生活事業</span>
+        >永信生活旅遊事業</span>
       </router-link>
       <v-spacer />
       <!-- <v-icon
@@ -195,7 +195,7 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="!user.isUser && !user.isDesigner && !user.isSupervisor"
+            v-if="!user.isUser"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -505,7 +505,7 @@
 
           <!-- 行銷費用管理選單 -->
           <v-divider
-            v-if="!user.isUser && !user.isDesigner && !user.isSupervisor"
+            v-if="!user.isUser"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"

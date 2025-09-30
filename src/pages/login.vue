@@ -26,7 +26,7 @@
             <span
               style="font-size: 24px; font-weight: 600; letter-spacing: 1.5px;"
               class="text-decoration-none text-grey-darken-3"
-            >永信旅遊生活事業</span>
+            >永信生活旅遊事業</span>
           </v-col>
 
           <v-col cols="12">

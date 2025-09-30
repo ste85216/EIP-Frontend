@@ -32,7 +32,12 @@ export const useUserStore = defineStore('user', () => {
   // 頭像相關工具函數
   const isDefaultAvatar = (avatarUrl) => {
     if (!avatarUrl) return false
-    return avatarUrl.includes('avatar_purple_robot') || avatarUrl.includes('avatar_robot')
+    const lower = String(avatarUrl).toLowerCase()
+    return (
+      lower.includes('avatar_purple_robot') ||
+      lower.includes('avatar_robot') ||
+      lower.includes('orange_robot')
+    )
   }
 
   const getInitials = (name) => {

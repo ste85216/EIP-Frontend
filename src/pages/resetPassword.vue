@@ -55,7 +55,7 @@
             <v-btn
               block
               elevation="2"
-              color="purple-lighten-1"
+              color="orange-darken-2"
               type="submit"
               :loading="isSubmitting"
             >
@@ -142,18 +142,28 @@ const submit = handleSubmit(async (values) => {
 #background {
   width: 100%;
   height: 100%;
-  background-image: url(/src/assets/image/bg_login.webp);
+  background-image: url(/src/assets/image/bg_login_4.jpg);
   background-size: cover;
-  background-position: center;
+  background-position: bottom;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.8) 0%,rgba(255,255,255,0.25) 20% , rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
+  }
 }
 
 .reset-password-wrapper {
   background: rgba(255,255,255,0.7);
   backdrop-filter: blur(10px);
   border-radius: 20px;
-  font-family: "微軟正黑體";
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 500;
   box-shadow: 0 0 20px 4px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
 }
 </style>
