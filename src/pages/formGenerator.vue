@@ -818,14 +818,16 @@
       @confirm="confirmDelete"
     />
 
-    <ConfirmDeleteDialog
+    <ConfirmDialog
       v-model="confirmDialogOpen"
       :dialog-width="'310'"
       :title="confirmDialogTitle"
       :message="confirmDialogMessage"
       :confirm-button-text="confirmDialogConfirmText"
       :cancel-button-text="confirmDialogCancelText"
-      :confirm-button-color="'teal-lighten-1'"
+      :confirm-button-color="'teal-darken-1'"
+      :header-color="'bg-teal-darken-1'"
+      :header-icon="'mdi-check-circle'"
       @confirm="handleConfirm"
     />
 
@@ -1032,6 +1034,7 @@ import { useDisplay } from 'vuetify'
 import { debounce } from 'lodash'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 // 動態引入重量級組件
 const RayHuangQuotationTemplate = defineAsyncComponent(() =>

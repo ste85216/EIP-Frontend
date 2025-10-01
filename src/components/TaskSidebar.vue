@@ -15,6 +15,16 @@
             {{ task?.name || '任務詳情' }}
           </div>
           <div class="d-flex align-center">
+            <!-- 任務狀態 -->
+            <v-chip
+              v-if="task?.status"
+              :color="getStatusColor(task.status)"
+              label
+              size="small"
+              class="me-2"
+            >
+              {{ getStatusText(task.status) }}
+            </v-chip>
             <v-btn
               icon
               variant="plain"
@@ -1390,9 +1400,38 @@ const formatDateTime = (dateString) => {
   })
 }
 
+// 取得任務狀態文字
+const getStatusText = (status) => {
+  const statusMap = {
+    'in-progress': '進行中',
+    'in_progress': '進行中',
+    'completed': '已完成',
+    'pending': '待處理',
+    'cancelled': '已取消'
+  }
+  return statusMap[status] || status
+}
+
+// 取得任務狀態顏色
+const getStatusColor = (status) => {
+  const colorMap = {
+    'in-progress': 'blue',
+    'in_progress': 'blue',
+    'completed': 'green',
+    'pending': 'orange',
+    'cancelled': 'red'
+  }
+  return colorMap[status] || 'grey'
+}
+
 // 取得截止日期顏色
 const getDueDateColor = (dueDate) => {
   if (!dueDate) return 'text-medium-emphasis'
+
+  // 如果任務已完成，顯示一般顏色
+  if (props.task?.status === 'completed') {
+    return 'text-medium-emphasis'
+  }
 
   const today = new Date()
   const due = new Date(dueDate)

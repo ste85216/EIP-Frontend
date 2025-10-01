@@ -1103,60 +1103,19 @@
       @confirm="deleteTask"
     />
 
-    <!-- 完成任務確認對話框（自定義） -->
-    <v-dialog
+    <!-- 完成任務確認對話框 -->
+    <ConfirmDialog
       v-model="confirmCompleteDialog"
-      max-width="320px"
-      persistent
-    >
-      <v-card class="rounded-lg">
-        <div class="card-title px-6 py-2 mb-2 d-flex justify-space-between align-center bg-teal-darken-2">
-          <div>
-            <v-icon
-              size="20"
-              class="me-2"
-            >
-              mdi-check-circle
-            </v-icon>確認完成任務
-          </div>
-          <v-btn
-            icon
-            variant="plain"
-            size="36"
-            class="opacity-100"
-            :ripple="false"
-            @click="confirmCompleteDialog = false"
-          >
-            <v-icon size="20">
-              mdi-close
-            </v-icon>
-          </v-btn>
-        </div>
-        <v-card-text class="px-6 py-4">
-          <div>
-            您確定要將任務「<span class="font-weight-bold text-teal-darken-2">{{ completingTask?.name || '' }}</span>」標記為完成嗎？
-          </div>
-        </v-card-text>
-        <v-card-actions class="px-6 pb-4">
-          <v-spacer />
-          <v-btn
-            color="grey"
-            variant="outlined"
-            class="me-1"
-            @click="confirmCompleteDialog = false"
-          >
-            取消
-          </v-btn>
-          <v-btn
-            color="teal-darken-1"
-            variant="outlined"
-            @click="confirmCompleteTask"
-          >
-            完成
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+      :dialog-width="'320'"
+      title="確認完成任務"
+      :message="`您確定要將任務「<span class='font-weight-bold text-teal-darken-2'>${completingTask?.name || ''}</span>」標記為完成嗎？`"
+      confirm-button-text="確認"
+      cancel-button-text="取消"
+      :confirm-button-color="'teal-darken-1'"
+      :header-color="'bg-teal-darken-1'"
+      :header-icon="'mdi-check-circle'"
+      @confirm="confirmCompleteTask"
+    />
 
     <!-- 新增任務對話框 -->
     <v-dialog
@@ -1358,6 +1317,7 @@ import { useUserStore } from '@/stores/user'
 import { useTeamStore } from '@/stores/team'
 import UserAvatar from '@/components/UserAvatar.vue'
 import TaskStatisticsDialog from '@/components/TaskStatisticsDialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const props = defineProps({
   project: {
@@ -1649,7 +1609,7 @@ const getStatusColor = (status) => {
 const getStatusText = (status) => {
   switch (status) {
     case 'pending':
-      return '尚未處理'
+      return '待處理'
     case 'in_progress':
       return '進行中'
     case 'completed':

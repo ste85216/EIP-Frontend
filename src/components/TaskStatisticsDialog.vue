@@ -110,7 +110,7 @@
                 >
                   <v-card-text class="text-center py-4">
                     <div class="card-title text-orange-darken-2 mb-1">
-                      尚未處理
+                      待處理
                     </div>
                     <div class="text-h4 font-weight-bold text-orange-darken-1">
                       {{ totalPendingTasks }}
@@ -312,7 +312,7 @@ const totalCompletedTasks = ref(0)
 // 表格標頭
 const tableHeaders = [
   { title: '分類', key: 'category', sortable: true },
-  { title: '尚未處理', key: 'pending', sortable: true, align: 'center' },
+  { title: '待處理', key: 'pending', sortable: true, align: 'center' },
   { title: '進行中', key: 'inProgress', sortable: true, align: 'center' },
   { title: '已完成', key: 'completed', sortable: true, align: 'center' },
   { title: '總計', key: 'total', sortable: true, align: 'center' }
