@@ -858,6 +858,9 @@ const favoriteProjects = computed(() => {
     const isTeamMember = project.team?.members?.some(member => member._id === user._id)
     if (!isTeamMember) return false
 
+    // 排除已完成的專案
+    if (project.status === 'completed') return false
+
     // 檢查是否被當前用戶收藏 - 修復 fav.user._id 可能為 undefined 的問題
     return project.favorites?.some(fav => {
       // 如果 fav.user 是字串，直接比較
@@ -883,6 +886,9 @@ const displayedProjects = computed(() => {
     // 檢查專案所屬的團隊是否包含當前用戶
     const isTeamMember = project.team?.members?.some(member => member._id === user._id)
     if (!isTeamMember) return false
+
+    // 排除已完成的專案
+    if (project.status === 'completed') return false
 
     // 排除已加星號的專案 - 修復 fav.user._id 可能為 undefined 的問題
     return !project.favorites?.some(fav => {

@@ -114,14 +114,24 @@
                       團隊專案
                     </span>
                   </div>
-                  <v-btn
-                    v-if="isTeamManager"
-                    icon="mdi-plus"
-                    :size="iconButtonSize"
-                    variant="text"
-                    color="grey-darken-1"
-                    @click="openCreateProjectDialog"
-                  />
+                  <div class="d-flex align-center">
+                    <v-btn
+                      icon="mdi-history"
+                      :size="iconButtonSize"
+                      variant="text"
+                      color="grey-darken-1"
+                      class="me-1"
+                      @click="openHistoryProjectsDialog"
+                    />
+                    <v-btn
+                      v-if="isTeamManager"
+                      icon="mdi-plus"
+                      :size="iconButtonSize"
+                      variant="text"
+                      color="grey-darken-1"
+                      @click="openCreateProjectDialog"
+                    />
+                  </div>
                 </v-card-title>
                 <v-card-text class="px-2 px-sm-4 pb-0 pb-sm-2">
                   <div v-if="updatedProjects && updatedProjects.length > 0">
@@ -135,11 +145,11 @@
                       >
                         <template #prepend>
                           <v-icon
-                            :color="project.iconColor === 'white' ? 'grey-lighten-1' : project.iconColor"
+                            :color="project.iconColor && project.iconColor !== 'white' ? project.iconColor : 'grey-lighten-1'"
                             size="32"
                             class="ps-3"
                           >
-                            mdi-square-rounded
+                            {{ project.iconColor && project.iconColor !== 'white' ? 'mdi-square-rounded' : 'mdi-square-rounded-outline' }}
                           </v-icon>
                         </template>
                         <v-list-item-title>{{ project.name }}</v-list-item-title>
@@ -550,6 +560,12 @@
       :default-team-id="team?._id"
       @project-created="handleProjectCreated"
     />
+
+    <!-- 歷史專案對話框 -->
+    <HistoryProjectsDialog
+      v-model="historyProjectsDialog"
+      :team-id="team?._id"
+    />
   </v-container>
 </template>
 
@@ -565,6 +581,7 @@ import { useProjectStore } from '@/stores/project'
 import { useTeamStore } from '@/stores/team'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
+import HistoryProjectsDialog from '@/components/HistoryProjectsDialog.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 
 // 頁面定義
@@ -598,6 +615,7 @@ const newTeamName = ref('')
 const newDescription = ref('')
 const updatingTeamInfo = ref(false)
 const createProjectDialog = ref(false)
+const historyProjectsDialog = ref(false)
 const membersPage = ref(1)
 const membersPerPage = 10
 const projectsPage = ref(1)
@@ -616,22 +634,24 @@ const isTeamManager = computed(() => {
   return team.value.managers?.some(manager => manager._id === user._id) || false
 })
 
-// 獲取更新後的專案列表（包含 store 中的最新顏色）
+// 獲取更新後的專案列表（包含 store 中的最新顏色，排除已完成的專案）
 const updatedProjects = computed(() => {
   if (!team.value?.projects) return []
 
-  return team.value.projects.map(project => {
-    // 直接從 store 的 projects 陣列中查找
-    const storeProject = projectStore.projects.find(p => p._id === project._id)
-    const result = storeProject ? { ...project, ...storeProject } : project
+  return team.value.projects
+    .filter(project => project.status !== 'completed') // 排除已完成的專案
+    .map(project => {
+      // 直接從 store 的 projects 陣列中查找
+      const storeProject = projectStore.projects.find(p => p._id === project._id)
+      const result = storeProject ? { ...project, ...storeProject } : project
 
-    // 調試信息
-    if (storeProject) {
-      console.log(`專案 ${project.name} 從 store 更新:`, storeProject)
-    }
+      // 調試信息
+      if (storeProject) {
+        console.log(`專案 ${project.name} 從 store 更新:`, storeProject)
+      }
 
-    return result
-  })
+      return result
+    })
 })
 
 // 分頁後的團隊成員列表
@@ -973,6 +993,11 @@ const updateTeamInfo = async () => {
 // 開啟新增專案對話框
 const openCreateProjectDialog = () => {
   createProjectDialog.value = true
+}
+
+// 開啟歷史專案對話框
+const openHistoryProjectsDialog = () => {
+  historyProjectsDialog.value = true
 }
 
 // 處理專案建立完成

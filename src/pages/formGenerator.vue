@@ -553,23 +553,28 @@
       max-width="1600"
     >
       <v-card
-        class="rounded-lg pa-4 "
+        class="rounded-lg pb-2"
         min-height="920"
       >
-        <div class="d-flex justify-space-between align-center ps-6 pb-2">
-          <div class="card-title">
-            表單歷史紀錄
-          </div>
+        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+          <v-icon
+            icon="mdi-history"
+            size="18"
+            color="white"
+            class="me-2"
+          />
+          <span class="card-title text-white">表單歷史紀錄</span>
+          <v-spacer />
           <v-btn
             icon
-            color="red-lighten-1"
-            variant="plain"
+            variant="text"
+            color="white"
             @click="closeHistoryDialog"
           >
             <v-icon>mdi-close</v-icon>
           </v-btn>
-        </div>
-        <v-card-text>
+        </v-card-title>
+        <v-card-text class="px-6 pt-6">
           <!-- 在原有搜尋條件的上方添加快速搜尋 -->
 
           <div class="border rounded-lg px-4 py-4">
@@ -909,13 +914,28 @@
     <v-dialog
       v-model="reportDialog.open"
       persistent
-      width="320"
+      max-width="320"
     >
-      <v-card class="rounded-lg py-3 px-2">
-        <v-card-title class="card-title px-6 py-3 mb-2">
-          匯出報表
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-1 bg-deep-orange-darken-2">
+          <v-icon
+            icon="mdi-file-export"
+            size="18"
+            color="white"
+            class="me-2"
+          />
+          <span class="card-title text-white">匯出報表</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="text"
+            color="white"
+            @click="closeReportDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
         </v-card-title>
-        <v-card-text class="px-5 pb-2">
+        <v-card-text class="px-6 pt-8 pb-4">
           <v-form @submit.prevent="handleExportReport">
             <v-select
               v-model="reportDialog.type"
@@ -959,20 +979,22 @@
               :error-messages="reportDialog.dateError"
             />
 
-            <v-card-actions class="pa-0">
+            <v-card-actions class="px-0">
               <v-spacer />
               <v-btn
-                color="grey"
+                color="grey-darken-1"
                 variant="outlined"
+                :size="buttonSize"
                 @click="closeReportDialog"
               >
                 取消
               </v-btn>
               <v-btn
-                color="teal-darken-1"
+                color="deep-orange-darken-2"
                 variant="outlined"
                 type="submit"
                 :loading="isExportingReport"
+                :size="buttonSize"
                 class="ms-2"
               >
                 匯出

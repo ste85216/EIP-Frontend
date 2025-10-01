@@ -30,9 +30,9 @@
             <v-icon
               :size="smAndUp ? 32 : 24"
               class="me-2 me-sm-3 pt-1"
-              :color="updatedProject?.iconColor === 'white' ? 'grey-lighten-1' : updatedProject?.iconColor"
+              :color="updatedProject?.iconColor && updatedProject?.iconColor !== 'white' ? updatedProject?.iconColor : 'grey-lighten-1'"
             >
-              mdi-square-rounded
+              {{ updatedProject?.iconColor && updatedProject?.iconColor !== 'white' ? 'mdi-square-rounded' : 'mdi-square-rounded-outline' }}
             </v-icon>
             <div class="flex-grow-1">
               <div class="d-flex align-center">

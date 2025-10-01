@@ -30,6 +30,18 @@
             </v-btn>
           </div>
           <div class="d-flex align-center">
+            <v-btn
+              icon
+              :size="smAndUp ? '32' : '24'"
+              color="grey-darken-3"
+              class="me-3"
+              variant="plain"
+              @click="openHistoryProjectsDialog"
+            >
+              <v-icon :size="smAndUp ? '24' : '16'">
+                mdi-history
+              </v-icon>
+            </v-btn>
             <v-text-field
               v-model="searchQuery"
               placeholder="搜尋專案名稱..."
@@ -69,9 +81,9 @@
                   <td>
                     <div class="d-flex align-center">
                       <v-icon
-                        :icon="item.iconColor ? 'mdi-square-rounded' : 'mdi-square-rounded-outline'"
+                        :icon="item.iconColor && item.iconColor !== 'white' ? 'mdi-square-rounded' : 'mdi-square-rounded-outline'"
                         class="me-2"
-                        :color="item.iconColor || 'grey-darken-1'"
+                        :color="item.iconColor && item.iconColor !== 'white' ? item.iconColor : 'grey-darken-1'"
                       />
                       <router-link
                         :to="`/projectAndTaskManagement/projects/${item._id}`"
@@ -132,6 +144,11 @@
       v-model="createProjectDialog"
       @project-created="handleProjectCreated"
     />
+
+    <!-- 歷史專案對話框 -->
+    <HistoryProjectsDialog
+      v-model="historyProjectsDialog"
+    />
   </v-container>
 </template>
 
@@ -144,6 +161,7 @@ import { useUserStore } from '@/stores/user'
 import { useProjectStore } from '@/stores/project'
 import { definePage } from 'vue-router/auto'
 import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
+import HistoryProjectsDialog from '@/components/HistoryProjectsDialog.vue'
 import { useTeamStore } from '@/stores/team'
 
 // 頁面定義
@@ -164,6 +182,7 @@ const teamStore = useTeamStore()
 const projects = ref([])
 const loading = ref(false)
 const createProjectDialog = ref(false)
+const historyProjectsDialog = ref(false)
 const searchQuery = ref('')
 
 const { smAndUp } = useDisplay()
@@ -196,14 +215,17 @@ const mergedProjects = computed(() => {
   })
 })
 
-// 根據搜尋條件過濾專案
+// 根據搜尋條件過濾專案（排除已完成的專案）
 const filteredProjects = computed(() => {
+  // 先過濾掉已完成的專案
+  const activeProjects = mergedProjects.value.filter(project => project.status !== 'completed')
+
   if (!searchQuery.value.trim()) {
-    return mergedProjects.value
+    return activeProjects
   }
 
   const query = searchQuery.value.toLowerCase().trim()
-  return mergedProjects.value.filter(project =>
+  return activeProjects.filter(project =>
     project.name.toLowerCase().includes(query)
   )
 })
@@ -239,6 +261,11 @@ const fetchProjects = async () => {
 // 開啟新增專案對話框
 const openCreateProjectDialog = () => {
   createProjectDialog.value = true
+}
+
+// 開啟歷史專案對話框
+const openHistoryProjectsDialog = () => {
+  historyProjectsDialog.value = true
 }
 
 // 處理專案建立完成
