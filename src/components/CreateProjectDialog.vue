@@ -107,7 +107,7 @@
                 label="專案描述"
                 variant="outlined"
                 density="compact"
-                rows="10"
+                rows="6"
                 hide-details
                 clearable
               />

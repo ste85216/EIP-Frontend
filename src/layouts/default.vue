@@ -8,7 +8,8 @@
       class="position-fixed"
     >
       <v-app-bar-nav-icon
-        class="ms-3"
+        class="ms-3 me-1"
+        size="36"
         color="grey-darken-3"
         @click.stop="toggleDrawer"
       />

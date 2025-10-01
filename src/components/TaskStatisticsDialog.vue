@@ -419,11 +419,15 @@ const closeDialog = () => {
   dialog.value = false
 }
 
-// 監聽對話框開啟
+// 監聽對話框開啟和關閉
 watch(dialog, (newValue) => {
   if (newValue && props.project) {
     // 對話框開啟時自動載入統計資料
     fetchStatistics()
+  } else if (!newValue) {
+    // 對話框關閉時重置日期選擇
+    dateRange.value = []
+    appliedDateRange.value = []
   }
 })
 </script>

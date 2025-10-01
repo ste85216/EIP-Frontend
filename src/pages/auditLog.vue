@@ -1987,6 +1987,7 @@ const resetSearch = () => {
   // 清空表格資料
   tableItems.value = []
   tableItemsLength.value = 0
+  hasSearched.value = false // 重置搜尋狀態
 }
 
 // 新增 quickSearchText 和 isLoading
@@ -2058,6 +2059,7 @@ const performSearch = async () => {
     if (data.success) {
       tableItems.value = data.result.data
       tableItemsLength.value = data.result.totalItems
+      hasSearched.value = true // 標記已經搜尋過
     }
   } catch (error) {
     console.error('搜尋失敗:', error)
@@ -2113,6 +2115,7 @@ const shouldShowBudgetTable = computed(() => {
 // 初始載入
 onMounted(async () => {
   await loadAllUsers()
+  // 不自動載入資料，等待使用者手動搜尋
 })
 
 // 修改 formatUserDisplay 函數，支援系統使用者和員工
@@ -2160,6 +2163,7 @@ watch(
 
 // 新增 TAB 相關變數
 const activeTab = ref('all')
+const hasSearched = ref(false) // 追蹤是否已經搜尋過
 
 // 新增刪除相關變數
 const deleteDialog = ref(false)
@@ -2434,8 +2438,10 @@ const deleteLog = async () => {
 
 // 處理 TAB 切換
 const handleTabChange = () => {
-  // 重新搜尋
-  performSearch()
+  // 只有在已經搜尋過的情況下才重新搜尋
+  if (hasSearched.value) {
+    performSearch()
+  }
 }
 
 // 過濾表格資料
