@@ -1948,8 +1948,12 @@ const deleteTask = async () => {
 // 重新開啟任務（從已完成狀態改為進行中）
 const reopenTask = async (task) => {
   try {
+    // 根據是否有指派對象來決定狀態
+    // 如果有指派對象，狀態應該是 'in_progress'，否則為 'pending'
+    const newStatus = task.assignee ? 'in_progress' : 'pending'
+
     const { data } = await apiAuth.put(`/tasks/${task._id}`, {
-      status: 'pending',
+      status: newStatus,
       completedAt: null
     })
 
