@@ -522,12 +522,35 @@
   <v-dialog
     v-model="deleteDialog"
     max-width="400"
+    @click:outside="closeDeleteDialog"
+    @keydown.esc="closeDeleteDialog"
   >
-    <v-card class="rounded-lg px-8 pt-7 pb-4">
-      <div class="card-title mb-2">
+    <v-card class="rounded-lg">
+      <div class="card-title px-6 py-3 bg-red-lighten-1 d-flex align-center">
+        <v-icon
+          size="20"
+          color="white"
+          class="me-2"
+        >
+          mdi-delete-alert
+        </v-icon>
         刪除異動紀錄
+        <v-spacer />
+        <v-btn
+          icon
+          color="white"
+          variant="plain"
+          class="opacity-100"
+          :ripple="false"
+          size="20"
+          @click="closeDeleteDialog"
+        >
+          <v-icon size="20">
+            mdi-close
+          </v-icon>
+        </v-btn>
       </div>
-      <v-card-text class="pt-6 px-0">
+      <v-card-text class="px-6 pt-6 pb-3">
         <!-- 操作人員選擇 -->
         <v-autocomplete
           v-model="selectedOperatorForDelete"
@@ -568,25 +591,28 @@
 
         <v-alert
           type="warning"
+          color="red-lighten-1"
           variant="tonal"
           density="compact"
-          class="mt-4 custom-alert"
+          class="mt-4"
         >
           注意：此操作將刪除該操作人員的所有異動紀錄，且不可恢復。
         </v-alert>
       </v-card-text>
-      <v-card-actions class="px-0">
+      <v-card-actions class="px-6 pb-5">
         <v-spacer />
         <v-btn
-          color="grey"
+          :size="buttonSize"
+          color="grey-darken-1"
           variant="outlined"
-          class="me-2"
+          class="me-1"
           @click="closeDeleteDialog"
         >
           取消
         </v-btn>
         <v-btn
-          color="red-darken-1"
+          :size="buttonSize"
+          color="red-lighten-1"
           variant="outlined"
           :loading="isDeleting"
           :disabled="!selectedOperatorForDelete || confirmOperatorName !== selectedOperatorForDelete.name"

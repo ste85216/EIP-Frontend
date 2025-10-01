@@ -10,7 +10,6 @@
     <!-- 大螢幕版本 -->
     <v-btn
       v-if="isLgmUp"
-      v-tooltip:top="'檔案不超過 2MB，格式僅限 JPG、PNG、WEBP。'"
       prepend-icon="mdi-camera-outline"
       color="blue-grey-darken-2"
       variant="outlined"

@@ -67,7 +67,6 @@
         <div>
           <template v-if="!rail">
             <v-card
-              v-tooltip="'個人資料管理'"
               elevation="0"
               rounded="0"
               height="172"
