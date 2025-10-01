@@ -438,6 +438,8 @@
             <div class="comment-content">
               <div
                 class="text-body-2 comment-text"
+                @mouseover="handleMentionHover"
+                @mouseout="handleMentionLeave"
                 v-html="formatCommentWithMentions(comment)"
               />
               <!-- 圖片附件 -->
@@ -587,6 +589,55 @@
     :message="`確定要刪除附件「${attachmentToDelete?.originalName || ''}」嗎？<br>此操作無法恢復。`"
     @confirm="confirmDeleteAttachment"
   />
+
+  <!-- 用戶 hover 菜單 -->
+  <v-menu
+    v-model="showUserMenu"
+    location="top"
+    :close-on-content-click="false"
+    :offset="15"
+    :transition="'fade-transition'"
+    :open-delay="0"
+    :close-delay="0"
+    :style="{
+      position: 'fixed',
+      left: menuPosition.x + 'px',
+      top: menuPosition.y + 'px',
+      zIndex: 9999
+    }"
+  >
+    <v-card
+      v-if="hoveredUser"
+      class="user-hover-card"
+      max-width="280"
+      @mouseenter="handleMenuHover"
+      @mouseleave="handleMenuLeave"
+    >
+      <v-card-text class="pa-3">
+        <div class="d-flex align-center">
+          <UserAvatar
+            :user="hoveredUser"
+            size="40"
+            class="me-3"
+          />
+          <div>
+            <div class="sub-title">
+              {{ hoveredUser.name }}
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              {{ hoveredUser.email }}
+            </div>
+            <div
+              v-if="hoveredUser.role"
+              class="text-caption text-medium-emphasis"
+            >
+              {{ hoveredUser.role }}
+            </div>
+          </div>
+        </div>
+      </v-card-text>
+    </v-card>
+  </v-menu>
 </template>
 
 <script setup>
@@ -652,6 +703,11 @@ const showAttachmentUpload = ref(false) // 預設收合
 const showDeleteDialog = ref(false)
 const attachmentToDelete = ref(null)
 
+// hover 菜單相關
+const showUserMenu = ref(false)
+const hoveredUser = ref(null)
+const menuPosition = ref({ x: 0, y: 0 })
+
 // 計算屬性
 const drawerOpen = computed({
   get: () => props.modelValue,
@@ -668,6 +724,50 @@ const validCollaborators = computed(() => {
     seen.add(collaborator._id)
     return true
   })
+})
+
+// 所有相關用戶（包括團隊成員和評論中的標記用戶）
+const allRelatedUsers = computed(() => {
+  const users = new Map()
+
+  // 添加專案團隊成員
+  if (availableUsers.value && availableUsers.value.length > 0) {
+    availableUsers.value.forEach(user => {
+      if (user && user._id) {
+        users.set(user._id, user)
+      }
+    })
+  }
+
+      // 添加評論中的標記用戶
+      if (props.task?.comments) {
+        props.task.comments.forEach(comment => {
+          if (comment.mentions) {
+            comment.mentions.forEach(mention => {
+              if (mention.user && mention.name) {
+                // 處理 mention.user 可能是物件或字串的情況
+                const userId = typeof mention.user === 'string' ? mention.user : mention.user._id || mention.user.id
+                const userName = typeof mention.name === 'string' ? mention.name : mention.name.name || mention.name
+
+                if (userId && userName) {
+                  // 如果已經有完整資料，使用完整資料；否則創建基本資料
+                  const existingUser = users.get(userId)
+                  if (!existingUser) {
+                    users.set(userId, {
+                      _id: userId,
+                      name: userName,
+                      email: mention.email || '未知',
+                      role: mention.role || '未知'
+                    })
+                  }
+                }
+              }
+            })
+          }
+        })
+      }
+
+  return Array.from(users.values())
 })
 
 // 滾動評論列表到底部
@@ -987,6 +1087,103 @@ const canDeleteAttachment = () => {
   return true
 }
 
+// hover 計時器
+let hoverTimer = null
+
+// 處理標記 hover 事件
+const handleMentionHover = async (event) => {
+  // 清除之前的計時器
+  if (hoverTimer) {
+    clearTimeout(hoverTimer)
+    hoverTimer = null
+  }
+
+  const target = event.target
+  if (target.classList.contains('mention-tag')) {
+    const userId = target.getAttribute('data-user-id')
+    const userName = target.getAttribute('data-user-name')
+
+    if (userId && userName) {
+      // 確保用戶列表已載入
+      if (availableUsers.value.length === 0) {
+        await fetchAvailableUsers()
+      }
+
+      // 從所有相關用戶中查找
+      let user = allRelatedUsers.value.find(u => u._id === userId)
+
+
+      // 如果還是找不到，創建一個基本的用戶物件
+      if (!user) {
+        user = {
+          _id: userId,
+          name: userName,
+          email: '未知',
+          role: '未知'
+        }
+      }
+
+      hoveredUser.value = user
+
+      // 計算菜單位置 - 讓菜單出現在標記正上方
+      const rect = target.getBoundingClientRect()
+      // 估算菜單尺寸
+      const menuHeight = 80
+      const menuWidth = 280
+
+      // 計算水平位置，確保不超出視窗邊界
+      let x = rect.left + rect.width / 2 - menuWidth / 2
+      const viewportWidth = window.innerWidth
+      if (x < 10) x = 10 // 左邊界
+      if (x + menuWidth > viewportWidth - 10) x = viewportWidth - menuWidth - 10 // 右邊界
+
+      // 計算垂直位置
+      let y = rect.top - menuHeight - 10
+      if (y < 10) y = rect.bottom + 10 // 如果上方空間不足，顯示在下方
+
+      menuPosition.value = { x, y }
+
+      // 立即顯示菜單
+      showUserMenu.value = true
+    }
+  }
+}
+
+// 處理標記離開事件
+const handleMentionLeave = (event) => {
+  // 檢查是否真的離開了標記區域
+  const relatedTarget = event.relatedTarget
+
+  // 如果相關目標是菜單本身，不隱藏
+  if (relatedTarget && relatedTarget.closest('.user-hover-card')) {
+    return
+  }
+
+  // 延遲隱藏，避免快速移動時閃爍
+  hoverTimer = setTimeout(() => {
+    showUserMenu.value = false
+    hoveredUser.value = null
+  }, 50)
+}
+
+// 處理菜單 hover 事件
+const handleMenuHover = () => {
+  // 清除隱藏計時器
+  if (hoverTimer) {
+    clearTimeout(hoverTimer)
+    hoverTimer = null
+  }
+}
+
+// 處理菜單離開事件
+const handleMenuLeave = () => {
+  // 延遲隱藏菜單
+  hoverTimer = setTimeout(() => {
+    showUserMenu.value = false
+    hoveredUser.value = null
+  }, 50)
+}
+
 // 取得檔案類型圖標
 const getFileTypeIcon = (mimeType) => {
   if (mimeType.startsWith('image/')) return 'mdi-file-image'
@@ -1224,15 +1421,21 @@ const formatCommentWithMentions = (comment) => {
   // 如果評論有標記資訊，則高亮顯示
   if (comment.mentions && comment.mentions.length > 0) {
     comment.mentions.forEach(mention => {
-      // 使用更安全的字符串替換，避免正則表達式的特殊字符問題
-      const mentionText = `@${mention.name}`
-      // 轉義特殊字符以用於正則表達式
-      const escapedMentionText = mentionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      const mentionRegex = new RegExp(escapedMentionText, 'g')
-      formattedContent = formattedContent.replace(
-        mentionRegex,
-        `<span class="mention-tag">${mentionText}</span>`
-      )
+      // 處理 mention.user 和 mention.name 可能是物件的情況
+      const userId = typeof mention.user === 'string' ? mention.user : mention.user._id || mention.user.id
+      const userName = typeof mention.name === 'string' ? mention.name : mention.name.name || mention.name
+
+      if (userId && userName) {
+        // 使用更安全的字符串替換，避免正則表達式的特殊字符問題
+        const mentionText = `@${userName}`
+        // 轉義特殊字符以用於正則表達式
+        const escapedMentionText = mentionText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const mentionRegex = new RegExp(escapedMentionText, 'g')
+        formattedContent = formattedContent.replace(
+          mentionRegex,
+          `<span class="mention-tag" data-user-id="${userId}" data-user-name="${userName}">${mentionText}</span>`
+        )
+      }
     })
   }
 
@@ -1315,6 +1518,12 @@ onUnmounted(() => {
 :global(.mention-tag) {
   color: rgb(var(--v-theme-secondary-darken-1)) !important;
   font-weight: 500 !important;
+  transition: color 0.2s ease !important;
+}
+
+:global(.mention-tag:hover) {
+  color: rgb(var(--v-theme-primary)) !important;
+  cursor: pointer;
 }
 
 .task-sidebar {
@@ -1535,6 +1744,26 @@ onUnmounted(() => {
         white-space: nowrap;
       }
     }
+  }
+}
+
+/* 用戶 hover 菜單樣式 */
+.user-hover-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.1s ease !important;
+  animation: fadeInUp 0.15s ease-out !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

@@ -107,14 +107,6 @@ const initEditor = async () => {
       emit('update:modelValue', html)
     })
 
-    // 監聽 compositionstart 事件，開始中文輸入時隱藏 placeholder
-    quill.root.addEventListener('compositionstart', () => {
-      const editor = quill.root
-      if (editor.classList.contains('ql-blank')) {
-        editor.classList.remove('ql-blank')
-      }
-    })
-
     // 檢查編輯器是否有內容（包括文字、圖片等）
     const hasContent = () => {
       const editor = quill.root
@@ -125,6 +117,31 @@ const initEditor = async () => {
       // 如果 HTML 只包含空的段落標籤，視為無內容
       return text !== '' || (html !== '' && html !== '<p><br></p>' && html !== '<p></p>')
     }
+
+    // 監聽 focus 事件，當編輯器獲得焦點時隱藏 placeholder
+    quill.root.addEventListener('focus', () => {
+      const editor = quill.root
+      if (editor.classList.contains('ql-blank')) {
+        editor.classList.remove('ql-blank')
+      }
+    })
+
+    // 監聽 blur 事件，當編輯器失去焦點時檢查是否需要顯示 placeholder
+    quill.root.addEventListener('blur', () => {
+      const editor = quill.root
+      // 如果編輯器是空的，重新添加 ql-blank 類
+      if (!hasContent()) {
+        editor.classList.add('ql-blank')
+      }
+    })
+
+    // 監聽 compositionstart 事件，開始中文輸入時隱藏 placeholder
+    quill.root.addEventListener('compositionstart', () => {
+      const editor = quill.root
+      if (editor.classList.contains('ql-blank')) {
+        editor.classList.remove('ql-blank')
+      }
+    })
 
     // 監聽 compositionend 事件，結束中文輸入時檢查是否需要顯示 placeholder
     quill.root.addEventListener('compositionend', () => {
