@@ -42,7 +42,11 @@
                 >
                   {{ getRoleTitle(user.role) }}
                 </div>
-                <FileUploadButton />
+                <v-row class="justify-center">
+                  <v-col class="py-3">
+                    <FileUploadButton />
+                  </v-col>
+                </v-row>
               </v-col>
             </v-row>
           </v-card>
@@ -52,7 +56,7 @@
         <v-row class="elevation-4 rounded-lg pt-3 pt-sm-8 pb-6 px-2 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 ms-xl-0 me-xl-10 mb-4 bg-white">
           <v-col
             cols="12"
-            class="d-flex justify-space-between"
+            class="d-flex justify-space-between align-center"
           >
             <h3>
               個人資料管理&nbsp;&nbsp;&nbsp;
@@ -63,9 +67,20 @@
                 <span class="text-red-darken-2">* </span>若有需要修改 請聯絡管理者 ( 密碼可自行修改 )
               </span>
             </h3>
+
             <div>
               <v-row>
                 <v-col>
+                <v-btn
+                  icon
+                  color="blue-grey-darken-2"
+                  size="32"
+                  class="me-4"
+                  elevation="2"
+                  @click="showBackgroundDialog = true"
+                >
+                  <v-icon size="18">mdi-image</v-icon>
+                </v-btn>
                   <v-btn
                     v-if="mdAndUp"
                     :size="buttonSize"
@@ -474,6 +489,92 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- 背景圖片選擇對話框 -->
+  <v-dialog
+    v-model="showBackgroundDialog"
+    max-width="760"
+  >
+    <v-card class="rounded-lg">
+      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-grey-darken-2 mb-2">
+        <v-icon
+          class="me-2"
+          size="20"
+        >
+          mdi-image
+        </v-icon>
+        <span class="card-title text-white">變更背景圖片</span>
+        <v-spacer />
+        <v-btn
+          icon
+          variant="plain"
+          color="white"
+          class="opacity-100"
+          :size="buttonSize"
+          :ripple="false"
+          @click="showBackgroundDialog = false"
+        >
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
+      <v-card-text class="px-5 pb-3">
+        <v-row>
+          <v-col
+            v-for="(bg, index) in backgroundOptions"
+            :key="index"
+            cols="12"
+            sm="4"
+            class="text-center"
+          >
+            <v-card
+              class="cursor-pointer border rounded-lg"
+              elevation="0"
+              @click="selectedBackground = bg.url"
+            >
+              <v-img
+                :src="bg.url"
+                height="180"
+                cover
+              >
+                <div class="d-flex align-center justify-center h-100">
+                  <v-icon
+                    v-if="selectedBackground === bg.url"
+                    color="white"
+                    size="40"
+                    class="pt-5"
+                  >
+                    mdi-check-circle
+                  </v-icon>
+                </div>
+              </v-img>
+              <v-card-text class="pa-2">
+                <div class="sub-title">{{ bg.name }}</div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-card-text>
+      <v-card-actions class="px-5 mb-3">
+        <v-spacer />
+        <v-btn
+          color="grey-darken-1"
+          variant="outlined"
+          @click="showBackgroundDialog = false"
+        >
+          取消
+        </v-btn>
+        <v-btn
+          color="blue-grey-darken-2"
+          variant="outlined"
+          class="ms-1"
+          :loading="isUpdatingBackground"
+          @click="handleBackgroundChange"
+        >
+          確認
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
@@ -511,6 +612,10 @@ const showUserListDialog = ref(false)
 const userList = ref([])
 const isLoadingUsers = ref(false)
 
+const showBackgroundDialog = ref(false)
+const selectedBackground = ref('')
+const isUpdatingBackground = ref(false)
+
 const passwordForm = ref({
   currentPassword: '',
   newPassword: '',
@@ -523,6 +628,22 @@ const confirmPasswordError = ref('')
 
 const user = useUserStore()
 const createSnackbar = useSnackbar()
+
+// 背景圖片選項
+const backgroundOptions = ref([
+  {
+    name: '迷幻星空',
+    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_purplesky.png'
+  },
+  {
+    name: '機器人',
+    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_robot.png'
+  },
+  {
+    name: '野火燎原',
+    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_flame.png'
+  }
+])
 
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
@@ -562,6 +683,35 @@ const fetchUserList = async () => {
   watch(showUserListDialog, (newVal) => {
     if (newVal) fetchUserList()
   })
+
+  // 監聽背景選擇對話框開啟
+  watch(showBackgroundDialog, (newVal) => {
+    if (newVal) {
+      selectedBackground.value = user.backgroundImage || ''
+    }
+  })
+
+  // 處理背景圖片變更
+  const handleBackgroundChange = async () => {
+    try {
+      isUpdatingBackground.value = true
+      await user.updateBackgroundImage(selectedBackground.value)
+
+      createSnackbar({
+        text: '背景圖片更新成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+
+      showBackgroundDialog.value = false
+    } catch (error) {
+      createSnackbar({
+        text: error.message,
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+    } finally {
+      isUpdatingBackground.value = false
+    }
+  }
 
 const validatePasswordForm = () => {
   let isValid = true

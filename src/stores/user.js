@@ -15,6 +15,7 @@ export const useUserStore = defineStore('user', () => {
   const adminId = ref('')
   const note = ref('')
   const avatar = ref('')
+  const backgroundImage = ref('')
   const isDefaultPasswordChanged = ref(true)
   const _id = ref('')
 
@@ -106,6 +107,7 @@ export const useUserStore = defineStore('user', () => {
         adminId.value = data.result.adminId
         note.value = data.result.note
         avatar.value = data.result.avatar
+        backgroundImage.value = data.result.backgroundImage || ''
         isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
         _id.value = data.result._id
         await profile()
@@ -133,6 +135,7 @@ export const useUserStore = defineStore('user', () => {
         adminId.value = response.data.result.adminId
         note.value = response.data.result.note
         avatar.value = response.data.result.avatar
+        backgroundImage.value = response.data.result.backgroundImage || ''
         isDefaultPasswordChanged.value = response.data.result.isDefaultPasswordChanged
         _id.value = response.data.result._id
         return '登入成功'
@@ -158,6 +161,7 @@ export const useUserStore = defineStore('user', () => {
       adminId.value = data.result.adminId
       note.value = data.result.note
       avatar.value = data.result.avatar
+      backgroundImage.value = data.result.backgroundImage || ''
       isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
       _id.value = data.result._id
     } catch (error) {
@@ -247,6 +251,24 @@ export const useUserStore = defineStore('user', () => {
       }
     }
 
+    // 添加更新背景圖片的方法
+    const updateBackgroundImage = async (imageUrl) => {
+      try {
+        const { data } = await apiAuth.patch('/users/background-image', { backgroundImage: imageUrl })
+        if (!data.success) {
+          throw new Error(data.message || '背景圖片更新失敗')
+        }
+        backgroundImage.value = imageUrl
+        return {
+          success: true,
+          message: '背景圖片更新成功'
+        }
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || '背景圖片更新失敗'
+        throw new Error(errorMessage)
+      }
+    }
+
   // 登出
   const logout = async () => {
     try {
@@ -262,6 +284,7 @@ export const useUserStore = defineStore('user', () => {
     adminId.value = ''
     note.value = ''
     avatar.value = ''
+    backgroundImage.value = ''
     _id.value = ''
   }
 
@@ -275,6 +298,7 @@ export const useUserStore = defineStore('user', () => {
     adminId,
     note,
     avatar,
+    backgroundImage,
     isDefaultPasswordChanged,
     _id,
 
@@ -303,7 +327,8 @@ export const useUserStore = defineStore('user', () => {
     changePassword,
     forgotPassword,
     resetPassword,
-    updateAvatar
+    updateAvatar,
+    updateBackgroundImage
   }
 }, {
   persist: {

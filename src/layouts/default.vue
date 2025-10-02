@@ -73,6 +73,7 @@
               width="260"
               class="pa-0 card-bg position-relative"
               :class="{ 'loaded': isBackgroundLoaded }"
+              :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
               to="/profile"
             >
               <!-- 添加 skeleton -->
@@ -83,7 +84,7 @@
 
               <!-- 添加隱藏的圖片用於預加載 -->
               <img
-                src="/src/assets/image/bg_profile_purpleflower.webp"
+                :src="getBackgroundImage()"
                 alt="background"
                 style="display: none;"
                 @load="handleImageLoad"
@@ -395,6 +396,7 @@
             height="172"
             class="pa-0 card-bg"
             :class="{ 'loaded': isBackgroundLoaded }"
+            :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
             to="/profile"
           >
             <!-- 添加 skeleton -->
@@ -405,7 +407,7 @@
 
             <!-- 添加隱藏的圖片用於預加載 -->
             <img
-              src="/src/assets/image/bg_profile_purpleflower.webp"
+              :src="getBackgroundImage()"
               alt="background"
               style="display: none;"
               @load="handleImageLoad"
@@ -752,6 +754,14 @@ const handleAvatarLoad = () => {
 
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
+}
+
+const getBackgroundImage = () => {
+  if (user.backgroundImage) {
+    return user.backgroundImage
+  }
+  // 預設背景圖片
+  return 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_flame.png'
 }
 
 const userItems = [
@@ -1178,9 +1188,18 @@ watch(() => user.avatar, (newAvatar) => {
 
 <style lang="scss" scoped>
 .card-bg {
-  background: url(/src/assets/image/bg_profile.jpg);
   background-size: cover;
   transition: opacity 0.3s ease;
+  &::before{
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0));
+    z-index: -1;
+  }
 }
 
 </style>
