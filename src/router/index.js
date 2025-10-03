@@ -47,20 +47,23 @@ router.beforeEach(async (to, from, next) => {
     await user.profile()
   }
 
-  // 檢查是否要導向 '/profile'
-  // if (to.path === '/') {
-  //   next('/')
-  // } else
+  // 如果已登入且要訪問登入頁面，重導向到首頁
   if (user.isLogin && ['/login'].includes(to.path)) {
     next('/')
-  } else if (to.path === '/') {
-    next()
-  } else if (to.meta.login && !user.isLogin) {
+  } 
+  // 如果未登入且要訪問需要登入的頁面，重導向到登入頁面
+  else if (to.meta.login && !user.isLogin) {
     next('/login')
-  } else if (to.meta.roles && !to.meta.roles.includes(user.role)) {
-    // 檢查使用者角色是否匹配路由的角色要求
+  } 
+  // 如果未登入且要訪問首頁，重導向到登入頁面
+  else if (to.path === '/' && !user.isLogin) {
+    next('/login')
+  }
+  // 檢查使用者角色是否匹配路由的角色要求
+  else if (to.meta.roles && !to.meta.roles.includes(user.role)) {
     next('/')
-  } else {
+  } 
+  else {
     next()
   }
 })

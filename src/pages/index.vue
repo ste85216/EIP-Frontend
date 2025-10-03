@@ -535,8 +535,8 @@ import { useSnackbar } from 'vuetify-use-dialog'
 // 頁面定義
 definePage({
   meta: {
-    title: '首頁 | 永信生活旅遊事業系統',
-    login: false
+    title: '首頁 | Ystravel',
+    login: true
   }
 })
 

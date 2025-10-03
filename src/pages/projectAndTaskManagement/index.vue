@@ -1137,12 +1137,14 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { useUserStore } from '@/stores/user'
 import UserAvatar from '@/components/UserAvatar.vue'
 import TaskSidebar from '@/components/TaskSidebar.vue'
+import UserRole from '@/enums/UserRole'
 
 // 頁面定義
 definePage({
   meta: {
     title: '首頁 | 專案與任務管理',
     login: true,
+    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.MARKETING, UserRole.DESIGNER, UserRole.SUPERVISOR, UserRole.USER, UserRole.IT]
   }
 })
 
