@@ -390,7 +390,6 @@
       <v-list class="h-100 pa-0 overflow-auto">
         <div>
           <v-card
-            v-tooltip="'個人資料管理'"
             elevation="0"
             rounded="0"
             height="172"
@@ -1197,7 +1196,7 @@ watch(() => user.avatar, (newAvatar) => {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0));
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.55) 10%, rgba(0, 0, 0, 0));
     z-index: -1;
   }
 }

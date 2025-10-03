@@ -80,6 +80,7 @@
       v-model="drawer"
       :width="drawerWidth"
       color="#2f2f2f"
+      class="border-0"
       :rail="rail"
       permanent
       :expand-on-hover="rail"
@@ -94,6 +95,76 @@
         open-strategy="multiple"
         select-strategy="single-leaf"
       >
+        <!-- 用戶名片卡片 -->
+        <div v-if="!rail">
+          <v-card
+            elevation="0"
+            rounded="0"
+            height="174"
+            width="280"
+            class="pa-0 card-bg position-relative"
+            :class="{ 'loaded': isBackgroundLoaded }"
+            :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
+          >
+            <!-- 添加 skeleton -->
+            <v-skeleton-loader
+              v-if="!isBackgroundLoaded"
+              class="position-absolute w-100 h-100 pa-0 ma-0"
+            />
+
+            <!-- 添加隱藏的圖片用於預加載 -->
+            <img
+              :src="getBackgroundImage()"
+              alt="background"
+              style="display: none;"
+              @load="handleImageLoad"
+            >
+            <div class="card-blur pt-2 pb-4 px-2">
+              <v-card-title
+                class="ps-5 pb-3 d-flex justify-space-between pe-2"
+              >
+                <v-avatar
+                  size="48"
+                  style="box-shadow: 0 0 10px rgba(255,255,255,1);"
+                >
+                  <v-skeleton-loader
+                    v-if="!isAvatarLoaded"
+                    type="avatar"
+                  />
+                  <v-img
+                    v-show="isAvatarLoaded"
+                    :src="user.avatar"
+                    @load="handleAvatarLoad"
+                  />
+                </v-avatar>
+              </v-card-title>
+              <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
+                <v-row>
+                  <v-col
+                    cols="12"
+                    class="ps-4 pb-0 pt-4"
+                  >
+                    <span style="font-size: 17px; font-weight: 600;">{{ user.name }}</span>
+                  </v-col>
+                  <v-col
+                    cols="12"
+                    class="ps-4 pb-0 pt-0"
+                  >
+                    <span>{{ user.userId }}</span>
+                    <span v-if="user.isAdmin">{{ user.adminId }}</span>
+                  </v-col>
+                  <v-col
+                    cols="12"
+                    class="ps-4 pb-0 pt-0"
+                  >
+                    {{ getRoleTitle(user.role) }}
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </div>
+          </v-card>
+        </div>
+
         <!-- 基本功能按鈕 - 所有人都可以看到 -->
         <v-list-item
           to="/projectAndTaskManagement"
@@ -445,6 +516,73 @@
         open-strategy="multiple"
         select-strategy="single-leaf"
       >
+        <!-- 用戶名片卡片 -->
+        <v-card
+          elevation="0"
+          rounded="0"
+          height="172"
+          class="pa-0 card-bg"
+          :class="{ 'loaded': isBackgroundLoaded }"
+          :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
+        >
+          <!-- 添加 skeleton -->
+          <v-skeleton-loader
+            v-if="!isBackgroundLoaded"
+            class="position-absolute w-100 h-100 pa-0 ma-0"
+          />
+
+          <!-- 添加隱藏的圖片用於預加載 -->
+          <img
+            :src="getBackgroundImage()"
+            alt="background"
+            style="display: none;"
+            @load="handleImageLoad"
+          >
+          <div class="card-blur pt-2 pb-4 px-2">
+            <v-card-title class="ps-5 pb-3">
+              <v-avatar
+                size="48"
+                style="box-shadow: 0 0 10px rgba(255,255,255,1);"
+              >
+                <v-skeleton-loader
+                  v-if="!isAvatarLoaded"
+                  type="avatar"
+                />
+                <v-img
+                  v-show="isAvatarLoaded"
+                  :src="user.avatar"
+                  @load="handleAvatarLoad"
+                />
+              </v-avatar>
+            </v-card-title>
+            <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
+              <v-row>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-4"
+                >
+                  <span style="font-size: 17px; font-weight: 600;">{{ user.name }}</span>
+                </v-col>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-0"
+                >
+                  <span>{{ user.userId }}</span>
+                  <span v-if="user.isAdmin">{{ user.adminId }}</span>
+                </v-col>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-0"
+                >
+                  {{ getRoleTitle(user.role) }}
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </div>
+        </v-card>
+
+        <v-divider class="my-2" />
+
         <!-- 基本功能按鈕 - 所有人都可以看到 -->
         <v-list-item
           to="/projectAndTaskManagement"
@@ -772,6 +910,7 @@ import { useProjectStore } from '@/stores/project'
 import { useTeamStore } from '@/stores/team'
 import { useDisplay } from 'vuetify'
 import { useApi } from '@/composables/axios'
+import { roleNames } from '@/enums/UserRole'
 import CreateTeamDialog from '@/components/CreateTeamDialog.vue'
 import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
 import NotificationInbox from '@/components/NotificationInbox.vue'
@@ -794,6 +933,10 @@ const projectStore = useProjectStore()
 const teamStore = useTeamStore()
 const { smAndUp } = useDisplay()
 const { apiAuth } = useApi()
+
+// 名片卡片相關狀態
+const isBackgroundLoaded = ref(false)
+const isAvatarLoaded = ref(false)
 
 const titleIconSize = computed(() => {
   if (!smAndUp.value) return '20'  // 小螢幕
@@ -836,6 +979,29 @@ const saveOpenedGroups = () => {
 }
 
 const buttonSize = computed(() => !smAndUp.value ? 'small' : 'default')
+
+// 名片卡片相關方法
+const handleImageLoad = () => {
+  isBackgroundLoaded.value = true
+}
+
+const handleAvatarLoad = () => {
+  setTimeout(() => {
+    isAvatarLoaded.value = true
+  }, 100)
+}
+
+const getRoleTitle = (roleValue) => {
+  return roleNames[roleValue] || '未知'
+}
+
+const getBackgroundImage = () => {
+  if (user.backgroundImage) {
+    return user.backgroundImage
+  }
+  // 預設背景圖片
+  return 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_flame.png'
+}
 
 // 是否具備任一團隊管理者身分
 const canCreateProject = computed(() => {
@@ -1224,6 +1390,18 @@ const stopResize = () => {
   document.removeEventListener('mousemove', resizeDrawer)
   document.removeEventListener('mouseup', stopResize)
 }
+
+// 監聽 avatar 變化時重置 loading 狀態
+watch(() => user.avatar, (newAvatar) => {
+  if (newAvatar) {
+    isAvatarLoaded.value = false
+    const img = new Image()
+    img.onload = () => {
+      handleAvatarLoad()
+    }
+    img.src = newAvatar
+  }
+}, { immediate: true })
 </script>
 <style scoped lang="scss">
 @use '../styles/rwd' as rwd;
@@ -1376,5 +1554,21 @@ body.resizing {
 /* 優化拖曳時的渲染性能 */
 .v-navigation-drawer {
   will-change: width;
+}
+
+/* 名片卡片樣式 */
+.card-bg {
+  background-size: cover;
+  transition: opacity 0.3s ease;
+  &::before{
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.55) 10% , rgba(0, 0, 0, 0));
+    z-index: -1;
+  }
 }
 </style>

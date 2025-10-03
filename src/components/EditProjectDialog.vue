@@ -303,6 +303,7 @@ const handleSubmit = async () => {
       name: form.value.name,
       team: form.value.team,
       description: form.value.description,
+      status: props.project?.status, // 保持當前的狀態
       ...(form.value.iconColor ? { iconColor: form.value.iconColor } : { iconColor: null })
     }
 

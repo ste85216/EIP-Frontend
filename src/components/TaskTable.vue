@@ -520,7 +520,6 @@
 
                     <template #[`item.updatedAt`]="{ item }">
                       <v-tooltip
-                        :text="getFullDateTime(item.updatedAt)"
                         location="top"
                       >
                         <template #activator="{ props: tooltipProps }">
@@ -531,6 +530,9 @@
                             {{ formatDate(item.updatedAt) }}
                           </span>
                         </template>
+                        <div>
+                          {{ getFullDateTime(item.updatedAt) }} , {{ item.lastModifiedBy?.name || '未知' }}
+                        </div>
                       </v-tooltip>
                     </template>
 
@@ -584,6 +586,7 @@
                         </v-avatar>
                       </div>
                     </template>
+
 
                     <template #[`item.actions`]="{ item }">
                       <div class="d-flex align-center">

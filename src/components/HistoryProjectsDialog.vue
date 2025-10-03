@@ -66,9 +66,9 @@
                 <td>
                   <div class="d-flex align-center">
                     <v-icon
-                      :icon="item.iconColor ? 'mdi-square-rounded' : 'mdi-square-rounded-outline'"
+                      :icon="item.iconColor && item.iconColor !== 'white' ? 'mdi-square-rounded' : 'mdi-square-rounded-outline'"
                       class="me-2"
-                      :color="item.iconColor || 'grey-darken-1'"
+                      :color="item.iconColor && item.iconColor !== 'white' ? item.iconColor : 'grey'"
                     />
                     <router-link
                       :to="`/projectAndTaskManagement/projects/${item._id}`"
@@ -255,8 +255,14 @@ watch(dialog, (newValue) => {
     border-radius: 0px 4px 0px 0px;
   }
   :deep(th) {
-    background-color: #777;
-    color: white;
+    color: #333;
+    border-top: 1px solid #ddd;
+  }
+  :deep(th:nth-child(1)) {
+    border-left: 1px solid #ddd;
+  }
+  :deep(th:nth-child(4)) {
+    border-right: 1px solid #ddd;
   }
   :deep(tbody tr) {
     height: 48px;

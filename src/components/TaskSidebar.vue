@@ -817,9 +817,13 @@ const closeSidebar = () => {
 // 更新描述
 // 防抖動計時器
 let descriptionUpdateTimer = null
+let isInitializing = ref(false) // 新增初始化標記
 
 const updateDescription = async (newDescription) => {
   if (!props.task || !props.task._id) return
+
+  // 如果正在初始化，不執行更新
+  if (isInitializing.value) return
 
   // 清除之前的計時器
   if (descriptionUpdateTimer) {
@@ -1523,6 +1527,9 @@ const cancelEditing = () => {
 // 監聽任務變化，更新描述
 watch(() => props.task, (newTask, oldTask) => {
   if (newTask) {
+    // 設置初始化標記，防止在設置描述時觸發更新
+    isInitializing.value = true
+
     taskDescription.value = newTask.description || ''
     console.log('TaskSidebar 接收到的任務資料:', newTask)
 
@@ -1534,6 +1541,13 @@ watch(() => props.task, (newTask, oldTask) => {
       shouldAutoScroll.value = true
       scrollCommentsToBottom()
     }
+
+    // 使用 nextTick 確保 DOM 更新完成後再取消初始化標記
+    nextTick(() => {
+      setTimeout(() => {
+        isInitializing.value = false
+      }, 100) // 稍微延遲，確保 RichTextEditor 完全初始化
+    })
   }
 }, { immediate: true })
 

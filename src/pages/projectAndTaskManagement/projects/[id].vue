@@ -290,19 +290,19 @@
           class="text-center py-8"
         >
           <v-icon
-            size="64"
-            color="error"
+            size="48"
+            color="red-darken-2"
           >
             mdi-alert-circle
           </v-icon>
-          <h2 class="text-h5 mt-4">
+          <h2 class="page-title mt-4 mb-2">
             找不到專案
           </h2>
           <p class="text-body-1 text-medium-emphasis">
-            請檢查網址是否正確
+            專案可能已被刪除或是網址不正確
           </p>
           <v-btn
-            color="primary"
+            color="grey-darken-1"
             variant="outlined"
             class="mt-4"
             to="/projectAndTaskManagement"

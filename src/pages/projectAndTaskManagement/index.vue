@@ -2,17 +2,8 @@
   <v-container max-width="1920">
     <!-- 標題區域 -->
     <v-row class="mt-1 mx-0 px-2 rounded-lg bg-white">
-      <v-col class="d-flex align-center">
-        <UserAvatar
-          :user="user"
-          :size="smAndUp ? 40 : 26"
-          avatar-class="me-3"
-        />
-        <div>
-          <div class="page-title mb-1">
-            {{ user.name }}, 您好
-          </div>
-        </div>
+      <v-col class="d-flex align-center pb-4 px-2">
+        <span class="page-title">我的任務</span>
       </v-col>
     </v-row>
 
@@ -1140,7 +1131,6 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useDisplay } from 'vuetify'
 import { definePage } from 'vue-router/auto'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
@@ -1160,7 +1150,6 @@ const router = useRouter()
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 const user = useUserStore()
-const { smAndUp } = useDisplay()
 
 // 響應式變數
 const myTasks = ref([])
