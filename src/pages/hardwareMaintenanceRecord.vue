@@ -294,18 +294,37 @@
       v-model="dialog.open"
       persistent
       :width="dialogWidth"
+      :no-click-animation="isSubmitting"
     >
-      <v-form
-        ref="maintenanceFormRef"
-        :disabled="isSubmitting"
-        @submit.prevent="submitMaintenance"
-      >
-        <v-card class="rounded-lg px-4 py-6">
-          <div class="card-title px-4 py-3">
-            {{ dialog.id ? '編輯維修記錄' : '新增維修記錄' }}
-          </div>
-
-          <v-card-text class="mt-3 pa-3">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-blue-grey-darken-2 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-wrench
+          </v-icon>
+          {{ dialog.id ? '編輯維修記錄' : '新增維修記錄' }}
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="mt-6 mb-0 px-6 pb-4">
+          <v-form
+            ref="maintenanceFormRef"
+            :disabled="isSubmitting"
+            @submit.prevent="submitMaintenance"
+          >
             <v-row>
               <v-col
                 cols="12"
@@ -394,32 +413,32 @@
                 />
               </v-col>
             </v-row>
-          </v-card-text>
 
-          <v-card-actions class="px-3 mt-4">
-            <v-spacer />
-            <v-btn
-              color="grey-darken-1"
-              variant="outlined"
-              :size="buttonSize"
-              :loading="isSubmitting"
-              @click="closeDialog"
-            >
-              取消
-            </v-btn>
-            <v-btn
-              color="teal-darken-1"
-              variant="outlined"
-              type="submit"
-              class="ms-1"
-              :size="buttonSize"
-              :loading="isSubmitting"
-            >
-              送出
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-form>
+            <v-card-actions class="px-0 mt-4">
+              <v-spacer />
+              <v-btn
+                color="grey-darken-1"
+                variant="outlined"
+                :size="buttonSize"
+                :loading="isSubmitting"
+                @click="closeDialog"
+              >
+                取消
+              </v-btn>
+              <v-btn
+                color="teal-darken-1"
+                variant="outlined"
+                type="submit"
+                class="ms-1"
+                :size="buttonSize"
+                :loading="isSubmitting"
+              >
+                送出
+              </v-btn>
+            </v-card-actions>
+          </v-form>
+        </v-card-text>
+      </v-card>
     </v-dialog>
 
     <!-- 確認刪除對話框 -->
@@ -435,13 +454,33 @@
     <v-dialog
       v-model="exportDialog.open"
       persistent
-      width="320"
+      max-width="320"
+      :no-click-animation="isExporting"
     >
-      <v-card class="rounded-lg py-3 px-2">
-        <v-card-title class="card-title px-6 py-3">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-red-lighten-1 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-file-pdf-box
+          </v-icon>
           匯出PDF報表
-        </v-card-title>
-        <v-card-text class="px-5 pb-2">
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeExportDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 pt-7 pb-0">
           <v-form @submit.prevent="handleExportPDF">
             <v-date-input
               v-model="exportDialog.dateRange"
@@ -456,27 +495,29 @@
               :ok-text="'確認'"
               :error-messages="exportDialog.error"
             />
-            <v-card-actions class="pa-0">
-              <v-spacer />
-              <v-btn
-                color="grey"
-                variant="outlined"
-                @click="closeExportDialog"
-              >
-                取消
-              </v-btn>
-              <v-btn
-                color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                :loading="isExporting"
-                class="ms-2"
-              >
-                匯出
-              </v-btn>
-            </v-card-actions>
           </v-form>
         </v-card-text>
+        <v-card-actions class="px-6 pb-5">
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="outlined"
+            class="me-1"
+            :size="buttonSize"
+            @click="closeExportDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="red-lighten-1"
+            variant="outlined"
+            :size="buttonSize"
+            :loading="isExporting"
+            @click="handleExportPDF"
+          >
+            匯出
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -484,13 +525,33 @@
     <v-dialog
       v-model="exportExcelDialog.open"
       persistent
-      width="360"
+      max-width="360"
+      :no-click-animation="isExportingExcel"
     >
-      <v-card class="rounded-lg py-4 pb-0 px-2">
-        <v-card-title class="card-title px-6 py-3">
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-teal-darken-1 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-file-excel
+          </v-icon>
           匯出Excel報表
-        </v-card-title>
-        <v-card-text class="px-5 pb-5">
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="closeExportExcelDialog"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 pt-7 pb-0">
           <v-form @submit.prevent="handleExportExcel">
             <v-date-input
               v-model="exportExcelDialog.dateRange"
@@ -533,27 +594,29 @@
                 <v-divider class="mt-2" />
               </template>
             </v-select>
-            <v-card-actions class="pa-0">
-              <v-spacer />
-              <v-btn
-                color="grey"
-                variant="outlined"
-                @click="closeExportExcelDialog"
-              >
-                取消
-              </v-btn>
-              <v-btn
-                color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                :loading="isExportingExcel"
-                class="ms-2"
-              >
-                匯出
-              </v-btn>
-            </v-card-actions>
           </v-form>
         </v-card-text>
+        <v-card-actions class="px-6 pb-5">
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="outlined"
+            class="me-1"
+            :size="buttonSize"
+            @click="closeExportExcelDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            :size="buttonSize"
+            :loading="isExportingExcel"
+            @click="handleExportExcel"
+          >
+            匯出
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
@@ -590,7 +653,7 @@ const { smAndUp, mdAndUp } = useDisplay()
 // ===== 響應式變數 =====
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
 const dialogWidth = computed(() => {
-  if (mdAndUp.value) return '1000'
+  if (mdAndUp.value) return '900'
   if (smAndUp.value) return '600'
   return '100%'
 })

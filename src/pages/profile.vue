@@ -53,7 +53,7 @@
         </v-row>
       </v-col>
       <v-col xl="9">
-        <v-row class="elevation-4 rounded-lg pt-3 pt-sm-6 pb-6 px-2 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 me-xl-12 mb-4 bg-white">
+        <v-row class="elevation-4 rounded-lg pt-3 pt-sm-6 pb-6 px-2 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-0 me-xl-12 mb-4 bg-white">
           <v-col
             cols="12"
             class="d-flex justify-space-between align-center"
@@ -493,105 +493,12 @@
   </v-dialog>
 
   <!-- 背景圖片選擇對話框 -->
-  <v-dialog
+  <BackgroundImageDialog
     v-model="showBackgroundDialog"
-    max-width="900"
-  >
-    <v-card class="rounded-lg">
-      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-grey-darken-2 mb-2">
-        <v-icon
-          class="me-2"
-          size="20"
-        >
-          mdi-image
-        </v-icon>
-        <span class="card-title text-white">變更背景圖片</span>
-        <v-spacer />
-        <v-btn
-          icon
-          variant="plain"
-          color="white"
-          class="opacity-100"
-          :size="buttonSize"
-          :ripple="false"
-          @click="showBackgroundDialog = false"
-        >
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
-      <v-card-text class="px-5 pb-0 pt-6">
-        <v-row>
-          <v-col
-            v-for="(bg, index) in paginatedBackgrounds"
-            :key="index"
-            cols="12"
-            sm="6"
-            md="4"
-            class="text-center"
-          >
-            <v-card
-              class="cursor-pointer border rounded-lg"
-              elevation="0"
-              @click="selectedBackground = bg.url"
-            >
-              <v-img
-                :src="bg.url"
-                height="180"
-                cover
-              >
-                <div class="d-flex align-center justify-center h-100">
-                  <v-icon
-                    v-if="selectedBackground === bg.url"
-                    color="white"
-                    size="40"
-                    class="pt-5"
-                  >
-                    mdi-check-circle
-                  </v-icon>
-                </div>
-              </v-img>
-              <v-card-text class="pa-2">
-                <div class="sub-title">
-                  {{ bg.name }}
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-
-        <!-- 分頁組件 -->
-        <v-pagination
-          v-if="totalPages > 1"
-          v-model="currentPage"
-          :length="totalPages"
-          :total-visible="3"
-          class="mt-4"
-          size="x-small"
-          variant="flat"
-          color="blue-grey-darken-2"
-        />
-      </v-card-text>
-      <v-card-actions class="px-5 mb-3">
-        <v-spacer />
-        <v-btn
-          color="grey-darken-1"
-          variant="outlined"
-          @click="showBackgroundDialog = false"
-        >
-          取消
-        </v-btn>
-        <v-btn
-          color="blue-grey-darken-2"
-          variant="outlined"
-          class="ms-1"
-          :loading="isUpdatingBackground"
-          @click="handleBackgroundChange"
-        >
-          確認
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+    :current-background="user.backgroundImage"
+    :is-updating="isUpdatingBackground"
+    @confirm="handleBackgroundChange"
+  />
 </template>
 
 <script setup>
@@ -602,6 +509,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
 import FileUploadButton from '@/components/FileUploadButton.vue'
+import BackgroundImageDialog from '@/components/BackgroundImageDialog.vue'
 import { useApi } from '@/composables/axios'
 
 const { apiAuth } = useApi()
@@ -630,12 +538,7 @@ const userList = ref([])
 const isLoadingUsers = ref(false)
 
 const showBackgroundDialog = ref(false)
-const selectedBackground = ref('')
 const isUpdatingBackground = ref(false)
-
-// 分頁相關
-const currentPage = ref(1)
-const itemsPerPage = 6
 
 const passwordForm = ref({
   currentPassword: '',
@@ -650,96 +553,11 @@ const confirmPasswordError = ref('')
 const user = useUserStore()
 const createSnackbar = useSnackbar()
 
-// 背景圖片選項
-const backgroundOptions = ref([
-  {
-    name: '野火燎原',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_flame.png'
-  },
-  {
-    name: '迷幻星空',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_purplesky.png'
-  },
-  {
-    name: '小木屋',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_cabin.png'
-  },
-  {
-    name: '機器人',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_robot.png'
-  },
-  {
-    name: '靜謐之森',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_snowforest.png'
-  },
-  {
-    name: '日出',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_sunrise.png'
-  },
-  {
-    name: '龍貓',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_totoro.png'
-  },
-  {
-    name: '移動城堡',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_castle.png'
-  },
-  {
-    name: '霍格華茲',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_hogwarts.png'
-  },
-  {
-    name: '咖波',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_capoo.png'
-  },
-  {
-    name: '水晶球',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_pokemon.png'
-  },
-  {
-    name: 'Pingu',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_pingu.png'
-  },
-  {
-    name: '史迪奇',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_stitch.png'
-  },
-  {
-    name: '鳥居',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_shrine.png'
-  },
-  {
-    name: '胡蝶忍',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_kochoshinobu.png'
-  },
-  {
-    name: 'Chiikawa',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_chiikawa.png'
-  },
-  {
-    name: '紫月',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_purplemoon.png'
-  },
-  {
-    name: '小新',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_shinchan.png'
-  }
-])
 
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
 }
 
-// 分頁計算屬性
-const totalPages = computed(() => {
-  return Math.ceil(backgroundOptions.value.length / itemsPerPage)
-})
-
-const paginatedBackgrounds = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return backgroundOptions.value.slice(start, end)
-})
 
 const fetchUserList = async () => {
     try {
@@ -776,19 +594,11 @@ const fetchUserList = async () => {
     if (newVal) fetchUserList()
   })
 
-  // 監聽背景選擇對話框開啟
-  watch(showBackgroundDialog, (newVal) => {
-    if (newVal) {
-      selectedBackground.value = user.backgroundImage || ''
-      currentPage.value = 1 // 重置到第一頁
-    }
-  })
-
   // 處理背景圖片變更
-  const handleBackgroundChange = async () => {
+  const handleBackgroundChange = async (selectedBackground) => {
     try {
       isUpdatingBackground.value = true
-      await user.updateBackgroundImage(selectedBackground.value)
+      await user.updateBackgroundImage(selectedBackground)
 
       createSnackbar({
         text: '背景圖片更新成功',
