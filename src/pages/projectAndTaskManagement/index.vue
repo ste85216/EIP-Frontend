@@ -1147,6 +1147,7 @@ definePage({
     roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.MARKETING, UserRole.DESIGNER, UserRole.SUPERVISOR, UserRole.USER, UserRole.IT]
   }
 })
+
 const router = useRouter()
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
