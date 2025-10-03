@@ -54,7 +54,7 @@ router.beforeEach(async (to, from, next) => {
   if (user.isLogin && ['/login'].includes(to.path)) {
     next('/')
   } else if (to.path === '/') {
-    next('/profile')
+    next()
   } else if (to.meta.login && !user.isLogin) {
     next('/login')
   } else if (to.meta.roles && !to.meta.roles.includes(user.role)) {

@@ -290,6 +290,7 @@
           icon
           variant="plain"
           color="white"
+          class="opacity-100"
           :size="buttonSize"
           :ripple="false"
           @click="closePasswordDialog"
@@ -367,47 +368,7 @@
     </v-card>
   </v-dialog>
 
-  <!-- 預設密碼修改提示對話框 -->
-  <v-dialog
-    v-model="showDefaultPasswordDialog"
-    persistent
-    max-width="380"
-  >
-    <v-card class="rounded-lg px-7 pt-7 pb-5">
-      <div class="card-title mb-4">
-        請立即修改密碼
-      </div>
-      <v-card-text class="px-0">
-        <v-alert
-          type="warning"
-          color="red-darken-1"
-          variant="tonal"
-          class="mb-0 font-weight-bold"
-        >
-          為了您的帳戶安全，建議修改預設密碼。<br>
-          是否要立即修改密碼？
-        </v-alert>
-      </v-card-text>
-      <v-card-actions class="pa-0">
-        <v-spacer />
-        <v-btn
-          color="grey"
-          variant="outlined"
-          @click="showDefaultPasswordDialog = false"
-        >
-          稍後修改
-        </v-btn>
-        <v-btn
-          color="red-darken-1"
-          variant="flat"
-          class="elevation-2 ms-2"
-          @click="handleDefaultPasswordPrompt"
-        >
-          立即修改
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+  <!-- 預設密碼提醒已移至首頁處理 -->
 
   <v-dialog
     v-model="showUserListDialog"
@@ -503,7 +464,7 @@
 
 <script setup>
 import { definePage } from 'vue-router/auto'
-import { computed, ref, watch, onMounted, nextTick } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
@@ -643,24 +604,7 @@ const validatePasswordForm = () => {
   return isValid
 }
 
-const showDefaultPasswordDialog = ref(false)
-
-// 處理預設密碼提示對話框
-const handleDefaultPasswordPrompt = () => {
-  showDefaultPasswordDialog.value = false
-  nextTick(() => {
-    setTimeout(() => {
-      showPasswordDialog.value = true
-    }, 150 )
-  })
-}
-
-// 在組件掛載時檢查是否需要顯示預設密碼提示
-onMounted(() => {
-  if (!user.isDefaultPasswordChanged) {
-    showDefaultPasswordDialog.value = true
-  }
-})
+// 預設密碼提醒已移至首頁處理
 
 // 修改密碼成功後更新狀態
 const handlePasswordChange = async () => {
