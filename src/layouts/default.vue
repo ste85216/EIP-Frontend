@@ -67,6 +67,7 @@
         <div>
           <template v-if="!rail">
             <v-card
+              v-tooltip="'個人資料管理'"
               elevation="0"
               rounded="0"
               height="172"
@@ -764,8 +765,11 @@ const getBackgroundImage = () => {
 }
 
 const userItems = [
-
-
+  {
+    to: '/',
+    text: '首頁',
+    icon: 'mdi-home',
+  },
   {
     to: '/employeeList',
     text: '公司員工列表',
