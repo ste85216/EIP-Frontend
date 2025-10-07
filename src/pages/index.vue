@@ -376,21 +376,11 @@
         >
           mdi-alert-circle
         </v-icon>
-        <span class="card-title text-white">請立即修改密碼</span>
+        <span
+          class="card-title text-white"
+          style="padding: 10px 0;"
+        >請立即修改密碼</span>
         <v-spacer />
-        <v-btn
-          icon
-          variant="plain"
-          color="white"
-          class="opacity-100"
-          :size="buttonSize"
-          :ripple="false"
-          @click="showDefaultPasswordDialog = false"
-        >
-          <v-icon>
-            mdi-close
-          </v-icon>
-        </v-btn>
       </v-card-title>
       <v-card-text class="pb-0">
         <v-alert
@@ -399,21 +389,11 @@
           variant="tonal"
           class="mb-0 font-weight-bold"
         >
-          為了您的帳戶安全，建議修改預設密碼。<br>
-          是否要立即修改密碼？
+          為了您的帳戶安全，請立即修改系統密碼。
         </v-alert>
       </v-card-text>
       <v-card-actions class="me-4 mb-3 mt-4">
         <v-spacer />
-        <v-btn
-          color="grey"
-          variant="outlined"
-          :size="buttonSize"
-          class="me-2"
-          @click="showDefaultPasswordDialog = false"
-        >
-          稍後修改
-        </v-btn>
         <v-btn
           color="red-darken-1"
           variant="flat"
@@ -429,6 +409,7 @@
   <!-- 修改密碼對話框 -->
   <v-dialog
     v-model="showPasswordDialog"
+    persistent
     max-width="320"
   >
     <v-card class="rounded-lg pb-1">
@@ -439,21 +420,11 @@
         >
           mdi-lock
         </v-icon>
-        <span class="card-title text-white">修改密碼</span>
+        <span
+          class="card-title text-white"
+          style="padding: 10px 0;"
+        >修改密碼</span>
         <v-spacer />
-        <v-btn
-          icon
-          variant="plain"
-          color="white"
-          class="opacity-100"
-          :size="buttonSize"
-          :ripple="false"
-          @click="closePasswordDialog"
-        >
-          <v-icon>
-            mdi-close
-          </v-icon>
-        </v-btn>
       </v-card-title>
       <v-card-text class="pb-0">
         <v-form @submit.prevent="handlePasswordChange">
@@ -501,15 +472,6 @@
       </v-card-text>
       <v-card-actions class="me-4 mb-3">
         <v-spacer />
-        <v-btn
-          color="grey-darken-1"
-          variant="outlined"
-          :size="buttonSize"
-          class="me-2"
-          @click="closePasswordDialog"
-        >
-          取消
-        </v-btn>
         <v-btn
           color="blue-darken-2"
           variant="outlined"
