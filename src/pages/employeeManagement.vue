@@ -293,7 +293,6 @@
                       prepend-icon="mdi-account-plus"
                       variant="outlined"
                       color="blue-grey-darken-2"
-                      class="me-4"
                       @click="openDialog(null)"
                     >
                       新增員工
@@ -544,17 +543,53 @@
                       icon
                       color="light-blue-darken-4"
                       variant="plain"
-                      :size="buttonSize"
+                      :size="actionButtonSize"
                       :ripple="false"
                       @click="openDialog(item)"
                     >
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
                     <v-btn
+                      v-if="user.role === UserRole.ADMIN && !item.hasSystemUser && (item.employmentStatus === '在職' || item.employmentStatus === '待入職')"
+                      v-tooltip:start="'新增為系統用戶'"
+                      icon
+                      color="teal-darken-1"
+                      variant="plain"
+                      :size="actionButtonSize"
+                      :ripple="false"
+                      @click="copyEmployeeToUser(item)"
+                    >
+                      <v-icon>mdi-account-plus</v-icon>
+                    </v-btn>
+                    <v-btn
+                      v-else-if="user.role === UserRole.ADMIN && !item.hasSystemUser && (item.employmentStatus === '離職' || item.employmentStatus === '留職停薪')"
+                      v-tooltip:start="'離職/留停員工無法複製為系統用戶'"
+                      icon
+                      color="grey"
+                      variant="plain"
+                      :size="actionButtonSize"
+                      :ripple="false"
+                      disabled
+                    >
+                      <v-icon>mdi-account-plus</v-icon>
+                    </v-btn>
+                    <v-btn
+                      v-else-if="user.role === UserRole.ADMIN && item.hasSystemUser"
+                      v-tooltip:start="'已有系統用戶'"
+                      icon
+                      color="grey"
+                      variant="plain"
+                      :size="actionButtonSize"
+                      :ripple="false"
+                      disabled
+                    >
+                      <v-icon>mdi-account-check</v-icon>
+                    </v-btn>
+                    <v-btn
                       icon
                       color="red-lighten-1"
                       variant="plain"
-                      :size="buttonSize"
+                      :size="actionButtonSize"
                       :ripple="false"
                       @click="confirmDelete(item)"
                     >
@@ -1549,6 +1584,79 @@
       </v-card>
     </v-dialog>
 
+    <!-- 複製確認對話框 -->
+    <v-dialog
+      v-model="copyConfirmDialog.open"
+      max-width="360"
+      persistent
+    >
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-teal-darken-1 d-flex align-center">
+          <v-icon
+            size="20"
+            color="white"
+            class="me-2"
+          >
+            mdi-account-plus
+          </v-icon>
+          複製為系統用戶
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            size="20"
+            @click="copyConfirmDialog.open = false"
+          >
+            <v-icon size="20">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+        <v-card-text class="px-6 pt-6 pb-3">
+          <div class="mb-4">
+            確定要將員工「<span class="text-teal-darken-1 font-weight-bold">{{ copyConfirmDialog.employee?.name }}</span>」新增為系統用戶嗎？
+          </div>
+          <div class="mb-4">
+            系統將自動創建對應的用戶帳號，預設密碼為：<span class="text-blue-darken-1 font-weight-bold">ys{{ copyConfirmDialog.employee?.extNumber }}{{ copyConfirmDialog.employee?.printNumber }}</span>
+          </div>
+          <v-select
+            v-model="copyConfirmDialog.selectedRole"
+            :items="roleOptions"
+            label="選擇權限"
+            variant="outlined"
+            density="compact"
+            hide-details
+            class="py-2"
+            :error-messages="copyConfirmDialog.roleError"
+            @update:model-value="copyConfirmDialog.roleError = ''"
+          />
+        </v-card-text>
+        <v-card-actions class="px-6 pb-5">
+          <v-spacer />
+          <v-btn
+            color="grey"
+            variant="outlined"
+            class="me-1"
+            :size="buttonSize"
+            @click="copyConfirmDialog.open = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            :size="buttonSize"
+            @click="confirmCopyEmployeeToUser"
+          >
+            確認
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
     <!-- 匯入結果對話框 -->
     <v-dialog
       v-model="importResultDialog.open"
@@ -1648,7 +1756,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import UserRole from '@/enums/UserRole'
+import UserRole, { roleNames } from '@/enums/UserRole'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import * as yup from 'yup'
 import { useForm, useField } from 'vee-validate'
@@ -1658,7 +1766,7 @@ definePage({
   meta: {
     title: '員工管理 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.HR]
+    permission: 'EMPLOYEE_MANAGEMENT_READ'
   }
 })
 
@@ -1671,6 +1779,7 @@ const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 
 // 響應式變數
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
+const actionButtonSize = computed(() => smAndUp.value ? '32' : 'small')
 const dialogWidth = computed(() => mdAndUp.value ? '1200' : '100%')
 
 // 表格相關
@@ -1705,7 +1814,7 @@ const searchCriteria = ref({
   department: '',
   employmentType: '',
   jobTitle: '',
-  status: '',
+  status: '在職', // 預設在職狀態
   dateType: '',
   dateRange: []
 })
@@ -1870,7 +1979,7 @@ const resetSearch = () => {
     department: '',
     employmentType: '',
     jobTitle: '',
-    status: '', // 預設在職?
+    status: '在職', // 預設在職狀態
     dateType: '',
     dateRange: []
   }
@@ -1923,13 +2032,25 @@ const confirmDelete = (item) => {
 
 const deleteEmployee = async () => {
   try {
-    await apiAuth.delete(`/employees/${confirmDeleteDialog.value.id}`)
-    await performSearch()
-    confirmDeleteDialog.value.open = false
-    createSnackbar({
-      text: '刪除員工成功',
-      snackbarProps: { color: 'teal-lighten-1' }
-    })
+    const { data } = await apiAuth.delete(`/employees/${confirmDeleteDialog.value.id}`)
+
+    if (data.success) {
+      await performSearch()
+      confirmDeleteDialog.value.open = false
+
+      // 如果有系統用戶被影響，顯示額外訊息
+      if (data.result?.affectedUser) {
+        createSnackbar({
+          text: `員工已刪除，相關系統用戶「${data.result.affectedUser.name}」的關聯已解除`,
+          snackbarProps: { color: 'orange-darken-1' }
+        })
+      } else {
+        createSnackbar({
+          text: '刪除員工成功',
+          snackbarProps: { color: 'teal-lighten-1' }
+        })
+      }
+    }
   } catch (error) {
     createSnackbar({
       text: error?.response?.data?.message || '刪除失敗',
@@ -2232,6 +2353,18 @@ const submitEmployee = handleSubmit(async (values) => {
       // 編輯
       const { data } = await apiAuth.patch(`/employees/${dialog.value.id}`, values)
       if (data.success) {
+        // 如果員工有系統用戶且任職狀態發生變化，更新用戶狀態
+        if (values.employmentStatus) {
+          try {
+            await apiAuth.patch(`/employees/${dialog.value.id}/status-change`, {
+              employmentStatus: values.employmentStatus
+            })
+          } catch (statusError) {
+            console.warn('更新用戶狀態失敗:', statusError)
+            // 不阻擋主要流程，只記錄警告
+          }
+        }
+
         await performSearch()
         closeDialog()
         createSnackbar({
@@ -2640,6 +2773,29 @@ const importResultDialog = ref({
   errors: []
 })
 
+
+// 複製確認對話框
+const copyConfirmDialog = ref({
+  open: false,
+  employee: null,
+  selectedRole: 0, // 預設一般用戶
+  roleError: ''
+})
+
+// 權限選項（與 user.vue 保持一致）
+const roleOptions = [
+  { value: UserRole.USER, title: roleNames[UserRole.USER] },    // 一般用戶
+  { value: UserRole.MANAGER, title: roleNames[UserRole.MANAGER] },  // 經理
+  { value: UserRole.ADMIN, title: roleNames[UserRole.ADMIN] },  // 管理者
+  { value: UserRole.IT, title: roleNames[UserRole.IT] },  // IT人員
+  { value: UserRole.DESIGNER, title: roleNames[UserRole.DESIGNER] },  // 美編人員
+  { value: UserRole.MARKETING, title: roleNames[UserRole.MARKETING] },  // 行銷人員
+  { value: UserRole.HR, title: roleNames[UserRole.HR] },  // 人資
+  { value: UserRole.SUPERVISOR, title: roleNames[UserRole.SUPERVISOR] }  // 總管
+]
+
+
+
 // 開啟匯入對話框
 const openImportDialog = () => {
   importDialog.value = {
@@ -2975,6 +3131,57 @@ const jobTitleOptions = [  // 有順序之分
   { text: '實習生', value: '實習生' },
   { text: '顧問', value: '顧問' }
 ]
+
+// 複製員工為系統用戶
+const copyEmployeeToUser = (employee) => {
+  copyConfirmDialog.value = {
+    open: true,
+    employee: employee,
+    selectedRole: 0, // 重置為預設權限
+    roleError: ''
+  }
+}
+
+// 確認複製員工為系統用戶
+const confirmCopyEmployeeToUser = async () => {
+  // 驗證權限選擇
+  if (copyConfirmDialog.value.selectedRole === null || copyConfirmDialog.value.selectedRole === undefined) {
+    copyConfirmDialog.value.roleError = '請選擇權限'
+    return
+  }
+
+  const employee = copyConfirmDialog.value.employee
+  try {
+    const { data } = await apiAuth.post(`/employees/${employee._id}/copy-to-user`, {
+      role: copyConfirmDialog.value.selectedRole, // 使用選擇的權限
+      password: `ys${employee.extNumber}${employee.printNumber}`
+    })
+
+    if (data.success) {
+      // 關閉對話框
+      copyConfirmDialog.value.open = false
+
+      // 更新表格資料
+      await performSearch()
+
+      const message = data.message.includes('建立關聯')
+        ? `員工 ${employee.name} 已與現有系統用戶建立關聯`
+        : `員工 ${employee.name} 已成功新增為系統用戶`
+
+      createSnackbar({
+        text: message,
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('複製員工為用戶失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '複製失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
 </script>
 
 <style lang="scss" scoped>

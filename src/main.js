@@ -15,11 +15,20 @@ import App from './App.vue'
 // Composables
 import { createApp } from 'vue'
 
+// Directives
+import { vPermission, vAnyPermission, vAllPermissions, vRole } from '@/directives/permission'
+
 const app = createApp(App)
 app.use(vue3GoogleLogin, {
   clientId: '890205288379-2bm447qt1rj7jkooc7luqej83if9inp4.apps.googleusercontent.com'
 })
 app.use(VueEasyLightbox)
+
+// 註冊權限指令
+app.directive('permission', vPermission)
+app.directive('any-permission', vAnyPermission)
+app.directive('all-permissions', vAllPermissions)
+app.directive('role', vRole)
 
 registerPlugins(app)
 

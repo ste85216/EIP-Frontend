@@ -6,7 +6,7 @@
         cols="12"
         class="ps-3 pb-6"
       >
-        <h3>使用者管理</h3>
+        <h3>用戶管理</h3>
       </v-col>
 
       <v-col cols="12">
@@ -18,9 +18,18 @@
                   prepend-icon="mdi-account-plus"
                   variant="outlined"
                   color="blue-grey-darken-1"
+                  class="me-4"
                   @click="openDialog(null)"
                 >
-                  新增使用者
+                  新增用戶
+                </v-btn>
+                <v-btn
+                  prepend-icon="mdi-account-search"
+                  variant="outlined"
+                  color="teal-darken-1"
+                  @click="checkEmployeeLinks"
+                >
+                  檢查
                 </v-btn>
               </v-col>
               <v-col
@@ -83,7 +92,96 @@
                     {{ item.email }}
                   </td>
                   <td v-if="smAndUp">
-                    {{ getRoleTitle(item.role) }}
+                    <div v-if="item.rbacRoles && item.rbacRoles.length > 0">
+                      <v-chip
+                        v-for="userRole in item.rbacRoles.slice(0, 2)"
+                        :key="userRole._id"
+                        label
+                        size="small"
+                        color="blue-darken-2"
+                        class="ma-1"
+                      >
+                        {{ userRole.role?.name || '未知角色' }}
+                      </v-chip>
+                      <span
+                        v-if="item.rbacRoles.length > 2"
+                        class="text-grey text-caption"
+                      >
+                        (+{{ item.rbacRoles.length - 2 }} 個)
+                      </span>
+                    </div>
+                    <span
+                      v-else
+                      class="text-grey"
+                    >無權限</span>
+                  </td>
+                  <td v-if="lgAndUp">
+                    <v-menu
+                      v-if="item.employeeLink"
+                      location="end"
+                      transition="fade-transition"
+                      open-on-hover
+                      close-delay="30"
+                      open-delay="30"
+                      class="pa-0"
+                    >
+                      <template #activator="{ props }">
+                        <div
+                          v-bind="props"
+                          class="d-flex align-center"
+                        >
+                          <v-chip
+                            size="small"
+                            color="teal-lighten-1"
+                            prepend-icon="mdi-account-check"
+                          >
+                            已關聯
+                          </v-chip>
+                        </div>
+                      </template>
+                      <v-card
+                        min-width="200"
+                        class="rounded-lg pa-0 status-card"
+                        elevation="3"
+                      >
+                        <v-card-text class="pa-0">
+                          <div class="d-flex align-center px-3 py-2 bg-teal-lighten-1 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-office-building
+                            </v-icon>
+                            <span>公司：{{ item.employeeLink?.company?.name || '無' }}</span>
+                          </div>
+                          <div class="d-flex align-center px-3 py-2 bg-teal-lighten-3 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-domain
+                            </v-icon>
+                            <span>部門：{{ item.employeeLink?.department?.name || '無' }}</span>
+                          </div>
+                          <div class="d-flex align-center px-3 py-2 bg-teal-lighten-2 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-identifier
+                            </v-icon>
+                            <span>科威編號：{{ item.employeeLink?.employeeCode || '無' }}</span>
+                          </div>
+                        </v-card-text>
+                      </v-card>
+                    </v-menu>
+                    <span
+                      v-else
+                      class="text-grey"
+                    >無關聯</span>
                   </td>
                   <td v-if="lgAndUp">
                     {{ item.note }}
@@ -130,7 +228,7 @@
       >
         <v-card class="rounded-lg px-4 py-6">
           <div class="card-title px-4 py-3">
-            {{ dialog.id ? '使用者資料編輯' : '新增使用者' }}
+            {{ dialog.id ? '用戶資料編輯' : '新增用戶' }}
           </div>
 
           <v-card-text class="mt-3 pa-3">
@@ -144,7 +242,7 @@
                 <v-text-field
                   v-model="userId.value.value"
                   :error-messages="userId.errorMessage.value"
-                  label="使用者編號"
+                  label="用戶編號"
                   type="text"
                   variant="outlined"
                   density="compact"
@@ -187,18 +285,38 @@
               <v-col
                 cols="12"
                 sm="6"
-                md="4"
               >
                 <v-select
-                  v-model="role.value.value"
-                  :error-messages="role.errorMessage.value"
-                  :items="roles"
-                  item-title="title"
-                  item-value="value"
+                  v-model="selectedRoles"
+                  :items="availableRoles"
+                  item-title="name"
+                  item-value="_id"
                   label="*權限"
                   variant="outlined"
                   density="compact"
-                />
+                  multiple
+                  chips
+                  closable-chips
+                  hint="可選擇多個權限"
+                  persistent-hint
+                >
+                  <template #selection="{ item, index }">
+                    <v-chip
+                      v-if="index < 2"
+                      size="small"
+                      color="teal"
+                      class="ma-1"
+                    >
+                      {{ item.raw.name }}
+                    </v-chip>
+                    <span
+                      v-if="index === 2"
+                      class="text-grey text-caption align-self-center"
+                    >
+                      (+{{ selectedRoles.length - 2 }} 個權限)
+                    </span>
+                  </template>
+                </v-select>
               </v-col>
 
               <v-col
@@ -296,10 +414,10 @@
     <!-- 確認刪除對話框 -->
     <ConfirmDeleteDialogWithTextField
       v-model="confirmDeleteDialog"
-      title="確認刪除使用者"
-      :message="`確定要刪除使用者「<span class='text-pink-lighten-1' style='font-weight: 800;'>${originalData?.name || ''}</span>」嗎？ 此操作無法復原。`"
+      title="確認刪除用戶"
+      :message="`確定要刪除用戶「<span class='text-pink-lighten-1' style='font-weight: 800;'>${originalData?.name || ''}</span>」嗎？ 此操作無法復原。`"
       :expected-name="originalData?.name || ''"
-      input-label="使用者"
+      input-label="用戶"
       @confirm="deleteUser"
     />
 
@@ -314,6 +432,18 @@
       confirm-button-color="red-darken-1"
       @confirm="confirmStatusChange"
     />
+
+    <!-- 確認啟用對話框 -->
+    <ConfirmDialog
+      v-model="showEnableDialog"
+      :width="320"
+      title="確認啟用帳號"
+      :message="`確定要啟用使用者「<span class='text-teal-lighten-1' style='font-weight: 800;'>${selectedUser?.name || ''}</span>」的帳號嗎？`"
+      confirm-button-color="teal-darken-1"
+      header-color="bg-teal-darken-1"
+      header-icon="mdi-account-check"
+      @confirm="confirmEnableUser"
+    />
   </v-container>
 </template>
 
@@ -325,31 +455,38 @@ import { definePage } from 'vue-router/auto'
 import { useForm, useField } from 'vee-validate'
 import { useDisplay } from 'vuetify'
 import { useUserStore } from '@/stores/user'
-import UserRole, { roleNames } from '@/enums/UserRole'
+import { usePermissionStore } from '@/stores/permission'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import { useRouter } from 'vue-router'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '使用者管理 | Ystravel',
-    login: true,
-    roles: [UserRole.ADMIN]
+    title: '用戶管理 | Ystravel',
+    login: true
+    // 暫時移除權限檢查，讓你能先進入頁面設置權限
   }
 })
 
 // ===== API 與 Store 初始化 =====
 const { apiAuth } = useApi()
 const user = useUserStore()
+const permissionStore = usePermissionStore()
 const createSnackbar = useSnackbar()
 
 // ===== 響應式設定與螢幕斷點 =====
 const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
+
+// 權限檢查 (暫時移除，如需要可重新啟用)
+// const isSuperAdmin = computed(() => {
+//   return permissionStore.hasPermission('SUPER_ADMIN')
+// })
 
 // ===== 基礎狀態管理 =====
 const isEditing = ref(false)
@@ -367,9 +504,6 @@ const userSchema = computed(() => {
     name: yup
       .string()
       .required('請輸入姓名'),
-    role: yup
-      .number()
-      .required('請選擇使用者身分別'),
     note: yup
       .string()
       .nullable()
@@ -401,7 +535,6 @@ const { handleSubmit, isSubmitting, resetForm } = useForm({
   initialValues: {
     email: '',
     name: '',
-    role: UserRole.USER,
     note: ''
   }
 })
@@ -409,7 +542,6 @@ const { handleSubmit, isSubmitting, resetForm } = useForm({
 // ===== 表單欄位定義 =====
 const email = useField('email')
 const name = useField('name')
-const role = useField('role')
 const note = useField('note')
 const password = useField('password')
 const confirmPassword = useField('confirmPassword')
@@ -421,15 +553,16 @@ const tableSortBy = ref([{ key: 'userId', order: 'asc' }])
 const tablePage = ref(1)
 const tableItems = ref([])
 const tableKey = ref(0)
-const tableHeaders = [
-  { title: '使用者編號', align: 'left', sortable: true, key: 'userId' },
+const tableHeaders = computed(() => [
+  { title: '用戶編號', align: 'left', sortable: true, key: 'userId' },
   { title: '姓名', align: 'left', sortable: true, key: 'name' },
   { title: 'Email', align: 'left', sortable: true, key: 'email' },
-  { title: '身分別', align: 'left', sortable: true, key: 'role' },
+  { title: '權限', align: 'left', sortable: true, key: 'rbacRoles' },
+  { title: '員工關聯', align: 'left', sortable: false, key: 'employeeLink' },
   { title: '備註', align: 'left', sortable: true, key: 'note' },
   { title: '操作', align: 'left', sortable: false, key: 'action' },
   { title: '帳號狀態', align: 'left', sortable: true, key: 'isActive' }
-]
+])
 
 const tableLoading = ref(true)
 const tableItemsLength = ref(0)
@@ -450,31 +583,86 @@ const dialogWidth = computed(() => {
   return '100%'
 })
 
-// ===== 角色選項 =====
-const roles = ref([
-  { value: UserRole.USER, title: roleNames[UserRole.USER] },    // 一般使用者
-  { value: UserRole.MANAGER, title: roleNames[UserRole.MANAGER] },  // 經理
-  { value: UserRole.IT, title: roleNames[UserRole.IT] },  // IT人員
-  { value: UserRole.DESIGNER, title: roleNames[UserRole.DESIGNER] },  // 美編人員
-  { value: UserRole.MARKETING, title: roleNames[UserRole.MARKETING] },  // 行銷人員
-  { value: UserRole.HR, title: roleNames[UserRole.HR] },  // 人資
-  { value: UserRole.SUPERVISOR, title: roleNames[UserRole.SUPERVISOR] }  // 總管
-])
+// ===== 角色選項 (保留舊系統兼容性) =====
+// const roles = ref([
+//   { value: UserRole.USER, title: roleNames[UserRole.USER] },    // 一般用戶
+//   { value: UserRole.MANAGER, title: roleNames[UserRole.MANAGER] },  // 經理
+//   { value: UserRole.IT, title: roleNames[UserRole.IT] },  // IT人員
+//   { value: UserRole.DESIGNER, title: roleNames[UserRole.DESIGNER] },  // 美編人員
+//   { value: UserRole.MARKETING, title: roleNames[UserRole.MARKETING] },  // 行銷人員
+//   { value: UserRole.HR, title: roleNames[UserRole.HR] },  // 人資
+//   { value: UserRole.SUPERVISOR, title: roleNames[UserRole.SUPERVISOR] }  // 總管
+// ])
+
+// ===== 新 RBAC 角色管理 =====
+const availableRoles = ref([])
+const selectedRoles = ref([])
 
 // ===== 響應式表格抬頭設定 =====
 const filteredHeaders = computed(() => {
   if (lgAndUp.value) {
-    return tableHeaders
+    return tableHeaders.value
   }
   if (smAndUp.value) {
-    return tableHeaders.filter(header => header.key !== 'email' && header.key !== 'note')
+    return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'note')
   }
-  return tableHeaders.filter(header => header.key !== 'email' && header.key !== 'role' && header.key !== 'note')
+  return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'role' && header.key !== 'note' && header.key !== 'employeeLink')
 })
 
 // ===== 輔助函數 =====
-const getRoleTitle = (roleValue) => {
-  return roleNames[roleValue] || '未知'
+
+// 檢查員工關聯
+const checkEmployeeLinks = async () => {
+  try {
+    const { data } = await apiAuth.post('/users/check-employee-links')
+    if (data.success) {
+      // 重新載入資料
+      await tableLoadItems()
+
+      // 顯示詳細結果
+      console.log('檢查結果:', data.result)
+
+      let message = `檢查完成！成功關聯 ${data.result.linked} 個用戶`
+      if (data.result.errors.length > 0) {
+        message += `，${data.result.errors.length} 個無法關聯`
+      }
+
+      createSnackbar({
+        text: message,
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+
+      // 如果有錯誤，顯示詳細資訊
+      if (data.result.errors.length > 0) {
+        console.log('無法關聯的用戶:', data.result.errors)
+      }
+    }
+  } catch (error) {
+    console.error('檢查員工關聯失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '檢查失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+// ===== 角色管理函數 =====
+const loadRoles = async () => {
+  try {
+    const result = await permissionStore.getAllRoles()
+    // result 已經是角色陣列，不需要再訪問 .data
+    availableRoles.value = result.map(role => ({
+      _id: role._id,
+      name: role.name,
+      code: role.code
+    }))
+  } catch (error) {
+    console.error('載入角色失敗:', error)
+    createSnackbar({
+      text: error.message || '載入角色失敗',
+      snackbarProps: { color: 'red' }
+    })
+  }
 }
 
 // ===== API 相關函數 =====
@@ -499,7 +687,26 @@ const performSearch = async () => {
     const { data } = await apiAuth.get('/users/search', { params })
 
     if (data.success) {
-      tableItems.value = data.result.data
+      // 載入每個用戶的 RBAC 角色
+      const usersWithRoles = await Promise.all(
+        data.result.data.map(async (user) => {
+          try {
+            const rolesResult = await permissionStore.getUserRoles(user._id)
+            return {
+              ...user,
+              rbacRoles: rolesResult || []
+            }
+          } catch (error) {
+            console.error(`載入用戶 ${user.name} 的角色失敗:`, error)
+            return {
+              ...user,
+              rbacRoles: []
+            }
+          }
+        })
+      )
+
+      tableItems.value = usersWithRoles
       tableItemsLength.value = data.result.totalItems
     }
   } catch (error) {
@@ -527,21 +734,100 @@ const performSearch = async () => {
 const submit = handleSubmit(async (values) => {
   try {
     if (isEditing.value) {
-      const { data } = await apiAuth.patch(`users/${dialog.value.id}`, values)
+      const updateData = { ...values }
+      const { data } = await apiAuth.patch(`users/${dialog.value.id}`, updateData)
       const index = tableItems.value.findIndex(item => item._id === dialog.value.id)
       if (index !== -1) {
-        tableItems.value[index] = data.result
+        // 重新載入用戶的 RBAC 角色
+        try {
+          const rolesResult = await permissionStore.getUserRoles(dialog.value.id)
+          tableItems.value[index] = {
+            ...data.result,
+            rbacRoles: rolesResult || []
+          }
+        } catch (roleError) {
+          console.error('載入用戶角色失敗:', roleError)
+          tableItems.value[index] = {
+            ...data.result,
+            rbacRoles: []
+          }
+        }
+      }
+
+      // 處理 RBAC 角色更新
+      if (selectedRoles.value.length > 0) {
+        try {
+          // 獲取目前用戶的角色
+          const currentUserRoles = await permissionStore.getUserRoles(dialog.value.id)
+          const currentRoles = currentUserRoles
+            ?.filter(userRole => userRole.isActive)
+            ?.map(userRole => userRole.role._id) || []
+
+          // 找出需要新增的角色
+          const rolesToAdd = selectedRoles.value.filter(roleId => !currentRoles.includes(roleId))
+
+          // 找出需要移除的角色
+          const rolesToRemove = currentRoles.filter(roleId => !selectedRoles.value.includes(roleId))
+
+          // 執行角色變更
+          for (const roleId of rolesToAdd) {
+            await permissionStore.assignRoleToUser(dialog.value.id, roleId)
+          }
+
+          for (const roleId of rolesToRemove) {
+            const userRole = currentUserRoles.find(ur => ur.role._id === roleId && ur.isActive)
+            if (userRole) {
+              await permissionStore.removeRoleFromUser(userRole._id)
+            }
+          }
+
+          // 角色更新完成後，重新載入該用戶的角色
+          try {
+            const updatedRoles = await permissionStore.getUserRoles(dialog.value.id)
+            const userIndex = tableItems.value.findIndex(item => item._id === dialog.value.id)
+            if (userIndex !== -1) {
+              tableItems.value[userIndex] = {
+                ...tableItems.value[userIndex],
+                rbacRoles: updatedRoles || []
+              }
+            }
+          } catch (reloadError) {
+            console.error('重新載入用戶角色失敗:', reloadError)
+          }
+        } catch (roleError) {
+          console.error('更新用戶角色失敗:', roleError)
+          createSnackbar({
+            text: '用戶基本資料更新成功，但角色更新失敗',
+            snackbarProps: { color: 'orange' }
+          })
+        }
       }
     } else {
       const submitData = Object.fromEntries(
         Object.entries(values).filter(([key]) => key !== 'userId')
       )
-      await apiAuth.post('/users', submitData)
+      const { data } = await apiAuth.post('/users', submitData)
+
+      // 為新用戶分配角色
+      if (selectedRoles.value.length > 0) {
+        try {
+          for (const roleId of selectedRoles.value) {
+            await permissionStore.assignRoleToUser(data.result._id, roleId)
+          }
+        } catch (roleError) {
+          console.error('分配角色失敗:', roleError)
+          createSnackbar({
+            text: '用戶新增成功，但角色分配失敗',
+            snackbarProps: { color: 'orange' }
+          })
+        }
+      }
+
       await tableLoadItems(true)
     }
 
     createSnackbar({
-      text: isEditing.value ? '使用者資料更新成功' : '使用者新增成功',
+      text: isEditing.value ? '用戶資料更新成功' : '用戶新增成功',
       snackbarProps: { color: 'teal-lighten-1' }
     })
 
@@ -564,22 +850,33 @@ const openDialog = async (item) => {
     dialog.value.id = item._id
     email.value.value = item.email
     name.value.value = item.name
-    role.value.value = item.role
     note.value.value = item.note
     userId.value.value = item.userId
     password.value.value = ''
     confirmPassword.value.value = ''
 
+    // 載入用戶的 RBAC 角色
+    try {
+      const userRoles = await permissionStore.getUserRoles(item._id)
+      selectedRoles.value = userRoles
+        ?.filter(userRole => userRole.isActive)
+        ?.map(userRole => userRole.role._id) || []
+    } catch (error) {
+      console.error('載入用戶角色失敗:', error)
+      selectedRoles.value = []
+    }
+
     originalData.value = {
       email: item.email,
       name: item.name,
-      role: item.role,
       note: item.note,
-      userId: item.userId
+      userId: item.userId,
+      selectedRoles: [...selectedRoles.value] // 保存原始角色選擇
     }
   } else {
     isEditing.value = false
     dialog.value.id = ''
+    selectedRoles.value = []
     originalData.value = null
     resetForm()
   }
@@ -600,7 +897,7 @@ const deleteUser = async () => {
     await tableLoadItems(true)
 
     createSnackbar({
-      text: '使用者刪除成功',
+      text: '用戶刪除成功',
       snackbarProps: { color: 'teal-lighten-1' }
     })
   } catch (error) {
@@ -620,14 +917,22 @@ const hasChanges = computed(() => {
   if (!isEditing.value) return true
   if (!originalData.value) return false
 
-  return ['email', 'name', 'role', 'note', 'userId'].some(key => {
+  // 檢查基本欄位變更
+  const basicFieldsChanged = ['email', 'name', 'note', 'userId'].some(key => {
     const formValue = key === 'email' ? email.value.value :
                     key === 'name' ? name.value.value :
-                    key === 'role' ? role.value.value :
                     key === 'note' ? note.value.value :
                     key === 'userId' ? userId.value.value : null
     return originalData.value[key] !== formValue
   })
+
+  // 檢查 RBAC 角色變更
+  const originalRoles = originalData.value.selectedRoles || []
+  const currentRoles = selectedRoles.value || []
+  const rolesChanged = originalRoles.length !== currentRoles.length ||
+    !originalRoles.every(roleId => currentRoles.includes(roleId))
+
+  return basicFieldsChanged || rolesChanged
 })
 
 // ===== 監聽器 =====
@@ -648,6 +953,7 @@ watch(quickSearchText, (newVal) => {
 onMounted(async () => {
   try {
     await tableLoadItems(true)
+    await loadRoles()
   } catch (error) {
     console.error('初始化加載失敗:', error)
   }
@@ -675,17 +981,19 @@ const showConfirmPassword = ref(false)
 
 // ===== 處理狀態變更 =====
 const showConfirmDialog = ref(false)
+const showEnableDialog = ref(false)
 const selectedUser = ref(null)
 
 // 處理狀態變更
 const handleStatusChange = (item) => {
-  // 如果是要停用帳號，則顯示確認對話框
+  // 如果是要停用帳號，則顯示刪除確認對話框
   if (item.isActive) {
     selectedUser.value = item
     showConfirmDialog.value = true
   } else {
-    // 如果是要啟用帳號，直接執行
-    updateUserStatus(item, true)
+    // 如果是要啟用帳號，顯示啟用確認對話框
+    selectedUser.value = item
+    showEnableDialog.value = true
   }
 }
 
@@ -693,6 +1001,13 @@ const handleStatusChange = (item) => {
 const confirmStatusChange = async () => {
   if (selectedUser.value) {
     await updateUserStatus(selectedUser.value, false)
+  }
+}
+
+// 確認啟用帳號
+const confirmEnableUser = async () => {
+  if (selectedUser.value) {
+    await updateUserStatus(selectedUser.value, true)
   }
 }
 

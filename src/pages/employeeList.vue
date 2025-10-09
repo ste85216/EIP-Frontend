@@ -698,14 +698,13 @@ import { debounce } from 'lodash'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
-import UserRole from '@/enums/UserRole'
 
 // 頁面定義
 definePage({
   meta: {
     title: '公司員工列表 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT, UserRole.HR]
+    permission: 'EMPLOYEE_LIST_READ'
   }
 })
 

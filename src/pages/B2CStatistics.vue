@@ -2394,7 +2394,7 @@ const performSearch = async () => {
 
 const resetSearch = () => {
   if (!user.isLogin || (!user.isManager && !user.isAdmin && !user.isUser)) {
-    // 一般使用者保留公司選擇
+    // 一般用戶保留公司選擇
     searchCriteria.value = {
       company: searchCriteria.value.company,
       source: null,
@@ -2535,7 +2535,7 @@ onUnmounted(() => {
 
 // 開啟對話框
 const openDialog = async (item) => {
-  // 如果是管理者、管理員或一般使用者，開啟完整對話框
+  // 如果是管理者、管理員或一般用戶，開啟完整對話框
   if (user.isLogin && (user.isManager || user.isAdmin || user.isUser)) {
     dialog.value.open = true
     dialog.value.id = item?._id || null

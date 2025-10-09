@@ -41,7 +41,7 @@
             >
               <v-date-input
                 v-model="dateRange"
-                label="日期區間"
+                label="日期區間 ( 已完成任務 )"
                 variant="outlined"
                 density="compact"
                 multiple="range"

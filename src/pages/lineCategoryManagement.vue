@@ -683,7 +683,6 @@ import { definePage } from 'vue-router/auto'
 import { useForm, useField } from 'vee-validate'
 import { useDisplay } from 'vuetify'
 import { useUserStore } from '@/stores/user'
-import UserRole from '@/enums/UserRole'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
@@ -696,7 +695,7 @@ definePage({
   meta: {
     title: '線別分類管理 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER]
+    permission: 'LINE_CATEGORY_MANAGEMENT_READ'
   }
 })
 

@@ -641,7 +641,6 @@ import { useDisplay } from 'vuetify'
 import { useApi } from '@/composables/axios'
 import { debounce } from 'lodash'
 import { definePage } from 'vue-router/auto'
-import UserRole from '@/enums/UserRole'
 import { useSnackbar } from 'vuetify-use-dialog'
 import MarketingBudgetChangeTable from '@/components/MarketingBudgetChangeTable.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
@@ -650,7 +649,7 @@ definePage({
   meta: {
     title: '異動紀錄 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN]
+    permission: 'AUDIT_LOG_READ'
   }
 })
 
@@ -903,7 +902,7 @@ const formatDate = (date) => {
 // 角色轉換
 const formatRole = (role) => {
   const roleMap = {
-    0: '一般使用者',
+    0: '一般用戶',
     1: '經理',
     2: '管理者',
     3: 'IT人員',

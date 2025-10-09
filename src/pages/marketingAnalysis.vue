@@ -2084,7 +2084,6 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
 import { definePage } from 'vue-router/auto'
-import UserRole from '@/enums/UserRole'
 import html2pdf from 'html2pdf.js'
 import * as echarts from 'echarts'
 import VChart from 'vue-echarts'
@@ -2105,7 +2104,7 @@ definePage({
   meta: {
     title: '行銷費用分析 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MARKETING, UserRole.MANAGER]
+    permission: 'MARKETING_ANALYSIS_READ'
   }
 })
 

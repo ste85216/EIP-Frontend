@@ -128,7 +128,7 @@
                       cols="12"
                       class="ps-4 pb-0 pt-0"
                     >
-                      {{ getRoleTitle(user.role) }}
+                      {{ getDisplayRole() }}
                     </v-col>
                   </v-row>
                 </v-card-text>
@@ -197,7 +197,7 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="!user.isUser"
+            v-if="filteredCogItems.length > 0"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -254,7 +254,7 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="!user.isUser"
+            v-if="filteredITItems.length > 0"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -312,7 +312,7 @@
             </v-list-item>
           </template>
           <v-divider
-            v-if="user.isAdmin || user.isIT"
+            v-if="user.isLogin && filteredAdminItems.length > 0"
             color="grey-darken-3"
             opacity="0.3"
             class="my-2"
@@ -448,7 +448,7 @@
                     cols="12"
                     class="ps-4 pb-0 pt-0"
                   >
-                    {{ getRoleTitle(user.role) }}
+                    {{ getDisplayRole() }}
                   </v-col>
                 </v-row>
               </v-card-text>
@@ -722,8 +722,9 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, computed, nextTick } from 'vue'
 import { useUserStore } from '@/stores/user'
+import { usePermissionStore } from '@/stores/permission'
 import { useRouter, useRoute } from 'vue-router'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
@@ -735,6 +736,7 @@ const drawer = ref(true)
 const mdDrawer = ref(false)
 const rail = ref(false)
 const user = useUserStore()
+const permissionStore = usePermissionStore()
 const createSnackbar = useSnackbar()
 const router = useRouter()
 const route = useRoute()
@@ -742,18 +744,48 @@ const route = useRoute()
 const openedGroups = ref([]) // 初始值改為空數組
 const isBackgroundLoaded = ref(false)
 const isAvatarLoaded = ref(false)
+const userRbacRoles = ref([]) // 用戶的 RBAC 角色
 const handleImageLoad = () => {
   isBackgroundLoaded.value = true
 }
 
 const handleAvatarLoad = () => {
-  setTimeout(() => {
+  nextTick(() => {
     isAvatarLoaded.value = true
-  }, 100)
+  })
 }
 
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
+}
+
+// 獲取用戶 RBAC 角色
+const loadUserRbacRoles = async () => {
+  if (!user.isLogin) return
+
+  try {
+    const result = await permissionStore.getUserRoles(user._id)
+    userRbacRoles.value = result || []
+  } catch (error) {
+    console.error('載入用戶角色失敗:', error)
+    userRbacRoles.value = []
+  }
+}
+
+// 顯示角色資訊的函數
+const getDisplayRole = () => {
+  if (userRbacRoles.value.length === 0) {
+    // 如果沒有 RBAC 角色，回退到舊的 role 系統
+    return getRoleTitle(user.role) || '未知'
+  }
+
+  if (userRbacRoles.value.length === 1) {
+    return userRbacRoles.value[0].role?.name || '未知角色'
+  }
+
+  // 多個角色時顯示第一個 + 數量
+  const firstRoleName = userRbacRoles.value[0].role?.name || '未知角色'
+  return `${firstRoleName} (${userRbacRoles.value.length}個角色)`
 }
 
 const getBackgroundImage = () => {
@@ -774,13 +806,13 @@ const userItems = [
     to: '/employeeList',
     text: '公司員工列表',
     icon: 'mdi-account-details',
-    roles: ['ADMIN', 'MANAGER', 'IT', 'HR']
+    permission: 'EMPLOYEE_LIST_READ'
   },
   {
     to: '/projectAndTaskManagement',
     text: '專案與任務管理',
     icon: 'mdi-chart-box-outline',
-    roles: ['ADMIN', 'MANAGER', 'MARKETING', 'DESIGNER', 'SUPERVISOR', 'USER', 'IT']
+    permission: 'PROJECT_AND_TASK_MANAGEMENT_READ'
   }
 ]
 
@@ -789,49 +821,49 @@ const cogItems = [
     to: '/marketingAnalysis',
     text: '行銷費用分析',
     icon: 'mdi-chart-multiple',
-    roles: ['ADMIN', 'MANAGER']
+    permission: 'MARKETING_ANALYSIS_READ'
   },
   {
     text: '行銷費用管理',
     icon: 'mdi-chart-bar',
-    roles: ['ADMIN', 'MANAGER', 'MARKETING'],
+    permission: ['MARKETING_EXPENSE_MANAGEMENT_READ', 'MARKETING_BUDGET_MANAGEMENT_READ', 'MARKETING_CATEGORY_MANAGEMENT_READ'],
     children: [
       {
         to: '/marketingExpenseManagement',
         text: '實際支出管理',
         icon: 'mdi-cash-100',
-        roles: ['ADMIN', 'MANAGER', 'MARKETING']
+        permission: 'MARKETING_EXPENSE_MANAGEMENT_READ'
       },
       {
         to: '/marketingBudgetManagement',
         text: '行銷預算管理',
         icon: 'mdi-table-edit',
-        roles: ['ADMIN', 'MANAGER', 'MARKETING']
+        permission: 'MARKETING_BUDGET_MANAGEMENT_READ'
       },
       {
         to: '/marketingCategoryManagement',
         text: '行銷分類管理',
         icon: 'mdi-shape-plus-outline',
-        roles: ['ADMIN', 'MANAGER']
+        permission: 'MARKETING_CATEGORY_MANAGEMENT_READ'
       },
     ]
   },
   {
     text: '人事管理',
     icon: 'mdi-account-group',
-    roles: ['ADMIN', 'MANAGER', 'HR', 'IT'],
+    permission: ['EMPLOYEE_MANAGE_READ', 'COMPANY_AND_DEPARTMENT_MANAGEMENT_READ'],
     children: [
       {
         to: '/employeeManagement',
         text: '員工管理',
         icon: 'mdi-account-cog',
-        roles: ['ADMIN', 'MANAGER', 'HR']
+        permission: 'EMPLOYEE_MANAGEMENT_READ'
       },
       {
         to: '/companyAndDepartmentManagement',
         text: '公司部門管理',
         icon: 'mdi-office-building-cog',
-        roles: ['ADMIN','MANAGER', 'HR', 'IT']
+        permission: 'COMPANY_AND_DEPARTMENT_MANAGEMENT_READ'
       }
     ]
   },
@@ -839,25 +871,25 @@ const cogItems = [
     to: '/formGenerator',
     text: '表單產生器',
     icon: 'mdi-list-box-outline',
-    roles: ['ADMIN', 'MANAGER', 'SUPERVISOR']
+    permission: 'FORM_GENERATOR_READ'
   },
   {
     to: '/lineCategoryManagement',
     text: '線別分類管理',
     icon: 'mdi-shape-plus-outline',
-    roles: ['ADMIN', 'MANAGER']
+    permission: 'LINE_CATEGORY_MANAGEMENT_READ'
   },
   {
     to: '/B2CStatisticsManagement',
     text: '直客詢問管理',
     icon: 'mdi-account-question',
-    roles: ['ADMIN', 'MANAGER', 'MARKETING'],
+    permission: 'B2C_STATISTICS_MANAGEMENT_READ',
   },
   {
     to: '/marketingDesignRequestManagement',
     text: '行銷美編需求申請管理',
     icon: 'mdi-form-select',
-    roles: ['ADMIN', 'MANAGER', 'DESIGNER', 'MARKETING'],
+    permission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ',
   }
 ]
 
@@ -865,113 +897,68 @@ const ITItems = [
   {
     text: '公司硬體管理',
     icon: 'mdi-server-network-outline',
-    roles: ['ADMIN', 'IT'],
+    permission: ['HARDWARE_DEVICE_MANAGEMENT_READ', 'HARDWARE_MAINTENANCE_RECORD_READ', 'HARDWARE_CATEGORY_MANAGEMENT_READ'],
     children: [
       {
         to: '/hardwareDeviceManagement',
         text: '硬體設備管理',
         icon: 'mdi-server-outline',
-        roles: ['ADMIN', 'IT']
+        permission: 'HARDWARE_DEVICE_MANAGEMENT_READ'
       },
       {
         to: '/hardwareMaintenanceRecord',
         text: '硬體維修記錄',
         icon: 'mdi-wrench',
-        roles: ['ADMIN', 'IT']
+        permission: 'HARDWARE_MAINTENANCE_RECORD_READ'
       },
       {
         to: '/hardwareCategoryManagement',
         text: '硬體類型管理',
         icon: 'mdi-shape-plus-outline',
-        roles: ['ADMIN', 'IT']
+        permission: 'HARDWARE_CATEGORY_MANAGEMENT_READ'
       }
     ]
   },
-  // {
-  //   text: '員工帳號與權限管理',
-  //   icon: 'mdi-database-cog-outline',
-  //   roles: ['ADMIN', 'IT'],
-  //   to: '/employeeAccountAndAccessManagement'
-  // }
+
 ]
 
 const adminItems = [
   {
-    to: '/admin',
-    text: '管理者管理',
-    icon: 'mdi-database-cog',
-    roles: ['ADMIN']
-  },
-  {
     to: '/user',
-    text: '使用者管理',
+    text: '用戶管理',
     icon: 'mdi-account-cog',
-    roles: ['ADMIN']
+    permission: 'USER_MANAGEMENT_READ'
   },
 
+  {
+    to: '/permissionManagement',
+    text: '權限管理',
+    icon: 'mdi-shield-account',
+    permission: 'PERMISSION_MANAGEMENT_READ'
+  },
   {
     to: '/auditLog',
     text: '異動紀錄',
     icon: 'mdi-history',
-    roles: ['ADMIN']
+    permission: 'AUDIT_LOG_READ'
   }
 ]
 const filteredCogItems = computed(() => {
   return cogItems.filter(item => {
-    const hasPermission = item.roles.some(role => {
-      switch (role) {
-        case 'ADMIN':
-          return user.isAdmin
-        case 'MANAGER':
-          return user.isManager
-        case 'USER':
-          return user.isUser
-        case 'IT':
-          return user.isIT
-        case 'DESIGNER':
-          return user.isDesigner
-        case 'MARKETING':
-          return user.isMarketing
-        case 'SUPERVISOR':
-          return user.isSupervisor
-        case 'HR':
-          return user.isHR
-        default:
-          return false
-      }
-    })
-
-    // 如果有子項目，也需要檢查子項目的權限
+    // 有子項目：只要任一子項目可見，就顯示父項
     if (item.children) {
       item.children = item.children.filter(child => {
-        return child.roles.some(role => {
-          switch (role) {
-            case 'ADMIN':
-              return user.isAdmin
-            case 'MANAGER':
-              return user.isManager
-            case 'USER':
-              return user.isUser
-            case 'IT':
-              return user.isIT
-            case 'DESIGNER':
-              return user.isDesigner
-            case 'MARKETING':
-              return user.isMarketing
-            case 'SUPERVISOR':
-              return user.isSupervisor
-            case 'HR':
-              return user.isHR
-            default:
-              return false
-          }
-        })
+        return Array.isArray(child.permission)
+          ? permissionStore.hasAnyPermission(child.permission)
+          : permissionStore.hasPermission(child.permission)
       })
-      // 只有當子項目不為空時才顯示父項目
-      return hasPermission && item.children.length > 0
+      return item.children.length > 0
     }
 
-    return hasPermission
+    // 沒有子項目：檢查自身權限
+    return Array.isArray(item.permission)
+      ? permissionStore.hasAnyPermission(item.permission)
+      : permissionStore.hasPermission(item.permission)
   })
 })
 
@@ -979,131 +966,40 @@ const filteredCogItems = computed(() => {
 // 新增一個計算屬性來過濾可見的選單項目
 const filteredAdminItems = computed(() => {
   return adminItems.filter(item => {
-    const hasPermission = item.roles.some(role => {
-      switch (role) {
-        case 'SUPER_ADMIN':
-          return user.isSuperAdmin
-        case 'HR':
-          return user.isHR
-        case 'MANAGER':
-          return user.isManager
-        case 'IT':
-          return user.isIT
-        case 'ACCOUNTANT':
-          return user.isAccountant
-        case 'ADMIN':
-          return user.isAdmin
-        default:
-          return false
-      }
-    })
-
-    // 如果有子項目，也需要檢查子項目的權限
-    if (item.children) {
-      item.children = item.children.filter(child => {
-        return child.roles.some(role => {
-          switch (role) {
-            case 'SUPER_ADMIN':
-              return user.isSuperAdmin
-            case 'HR':
-              return user.isHR
-            case 'MANAGER':
-              return user.isManager
-            case 'IT':
-              return user.isIT
-            case 'ACCOUNTANT':
-              return user.isAccountant
-            case 'ADMIN':
-              return user.isAdmin
-            default:
-              return false
-          }
-        })
-      })
-      // 只有當子項目不為空時才顯示父項目
-      return hasPermission && item.children.length > 0
-    }
-
-    return hasPermission
+    return Array.isArray(item.permission)
+      ? permissionStore.hasAnyPermission(item.permission)
+      : permissionStore.hasPermission(item.permission)
   })
 })
 
 // 新增一個計算屬性來過濾一般功能選單
 const filteredUserItems = computed(() => {
   return userItems.filter(item => {
-    // 如果沒有設定角色限制，所有人都可以看到
-    if (!item.roles || item.roles.length === 0) return true
-
-    const hasPermission = item.roles.some(role => {
-      switch (role) {
-        case 'ADMIN':
-          return user.isAdmin
-        case 'MANAGER':
-          return user.isManager
-        case 'USER':
-          return user.isUser
-        case 'DESIGNER':
-          return user.isDesigner
-        case 'MARKETING':
-          return user.isMarketing
-        case 'SUPERVISOR':
-          return user.isSupervisor
-        case 'HR':
-          return user.isHR
-        case 'IT':
-          return user.isIT
-        default:
-          return false
-      }
-    })
-
-    // 如果有子項目，也需要檢查子項目的權限
-    if (item.children) {
-      item.children = item.children.filter(child => {
-        return child.roles.some(role => {
-          switch (role) {
-            case 'ADMIN':
-              return user.isAdmin
-            case 'MANAGER':
-              return user.isManager
-            case 'USER':
-              return user.isUser
-            case 'DESIGNER':
-              return user.isDesigner
-            case 'MARKETING':
-              return user.isMarketing
-            case 'SUPERVISOR':
-              return user.isSupervisor
-            case 'HR':
-              return user.isHR
-            case 'IT':
-              return user.isIT
-            default:
-              return false
-          }
-        })
-      })
-      // 只有當子項目不為空時才顯示父項目
-      return hasPermission && item.children.length > 0
-    }
-
-    return hasPermission
+    return Array.isArray(item.permission)
+      ? permissionStore.hasAnyPermission(item.permission)
+      : permissionStore.hasPermission(item.permission)
   })
 })
 
 // 在 script setup 部分添加新的 computed property
 const filteredITItems = computed(() => {
   return ITItems.filter(item => {
-    return item.roles.some(role => {
-      switch (role) {
-        case 'ADMIN':
-          return user.isAdmin
-        case 'IT':
-          return user.isIT
-        default:
-          return false
-      }
-    })
+    const hasPermission = Array.isArray(item.permission)
+      ? permissionStore.hasAnyPermission(item.permission)
+      : permissionStore.hasPermission(item.permission)
+
+    // 如果有子項目，也需要檢查子項目的權限
+    if (item.children) {
+      item.children = item.children.filter(child => {
+        return Array.isArray(child.permission)
+          ? permissionStore.hasAnyPermission(child.permission)
+          : permissionStore.hasPermission(child.permission)
+      })
+      // 只有當子項目不為空時才顯示父項目
+      return hasPermission && item.children.length > 0
+    }
+
+    return hasPermission
   })
 })
 
@@ -1156,12 +1052,15 @@ const toggleDrawer = () => {
 }
 
 // 組件掛載時設置初始狀態
-onMounted(() => {
+onMounted(async () => {
   if (xlAndUp.value) {
     rail.value = false // XL 以上，預設展開
   } else if (mdAndUp.value) {
     rail.value = true // SM 到 XL 之間，預設收合
   }
+
+  // 載入用戶 RBAC 角色
+  await loadUserRbacRoles()
 })
 
 const logout = async () => {
@@ -1182,7 +1081,9 @@ watch(() => user.avatar, (newAvatar) => {
     isAvatarLoaded.value = false
     const img = new Image()
     img.onload = () => {
-      handleAvatarLoad()
+      nextTick(() => {
+        handleAvatarLoad()
+      })
     }
     img.src = newAvatar
   }

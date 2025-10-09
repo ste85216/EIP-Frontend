@@ -9,6 +9,7 @@ import { createRouter, createWebHistory, START_LOCATION } from 'vue-router/auto'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { routes } from 'vue-router/auto-routes'
 import { useUserStore } from '@/stores/user'
+import { usePermissionStore } from '@/stores/permission'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -42,27 +43,45 @@ router.isReady().then(() => {
 
 router.beforeEach(async (to, from, next) => {
   const user = useUserStore()
+  const permissionStore = usePermissionStore()
 
   if (from === START_LOCATION) {
     await user.profile()
+    // 載入用戶權限
+    try {
+      await permissionStore.loadUserPermissions()
+    } catch (error) {
+      console.error('載入用戶權限失敗:', error)
+    }
   }
 
   // 如果已登入且要訪問登入頁面，重導向到首頁
   if (user.isLogin && ['/login'].includes(to.path)) {
     next('/')
-  } 
+  }
   // 如果未登入且要訪問需要登入的頁面，重導向到登入頁面
   else if (to.meta.login && !user.isLogin) {
     next('/login')
-  } 
+  }
   // 如果未登入且要訪問首頁，重導向到登入頁面
   else if (to.path === '/' && !user.isLogin) {
     next('/login')
   }
-  // 檢查使用者角色是否匹配路由的角色要求
+  // 檢查權限（新系統）
+  else if (to.meta.permissions) {
+    const hasPermission = to.meta.requireAll
+      ? permissionStore.hasAllPermissions(to.meta.permissions)
+      : permissionStore.hasAnyPermission(to.meta.permissions)
+
+    if (!hasPermission) {
+      next('/') // 重導向到首頁或無權限頁面
+      return
+    }
+  }
+  // 檢查使用者角色是否匹配路由的角色要求（舊系統，向後相容）
   else if (to.meta.roles && !to.meta.roles.includes(user.role)) {
     next('/')
-  } 
+  }
   else {
     next()
   }

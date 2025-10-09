@@ -2440,7 +2440,6 @@ import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { useDisplay } from 'vuetify'
-import UserRole from '@/enums/UserRole'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
@@ -2451,7 +2450,7 @@ definePage({
   meta: {
     title: '行銷美編需求申請管理 | Ystravel',
     login: true,
-    roles: [UserRole.MARKETING, UserRole.ADMIN, UserRole.DESIGNER, UserRole.MANAGER]
+    permission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ'
   }
 })
 

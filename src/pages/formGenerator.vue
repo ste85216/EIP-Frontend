@@ -1027,7 +1027,6 @@
 import { ref, shallowRef, computed, watch, onMounted, nextTick, defineAsyncComponent } from 'vue'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useApi } from '@/composables/axios'
-import UserRole from '@/enums/UserRole'
 import { definePage } from 'vue-router/auto'
 import { useUserStore } from '@/stores/user'
 import { useDisplay } from 'vuetify'
@@ -1089,7 +1088,7 @@ definePage({
   meta: {
     title: '表單產生器 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.SUPERVISOR]
+    permission: 'FORM_GENERATOR_READ'
   }
 })
 

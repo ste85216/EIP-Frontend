@@ -709,7 +709,6 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import UserRole from '@/enums/UserRole'
 import * as yup from 'yup'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
@@ -723,7 +722,7 @@ definePage({
   meta: {
     title: '行銷預算管理 | Ystravel',
     login: true,
-    roles: [ UserRole.ADMIN, UserRole.MANAGER, UserRole.MARKETING ]
+    permission: 'MARKETING_BUDGET_MANAGEMENT_READ'
   }
 })
 

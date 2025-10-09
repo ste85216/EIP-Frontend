@@ -1687,14 +1687,13 @@ import { definePage } from 'vue-router/auto'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import * as yup from 'yup'
 import { useForm, useField } from 'vee-validate'
-import UserRole from '@/enums/UserRole'
 
 // 頁面定義
 definePage({
   meta: {
     title: '直客詢問統計表管理 | Ystravel',
     login: true,
-    roles: [UserRole.MARKETING, UserRole.ADMIN,UserRole.MANAGER,UserRole.HR]
+    permission: 'B2C_STATISTICS_MANAGEMENT_READ'
   }
 })
 

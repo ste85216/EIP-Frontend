@@ -436,7 +436,7 @@
               </v-list-item-title>
               <template #append>
                 <v-btn
-                  v-if="user.isAdmin || user.isManager"
+                  v-if="permissionStore.hasPermission('TEAM_CREATE')"
                   icon="mdi-plus"
                   size="22"
                   variant="text"
@@ -909,6 +909,7 @@ import { useUserStore } from '@/stores/user'
 import { useProjectStore } from '@/stores/project'
 import { useTeamStore } from '@/stores/team'
 import { useDisplay } from 'vuetify'
+import { usePermissionStore } from '@/stores/permission'
 import { useApi } from '@/composables/axios'
 import { roleNames } from '@/enums/UserRole'
 import CreateTeamDialog from '@/components/CreateTeamDialog.vue'
@@ -931,6 +932,7 @@ let animationFrameId = null
 const user = useUserStore()
 const projectStore = useProjectStore()
 const teamStore = useTeamStore()
+const permissionStore = usePermissionStore()
 const { smAndUp } = useDisplay()
 const { apiAuth } = useApi()
 

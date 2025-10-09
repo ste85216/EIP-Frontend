@@ -22,6 +22,15 @@
                 >
                   新增管理者
                 </v-btn>
+                <v-btn
+                  prepend-icon="mdi-account-search"
+                  variant="outlined"
+                  color="teal-darken-1"
+                  class="ms-4"
+                  @click="checkEmployeeLinks"
+                >
+                  檢查
+                </v-btn>
               </v-col>
               <v-col
                 sm="4"
@@ -81,6 +90,75 @@
                   <td>{{ item.name }}</td>
                   <td v-if="lgAndUp">
                     {{ item.email }}
+                  </td>
+                  <!-- 員工關聯 (只在 lg 以上顯示) -->
+                  <td v-if="lgAndUp">
+                    <v-menu
+                      v-if="item.employeeLink"
+                      location="end"
+                      transition="fade-transition"
+                      open-on-hover
+                      close-delay="30"
+                      open-delay="30"
+                      class="pa-0"
+                    >
+                      <template #activator="{ props }">
+                        <div
+                          v-bind="props"
+                          class="d-flex align-center"
+                        >
+                          <v-chip
+                            size="small"
+                            color="teal-lighten-1"
+                            prepend-icon="mdi-account-check"
+                          >
+                            已關聯
+                          </v-chip>
+                        </div>
+                      </template>
+                      <v-card
+                        min-width="200"
+                        class="rounded-lg pa-0 status-card"
+                        elevation="3"
+                      >
+                        <v-card-text class="pa-0">
+                          <div class="d-flex align-center px-3 py-2 bg-teal-lighten-1 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-office-building
+                            </v-icon>
+                            <span>公司：{{ item.employeeLink?.company?.name || '無' }}</span>
+                          </div>
+                          <div class="d-flex align-center px-3 py-2 bg-teal-lighten-3 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-domain
+                            </v-icon>
+                            <span>部門：{{ item.employeeLink?.department?.name || '無' }}</span>
+                          </div>
+                          <div class="d-flex align-center px-3 py-2 bg-teal-lighten-2 text-white">
+                            <v-icon
+                              size="16"
+                              class="me-2"
+                              color="white"
+                            >
+                              mdi-identifier
+                            </v-icon>
+                            <span>科威編號：{{ item.employeeLink?.employeeCode || '無' }}</span>
+                          </div>
+                        </v-card-text>
+                      </v-card>
+                    </v-menu>
+                    <span
+                      v-else
+                      class="text-grey"
+                    >無關聯</span>
                   </td>
                   <td>{{ item.note }}</td>
                   <td>
@@ -398,6 +476,7 @@ const tableHeaders = [
   { title: '管理者編號', align: 'left', sortable: true, key: 'adminId' },
   { title: '姓名', align: 'left', sortable: true, key: 'name' },
   { title: 'Email', align: 'left', sortable: true, key: 'email' },
+  { title: '員工關聯', align: 'left', sortable: false, key: 'employeeLink' },
   { title: '備註', align: 'left', sortable: true, key: 'note' },
   { title: '操作', align: 'left', sortable: false, key: 'action' },
   { title: '帳號狀態', align: 'left', sortable: true, key: 'isActive' }
@@ -426,8 +505,12 @@ const dialogWidth = computed(() => {
 const filteredHeaders = computed(() => {
   if (lgAndUp.value) {
     return tableHeaders
+  } else if (mdAndUp.value) {
+    // md 以上顯示除了員工關聯外的所有欄位
+    return tableHeaders.filter(header => header.key !== 'employeeLink')
   }
-  return tableHeaders.filter(header => header.key !== 'email')
+  // sm 以下只顯示基本欄位
+  return tableHeaders.filter(header => !['email', 'employeeLink', 'note'].includes(header.key))
 })
 
 // ===== API 相關函數 =====
@@ -678,6 +761,30 @@ const updateUserStatus = async (user, newStatus) => {
     if (index !== -1) {
       tableItems.value[index].isActive = !newStatus
     }
+  }
+}
+
+// 檢查員工關聯（管理者）
+const checkEmployeeLinks = async () => {
+  try {
+    const { data } = await apiAuth.post('/users/check-admin-employee-links')
+    if (data.success) {
+      await tableLoadItems(false) // 重新載入資料
+      let message = `管理者檢查完成！成功關聯 ${data.result.linked} 個管理者`
+      if (data.result.errors.length > 0) {
+        message += `，${data.result.errors.length} 個無法關聯`
+      }
+      createSnackbar({ text: message, snackbarProps: { color: 'teal-lighten-1' } })
+      if (data.result.errors.length > 0) {
+        console.log('無法關聯的管理者:', data.result.errors)
+      }
+    }
+  } catch (error) {
+    console.error('檢查管理者員工關聯失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '檢查失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
   }
 }
 </script>

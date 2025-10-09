@@ -40,7 +40,7 @@
                   style="font-size: 15px; font-weight: 600;"
                   class="opacity-90 mb-10"
                 >
-                  {{ getRoleTitle(user.role) }}
+                  {{ getDisplayRole() }}
                 </div>
                 <v-row class="justify-center">
                   <v-col class="py-3">
@@ -219,7 +219,7 @@
                     sm="12"
                     class="align-self-center py-0"
                   >
-                    身分別 :
+                    權限 :
                   </v-col>
                   <v-col
                     cols="9"
@@ -230,7 +230,7 @@
                       density="compact"
                       hide-details
                       readonly
-                      :model-value="getRoleTitle(user.role)"
+                      :model-value="getDisplayRole()"
                     />
                   </v-col>
                 </v-row>
@@ -464,8 +464,9 @@
 
 <script setup>
 import { definePage } from 'vue-router/auto'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
+import { usePermissionStore } from '@/stores/permission'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
@@ -512,11 +513,44 @@ const newPasswordError = ref('')
 const confirmPasswordError = ref('')
 
 const user = useUserStore()
+const permissionStore = usePermissionStore()
 const createSnackbar = useSnackbar()
+
+// RBAC 角色相關
+const userRbacRoles = ref([])
 
 
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
+}
+
+// 獲取用戶 RBAC 角色
+const loadUserRbacRoles = async () => {
+  if (!user.isLogin) return
+
+  try {
+    const result = await permissionStore.getUserRoles(user._id)
+    userRbacRoles.value = result || []
+  } catch (error) {
+    console.error('載入用戶角色失敗:', error)
+    userRbacRoles.value = []
+  }
+}
+
+// 顯示角色資訊的函數
+const getDisplayRole = () => {
+  if (userRbacRoles.value.length === 0) {
+    // 如果沒有 RBAC 角色，回退到舊的 role 系統
+    return getRoleTitle(user.role) || '未知'
+  }
+
+  if (userRbacRoles.value.length === 1) {
+    return userRbacRoles.value[0].role?.name || '未知角色'
+  }
+
+  // 多個角色時顯示第一個 + 數量
+  const firstRoleName = userRbacRoles.value[0].role?.name || '未知角色'
+  return `${firstRoleName} (${userRbacRoles.value.length}個角色)`
 }
 
 
@@ -524,7 +558,7 @@ const fetchUserList = async () => {
     try {
       isLoadingUsers.value = true
       const { data } = await apiAuth.get('/users/public/all')
-      // 定義角色優先順序（1.經理 2.行銷人員 3.美編人員 4.總管 5.人資 6.IT 7.一般使用者 8.管理者）
+      // 定義角色優先順序（1.經理 2.行銷人員 3.美編人員 4.總管 5.人資 6.IT 7.一般用戶 8.管理者）
       const roleOrder = {
         1: 0, // MANAGER 經理
         5: 1, // MARKETING 行銷人員
@@ -532,7 +566,7 @@ const fetchUserList = async () => {
         7: 3, // SUPERVISOR 總管
         6: 4, // HR 人資
         3: 5, // IT IT人員
-        0: 6, // USER 一般使用者
+        0: 6, // USER 一般用戶
         2: 7  // ADMIN 管理者
       }
 
@@ -667,6 +701,11 @@ watch(() => user.avatar, (newAvatar) => {
     img.src = newAvatar
   }
 }, { immediate: true })
+
+// 組件掛載時載入 RBAC 角色
+onMounted(async () => {
+  await loadUserRbacRoles()
+})
 </script>
 
 <style lang="scss" scoped>

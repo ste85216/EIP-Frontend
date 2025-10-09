@@ -824,7 +824,6 @@ import { debounce } from 'lodash'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
-import UserRole from '@/enums/UserRole'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
@@ -833,7 +832,7 @@ definePage({
   meta: {
     title: '公司部門管理 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.MANAGER, UserRole.IT, UserRole.HR]
+    permission: 'COMPANY_AND_DEPARTMENT_MANAGEMENT_READ'
   }
 })
 
