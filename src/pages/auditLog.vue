@@ -649,7 +649,7 @@ definePage({
   meta: {
     title: '異動紀錄 | Ystravel',
     login: true,
-    permission: 'AUDIT_LOG_READ'
+    permission: 'AUDIT_LOG_PAGE_READ'
   }
 })
 
@@ -696,7 +696,7 @@ const actionOptions = [
 
 const modelOptions = [
   { title: '全部', value: '' },
-  { title: '使用者', value: 'users' },
+  { title: '用戶', value: 'users' },
   { title: '表單', value: 'forms' },
   { title: '表單模板', value: 'formTemplates' },
   { title: '行銷分類', value: 'marketingCategories' },
@@ -711,7 +711,9 @@ const modelOptions = [
   { title: '直客詢問紀錄', value: 'customerInquiries' },
   { title: '線別分類', value: 'lineCategories' },
   { title: '行銷美編需求申請', value: 'designRequests' },
-  { title: '通知 EMAIL', value: 'notificationEmails' }
+  { title: '通知 EMAIL', value: 'notificationEmails' },
+  { title: '權限', value: 'permissions' },
+  { title: '角色', value: 'roles' }
 ]
 
 // 表格標頭
@@ -748,6 +750,8 @@ const fieldTranslations = {
   name: '資料名稱',
   email: '電子郵件',
   role: '權限',
+  roles: '權限',
+  permissions: '權限',
   userId: '使用者編號',
   adminId: '管理者編號',
   formNumber: '表單編號',
@@ -865,7 +869,13 @@ const fieldTranslations = {
   reportUserId: '報修人',
   isB2CSupervisor: '業務主管',
   departmentNote: '部門備註',
-  newElectronicInfo: '新電子說資'
+  newElectronicInfo: '新電子說資',
+  code: '代碼',
+  description: '描述',
+  level:'層級',
+  module: '模組',
+  resource: '資源',
+  action: '操作類型',
 }
 
 // 行銷分類類型對應
@@ -901,6 +911,17 @@ const formatDate = (date) => {
 
 // 角色轉換
 const formatRole = (role) => {
+  // 如果是 null 或 undefined，表示角色已被移除
+  if (role === null || role === undefined) {
+    return '(無)'
+  }
+  
+  // 如果是物件格式（新的 RBAC 角色）
+  if (typeof role === 'object' && role !== null) {
+    return role.name || role.code || '未知角色'
+  }
+  
+  // 如果是數字格式（舊的角色系統）
   const roleMap = {
     0: '一般用戶',
     1: '經理',
@@ -913,6 +934,16 @@ const formatRole = (role) => {
   }
   return roleMap[role] || role
 }
+
+// 角色陣列轉換
+const formatRolesArray = (roles) => {
+  if (!roles || !Array.isArray(roles) || roles.length === 0) {
+    return '(無)'
+  }
+  
+  return roles.map(role => formatRole(role)).join('、')
+}
+
 
 // 申請類型轉換
 const getProductTypeText = (productType) => {
@@ -946,7 +977,7 @@ const getStatusText = (status) => {
 
 const getModelDisplay = (model) => {
   const modelMap = {
-    users: '使用者',
+    users: '用戶',
     forms: '表單',
     formTemplates: '表單模板',
     marketingCategories: '行銷分類',
@@ -961,7 +992,9 @@ const getModelDisplay = (model) => {
     customerInquiries: '直客詢問紀錄',
     lineCategories: '線別分類',
     designRequests: '行銷美編需求申請',
-    notificationEmails: '通知 EMAIL'
+    notificationEmails: '通知 EMAIL',
+    permissions: '權限',
+    roles: '角色'
   }
   return modelMap[model] || model
 }
@@ -1469,7 +1502,13 @@ const formatChanges = (item) => {
     Object.entries(after).forEach(([key, value]) => {
       if (!excludeFields.includes(key) && fieldTranslations[key]) {
         if (key === 'role') {
-          changes.push(`${fieldTranslations[key]}: ${formatRole(value)}`)
+          // 處理新的角色格式（物件）或舊的角色格式（數字）
+          const roleText = formatRole(value)
+          changes.push(`${fieldTranslations[key]}: ${roleText}`)
+        } else if (key === 'roles') {
+          // 處理角色陣列
+          const rolesText = formatRolesArray(value)
+          changes.push(`${fieldTranslations[key]}: ${rolesText}`)
         } else if (key === 'salesPerson') {
           const name = value?.name || value?.nickname || '(無)'
           changes.push(`${fieldTranslations[key]}: ${name}`)
@@ -1812,7 +1851,18 @@ const formatChanges = (item) => {
       }
 
       if (key === 'role') {
-        changes.push(`${fieldTranslations[key]}: ${formatRole(oldValue)} → ${formatRole(newValue)}`)
+        // 處理新的角色格式（物件）或舊的角色格式（數字）
+        const oldRoleText = formatRole(oldValue)
+        const newRoleText = formatRole(newValue)
+        changes.push(`${fieldTranslations[key]}: ${oldRoleText} → ${newRoleText}`)
+      } else if (key === 'roles') {
+        // 處理角色陣列變更
+        const oldRolesText = formatRolesArray(oldValue)
+        const newRolesText = formatRolesArray(newValue)
+        changes.push(`${fieldTranslations[key]}: ${oldRolesText} → ${newRolesText}`)
+      } else if (key === 'permissions') {
+        // 處理權限陣列變更，只顯示"權限變更"
+        changes.push('權限變更')
       } else if (key === 'salesPerson') {
         const oldName = oldValue?.name || oldValue?.nickname || '(無)'
         const newName = newValue?.name || newValue?.nickname || '(無)'

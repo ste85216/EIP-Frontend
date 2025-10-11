@@ -416,7 +416,6 @@ import { definePage } from 'vue-router/auto'
 import { useForm, useField } from 'vee-validate'
 import { useDisplay } from 'vuetify'
 import { useUserStore } from '@/stores/user'
-import UserRole from '@/enums/UserRole'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
@@ -429,7 +428,7 @@ definePage({
   meta: {
     title: '硬體類別管理 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.IT]
+    permission: 'HARDWARE_CATEGORY_MANAGEMENT_READ'
   }
 })
 

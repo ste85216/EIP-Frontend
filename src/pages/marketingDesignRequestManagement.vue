@@ -67,6 +67,8 @@
                     multiple="range"
                     :cancel-text="'取消'"
                     :ok-text="'確認'"
+                    @update:model-value="handleApplicationDateChange"
+                    @click:clear="handleApplicationDateClear"
                   />
                 </div>
               </v-col>
@@ -2614,6 +2616,16 @@ const filteredProductTypeOptions = computed(() => {
 
 // 新增 basePath 變數，取得 Vite 的 base 路徑
 const basePath = import.meta.env.BASE_URL || '/'
+
+// 處理申請日期變更
+const handleApplicationDateChange = (dates) => {
+  searchCriteria.applicationDate = dates
+}
+
+// 處理申請日期清空
+const handleApplicationDateClear = () => {
+  searchCriteria.applicationDate = []
+}
 
 const resetSearch = () => {
   searchCriteria.applicationDate = []

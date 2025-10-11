@@ -772,7 +772,7 @@ definePage({
   meta: {
     title: '行銷分類管理 | Ystravel',
     login: true,
-    permission: 'MARKETING_CATEGORY_MANAGEMENT_READ'
+    permission: 'MARKETING_CATEGORY_MANAGEMENT_READ'  
   }
 })
 

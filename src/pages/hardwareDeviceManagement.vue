@@ -1422,7 +1422,6 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import UserRole from '@/enums/UserRole'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import * as yup from 'yup'
 import { useForm, useField } from 'vee-validate'
@@ -1432,7 +1431,7 @@ definePage({
   meta: {
     title: '硬體設備管理 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.IT]
+    permission: 'HARDWARE_DEVICE_MANAGEMENT_READ'
   }
 })
 

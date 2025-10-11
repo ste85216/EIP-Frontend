@@ -4,7 +4,7 @@
       <!-- 標題區塊 -->
       <v-col
         cols="12"
-        class="ps-3 pb-6"
+        class="ps-3 pb-0"
       >
         <h3>權限管理</h3>
       </v-col>
@@ -34,24 +34,25 @@
           <!-- 角色管理標籤頁 -->
           <v-window-item value="roles">
             <v-card flat>
-              <v-card-text>
-                <v-row>
+              <v-card-text class="px-0 pt-6">
+                <v-row class="pb-2">
                   <v-col
                     cols="12"
                     md="6"
                   >
                     <v-btn
                       prepend-icon="mdi-plus"
-                      color="teal-darken-1"
+                      color="blue-grey-darken-2"
                       variant="outlined"
                       @click="openRoleDialog(null)"
                     >
                       新增角色
                     </v-btn>
                   </v-col>
+                  <v-spacer />
                   <v-col
                     cols="12"
-                    md="6"
+                    md="3"
                   >
                     <v-text-field
                       v-model="roleSearch"
@@ -59,6 +60,7 @@
                       label="搜尋角色"
                       variant="outlined"
                       density="compact"
+                      hide-details
                       clearable
                     />
                   </v-col>
@@ -86,11 +88,17 @@
                           prepend-icon="mdi-shield-account"
                           @click="openPermissionSelectionForRole(item)"
                         >
-                          查看及編輯權限
+                          管理權限
+                          <v-chip
+                            v-if="item.permissions?.length > 0"
+                            size="x-small"
+                            density="compact"
+                            color="teal-darken-2"
+                            class="ms-1 px-1"
+                          >
+                            {{ item.permissions.length }}
+                          </v-chip>
                         </v-btn>
-                        <div class="text-caption text-grey mt-1">
-                          {{ item.permissions?.length || 0 }} 個權限
-                        </div>
                       </td>
                       <td class="text-center">
                         <v-btn
@@ -126,24 +134,25 @@
           <!-- 權限管理標籤頁 -->
           <v-window-item value="permissions">
             <v-card flat>
-              <v-card-text>
-                <v-row>
+              <v-card-text class="px-0 pt-6">
+                <v-row class="pb-2">
                   <v-col
                     cols="12"
                     md="6"
                   >
                     <v-btn
                       prepend-icon="mdi-plus"
-                      color="teal-darken-1"
+                      color="blue-grey-darken-2"
                       variant="outlined"
                       @click="openPermissionDialog(null)"
                     >
                       新增權限
                     </v-btn>
                   </v-col>
+                  <v-spacer />
                   <v-col
                     cols="12"
-                    md="6"
+                    md="3"
                   >
                     <v-text-field
                       v-model="permissionSearch"
@@ -151,6 +160,7 @@
                       label="搜尋權限"
                       variant="outlined"
                       density="compact"
+                      hide-details
                       clearable
                     />
                   </v-col>
@@ -214,12 +224,23 @@
     <!-- 刪除權限確認對話框（共用元件） -->
     <ConfirmDeleteDialog
       v-model="deletePermissionDialogOpen"
-      dialog-width="420"
+      dialog-width="320"
       title="確認刪除"
       :message="`確定要刪除權限「<span class='text-red'>${selectedPermissionToDelete?.name || ''}</span>」嗎？<br/>代碼：${selectedPermissionToDelete?.code || ''}`"
       confirm-button-color="red-darken-1"
       cancel-button-color="grey-darken-1"
       @confirm="confirmDeletePermission"
+    />
+
+    <!-- 刪除角色確認對話框 -->
+    <ConfirmDeleteDialog
+      v-model="deleteRoleDialogOpen"
+      dialog-width="320"
+      title="確認刪除角色"
+      :message="`確定要刪除角色「<span class='text-red'>${selectedRoleToDelete?.name || ''}</span>」嗎？<br/>代碼：${selectedRoleToDelete?.code || ''}<br/><br/><span class='text-orange-darken-2'>注意：如果此角色正在被用戶使用，將無法刪除。</span>`"
+      confirm-button-color="red-darken-1"
+      cancel-button-color="grey-darken-1"
+      @confirm="confirmDeleteRole"
     />
 
     <!-- 權限對話框 -->
@@ -440,53 +461,13 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </div>
-        <v-card-text class="mt-4 mb-0 px-6">
+        <v-card-text class="mt-4 mb-0 px-6 pb-4">
           <v-form
             ref="roleFormRef"
             v-model="roleFormValid"
             @submit.prevent="saveRole"
           >
             <v-row>
-              <v-col
-                cols="12"
-                class="sub-title text-blue-grey-darken-2 d-flex align-center justify-center"
-              >
-                <v-row>
-                  <v-col
-                    cols="3"
-                    sm="5"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-divider
-                      class="border-opacity-25"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-col>
-                  <v-col
-                    cols="6"
-                    sm="2"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-icon
-                      size="18"
-                      class="me-2"
-                    >
-                      mdi-account-details
-                    </v-icon> 角色資訊
-                  </v-col>
-                  <v-col
-                    cols="3"
-                    sm="5"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-divider
-                      class="border-opacity-25"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-col>
-                </v-row>
-              </v-col>
-
               <v-col
                 cols="12"
                 sm="6"
@@ -552,7 +533,7 @@
               <!-- 權限選擇按鈕（已移至表格列操作，這裡不再顯示） -->
             </v-row>
 
-            <v-card-actions class="px-3 mt-4">
+            <v-card-actions class="px-0">
               <v-spacer />
               <v-btn
                 color="grey-darken-1"
@@ -583,7 +564,9 @@
       v-model="permissionSelectionDialog.open"
       :permissions="currentEditingRole ? currentEditingRole.permissions : roleForm.permissions"
       :submitting="permissionSubmitting"
+      :current-role="currentEditingRole"
       @save="handlePermissionSave"
+      @copy="handlePermissionCopy"
     />
   </v-container>
 </template>
@@ -601,7 +584,8 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 definePage({
   meta: {
     title: '權限管理 | Ystravel',
-    login: true
+    login: true,
+    permissions: ['PERMISSION_MANAGEMENT_READ']
     // 暫時移除權限檢查，讓你能先進入頁面設置權限
   }
 })
@@ -642,6 +626,7 @@ const permissionForm = ref({
   isActive: true
 })
 
+
 // 角色相關
 const roles = ref([])
 const roleLoading = ref(false)
@@ -649,6 +634,8 @@ const roleDialog = ref({ open: false, id: null })
 const roleFormRef = ref(null)
 const roleFormValid = ref(false)
 const roleSubmitting = ref(false)
+const deleteRoleDialogOpen = ref(false)
+const selectedRoleToDelete = ref(null)
 const roleForm = ref({
   name: '',
   code: '',
@@ -726,6 +713,7 @@ const filteredRoles = computed(() => {
 })
 
 
+
 // 方法
 const loadPermissions = async () => {
   try {
@@ -762,11 +750,8 @@ const editRole = (role) => {
 }
 
 const deleteRole = (role) => {
-  // 刪除角色
-  createSnackbar({
-    text: `刪除角色 ${role.name} 功能開發中`,
-    snackbarProps: { color: 'info' }
-  })
+  selectedRoleToDelete.value = role
+  deleteRoleDialogOpen.value = true
 }
 
 const editPermission = (permission) => {
@@ -777,6 +762,7 @@ const openDeletePermissionDialog = (permission) => {
   selectedPermissionToDelete.value = permission
   deletePermissionDialogOpen.value = true
 }
+
 
 const confirmDeletePermission = async () => {
   const target = selectedPermissionToDelete.value
@@ -794,6 +780,30 @@ const confirmDeletePermission = async () => {
   } catch (error) {
     createSnackbar({
       text: error.message || '刪除權限失敗',
+      snackbarProps: { color: 'red' }
+    })
+  }
+}
+
+const confirmDeleteRole = async () => {
+  const target = selectedRoleToDelete.value
+  if (!target?._id) return
+
+  try {
+    await permissionStore.deleteRole(target._id)
+    createSnackbar({
+      text: `已刪除角色：${target.name}`,
+      snackbarProps: { color: 'teal' }
+    })
+    deleteRoleDialogOpen.value = false
+    selectedRoleToDelete.value = null
+    await loadRoles()
+  } catch (error) {
+    console.error('刪除角色失敗:', error)
+    // 提取後端返回的具體錯誤訊息
+    const errorMessage = error.response?.data?.message || error.message || '刪除角色失敗'
+    createSnackbar({
+      text: errorMessage,
       snackbarProps: { color: 'red' }
     })
   }
@@ -944,6 +954,27 @@ const handlePermissionSave = async (permissionCodes) => {
   // 關閉對話框
   permissionSelectionDialog.value.open = false
   currentEditingRole.value = null
+}
+
+// 處理複製權限
+const handlePermissionCopy = async () => {
+  try {
+    // 重新載入角色列表以獲取最新權限
+    await loadRoles()
+    
+    // 更新當前編輯角色的權限
+    if (currentEditingRole.value) {
+      const updatedRole = roles.value.find(r => r._id === currentEditingRole.value._id)
+      if (updatedRole) {
+        currentEditingRole.value.permissions = updatedRole.permissions
+      }
+    }
+  } catch {
+    createSnackbar({
+      text: '更新權限失敗',
+      snackbarProps: { color: 'red' }
+    })
+  }
 }
 
 

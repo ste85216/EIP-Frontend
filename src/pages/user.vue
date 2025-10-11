@@ -283,43 +283,6 @@
               </v-col>
 
               <v-col
-                cols="12"
-                sm="6"
-              >
-                <v-select
-                  v-model="selectedRoles"
-                  :items="availableRoles"
-                  item-title="name"
-                  item-value="_id"
-                  label="*權限"
-                  variant="outlined"
-                  density="compact"
-                  multiple
-                  chips
-                  closable-chips
-                  hint="可選擇多個權限"
-                  persistent-hint
-                >
-                  <template #selection="{ item, index }">
-                    <v-chip
-                      v-if="index < 2"
-                      size="small"
-                      color="teal"
-                      class="ma-1"
-                    >
-                      {{ item.raw.name }}
-                    </v-chip>
-                    <span
-                      v-if="index === 2"
-                      class="text-grey text-caption align-self-center"
-                    >
-                      (+{{ selectedRoles.length - 2 }} 個權限)
-                    </span>
-                  </template>
-                </v-select>
-              </v-col>
-
-              <v-col
                 v-if="!isEditing"
                 cols="12"
                 sm="6"
@@ -354,6 +317,46 @@
                   @click:append-inner="showConfirmPassword = !showConfirmPassword"
                 />
               </v-col>
+
+              <v-col
+                cols="12"
+                sm="6"
+              >
+                <v-select
+                  v-model="selectedRolesField.value.value"
+                  :items="availableRoles"
+                  item-title="name"
+                  item-value="_id"
+                  label="*權限"
+                  variant="outlined"
+                  density="compact"
+                  multiple
+                  chips
+                  closable-chips
+                  :error-messages="selectedRolesField.meta.touched ? selectedRolesField.errorMessage.value : []"
+                  persistent-hint
+                  @blur="selectedRolesField.handleBlur"
+                >
+                  <template #selection="{ item, index }">
+                    <v-chip
+                      v-if="index < 2"
+                      size="small"
+                      color="teal"
+                      class="ma-1"
+                    >
+                      {{ item.raw.name }}
+                    </v-chip>
+                    <span
+                      v-if="index === 2"
+                      class="text-grey text-caption align-self-center"
+                    >
+                      (+{{ selectedRolesField.value.value.length - 2 }} 個權限)
+                    </span>
+                  </template>
+                </v-select>
+              </v-col>
+
+
 
               <v-col cols="12">
                 <v-text-field
@@ -467,8 +470,8 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 definePage({
   meta: {
     title: '用戶管理 | Ystravel',
-    login: true
-    // 暫時移除權限檢查，讓你能先進入頁面設置權限
+    login: true,
+    permission: 'USER_MANAGEMENT_READ'
   }
 })
 
@@ -506,7 +509,11 @@ const userSchema = computed(() => {
       .required('請輸入姓名'),
     note: yup
       .string()
-      .nullable()
+      .nullable(),
+    selectedRoles: yup
+      .array()
+      .min(1, '請至少選擇一個權限')
+      .required('請選擇權限')
   }
 
   if (isEditing.value) {
@@ -532,10 +539,12 @@ const userSchema = computed(() => {
 // ===== 表單初始化與欄位設定 =====
 const { handleSubmit, isSubmitting, resetForm } = useForm({
   validationSchema: userSchema,
+  validateOnMount: false,
   initialValues: {
     email: '',
     name: '',
-    note: ''
+    note: '',
+    selectedRoles: []
   }
 })
 
@@ -546,6 +555,7 @@ const note = useField('note')
 const password = useField('password')
 const confirmPassword = useField('confirmPassword')
 const userId = useField('userId')
+const selectedRolesField = useField('selectedRoles')
 
 // ===== 表格相關設定 =====
 const tableItemsPerPage = ref(10)
@@ -596,7 +606,6 @@ const dialogWidth = computed(() => {
 
 // ===== 新 RBAC 角色管理 =====
 const availableRoles = ref([])
-const selectedRoles = ref([])
 
 // ===== 響應式表格抬頭設定 =====
 const filteredHeaders = computed(() => {
@@ -606,7 +615,7 @@ const filteredHeaders = computed(() => {
   if (smAndUp.value) {
     return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'note')
   }
-  return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'role' && header.key !== 'note' && header.key !== 'employeeLink')
+  return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'note' && header.key !== 'employeeLink')
 })
 
 // ===== 輔助函數 =====
@@ -734,95 +743,47 @@ const performSearch = async () => {
 const submit = handleSubmit(async (values) => {
   try {
     if (isEditing.value) {
+      // 檢查是否有基本資料變更
+      const basicFieldsChanged = ['email', 'name', 'note', 'userId'].some(key => {
+        const formValue = key === 'email' ? email.value.value :
+                        key === 'name' ? name.value.value :
+                        key === 'note' ? note.value.value :
+                        key === 'userId' ? userId.value.value : null
+        return originalData.value[key] !== formValue
+      })
+
+      // 檢查是否有角色變更
+      const originalRoles = originalData.value.selectedRoles || []
+      const currentRoles = selectedRolesField.value.value || []
+      const rolesChanged = originalRoles.length !== currentRoles.length ||
+        !originalRoles.every(roleId => currentRoles.includes(roleId))
+
+      // 準備更新資料
       const updateData = { ...values }
-      const { data } = await apiAuth.patch(`users/${dialog.value.id}`, updateData)
-      const index = tableItems.value.findIndex(item => item._id === dialog.value.id)
-      if (index !== -1) {
-        // 重新載入用戶的 RBAC 角色
-        try {
-          const rolesResult = await permissionStore.getUserRoles(dialog.value.id)
-          tableItems.value[index] = {
-            ...data.result,
-            rbacRoles: rolesResult || []
-          }
-        } catch (roleError) {
-          console.error('載入用戶角色失敗:', roleError)
-          tableItems.value[index] = {
-            ...data.result,
-            rbacRoles: []
-          }
-        }
+      
+      // 如果有角色變更，將角色 ID 加入更新資料中
+      if (rolesChanged) {
+        updateData.roleIds = selectedRolesField.value.value
       }
 
-      // 處理 RBAC 角色更新
-      if (selectedRoles.value.length > 0) {
-        try {
-          // 獲取目前用戶的角色
-          const currentUserRoles = await permissionStore.getUserRoles(dialog.value.id)
-          const currentRoles = currentUserRoles
-            ?.filter(userRole => userRole.isActive)
-            ?.map(userRole => userRole.role._id) || []
-
-          // 找出需要新增的角色
-          const rolesToAdd = selectedRoles.value.filter(roleId => !currentRoles.includes(roleId))
-
-          // 找出需要移除的角色
-          const rolesToRemove = currentRoles.filter(roleId => !selectedRoles.value.includes(roleId))
-
-          // 執行角色變更
-          for (const roleId of rolesToAdd) {
-            await permissionStore.assignRoleToUser(dialog.value.id, roleId)
-          }
-
-          for (const roleId of rolesToRemove) {
-            const userRole = currentUserRoles.find(ur => ur.role._id === roleId && ur.isActive)
-            if (userRole) {
-              await permissionStore.removeRoleFromUser(userRole._id)
-            }
-          }
-
-          // 角色更新完成後，重新載入該用戶的角色
-          try {
-            const updatedRoles = await permissionStore.getUserRoles(dialog.value.id)
-            const userIndex = tableItems.value.findIndex(item => item._id === dialog.value.id)
-            if (userIndex !== -1) {
-              tableItems.value[userIndex] = {
-                ...tableItems.value[userIndex],
-                rbacRoles: updatedRoles || []
-              }
-            }
-          } catch (reloadError) {
-            console.error('重新載入用戶角色失敗:', reloadError)
-          }
-        } catch (roleError) {
-          console.error('更新用戶角色失敗:', roleError)
-          createSnackbar({
-            text: '用戶基本資料更新成功，但角色更新失敗',
-            snackbarProps: { color: 'orange' }
-          })
-        }
+      // 如果有任何變更，執行更新
+      if (basicFieldsChanged || rolesChanged) {
+        await apiAuth.patch(`users/${dialog.value.id}`, updateData)
+        
+        // 重新載入表格數據以確保排序正確
+        await tableLoadItems(false)
       }
     } else {
       const submitData = Object.fromEntries(
         Object.entries(values).filter(([key]) => key !== 'userId')
       )
-      const { data } = await apiAuth.post('/users', submitData)
-
-      // 為新用戶分配角色
-      if (selectedRoles.value.length > 0) {
-        try {
-          for (const roleId of selectedRoles.value) {
-            await permissionStore.assignRoleToUser(data.result._id, roleId)
-          }
-        } catch (roleError) {
-          console.error('分配角色失敗:', roleError)
-          createSnackbar({
-            text: '用戶新增成功，但角色分配失敗',
-            snackbarProps: { color: 'orange' }
-          })
-        }
+      
+      // 將角色 ID 加入提交資料中
+      if (selectedRolesField.value.value.length > 0) {
+        submitData.roleIds = selectedRolesField.value.value
       }
-
+      
+      await apiAuth.post('/users', submitData)
       await tableLoadItems(true)
     }
 
@@ -858,12 +819,12 @@ const openDialog = async (item) => {
     // 載入用戶的 RBAC 角色
     try {
       const userRoles = await permissionStore.getUserRoles(item._id)
-      selectedRoles.value = userRoles
+      selectedRolesField.value.value = userRoles
         ?.filter(userRole => userRole.isActive)
         ?.map(userRole => userRole.role._id) || []
     } catch (error) {
       console.error('載入用戶角色失敗:', error)
-      selectedRoles.value = []
+      selectedRolesField.value.value = []
     }
 
     originalData.value = {
@@ -871,12 +832,12 @@ const openDialog = async (item) => {
       name: item.name,
       note: item.note,
       userId: item.userId,
-      selectedRoles: [...selectedRoles.value] // 保存原始角色選擇
+      selectedRoles: [...selectedRolesField.value.value] // 保存原始角色選擇
     }
   } else {
     isEditing.value = false
     dialog.value.id = ''
-    selectedRoles.value = []
+    selectedRolesField.value.value = []
     originalData.value = null
     resetForm()
   }
@@ -928,7 +889,7 @@ const hasChanges = computed(() => {
 
   // 檢查 RBAC 角色變更
   const originalRoles = originalData.value.selectedRoles || []
-  const currentRoles = selectedRoles.value || []
+  const currentRoles = selectedRolesField.value.value || []
   const rolesChanged = originalRoles.length !== currentRoles.length ||
     !originalRoles.every(roleId => currentRoles.includes(roleId))
 

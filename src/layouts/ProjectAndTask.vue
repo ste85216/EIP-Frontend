@@ -123,20 +123,12 @@
               <v-card-title
                 class="ps-5 pb-3 d-flex justify-space-between pe-2"
               >
-                <v-avatar
+                <UserAvatar
+                  :user="user"
                   size="48"
+                  avatar-class="me-3"
                   style="box-shadow: 0 0 10px rgba(255,255,255,1);"
-                >
-                  <v-skeleton-loader
-                    v-if="!isAvatarLoaded"
-                    type="avatar"
-                  />
-                  <v-img
-                    v-show="isAvatarLoaded"
-                    :src="user.avatar"
-                    @load="handleAvatarLoad"
-                  />
-                </v-avatar>
+                />
               </v-card-title>
               <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
                 <v-row>
@@ -157,7 +149,7 @@
                     cols="12"
                     class="ps-4 pb-0 pt-0"
                   >
-                    {{ getRoleTitle(user.role) }}
+                    {{ getDisplayRole() }}
                   </v-col>
                 </v-row>
               </v-card-text>
@@ -540,20 +532,12 @@
           >
           <div class="card-blur pt-2 pb-4 px-2">
             <v-card-title class="ps-5 pb-3">
-              <v-avatar
+              <UserAvatar
+                :user="user"
                 size="48"
+                avatar-class="me-3"
                 style="box-shadow: 0 0 10px rgba(255,255,255,1);"
-              >
-                <v-skeleton-loader
-                  v-if="!isAvatarLoaded"
-                  type="avatar"
-                />
-                <v-img
-                  v-show="isAvatarLoaded"
-                  :src="user.avatar"
-                  @load="handleAvatarLoad"
-                />
-              </v-avatar>
+              />
             </v-card-title>
             <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
               <v-row>
@@ -574,7 +558,7 @@
                   cols="12"
                   class="ps-4 pb-0 pt-0"
                 >
-                  {{ getRoleTitle(user.role) }}
+                  {{ getDisplayRole() }}
                 </v-col>
               </v-row>
             </v-card-text>
@@ -903,7 +887,7 @@
   </v-app>
 </template>
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, computed, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useProjectStore } from '@/stores/project'
@@ -912,6 +896,7 @@ import { useDisplay } from 'vuetify'
 import { usePermissionStore } from '@/stores/permission'
 import { useApi } from '@/composables/axios'
 import { roleNames } from '@/enums/UserRole'
+import UserAvatar from '@/components/UserAvatar.vue'
 import CreateTeamDialog from '@/components/CreateTeamDialog.vue'
 import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
 import NotificationInbox from '@/components/NotificationInbox.vue'
@@ -939,6 +924,7 @@ const { apiAuth } = useApi()
 // 名片卡片相關狀態
 const isBackgroundLoaded = ref(false)
 const isAvatarLoaded = ref(false)
+const userRbacRoles = ref([]) // 用戶的 RBAC 角色
 
 const titleIconSize = computed(() => {
   if (!smAndUp.value) return '20'  // 小螢幕
@@ -988,14 +974,58 @@ const handleImageLoad = () => {
 }
 
 const handleAvatarLoad = () => {
-  setTimeout(() => {
+  nextTick(() => {
     isAvatarLoaded.value = true
-  }, 100)
+  })
 }
 
 const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
 }
+
+// 獲取用戶 RBAC 角色
+const loadUserRbacRoles = async () => {
+  if (!user.isLogin) return
+
+  try {
+    const result = await permissionStore.getUserRoles(user._id)
+    userRbacRoles.value = result || []
+  } catch (error) {
+    console.error('載入用戶角色失敗:', error)
+    userRbacRoles.value = []
+  }
+}
+
+// 顯示角色資訊的函數
+const getDisplayRole = () => {
+  if (userRbacRoles.value.length === 0) {
+    // 如果沒有 RBAC 角色，回退到舊的 role 系統
+    return getRoleTitle(user.role) || '未知'
+  }
+
+  if (userRbacRoles.value.length === 1) {
+    return userRbacRoles.value[0].role?.name || '未知角色'
+  }
+
+  // 多個角色時，根據 level 排序，顯示權重最高的角色
+  const sortedRoles = userRbacRoles.value.sort((a, b) => {
+    const levelA = a.role?.level || 0
+    const levelB = b.role?.level || 0
+    
+    // 先按 level 排序（降序）
+    if (levelA !== levelB) {
+      return levelB - levelA
+    }
+    
+    // 如果 level 相同，按角色名稱排序（升序）
+    const nameA = a.role?.name || ''
+    const nameB = b.role?.name || ''
+    return nameA.localeCompare(nameB)
+  })
+
+  return sortedRoles[0].role?.name || '未知角色'
+}
+
 
 const getBackgroundImage = () => {
   if (user.backgroundImage) {
@@ -1238,7 +1268,7 @@ watch(() => breakpoint.value, () => {
 })
 
 // 組件掛載時設置初始狀態
-onMounted(() => {
+onMounted(async () => {
   // 載入展開狀態
   loadOpenedGroups()
 
@@ -1253,6 +1283,9 @@ onMounted(() => {
 
   // 標記為已初始化，後續狀態變化將使用延遲邏輯
   isInitialized = true
+
+  // 載入用戶 RBAC 角色
+  await loadUserRbacRoles()
 
   // 載入用戶團隊和專案
   if (user.isLogin) {
@@ -1399,9 +1432,19 @@ watch(() => user.avatar, (newAvatar) => {
     isAvatarLoaded.value = false
     const img = new Image()
     img.onload = () => {
-      handleAvatarLoad()
+      nextTick(() => {
+        handleAvatarLoad()
+      })
+    }
+    img.onerror = () => {
+      nextTick(() => {
+        handleAvatarLoad()
+      })
     }
     img.src = newAvatar
+  } else {
+    // 沒有頭像時，直接設置為已載入
+    isAvatarLoaded.value = true
   }
 }, { immediate: true })
 </script>

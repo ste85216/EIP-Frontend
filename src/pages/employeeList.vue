@@ -745,7 +745,7 @@ const searchCriteria = ref({
   department: '',
   employmentType: '',
   jobTitle: '',
-  status: '',
+  status: '在職', // 預設顯示在職員工
   dateType: '',
   dateRange: []
 })
@@ -950,7 +950,7 @@ const resetSearch = () => {
     department: '',
     employmentType: '',
     jobTitle: '',
-    status: '',
+    status: '在職', // 重置時也預設為在職
     dateType: '',
     dateRange: []
   }

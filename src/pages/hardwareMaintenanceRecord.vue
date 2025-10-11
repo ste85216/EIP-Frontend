@@ -466,7 +466,7 @@
           >
             mdi-file-pdf-box
           </v-icon>
-          匯出PDF報表
+          匯出 PDF 報表
           <v-spacer />
           <v-btn
             icon
@@ -537,7 +537,7 @@
           >
             mdi-file-excel
           </v-icon>
-          匯出Excel報表
+          匯出 Excel 報表
           <v-spacer />
           <v-btn
             icon
@@ -630,7 +630,6 @@ import { useDisplay } from 'vuetify'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
-import UserRole from '@/enums/UserRole.js'
 import * as yup from 'yup'
 import { useField, useForm } from 'vee-validate'
 import html2pdf from 'html2pdf.js'
@@ -641,7 +640,7 @@ definePage({
   meta: {
     title: '硬體維修記錄 | Ystravel',
     login: true,
-    roles: [UserRole.ADMIN, UserRole.IT]
+    permissions: ['HARDWARE_MAINTENANCE_RECORD_PAGE_READ']
   }
 })
 
@@ -665,6 +664,7 @@ const maintenanceSchema = yup.object({
   maintenanceContent: yup.string().required('請輸入問題內容'),
   maintenanceResult: yup.string().required('請輸入處理結果'),
   reportUser: yup.string().nullable(),
+  reportUserId: yup.string().nullable(),
   note: yup.string().nullable()
 })
 

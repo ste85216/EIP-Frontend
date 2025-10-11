@@ -12,20 +12,10 @@
           >
             <v-row class="text-center">
               <v-col cols="12">
-                <v-avatar
+                <UserAvatar
+                  :user="user"
                   size="100"
-                >
-                  <v-skeleton-loader
-                    v-if="!isProfileAvatarLoaded"
-                    width="100"
-                    height="100"
-                  />
-                  <v-img
-                    v-show="isProfileAvatarLoaded"
-                    :src="user.avatar"
-                    @load="handleProfileAvatarLoad"
-                  />
-                </v-avatar>
+                />
               </v-col>
               <v-col>
                 <div class="name mb-3 opacity-90">
@@ -421,15 +411,14 @@
               elevation="0"
             >
               <div class="d-flex align-center">
-                <v-avatar
+                <UserAvatar
+                  :user="users"
                   size="40"
-                  class="me-3"
-                >
-                  <v-img :src="users.avatar" />
-                </v-avatar>
+                  avatar-class="me-3"
+                />
                 <div class="text-truncate">
                   <div class="font-weight-medium">
-                    {{ users.name }} <span class="text-subtitle-2 font-weight-regular text-grey">( {{ getRoleTitle(users.role) }} )</span>
+                    {{ users.name }} <span class="text-subtitle-2 font-weight-regular text-grey">( {{ getUserDisplayRole(users) }} )</span>
                   </div>
                   <div class="text-caption text-medium-emphasis">
                     {{ users.email }}
@@ -472,6 +461,7 @@ import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
 import FileUploadButton from '@/components/FileUploadButton.vue'
 import BackgroundImageDialog from '@/components/BackgroundImageDialog.vue'
+import UserAvatar from '@/components/UserAvatar.vue'
 import { useApi } from '@/composables/axios'
 
 const { apiAuth } = useApi()
@@ -524,6 +514,19 @@ const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
 }
 
+// 獲取用戶顯示角色的函數（用於使用者清單）
+const getUserDisplayRole = (user) => {
+  // 如果有 RBAC 角色，使用 RBAC 角色
+  if (user.rbacRoles && user.rbacRoles.length > 0) {
+    return user.rbacRoles[0].role?.name || '未知角色'
+  }
+  
+  // 如果沒有 RBAC 角色，回退到舊的 role 系統
+  return getRoleTitle(user.role) || '未知'
+}
+
+
+
 // 獲取用戶 RBAC 角色
 const loadUserRbacRoles = async () => {
   if (!user.isLogin) return
@@ -548,9 +551,23 @@ const getDisplayRole = () => {
     return userRbacRoles.value[0].role?.name || '未知角色'
   }
 
-  // 多個角色時顯示第一個 + 數量
-  const firstRoleName = userRbacRoles.value[0].role?.name || '未知角色'
-  return `${firstRoleName} (${userRbacRoles.value.length}個角色)`
+  // 多個角色時，根據 level 排序，顯示權重最高的角色
+  const sortedRoles = userRbacRoles.value.sort((a, b) => {
+    const levelA = a.role?.level || 0
+    const levelB = b.role?.level || 0
+    
+    // 先按 level 排序（降序）
+    if (levelA !== levelB) {
+      return levelB - levelA
+    }
+    
+    // 如果 level 相同，按角色名稱排序（升序）
+    const nameA = a.role?.name || ''
+    const nameB = b.role?.name || ''
+    return nameA.localeCompare(nameB)
+  })
+
+  return sortedRoles[0].role?.name || '未知角色'
 }
 
 
@@ -558,21 +575,51 @@ const fetchUserList = async () => {
     try {
       isLoadingUsers.value = true
       const { data } = await apiAuth.get('/users/public/all')
-      // 定義角色優先順序（1.經理 2.行銷人員 3.美編人員 4.總管 5.人資 6.IT 7.一般用戶 8.管理者）
-      const roleOrder = {
-        1: 0, // MANAGER 經理
-        5: 1, // MARKETING 行銷人員
-        4: 2, // DESIGNER 美編人員
-        7: 3, // SUPERVISOR 總管
-        6: 4, // HR 人資
-        3: 5, // IT IT人員
-        0: 6, // USER 一般用戶
-        2: 7  // ADMIN 管理者
-      }
-
-      // 根據角色排序
+      
+      // 根據 RBAC 角色的名稱排序
       userList.value = data.result.data.sort((a, b) => {
-        return roleOrder[a.role] - roleOrder[b.role]
+        // 獲取用戶的主要角色名稱
+        const getPrimaryRoleName = (user) => {
+          if (user.rbacRoles && user.rbacRoles.length > 0) {
+            // 如果有 RBAC 角色，取最高 level 的角色名稱
+            const sortedRoles = user.rbacRoles.sort((x, y) => {
+              const levelX = x.role?.level || 0
+              const levelY = y.role?.level || 0
+              if (levelX !== levelY) {
+                return levelY - levelX // 降序
+              }
+              const nameX = x.role?.name || ''
+              const nameY = y.role?.name || ''
+              return nameX.localeCompare(nameY)
+            })
+            return sortedRoles[0].role?.name || '未知角色'
+          }
+          // 如果沒有 RBAC 角色，回退到舊的 role 系統
+          const roleNames = {
+            0: '一般用戶',
+            1: '經理',
+            2: '管理者',
+            3: 'IT人員',
+            4: '美編人員',
+            5: '行銷人員',
+            6: '人資',
+            7: '總管'
+          }
+          return roleNames[user.role] || '未知角色'
+        }
+
+        const roleNameA = getPrimaryRoleName(a)
+        const roleNameB = getPrimaryRoleName(b)
+        
+        // 先按角色名稱排序（升序）
+        if (roleNameA !== roleNameB) {
+          return roleNameA.localeCompare(roleNameB)
+        }
+        
+        // 如果角色名稱相同，按姓名排序（升序）
+        const nameA = a.name || ''
+        const nameB = b.name || ''
+        return nameA.localeCompare(nameB)
       })
     } catch (error) {
       console.error('Failed to fetch user list:', error)
@@ -698,7 +745,13 @@ watch(() => user.avatar, (newAvatar) => {
     img.onload = () => {
       handleProfileAvatarLoad()
     }
+    img.onerror = () => {
+      handleProfileAvatarLoad()
+    }
     img.src = newAvatar
+  } else {
+    // 沒有頭像時，直接設置為已載入
+    isProfileAvatarLoaded.value = true
   }
 }, { immediate: true })
 

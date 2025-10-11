@@ -498,7 +498,8 @@ import { useSnackbar } from 'vuetify-use-dialog'
 definePage({
   meta: {
     title: '首頁 | Ystravel',
-    login: true
+    login: true,
+    permission: 'HOME_READ'
   }
 })
 

@@ -68,14 +68,24 @@ router.beforeEach(async (to, from, next) => {
     next('/login')
   }
   // 檢查權限（新系統）
-  else if (to.meta.permissions) {
-    const hasPermission = to.meta.requireAll
-      ? permissionStore.hasAllPermissions(to.meta.permissions)
-      : permissionStore.hasAnyPermission(to.meta.permissions)
+  else if (to.meta.permission || to.meta.permissions) {
+    let hasPermission = false
+    
+    if (to.meta.permission) {
+      // 單一權限檢查
+      hasPermission = permissionStore.hasPermission(to.meta.permission)
+    } else if (to.meta.permissions) {
+      // 多權限檢查
+      hasPermission = to.meta.requireAll
+        ? permissionStore.hasAllPermissions(to.meta.permissions)
+        : permissionStore.hasAnyPermission(to.meta.permissions)
+    }
 
     if (!hasPermission) {
       next('/') // 重導向到首頁或無權限頁面
       return
+    } else {
+      next() // 有權限，繼續導航
     }
   }
   // 檢查使用者角色是否匹配路由的角色要求（舊系統，向後相容）

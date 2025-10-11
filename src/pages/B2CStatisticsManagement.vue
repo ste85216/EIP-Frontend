@@ -126,6 +126,7 @@
                             :cancel-text="'取消'"
                             :ok-text="'確認'"
                             @update:model-value="handleDateRangeChange"
+                            @click:clear="handleDateRangeClear"
                           />
                         </div>
                       </v-col>
@@ -2070,6 +2071,15 @@ const loadSearchSalesPersons = async () => {
 // 處理日期區間變更
 const handleDateRangeChange = (dates) => {
   searchCriteria.value.dateRange = dates
+}
+
+// 處理日期清空
+const handleDateRangeClear = () => {
+  searchCriteria.value.dateRange = null
+  // 如果當前月份按鈕是啟用狀態，也要關閉它
+  if (isCurrentMonthActive.value) {
+    isCurrentMonthActive.value = false
+  }
 }
 
 // 處理公司變更

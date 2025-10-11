@@ -550,7 +550,7 @@
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
                     <v-btn
-                      v-if="user.role === UserRole.ADMIN && !item.hasSystemUser && (item.employmentStatus === '在職' || item.employmentStatus === '待入職')"
+                      v-if="hasSystemUserReadPermission && !item.hasSystemUser && (item.employmentStatus === '在職' || item.employmentStatus === '待入職')"
                       v-tooltip:start="'新增為系統用戶'"
                       icon
                       color="teal-darken-1"
@@ -562,7 +562,7 @@
                       <v-icon>mdi-account-plus</v-icon>
                     </v-btn>
                     <v-btn
-                      v-else-if="user.role === UserRole.ADMIN && !item.hasSystemUser && (item.employmentStatus === '離職' || item.employmentStatus === '留職停薪')"
+                      v-else-if="hasSystemUserReadPermission && !item.hasSystemUser && (item.employmentStatus === '離職' || item.employmentStatus === '留職停薪')"
                       v-tooltip:start="'離職/留停員工無法複製為系統用戶'"
                       icon
                       color="grey"
@@ -574,7 +574,7 @@
                       <v-icon>mdi-account-plus</v-icon>
                     </v-btn>
                     <v-btn
-                      v-else-if="user.role === UserRole.ADMIN && item.hasSystemUser"
+                      v-else-if="hasSystemUserReadPermission && item.hasSystemUser"
                       v-tooltip:start="'已有系統用戶'"
                       icon
                       color="grey"
@@ -1756,6 +1756,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { usePermissionStore } from '@/stores/permission'
 import UserRole, { roleNames } from '@/enums/UserRole'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import * as yup from 'yup'
@@ -1774,6 +1775,7 @@ definePage({
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 const user = useUserStore()
+const permissionStore = usePermissionStore()
 const router = useRouter()
 const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 
@@ -1781,6 +1783,11 @@ const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
 const actionButtonSize = computed(() => smAndUp.value ? '32' : 'small')
 const dialogWidth = computed(() => mdAndUp.value ? '1200' : '100%')
+
+// 權限檢查
+const hasSystemUserReadPermission = computed(() => {
+  return permissionStore.hasPermission('SYSTEM_USER_CREATE')
+})
 
 // 表格相關
 const tableHeaders = [

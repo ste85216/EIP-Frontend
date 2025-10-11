@@ -29,6 +29,7 @@
                 cols="6"
               >
                 <v-btn
+                  v-permission="'COMPANY_CREATE'"
                   prepend-icon="mdi-domain"
                   variant="outlined"
                   color="blue-grey-darken-1"
@@ -44,6 +45,7 @@
                 cols="6"
               >
                 <v-btn
+                  v-permission="'DEPARTMENT_CREATE'"
                   prepend-icon="mdi-account-multiple-plus"
                   variant="outlined"
                   color="blue-grey-darken-1"
@@ -57,7 +59,7 @@
               <!-- 桌面版按鈕 -->
               <v-col v-if="mdAndUp">
                 <v-btn
-                  v-if="!user.isIT"
+                  v-permission="'COMPANY_CREATE'"
                   prepend-icon="mdi-domain"
                   variant="outlined"
                   color="blue-grey-darken-1"
@@ -76,7 +78,7 @@
                   公司地點
                 </v-btn>
                 <v-btn
-                  v-if="!user.isIT"
+                  v-permission="'DEPARTMENT_CREATE'"
                   prepend-icon="mdi-account-multiple-plus"
                   variant="outlined"
                   color="blue-grey-darken-2"
@@ -260,21 +262,6 @@
                           class="ps-2 text-blue-grey-darken-2"
                           style="font-size: 14px;"
                         >編輯</span>
-                      </v-list-item>
-                      <v-list-item
-                        density="compact"
-                        class="ps-2 pe-3 py-0"
-                        @click="openPasswordDialog(company)"
-                      >
-                        <v-icon
-                          icon="mdi-lock"
-                          size="16"
-                          color="teal-darken-2"
-                        />
-                        <span
-                          class="ps-2 text-blue-grey-darken-2"
-                          style="font-size: 14px;"
-                        >密碼設定</span>
                       </v-list-item>
                       <v-list-item
                         density="compact"
@@ -764,54 +751,6 @@
             </v-btn>
           </v-card-actions>
         </v-form>
-      </v-card>
-    </v-dialog>
-
-    <!-- 密碼管理 Dialog -->
-    <v-dialog
-      v-model="passwordDialog.open"
-      persistent
-      max-width="320"
-    >
-      <v-card class="rounded-lg px-4 pt-7 pb-6">
-        <div class="card-title px-4 pb-2">
-          公司密碼設定
-        </div>
-        <v-card-text class="mt-3 pa-3">
-          <v-text-field
-            v-model="passwordDialog.newPassword"
-            label="新密碼"
-            type="password"
-            variant="outlined"
-            density="compact"
-            :error-messages="passwordDialog.error"
-            hide-details="auto"
-            persistent-hint
-            hint="請直接輸入欲設定新密碼 會覆蓋掉舊密碼"
-          />
-        </v-card-text>
-        <v-card-actions class="px-3 pt-4">
-          <v-spacer />
-          <v-btn
-            color="grey-darken-1"
-            variant="outlined"
-            :size="buttonSize"
-            @click="closePasswordDialog"
-          >
-            取消
-          </v-btn>
-          <v-btn
-            color="teal-darken-1"
-            variant="outlined"
-            :size="buttonSize"
-            :loading="isSubmitting"
-            :disabled="!passwordDialog.newPassword"
-            class="ms-2"
-            @click="updateCompanyPassword"
-          >
-            更新
-          </v-btn>
-        </v-card-actions>
       </v-card>
     </v-dialog>
   </v-container>
@@ -1395,6 +1334,7 @@ const closeEditLocationDialog = () => {
 const addEditingLocation = () => {
   const newOrder = editingLocations.value.length
   editingLocations.value.push({
+    _id: null, // 新增的地點沒有 ID
     locationName: '',
     order: newOrder,
     error: ''
@@ -1438,21 +1378,55 @@ const submitEditLocations = async () => {
       return
     }
 
-    const { data } = await apiAuth.patch(`/companies/${editLocationDialog.value.companyId}`, {
-      locations: editingLocations.value.map((loc, index) => ({
-        locationName: loc.locationName.trim(),
-        order: index
-      }))
-    })
+    // 比較原始地點和編輯後的地點，識別變更
+    const originalLocationsData = originalLocations.value
+    const currentLocations = editingLocations.value
 
-    if (data.success) {
-      createSnackbar({
-        text: '地點更新成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
-      await loadCompanies()
-      closeEditLocationDialog()
+    // 找出需要刪除的地點（在原始中存在，但在編輯後不存在）
+    const locationsToDelete = originalLocationsData.filter(original => 
+      !currentLocations.some(current => current._id === original._id)
+    )
+
+    // 找出需要新增的地點（在編輯後存在，但在原始中不存在）
+    const locationsToAdd = currentLocations.filter(current => 
+      !current._id || !originalLocationsData.some(original => original._id === current._id)
+    )
+
+    // 找出需要修改的地點（在兩邊都存在但內容不同）
+    const locationsToUpdate = currentLocations.filter(current => 
+      current._id && originalLocationsData.some(original => 
+        original._id === current._id && 
+        (original.locationName !== current.locationName.trim() || original.order !== current.order)
+      )
+    )
+
+    // 執行刪除操作
+    for (const location of locationsToDelete) {
+      await apiAuth.delete(`/companies/${editLocationDialog.value.companyId}/locations/${location._id}`)
     }
+
+    // 執行新增操作
+    for (const location of locationsToAdd) {
+      await apiAuth.post(`/companies/${editLocationDialog.value.companyId}/locations`, {
+        locationName: location.locationName.trim(),
+        order: location.order
+      })
+    }
+
+    // 執行修改操作
+    for (const location of locationsToUpdate) {
+      await apiAuth.patch(`/companies/${editLocationDialog.value.companyId}/locations/${location._id}`, {
+        locationName: location.locationName.trim(),
+        order: location.order
+      })
+    }
+
+    createSnackbar({
+      text: '地點更新成功',
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+    await loadCompanies()
+    closeEditLocationDialog()
   } catch (error) {
     console.error('更新地點時發生錯誤:', error)
     handleError(error)
@@ -1512,6 +1486,7 @@ const handleBatchLocationAdd = () => {
   batchLocationDialog.value.error = ''
   const startOrder = editingLocations.value.length
   const newLocations = Array(count).fill(null).map((_, index) => ({
+    _id: null, // 新增的地點沒有 ID
     locationName: '',
     order: startOrder + index,
     error: ''
@@ -1534,56 +1509,6 @@ const moveLocation = (index, direction) => {
   editingLocations.value[newIndex] = { ...temp, order: editingLocations.value[index].order }
 }
 
-// 在 script setup 中添加
-const passwordDialog = ref({
-  open: false,
-  companyId: '',
-  companyName: '',
-  newPassword: '',
-  error: ''
-})
-
-const openPasswordDialog = (company) => {
-  passwordDialog.value = {
-    open: true,
-    companyId: company._id,
-    companyName: company.name,
-    newPassword: '',
-    error: ''
-  }
-}
-
-const closePasswordDialog = () => {
-  passwordDialog.value = {
-    open: false,
-    companyId: '',
-    companyName: '',
-    newPassword: '',
-    error: ''
-  }
-}
-
-const updateCompanyPassword = async () => {
-  if (!passwordDialog.value.newPassword) return
-
-  isSubmitting.value = true
-  try {
-    await apiAuth.patch(`/companies/${passwordDialog.value.companyId}/statistics-password`, {
-      statisticsPassword: passwordDialog.value.newPassword
-    })
-
-    createSnackbar({
-      text: '密碼更新成功',
-      snackbarProps: { color: 'teal-lighten-1' }
-    })
-
-    closePasswordDialog()
-  } catch (error) {
-    passwordDialog.value.error = error?.response?.data?.message || '密碼更新失敗'
-  } finally {
-    isSubmitting.value = false
-  }
-}
 </script>
 
 <style lang="scss" scoped>
