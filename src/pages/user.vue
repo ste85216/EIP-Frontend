@@ -128,7 +128,7 @@
                       <template #activator="{ props }">
                         <div
                           v-bind="props"
-                          class="d-flex align-center"
+                          class="d-inline-block pe-6"
                         >
                           <v-chip
                             size="small"
@@ -568,7 +568,7 @@ const tableHeaders = computed(() => [
   { title: '姓名', align: 'left', sortable: true, key: 'name' },
   { title: 'Email', align: 'left', sortable: true, key: 'email' },
   { title: '權限', align: 'left', sortable: true, key: 'rbacRoles' },
-  { title: '員工關聯', align: 'left', sortable: false, key: 'employeeLink' },
+  { title: '員工關聯', align: 'left',  sortable: false, key: 'employeeLink' },
   { title: '備註', align: 'left', sortable: true, key: 'note' },
   { title: '操作', align: 'left', sortable: false, key: 'action' },
   { title: '帳號狀態', align: 'left', sortable: true, key: 'isActive' }

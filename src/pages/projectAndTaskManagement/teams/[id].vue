@@ -579,6 +579,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { useUserStore } from '@/stores/user'
 import { useProjectStore } from '@/stores/project'
 import { useTeamStore } from '@/stores/team'
+import { usePermissionStore } from '@/stores/permission'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
 import HistoryProjectsDialog from '@/components/HistoryProjectsDialog.vue'
@@ -599,6 +600,7 @@ const createSnackbar = useSnackbar()
 const user = useUserStore()
 const projectStore = useProjectStore()
 const teamStore = useTeamStore()
+const permissionStore = usePermissionStore()
 const { smAndUp } = useDisplay()
 
 // 響應式變數
@@ -625,11 +627,11 @@ const iconButtonSize = computed(() => !smAndUp.value ? 'x-small' : 'small')
 const iconSize = computed(() => !smAndUp.value ? 15 : 20)
 const avatarSize = computed(() => !smAndUp.value ? 36 : 40)
 
-// 檢查是否為團隊管理者或系統管理員
+// 檢查是否為團隊管理者或擁有 PROJECT_AND_TASK_MANAGE 權限
 const isTeamManager = computed(() => {
   if (!team.value || !user._id) return false
-  // 系統管理員可以刪除任何團隊
-  if (user.isAdmin) return true
+  // 擁有 PROJECT_AND_TASK_MANAGE 權限的用戶可以管理任何團隊
+  if (permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE')) return true
   // 檢查是否為團隊管理者
   return team.value.managers?.some(manager => manager._id === user._id) || false
 })
@@ -757,8 +759,8 @@ const checkIsTeamManager = (memberId) => {
 // 檢查是否可以管理指定成員
 const canManageMember = (memberId) => {
   if (!team.value || !user._id) return false
-  // 系統管理員可以管理任何成員
-  if (user.isAdmin) return true
+  // 擁有 PROJECT_AND_TASK_MANAGE 權限的用戶可以管理任何成員
+  if (permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE')) return true
   // 團隊管理者可以管理其他成員（但不能管理自己）
   if (isTeamManager.value && memberId !== user._id) return true
   return false

@@ -224,7 +224,7 @@
               <v-menu>
                 <template #activator="{ props: menuProps }">
                   <v-btn
-                    v-if="showColorButton && (user.isAdmin || user.isManager)"
+                    v-if="showColorButton && canManageProjectColor(project)"
                     v-bind="menuProps"
                     icon="mdi-palette"
                     size="x-small"
@@ -337,7 +337,7 @@
               <v-menu>
                 <template #activator="{ props: menuProps }">
                   <v-btn
-                    v-if="showColorButton && (user.isAdmin || user.isManager)"
+                    v-if="showColorButton && canManageProjectColor(project)"
                     v-bind="menuProps"
                     icon="mdi-palette"
                     size="x-small"
@@ -621,7 +621,7 @@
               <v-menu>
                 <template #activator="{ props: menuProps }">
                   <v-btn
-                    v-if="showColorButton && (user.isAdmin || user.isManager)"
+                    v-if="showColorButton && canManageProjectColor(project)"
                     v-bind="menuProps"
                     icon="mdi-palette"
                     size="x-small"
@@ -726,7 +726,7 @@
               <v-menu>
                 <template #activator="{ props: menuProps }">
                   <v-btn
-                    v-if="showColorButton && (user.isAdmin || user.isManager)"
+                    v-if="showColorButton && canManageProjectColor(project)"
                     v-bind="menuProps"
                     icon="mdi-palette"
                     size="x-small"
@@ -811,7 +811,7 @@
               <v-list-item-title>團隊</v-list-item-title>
               <template #append>
                 <v-btn
-                  v-if="user.isAdmin || user.isManager"
+                  v-if="permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE')"
                   icon="mdi-plus"
                   size="x-small"
                   variant="text"
@@ -892,8 +892,8 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useProjectStore } from '@/stores/project'
 import { useTeamStore } from '@/stores/team'
-import { useDisplay } from 'vuetify'
 import { usePermissionStore } from '@/stores/permission'
+import { useDisplay } from 'vuetify'
 import { useApi } from '@/composables/axios'
 import { roleNames } from '@/enums/UserRole'
 import UserAvatar from '@/components/UserAvatar.vue'
@@ -1040,6 +1040,21 @@ const canCreateProject = computed(() => {
   const teams = teamStore.teams || []
   return teams.some(t => t?.managers?.some(m => m._id === user._id))
 })
+
+// 檢查用戶是否可以管理該專案的顏色
+const canManageProjectColor = (project) => {
+  // 如果用戶有 PROJECT_AND_TASK_MANAGE 權限，可以管理任何專案
+  if (permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE')) {
+    return true
+  }
+  
+  // 檢查用戶是否為該專案所屬團隊的管理者
+  if (project.team?.managers) {
+    return project.team.managers.some(manager => manager._id === user._id)
+  }
+  
+  return false
+}
 
 // 動態控制 mx-2 的類別 - 在 rail 狀態下不使用 mx-2
 // const titleItemClass = computed(() => {

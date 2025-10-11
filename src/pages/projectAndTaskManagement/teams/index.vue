@@ -190,7 +190,7 @@ import { useDisplay } from 'vuetify'
 import { definePage } from 'vue-router/auto'
 import CreateTeamDialog from '@/components/CreateTeamDialog.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
-import { useUserStore } from '@/stores/user'
+import { usePermissionStore } from '@/stores/permission'
 
 // 頁面定義
 definePage({
@@ -203,7 +203,7 @@ definePage({
 const { apiAuth } = useApi()
 const { createSnackbar } = useSnackbar()
 const teamStore = useTeamStore()
-const userStore = useUserStore()
+const permissionStore = usePermissionStore()
 
 // 響應式數據
 const loading = ref(false)
@@ -212,8 +212,8 @@ const searchQuery = ref('')
 
 const { smAndUp } = useDisplay()
 
-// 只有 Admin 或 Manager 可以新增團隊
-const canCreateTeam = computed(() => userStore.isAdmin || userStore.isManager)
+// 只有擁有 PROJECT_AND_TASK_MANAGE 權限的用戶可以新增團隊
+const canCreateTeam = computed(() => permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE'))
 
 // 使用 store 中的團隊數據
 const teams = computed(() => teamStore.teams)

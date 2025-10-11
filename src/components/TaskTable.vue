@@ -1318,6 +1318,7 @@ import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useUserStore } from '@/stores/user'
 import { useTeamStore } from '@/stores/team'
+import { usePermissionStore } from '@/stores/permission'
 import UserAvatar from '@/components/UserAvatar.vue'
 import TaskStatisticsDialog from '@/components/TaskStatisticsDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -1343,12 +1344,13 @@ const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 const userStore = useUserStore()
 const teamStore = useTeamStore()
+const permissionStore = usePermissionStore()
 
 // 權限檢查
 const canManageProject = computed(() => {
   if (!props.project || !userStore._id) return false
-  // 系統管理員可以管理任何專案
-  if (userStore.isAdmin) return true
+  // 擁有 PROJECT_AND_TASK_MANAGE 權限的用戶可以管理任何專案
+  if (permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE')) return true
   // 檢查是否為專案所屬團隊的管理者
   return teamStore.isProjectTeamManager(props.project, userStore._id)
 })
@@ -1356,8 +1358,8 @@ const canManageProject = computed(() => {
 // 檢查是否為團隊成員（可以刪除任務）
 const canDeleteTask = computed(() => {
   if (!props.project || !userStore._id) return false
-  // 系統管理員可以刪除任何任務
-  if (userStore.isAdmin) return true
+  // 擁有 PROJECT_AND_TASK_MANAGE 權限的用戶可以刪除任何任務
+  if (permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE')) return true
   // 檢查是否為專案所屬團隊的成員
   return props.project.team?.members?.some(member => member._id === userStore._id) || false
 })

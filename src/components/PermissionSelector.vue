@@ -311,6 +311,7 @@ const permissionModules = ref([
     features: [
       // { key: 'teamRead', name: '查看團隊', permission: 'TEAM_READ' },
       { key: 'teamCreate', name: '新增團隊', permission: 'TEAM_CREATE' },
+      { key: 'projectAndTaskManage', name: '管理專案與任務', permission: 'PROJECT_AND_TASK_MANAGE' },
       // { key: 'teamUpdate', name: '編輯團隊', permission: 'TEAM_UPDATE' },
       // { key: 'teamDelete', name: '刪除團隊', permission: 'TEAM_DELETE' },
       // { key: 'projectRead', name: '查看專案', permission: 'PROJECT_READ' },

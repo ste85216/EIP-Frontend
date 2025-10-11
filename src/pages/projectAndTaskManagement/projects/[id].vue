@@ -589,6 +589,7 @@ import { definePage } from 'vue-router/auto'
 import { useProjectStore } from '@/stores/project'
 import { useUserStore } from '@/stores/user'
 import { useTeamStore } from '@/stores/team'
+import { usePermissionStore } from '@/stores/permission'
 import EditProjectDialog from '@/components/EditProjectDialog.vue'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import TaskTable from '@/components/TaskTable.vue'
@@ -604,6 +605,7 @@ const { smAndUp } = useDisplay()
 const projectStore = useProjectStore()
 const userStore = useUserStore()
 const teamStore = useTeamStore()
+const permissionStore = usePermissionStore()
 const iconSize = computed(() => !smAndUp.value ? 15 : 20)
 const buttonSize = computed(() => !smAndUp.value ? 'small' : 'default')
 
@@ -676,9 +678,11 @@ const isProjectFavorited = computed(() => {
   return favorites?.some(fav => fav.user._id === userId) || false
 })
 
-// 檢查是否為專案所屬團隊的管理者
+// 檢查是否為專案所屬團隊的管理者或擁有 PROJECT_AND_TASK_MANAGE 權限
 const isTeamManager = computed(() => {
   if (!project.value || !userStore._id) return false
+  // 擁有 PROJECT_AND_TASK_MANAGE 權限的用戶可以管理任何專案
+  if (permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE')) return true
   // 僅團隊管理者可管理專案
   return teamStore.isProjectTeamManager(project.value, userStore._id)
 })
