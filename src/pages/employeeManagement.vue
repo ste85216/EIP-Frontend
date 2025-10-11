@@ -1757,7 +1757,6 @@ import { definePage } from 'vue-router/auto'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { usePermissionStore } from '@/stores/permission'
-import UserRole, { roleNames } from '@/enums/UserRole'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import * as yup from 'yup'
 import { useForm, useField } from 'vee-validate'
@@ -2789,19 +2788,33 @@ const copyConfirmDialog = ref({
   roleError: ''
 })
 
-// 權限選項（與 user.vue 保持一致）
-const roleOptions = [
-  { value: UserRole.USER, title: roleNames[UserRole.USER] },    // 一般用戶
-  { value: UserRole.MANAGER, title: roleNames[UserRole.MANAGER] },  // 經理
-  { value: UserRole.ADMIN, title: roleNames[UserRole.ADMIN] },  // 管理者
-  { value: UserRole.IT, title: roleNames[UserRole.IT] },  // IT人員
-  { value: UserRole.DESIGNER, title: roleNames[UserRole.DESIGNER] },  // 美編人員
-  { value: UserRole.MARKETING, title: roleNames[UserRole.MARKETING] },  // 行銷人員
-  { value: UserRole.HR, title: roleNames[UserRole.HR] },  // 人資
-  { value: UserRole.SUPERVISOR, title: roleNames[UserRole.SUPERVISOR] }  // 總管
-]
+// RBAC 角色選項
+const roleOptions = ref([])
 
+// 載入角色列表
+const loadRoles = async () => {
+  try {
+    const roles = await permissionStore.getAllRoles()
+    console.log('載入的角色列表:', roles)
+    roleOptions.value = roles
+      .filter(role => role.isActive)
+      .map(role => ({
+        value: role._id,
+        title: role.name,
+        description: role.description
+      }))
+    console.log('處理後的角色選項:', roleOptions.value)
+  } catch (error) {
+    console.error('載入角色列表失敗:', error)
+    createSnackbar({
+      text: '載入角色列表失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
 
+// 組件掛載時載入角色列表
+loadRoles()
 
 // 開啟匯入對話框
 const openImportDialog = () => {
@@ -3144,7 +3157,7 @@ const copyEmployeeToUser = (employee) => {
   copyConfirmDialog.value = {
     open: true,
     employee: employee,
-    selectedRole: 0, // 重置為預設權限
+    selectedRole: null, // 重置為空，讓用戶選擇角色
     roleError: ''
   }
 }
@@ -3158,9 +3171,14 @@ const confirmCopyEmployeeToUser = async () => {
   }
 
   const employee = copyConfirmDialog.value.employee
+  console.log('準備發送請求:', {
+    employeeId: employee._id,
+    selectedRole: copyConfirmDialog.value.selectedRole,
+    roleId: copyConfirmDialog.value.selectedRole
+  })
   try {
     const { data } = await apiAuth.post(`/employees/${employee._id}/copy-to-user`, {
-      role: copyConfirmDialog.value.selectedRole, // 使用選擇的權限
+      roleId: copyConfirmDialog.value.selectedRole, // 使用選擇的 RBAC 角色 ID
       password: `ys${employee.extNumber}${employee.printNumber}`
     })
 
