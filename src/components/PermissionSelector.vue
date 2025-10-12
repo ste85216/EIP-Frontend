@@ -294,6 +294,11 @@ const permissionModules = ref([
     icon: 'mdi-home',
     pagePermission: 'HOME_READ',
     features: [
+      {
+        key: 'BackgroundImageUsageStatsDialog.vueImageRead',
+        name: '查看背景使用統計',
+        permission: 'SYSTEM_BACKGROUND_IMAGE_READ'
+      }
     ]
   },
   { key: 'employeeList',

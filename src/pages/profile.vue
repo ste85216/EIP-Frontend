@@ -448,6 +448,12 @@
     :current-background="user.backgroundImage"
     :is-updating="isUpdatingBackground"
     @confirm="handleBackgroundChange"
+    @show-usage-stats="showUsageStatsDialog = true"
+  />
+
+  <!-- 背景圖片使用統計對話框 -->
+  <BackgroundImageUsageStatsDialog
+    v-model="showUsageStatsDialog"
   />
 </template>
 
@@ -461,6 +467,7 @@ import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
 import FileUploadButton from '@/components/FileUploadButton.vue'
 import BackgroundImageDialog from '@/components/BackgroundImageDialog.vue'
+import BackgroundImageUsageStatsDialog from '@/components/BackgroundImageUsageStatsDialog.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import { useApi } from '@/composables/axios'
 
@@ -491,6 +498,7 @@ const isLoadingUsers = ref(false)
 
 const showBackgroundDialog = ref(false)
 const isUpdatingBackground = ref(false)
+const showUsageStatsDialog = ref(false)
 
 const passwordForm = ref({
   currentPassword: '',

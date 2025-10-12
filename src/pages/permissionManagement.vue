@@ -251,7 +251,7 @@
       :no-click-animation="permissionSubmitting"
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-8 py-4 bg-teal-darken-1 d-flex align-center">
+        <div class="card-title px-8 py-4 bg-blue-grey-darken-2 d-flex align-center">
           <v-icon
             size="20"
             color="white"
@@ -273,7 +273,7 @@
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </div>
-        <v-card-text class="mt-6 mb-0 px-6">
+        <v-card-text class="mt-4 mb-0 px-6">
           <v-form
             ref="permissionFormRef"
             v-model="permissionFormValid"

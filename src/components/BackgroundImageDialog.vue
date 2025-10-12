@@ -14,6 +14,16 @@
         <span class="card-title text-white">變更背景圖片</span>
         <v-spacer />
         <v-btn
+          v-permission="'SYSTEM_BACKGROUND_IMAGE_READ'"
+          variant="outlined"
+          color="white"
+          class="me-4"
+          size="small"
+          @click="showUsageStats"
+        >
+          使用統計
+        </v-btn>
+        <v-btn
           icon
           variant="plain"
           color="white"
@@ -125,7 +135,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['update:modelValue', 'confirm'])
+const emit = defineEmits(['update:modelValue', 'confirm', 'show-usage-stats'])
 
 // 背景圖片選項
 const backgroundOptions = ref([
@@ -240,6 +250,11 @@ const closeDialog = () => {
 // 確認選擇
 const handleConfirm = () => {
   emit('confirm', selectedBackground.value)
+}
+
+// 顯示使用統計
+const showUsageStats = () => {
+  emit('show-usage-stats')
 }
 </script>
 
