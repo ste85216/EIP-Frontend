@@ -33,6 +33,24 @@
                 </v-btn>
               </v-col>
               <v-col
+                sm="3"
+                lg="2"
+                xl="1"
+                class="pe-1"
+              >
+                <v-select
+                  v-model="statusFilter"
+                  :items="statusFilterOptions"
+                  item-title="text"
+                  item-value="value"
+                  label="狀態篩選"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                />
+              </v-col>
+              <v-col
                 sm="4"
                 lg="3"
                 xl="2"
@@ -580,6 +598,14 @@ const tableSearch = ref('')
 
 // ===== 搜尋相關設定 =====
 const quickSearchText = ref('')
+const statusFilter = ref('')
+
+// 狀態篩選選項
+const statusFilterOptions = [
+  { text: '全部', value: '' },
+  { text: '啟用', value: 'active' },
+  { text: '停用', value: 'inactive' }
+]
 
 // ===== 對話框設定 =====
 const dialog = ref({
@@ -690,7 +716,8 @@ const performSearch = async () => {
       itemsPerPage: tableItemsPerPage.value,
       sortBy: tableSortBy.value[0]?.key || 'userId',
       sortOrder: tableSortBy.value[0]?.order || 'asc',
-      quickSearch: quickSearchText.value
+      quickSearch: quickSearchText.value,
+      statusFilter: statusFilter.value
     }
 
     const { data } = await apiAuth.get('/users/search', { params })
@@ -908,6 +935,15 @@ const debouncedQuickSearch = debounce(() => {
 
 watch(quickSearchText, (newVal) => {
   debouncedQuickSearch(newVal)
+})
+
+watch(statusFilter, () => {
+  tablePage.value = 1
+  tableLoading.value = true
+  performSearch()
+    .finally(() => {
+      tableLoading.value = false
+    })
 })
 
 // ===== 生命週期鉤子 =====
