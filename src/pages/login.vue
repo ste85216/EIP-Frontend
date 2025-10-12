@@ -258,51 +258,57 @@ const submit = handleSubmit(async (values) => {
 })
 
 onMounted(async () => {
-  const savedEmail = localStorage.getItem('savedEmail')
-  if (savedEmail) {
-    email.value.value = savedEmail
-    rememberMe.value = true
-  }
+  try {
+    const savedEmail = localStorage.getItem('savedEmail')
+    if (savedEmail) {
+      email.value.value = savedEmail
+      rememberMe.value = true
+    }
 
-  const params = new URLSearchParams(window.location.search)
-  const token = params.get('token')
-  const paramEmail = params.get('email')
-  const avatar = params.get('avatar')
-  const name = params.get('name')
-  const role = parseInt(params.get('role'), 10)
-  const errorMessage = params.get('message')
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('token')
+    const paramEmail = params.get('email')
+    const avatar = params.get('avatar')
+    const name = params.get('name')
+    const role = parseInt(params.get('role'), 10)
+    const errorMessage = params.get('message')
 
-  if (errorMessage) {
-    createSnackbar({
-      text: errorMessage,
-      snackbarProps: {
-        color: 'red-lighten-1'
-      }
-    })
+    if (errorMessage) {
+      createSnackbar({
+        text: errorMessage,
+        snackbarProps: {
+          color: 'red-lighten-1'
+        }
+      })
+      isChecking.value = false
+      return
+    }
+
+    if (token) {
+      user.$patch({
+        token,
+        email: paramEmail,
+        avatar,
+        name,
+        role
+      })
+
+      await nextTick()
+      createSnackbar({
+        text: '登入成功',
+        snackbarProps: {
+          color: 'teal-lighten-1'
+        }
+      })
+      router.push('/')
+      return
+    }
+  } catch (error) {
+    console.error('登入頁面初始化錯誤:', error)
+  } finally {
+    // 確保 isChecking 狀態被正確設定
     isChecking.value = false
-    return
   }
-
-  if (token) {
-    user.$patch({
-      token,
-      email: paramEmail,
-      avatar,
-      name,
-      role
-    })
-
-    await nextTick()
-    createSnackbar({
-      text: '登入成功',
-      snackbarProps: {
-        color: 'teal-lighten-1'
-      }
-    })
-    router.push('/')
-  }
-
-  isChecking.value = false
 })
 </script>
 

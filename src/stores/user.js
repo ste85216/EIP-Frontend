@@ -110,7 +110,19 @@ export const useUserStore = defineStore('user', () => {
         backgroundImage.value = data.result.backgroundImage || ''
         isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
         _id.value = data.result._id
-        await profile()
+        
+        // 登入成功後載入用戶資料和權限
+        try {
+          await profile()
+          // 載入權限
+          const { usePermissionStore } = await import('@/stores/permission')
+          const permissionStore = usePermissionStore()
+          await permissionStore.loadUserPermissions()
+        } catch (error) {
+          console.error('載入用戶資料或權限失敗:', error)
+          // 即使載入失敗也不影響登入流程
+        }
+        
         return '登入成功'
       } else {
         throw new Error(data.message || '登入失敗')
@@ -138,6 +150,19 @@ export const useUserStore = defineStore('user', () => {
         backgroundImage.value = response.data.result.backgroundImage || ''
         isDefaultPasswordChanged.value = response.data.result.isDefaultPasswordChanged
         _id.value = response.data.result._id
+        
+        // 登入成功後載入用戶資料和權限
+        try {
+          await profile()
+          // 載入權限
+          const { usePermissionStore } = await import('@/stores/permission')
+          const permissionStore = usePermissionStore()
+          await permissionStore.loadUserPermissions()
+        } catch (error) {
+          console.error('載入用戶資料或權限失敗:', error)
+          // 即使載入失敗也不影響登入流程
+        }
+        
         return '登入成功'
       } else {
         throw new Error(response.data.message)

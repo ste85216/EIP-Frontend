@@ -46,12 +46,16 @@ router.beforeEach(async (to, from, next) => {
   const permissionStore = usePermissionStore()
 
   if (from === START_LOCATION) {
-    await user.profile()
-    // 載入用戶權限
-    try {
-      await permissionStore.loadUserPermissions()
-    } catch (error) {
-      console.error('載入用戶權限失敗:', error)
+    // 只有在用戶已登入時才載入用戶資料和權限
+    if (user.isLogin) {
+      try {
+        await user.profile()
+        await permissionStore.loadUserPermissions()
+      } catch (error) {
+        console.error('載入用戶資料失敗:', error)
+        // 如果載入失敗，清除登入狀態
+        user.logout()
+      }
     }
   }
 
