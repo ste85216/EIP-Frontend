@@ -3,7 +3,7 @@
     <v-btn
       v-show="showButton"
       icon="mdi-arrow-up"
-      color="deep-purple-darken-3"
+      color="blue-grey-darken-2"
       class="scroll-to-top"
       @click="scrollToTop"
     />
@@ -70,4 +70,4 @@ onUnmounted(() => {
 .fade-leave-to {
   opacity: 0;
 }
-</style> 
+</style>

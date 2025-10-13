@@ -13,21 +13,22 @@
             </h3>
             <span>
               <v-btn
-                v-if="userStore.isAdmin || userStore.isManager"
+                v-if="!smAndUp"
+                v-permission="'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE'"
                 icon="mdi-email-multiple"
                 color="blue-grey-darken-2"
                 variant="text"
                 :size="smAndUp ? 'default' : 'small'"
-                class="d-sm-none"
                 @click="openNotificationEmailDialog"
               />
               <v-btn
-                v-if="userStore.isAdmin || userStore.isManager"
+                v-if="smAndUp"
+                v-permission="'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE'"
                 prepend-icon="mdi-email-multiple"
                 color="blue-grey-darken-2"
                 variant="outlined"
+                class="me-4"
                 :size="smAndUp ? 'default' : 'small'"
-                class="d-none d-sm-inline-flex me-4"
                 @click="openNotificationEmailDialog"
               >
                 通知設定管理
@@ -2445,7 +2446,7 @@ import { useDisplay } from 'vuetify'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
-import { useUserStore } from '@/stores/user'
+// 移除未使用的 userStore 匯入
 
 // 頁面定義
 definePage({
@@ -2458,7 +2459,7 @@ definePage({
 
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
-const userStore = useUserStore()
+// 移除未使用的 userStore 變數
 const { smAndUp } = useDisplay()
 const buttonSize = computed(() => !smAndUp.value ? 'small' : 'default')
 

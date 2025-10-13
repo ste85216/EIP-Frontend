@@ -467,13 +467,16 @@
           class="no-comments"
         >
           <v-icon
-            size="48"
+            size="36"
             color="grey-lighten-1"
-            class="mb-4"
+            class="mb-2"
           >
             mdi-comment-outline
           </v-icon>
-          <p class="text-body-2 text-medium-emphasis">
+          <p
+            style="font-size: 14px;"
+            class="text-grey"
+          >
             尚無評論
           </p>
         </div>
@@ -1672,7 +1675,7 @@ onUnmounted(() => {
 }
 
 .comments-list {
-  max-height: 160px; /* 預設高度，大約可以顯示2個評論 */
+  max-height: 160px; /* 預設高度，縮小以顯示更少內容 */
   overflow-y: auto;
   margin-bottom: 16px;
   padding-right: 8px; /* 為滾動條留出空間 */
@@ -1726,7 +1729,7 @@ onUnmounted(() => {
 
 .no-comments {
   text-align: center;
-  padding: 32px 16px;
+  padding: 0px 16px 32px 16px;
 }
 
 .add-comment {

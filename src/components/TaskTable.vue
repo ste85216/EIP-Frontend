@@ -603,37 +603,59 @@
                             {{ item.status === 'completed' ? 'mdi-check-bold' : 'mdi-check-outline' }}
                           </v-icon>
                         </v-btn>
-                        <v-tooltip
-                          text="移動到其他分類"
-                          location="top"
-                        >
-                          <template #activator="{ props: tooltipProps }">
+                        <v-menu>
+                          <template #activator="{ props: menuProps }">
                             <v-btn
-                              v-bind="tooltipProps"
+                              v-bind="menuProps"
                               icon
                               size="30"
                               variant="plain"
-                              color="blue-grey-darken-1"
-                              @click.stop="openMoveTaskDialog(item)"
+                              color="grey-darken-1"
+                              @click.stop
                             >
                               <v-icon size="20">
-                                mdi-folder-move
+                                mdi-dots-horizontal
                               </v-icon>
                             </v-btn>
                           </template>
-                        </v-tooltip>
-                        <v-btn
-                          v-if="canDeleteTask"
-                          icon
-                          size="30"
-                          variant="plain"
-                          color="red-lighten-1"
-                          @click.stop="openDeleteTaskDialog(item)"
-                        >
-                          <v-icon size="20">
-                            mdi-delete
-                          </v-icon>
-                        </v-btn>
+                          <v-list
+                            density="compact"
+                            slim
+                          >
+                            <v-list-item
+                              title="複製任務"
+                              @click="duplicateTask(item)"
+                            >
+                              <template #prepend>
+                                <v-icon size="18">
+                                  mdi-content-copy
+                                </v-icon>
+                              </template>
+                            </v-list-item>
+                            <v-list-item
+                              title="移動到其他分類"
+                              @click="openMoveTaskDialog(item)"
+                            >
+                              <template #prepend>
+                                <v-icon size="18">
+                                  mdi-folder-move
+                                </v-icon>
+                              </template>
+                            </v-list-item>
+                            <v-list-item
+                              v-if="canDeleteTask"
+                              title="刪除任務"
+                              base-color="red-darken-2"
+                              @click="openDeleteTaskDialog(item)"
+                            >
+                              <template #prepend>
+                                <v-icon size="18">
+                                  mdi-delete
+                                </v-icon>
+                              </template>
+                            </v-list-item>
+                          </v-list>
+                        </v-menu>
                       </div>
                     </template>
 
@@ -906,48 +928,70 @@
 
             <template #[`item.actions`]="{ item }">
               <div class="d-flex justify-center">
-                <v-tooltip
-                  text="移動到其他分類"
-                  location="top"
-                >
-                  <template #activator="{ props: tooltipProps }">
-                    <v-btn
-                      icon
-                      size="30"
-                      variant="plain"
-                      color="teal-darken-1"
-                      @click.stop="reopenTask(item)"
-                    >
-                      <v-icon size="18">
-                        mdi-undo
-                      </v-icon>
-                    </v-btn>
-                    <v-btn
-                      v-bind="tooltipProps"
-                      icon
-                      size="30"
-                      variant="plain"
-                      color="blue-grey-darken-1"
-                      @click.stop="openMoveTaskDialog(item)"
-                    >
-                      <v-icon size="18">
-                        mdi-folder-move
-                      </v-icon>
-                    </v-btn>
-                  </template>
-                </v-tooltip>
                 <v-btn
-                  v-if="canDeleteTask"
                   icon
                   size="30"
                   variant="plain"
-                  color="red-lighten-1"
-                  @click.stop="openDeleteTaskDialog(item)"
+                  color="teal-darken-1"
+                  @click.stop="handleReopenClick(item)"
                 >
                   <v-icon size="18">
-                    mdi-delete
+                    mdi-undo
                   </v-icon>
                 </v-btn>
+                <v-menu>
+                  <template #activator="{ props: menuProps }">
+                    <v-btn
+                      v-bind="menuProps"
+                      icon
+                      size="30"
+                      variant="plain"
+                      color="grey-darken-1"
+                      @click.stop
+                    >
+                      <v-icon size="18">
+                        mdi-dots-horizontal
+                      </v-icon>
+                    </v-btn>
+                  </template>
+                  <v-list
+                    density="compact"
+                    slim
+                  >
+                    <v-list-item
+                      title="複製任務"
+                      @click="duplicateTask(item)"
+                    >
+                      <template #prepend>
+                        <v-icon size="18">
+                          mdi-content-copy
+                        </v-icon>
+                      </template>
+                    </v-list-item>
+                    <v-list-item
+                      title="移動到其他分類"
+                      @click="openMoveTaskDialog(item)"
+                    >
+                      <template #prepend>
+                        <v-icon size="18">
+                          mdi-folder-move
+                        </v-icon>
+                      </template>
+                    </v-list-item>
+                    <v-list-item
+                      v-if="canDeleteTask"
+                      title="刪除任務"
+                      base-color="red-darken-2"
+                      @click="openDeleteTaskDialog(item)"
+                    >
+                      <template #prepend>
+                        <v-icon size="18">
+                          mdi-delete
+                        </v-icon>
+                      </template>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
               </div>
             </template>
           </v-data-table>
@@ -1101,6 +1145,7 @@
     <ConfirmDeleteDialog
       v-model="deleteTaskDialog"
       title="確認刪除任務"
+      :dialog-width="'320'"
       :message="`您確定要刪除任務「<span class='font-weight-bold text-red-darken-2'>${deletingTask?.name}</span>」嗎？此操作無法復原。`"
       confirm-button-text="刪除"
       @confirm="deleteTask"
@@ -1118,6 +1163,20 @@
       :header-color="'bg-teal-darken-1'"
       :header-icon="'mdi-check-circle'"
       @confirm="confirmCompleteTask"
+    />
+
+    <!-- 重新開啟任務確認對話框 -->
+    <ConfirmDialog
+      v-model="confirmReopenDialog"
+      :dialog-width="'320'"
+      title="確認重新開啟任務"
+      :message="`您確定要將任務「<span class='font-weight-bold text-teal-darken-2'>${reopeningTask?.name || ''}</span>」重新開啟嗎？`"
+      confirm-button-text="確認"
+      cancel-button-text="取消"
+      :confirm-button-color="'teal-darken-1'"
+      :header-color="'bg-teal-darken-1'"
+      :header-icon="'mdi-undo'"
+      @confirm="confirmReopenTask"
     />
 
     <!-- 新增任務對話框 -->
@@ -1178,7 +1237,7 @@
               label="協作者"
               variant="outlined"
               density="compact"
-              :items="project?.team?.members || []"
+              :items="collaboratorOptionsForCreate"
               item-title="name"
               item-value="_id"
               multiple
@@ -1403,6 +1462,10 @@ const selectedNewCategory = ref('')
 // 完成任務確認對話框
 const confirmCompleteDialog = ref(false)
 const completingTask = ref(null)
+
+// 重新開啟任務確認對話框
+const confirmReopenDialog = ref(false)
+const reopeningTask = ref(null)
 
 // 統計對話框
 const statisticsDialog = ref(false)
@@ -1990,6 +2053,21 @@ const reopenTask = async (task) => {
   }
 }
 
+// 點擊重新開啟按鈕（觸發確認）
+const handleReopenClick = (task) => {
+  reopeningTask.value = task
+  confirmReopenDialog.value = true
+}
+
+// 確認重新開啟任務
+const confirmReopenTask = async () => {
+  if (!reopeningTask.value) return
+  const task = reopeningTask.value
+  confirmReopenDialog.value = false
+  await reopenTask(task)
+  reopeningTask.value = null
+}
+
 // 開啟新增任務對話框
 const openCreateTaskDialog = (categoryName) => {
   newTask.value = {
@@ -2461,6 +2539,82 @@ const getAvailableCategories = computed(() => {
   const categories = props.project?.taskCategories || []
   return categories
 })
+
+// 新增任務對話框可選協作者（不包含自己）
+const collaboratorOptionsForCreate = computed(() => {
+  const members = props.project?.team?.members || []
+  return members.filter(member => member && member._id !== userStore._id)
+})
+
+// 複製任務：僅複製名稱與描述，其餘欄位不帶入
+const duplicateTask = async (task) => {
+  try {
+    // 產生複製名稱，處理可能的重複名稱
+    const baseName = `${task.name}-複本`
+    let finalName = baseName
+
+    // 嘗試建立任務，若名稱衝突再以 (2) 重試一次
+    const attemptCreate = async (nameToUse) => {
+      const { data } = await apiAuth.post('/tasks', {
+        name: nameToUse,
+        description: task.description || '',
+        category: task.category || '',
+        project: props.project._id
+      })
+      return data
+    }
+
+    let resp = await attemptCreate(finalName)
+    if (!resp.success) throw new Error(resp.message || '複製任務失敗')
+
+    // 若成功
+    if (resp.success) {
+      emit('task-created', { task: resp.data, category: task.category || '' })
+      createSnackbar({
+        text: '任務複製成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+      return
+    }
+  } catch (firstError) {
+    // 若為名稱重複（後端 409），改用名稱 (2) 再嘗試一次
+    const backendMsg = firstError?.response?.data?.message || ''
+    const isDuplicate = backendMsg.includes('已存在') || firstError?.response?.status === 409
+    if (!isDuplicate) {
+      console.error('複製任務失敗:', firstError)
+      createSnackbar({
+        text: backendMsg || '複製任務失敗',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+      return
+    }
+
+    try {
+      const nameWithIdx = `${task.name}-複本 (2)`
+      const { data } = await apiAuth.post('/tasks', {
+        name: nameWithIdx,
+        description: task.description || '',
+        category: task.category || '',
+        project: props.project._id
+      })
+      if (data.success) {
+        emit('task-created', { task: data.data, category: task.category || '' })
+        createSnackbar({
+          text: '任務複製成功',
+          snackbarProps: { color: 'teal-lighten-1' }
+        })
+        return
+      }
+      throw new Error(data.message || '複製任務失敗')
+    } catch (secondError) {
+      console.error('複製任務失敗 (第二次嘗試):', secondError)
+      createSnackbar({
+        text: secondError?.response?.data?.message || '複製任務失敗',
+        snackbarProps: { color: 'red-lighten-1' }
+      })
+    }
+  }
+}
 
 // 組件掛載時添加事件監聽器
 onMounted(() => {

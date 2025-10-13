@@ -1011,12 +1011,12 @@ const getDisplayRole = () => {
   const sortedRoles = userRbacRoles.value.sort((a, b) => {
     const levelA = a.role?.level || 0
     const levelB = b.role?.level || 0
-    
+
     // 先按 level 排序（降序）
     if (levelA !== levelB) {
       return levelB - levelA
     }
-    
+
     // 如果 level 相同，按角色名稱排序（升序）
     const nameA = a.role?.name || ''
     const nameB = b.role?.name || ''
@@ -1047,12 +1047,12 @@ const canManageProjectColor = (project) => {
   if (permissionStore.hasPermission('PROJECT_AND_TASK_MANAGE')) {
     return true
   }
-  
+
   // 檢查用戶是否為該專案所屬團隊的管理者
   if (project.team?.managers) {
     return project.team.managers.some(manager => manager._id === user._id)
   }
-  
+
   return false
 }
 
@@ -1086,9 +1086,9 @@ const favoriteProjects = computed(() => {
   })
 })
 
-// 限制顯示的已加星號專案數量（最多10個）
+// 已加星號專案不設定上限
 const displayedFavoriteProjects = computed(() => {
-  return favoriteProjects.value.slice(0, 10)
+  return favoriteProjects.value
 })
 
 // 限制顯示的專案數量（最多10個，排除已加星號的專案）

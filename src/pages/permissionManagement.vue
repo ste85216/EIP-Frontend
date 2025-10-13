@@ -79,6 +79,7 @@
                     <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
                       <td>{{ item.name }}</td>
                       <td>{{ item.code }}</td>
+                      <td>{{ item.level || 0 }}</td>
                       <td>{{ item.description || '-' }}</td>
                       <td class="py-2">
                         <v-btn
@@ -659,6 +660,7 @@ const permissionHeaders = [
 const roleHeaders = [
   { title: '角色名稱', key: 'name', sortable: true },
   { title: '角色代碼', key: 'code', sortable: true },
+  { title: '角色層級', key: 'level', sortable: true },
   { title: '描述', key: 'description' },
   { title: '權限', key: 'permissions' },
   { title: '操作', key: 'action', sortable: false, align: 'center' }
@@ -961,7 +963,7 @@ const handlePermissionCopy = async () => {
   try {
     // 重新載入角色列表以獲取最新權限
     await loadRoles()
-    
+
     // 更新當前編輯角色的權限
     if (currentEditingRole.value) {
       const updatedRole = roles.value.find(r => r._id === currentEditingRole.value._id)

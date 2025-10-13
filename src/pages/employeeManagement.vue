@@ -3145,6 +3145,7 @@ const jobTitleOptions = [  // 有順序之分
   { text: '美編助理', value: '美編助理' },
   { text: '外務', value: '外務' },
   { text: '旅遊經理人', value: '旅遊經理人' },
+  { text: '旅遊規劃師', value: '旅遊規劃師' },
   { text: '助理工程師', value: '助理工程師' },
   { text: 'Indoor', value: 'Indoor' },
   { text: '工讀生', value: '工讀生' },

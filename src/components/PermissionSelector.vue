@@ -89,7 +89,7 @@
                 />
               </div>
             </v-card-title>
-            <v-card-text 
+            <v-card-text
               v-if="modulePermissions[module.key].pageAccess && module.features && module.features.length > 0"
               class="px-4 pb-5"
             >
@@ -294,7 +294,15 @@ const permissionModules = ref([
     icon: 'mdi-home',
     pagePermission: 'HOME_READ',
     features: [
-      {
+    ]
+  },
+  {
+    key: 'profile',
+    name: '個人資料管理',
+    icon: 'mdi-account-circle',
+    pagePermission: 'PROFILE_READ',
+    features: [
+    {
         key: 'BackgroundImageUsageStatsDialog.vueImageRead',
         name: '查看背景使用統計',
         permission: 'SYSTEM_BACKGROUND_IMAGE_READ'
@@ -451,6 +459,7 @@ const permissionModules = ref([
     features: [
       { key: 'read', name: '查看行美申請', permission: 'MARKETING_DESIGN_REQUEST_READ' },
       { key: 'update', name: '編輯行美申請', permission: 'MARKETING_DESIGN_REQUEST_UPDATE' },
+      { key: 'notificationManage', name: '通知設定管理', permission: 'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE' },
     ]
   },
   {
@@ -626,7 +635,7 @@ const closeDialog = () => {
 const resetPermissions = () => {
   // 初始化所有模組權限為 false
   initializeModulePermissions()
-  
+
   createSnackbar({
     text: '權限已重置',
     snackbarProps: { color: 'teal-lighten-1' }
@@ -639,7 +648,7 @@ const selectAllModuleFeatures = (moduleKey) => {
   if (!module || !module.features || module.features.length === 0) return
 
   // 檢查是否已經全選功能權限
-  const isAllFeaturesSelected = module.features.every(feature => 
+  const isAllFeaturesSelected = module.features.every(feature =>
     modulePermissions.value[moduleKey][feature.key]
   )
 
@@ -719,10 +728,10 @@ const copyPermissions = async () => {
     } else {
       // 如果不覆蓋，需要合併現有權限
       const existingPermissionIds = props.currentRole?.permissions?.map(p => p._id || p) || []
-      
+
       // 合併權限（去重）
       const mergedPermissionIds = [...new Set([...existingPermissionIds, ...sourcePermissionIds])]
-      
+
       updateData.permissions = mergedPermissionIds
       await permissionStore.updateRole(props.currentRole._id, updateData)
     }
@@ -781,12 +790,12 @@ watch(() => props.modelValue, (newValue) => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 16px;
-  
+
   // 響應式設計
   @media (max-width: 1200px) {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
-  
+
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -798,16 +807,16 @@ watch(() => props.modelValue, (newValue) => {
   border-radius: 8px;
   transition: all 0.2s ease;
   min-height: fit-content;
-  
+
   &:hover {
     border-color: #26a69a;
     box-shadow: 0 2px 8px rgba(38, 166, 154, 0.1);
   }
-  
+
   &.has-features {
     min-height: 120px;
   }
-  
+
   .card-title {
     font-weight: 500;
     color: #424242;
@@ -818,7 +827,7 @@ watch(() => props.modelValue, (newValue) => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
-  
+
   @media (max-width: 768px) {
     flex-direction: column;
     gap: 8px;
@@ -835,18 +844,18 @@ watch(() => props.modelValue, (newValue) => {
   min-width: 100px;
   max-width: calc(50% - 8px);
   height: 24px;
-  
+
   &.feature-left {
     order: 1;
   }
-  
+
   &.feature-right {
     order: 2;
   }
   :deep(.v-label) {
     font-size: 14px !important;
   }
-  
+
   @media (max-width: 768px) {
     max-width: 100%;
     order: unset !important;
@@ -866,7 +875,7 @@ watch(() => props.modelValue, (newValue) => {
 .permission-grid::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
-  
+
   &:hover {
     background: #a8a8a8;
   }

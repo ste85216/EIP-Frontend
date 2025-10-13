@@ -105,11 +105,17 @@
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
                   <td>{{ item.userId }}</td>
+                  <td v-if="lgAndUp">
+                    <UserAvatar
+                      :user="item"
+                      :size="28"
+                    />
+                  </td>
                   <td>{{ item.name }}</td>
                   <td v-if="lgAndUp">
                     {{ item.email }}
                   </td>
-                  <td v-if="smAndUp">
+                  <td v-if="mdAndUp">
                     <div v-if="item.rbacRoles && item.rbacRoles.length > 0">
                       <v-chip
                         v-for="userRole in item.rbacRoles.slice(0, 2)"
@@ -483,6 +489,7 @@ import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWi
 import { useRouter } from 'vue-router'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import UserAvatar from '@/components/UserAvatar.vue'
 
 // ===== 頁面設定 =====
 definePage({
@@ -583,6 +590,7 @@ const tableItems = ref([])
 const tableKey = ref(0)
 const tableHeaders = computed(() => [
   { title: '用戶編號', align: 'left', sortable: true, key: 'userId' },
+  { title: '大頭貼', align: 'left', sortable: false, key: 'avatar' },
   { title: '姓名', align: 'left', sortable: true, key: 'name' },
   { title: 'Email', align: 'left', sortable: true, key: 'email' },
   { title: '權限', align: 'left', sortable: true, key: 'rbacRoles' },
@@ -638,10 +646,12 @@ const filteredHeaders = computed(() => {
   if (lgAndUp.value) {
     return tableHeaders.value
   }
-  if (smAndUp.value) {
-    return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'note')
+  if (mdAndUp.value) {
+    // 在 md 以上顯示 rbacRoles，但仍隱藏 email、note、employeeLink、avatar
+    return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'note' && header.key !== 'employeeLink' && header.key !== 'avatar')
   }
-  return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'note' && header.key !== 'employeeLink')
+  // XS：同時隱藏 email、note、employeeLink、avatar、rbacRoles
+  return tableHeaders.value.filter(header => header.key !== 'email' && header.key !== 'note' && header.key !== 'employeeLink' && header.key !== 'avatar' && header.key !== 'rbacRoles')
 })
 
 // ===== 輔助函數 =====
@@ -787,7 +797,7 @@ const submit = handleSubmit(async (values) => {
 
       // 準備更新資料
       const updateData = { ...values }
-      
+
       // 如果有角色變更，將角色 ID 加入更新資料中
       if (rolesChanged) {
         updateData.roleIds = selectedRolesField.value.value
@@ -796,7 +806,7 @@ const submit = handleSubmit(async (values) => {
       // 如果有任何變更，執行更新
       if (basicFieldsChanged || rolesChanged) {
         await apiAuth.patch(`users/${dialog.value.id}`, updateData)
-        
+
         // 重新載入表格數據以確保排序正確
         await tableLoadItems(false)
       }
@@ -804,12 +814,12 @@ const submit = handleSubmit(async (values) => {
       const submitData = Object.fromEntries(
         Object.entries(values).filter(([key]) => key !== 'userId')
       )
-      
+
       // 將角色 ID 加入提交資料中
       if (selectedRolesField.value.value.length > 0) {
         submitData.roleIds = selectedRolesField.value.value
       }
-      
+
       await apiAuth.post('/users', submitData)
       await tableLoadItems(true)
     }

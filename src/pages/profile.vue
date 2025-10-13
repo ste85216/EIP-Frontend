@@ -22,9 +22,7 @@
                   {{ user.name }}
                 </div>
                 <div class="text-subtitle-2 mb-4 opacity-70">
-                  <span v-tooltip:end="user.isAdmin ? '管理者編號' : '使用者編號'">
-                    {{ user.isAdmin ? user.adminId : user.userId }}
-                  </span>
+                  {{ user.userId }}
                 </div>
                 <div
                   style="font-size: 15px; font-weight: 600;"
@@ -62,6 +60,7 @@
               <v-row>
                 <v-col>
                   <v-btn
+                    v-tooltip:top="mdAndUp ? '變更背景圖片' : ''"
                     icon
                     color="blue-grey-darken-2"
                     size="32"
@@ -74,24 +73,16 @@
                     </v-icon>
                   </v-btn>
                   <v-btn
-                    v-if="mdAndUp"
-                    :size="buttonSize"
-                    class="me-4"
-                    color="blue-grey-darken-2"
-                    prepend-icon="mdi-account"
-                    variant="outlined"
-                    @click="showUserListDialog = true"
-                  >
-                    使用者清單
-                  </v-btn>
-                  <v-btn
-                    color="light-blue-darken-4"
-                    prepend-icon="mdi-pencil"
-                    variant="outlined"
-                    :size="buttonSize"
+                    v-tooltip:top="mdAndUp ? '修改密碼' : ''"
+                    icon
+                    color="light-blue-darken-3"
+                    size="32"
+                    elevation="2"
                     @click="showPasswordDialog = true"
                   >
-                    修改密碼
+                    <v-icon size="18">
+                      mdi-pencil
+                    </v-icon>
                   </v-btn>
                 </v-col>
               </v-row>
@@ -129,8 +120,9 @@
                     sm="12"
                   >
                     <v-text-field
-                      variant="outlined"
+                      variant="text"
                       density="compact"
+                      class="profile-text-field"
                       hide-details
                       readonly
                       :model-value="user.name"
@@ -158,8 +150,9 @@
                     sm="12"
                   >
                     <v-text-field
-                      variant="outlined"
+                      variant="text"
                       density="compact"
+                      class="profile-text-field"
                       hide-details
                       readonly
                       :model-value="user.email"
@@ -180,15 +173,16 @@
                     sm="12"
                     class="align-self-center py-0"
                   >
-                    {{ user.isAdmin ? '管理者編號' : '使用者編號' }} :
+                    用戶編號 :
                   </v-col>
                   <v-col
                     cols="9"
                     sm="12"
                   >
                     <v-text-field
-                      variant="outlined"
+                      variant="text"
                       density="compact"
+                      class="profile-text-field"
                       hide-details
                       readonly
                       :model-value="user.isAdmin ? user.adminId : user.userId"
@@ -216,7 +210,8 @@
                     sm="12"
                   >
                     <v-text-field
-                      variant="outlined"
+                      variant="text"
+                      class="profile-text-field"
                       density="compact"
                       hide-details
                       readonly
@@ -360,87 +355,6 @@
 
   <!-- 預設密碼提醒已移至首頁處理 -->
 
-  <v-dialog
-    v-model="showUserListDialog"
-    max-width="900"
-  >
-    <v-card class=" rounded-lg">
-      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-grey-darken-2 mb-2">
-        <v-icon
-          class="me-2"
-          size="20"
-        >
-          mdi-account-group
-        </v-icon>
-        <span class="card-title text-white">使用者清單</span>
-        <v-spacer />
-        <v-btn
-          icon
-          variant="plain"
-          color="white"
-          :size="buttonSize"
-          :ripple="false"
-          @click="showUserListDialog = false"
-        >
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
-      <v-card-text class="px-5 pb-2">
-        <div
-          v-if="isLoadingUsers"
-          class="d-flex justify-center align-center py-8"
-        >
-          <v-progress-circular
-            indeterminate
-            color="blue-grey-darken-2"
-            :size="52"
-            :width="4"
-          />
-        </div>
-        <v-row v-else>
-          <v-col
-            v-for="users in userList"
-            :key="users.id"
-            cols="12"
-            sm="6"
-            md="4"
-            class="mb-2"
-          >
-            <v-card
-              class="py-2 px-3 border rounded-lg"
-              elevation="0"
-            >
-              <div class="d-flex align-center">
-                <UserAvatar
-                  :user="users"
-                  size="40"
-                  avatar-class="me-3"
-                />
-                <div class="text-truncate">
-                  <div class="font-weight-medium">
-                    {{ users.name }} <span class="text-subtitle-2 font-weight-regular text-grey">( {{ getUserDisplayRole(users) }} )</span>
-                  </div>
-                  <div class="text-caption text-medium-emphasis">
-                    {{ users.email }}
-                  </div>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-card-text>
-      <v-card-actions class="px-5 mb-2">
-        <v-spacer />
-        <v-btn
-          color="grey-darken-1"
-          variant="outlined"
-          @click="showUserListDialog = false"
-        >
-          關閉
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
 
   <!-- 背景圖片選擇對話框 -->
   <BackgroundImageDialog
@@ -469,9 +383,6 @@ import FileUploadButton from '@/components/FileUploadButton.vue'
 import BackgroundImageDialog from '@/components/BackgroundImageDialog.vue'
 import BackgroundImageUsageStatsDialog from '@/components/BackgroundImageUsageStatsDialog.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
-import { useApi } from '@/composables/axios'
-
-const { apiAuth } = useApi()
 
 const { mdAndUp, width } = useDisplay()
 const isLgmUp = computed(() => width.value >= 1500)
@@ -481,7 +392,8 @@ const buttonSize = computed(() => mdAndUp.value ? 'default' : 'small')
 definePage({
   meta: {
     title: '個人資料管理 | Ystravel',
-    login: true
+    login: true,
+    permission: 'PROFILE_READ'
   }
 })
 
@@ -492,9 +404,6 @@ const showCurrentPassword = ref(false)
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
 
-const showUserListDialog = ref(false)
-const userList = ref([])
-const isLoadingUsers = ref(false)
 
 const showBackgroundDialog = ref(false)
 const isUpdatingBackground = ref(false)
@@ -522,16 +431,6 @@ const getRoleTitle = (roleValue) => {
   return roleNames[roleValue] || '未知'
 }
 
-// 獲取用戶顯示角色的函數（用於使用者清單）
-const getUserDisplayRole = (user) => {
-  // 如果有 RBAC 角色，使用 RBAC 角色
-  if (user.rbacRoles && user.rbacRoles.length > 0) {
-    return user.rbacRoles[0].role?.name || '未知角色'
-  }
-  
-  // 如果沒有 RBAC 角色，回退到舊的 role 系統
-  return getRoleTitle(user.role) || '未知'
-}
 
 
 
@@ -563,12 +462,12 @@ const getDisplayRole = () => {
   const sortedRoles = userRbacRoles.value.sort((a, b) => {
     const levelA = a.role?.level || 0
     const levelB = b.role?.level || 0
-    
+
     // 先按 level 排序（降序）
     if (levelA !== levelB) {
       return levelB - levelA
     }
-    
+
     // 如果 level 相同，按角色名稱排序（升序）
     const nameA = a.role?.name || ''
     const nameB = b.role?.name || ''
@@ -579,70 +478,6 @@ const getDisplayRole = () => {
 }
 
 
-const fetchUserList = async () => {
-    try {
-      isLoadingUsers.value = true
-      const { data } = await apiAuth.get('/users/public/all')
-      
-      // 根據 RBAC 角色的名稱排序
-      userList.value = data.result.data.sort((a, b) => {
-        // 獲取用戶的主要角色名稱
-        const getPrimaryRoleName = (user) => {
-          if (user.rbacRoles && user.rbacRoles.length > 0) {
-            // 如果有 RBAC 角色，取最高 level 的角色名稱
-            const sortedRoles = user.rbacRoles.sort((x, y) => {
-              const levelX = x.role?.level || 0
-              const levelY = y.role?.level || 0
-              if (levelX !== levelY) {
-                return levelY - levelX // 降序
-              }
-              const nameX = x.role?.name || ''
-              const nameY = y.role?.name || ''
-              return nameX.localeCompare(nameY)
-            })
-            return sortedRoles[0].role?.name || '未知角色'
-          }
-          // 如果沒有 RBAC 角色，回退到舊的 role 系統
-          const roleNames = {
-            0: '一般用戶',
-            1: '經理',
-            2: '管理者',
-            3: 'IT人員',
-            4: '美編人員',
-            5: '行銷人員',
-            6: '人資',
-            7: '總管'
-          }
-          return roleNames[user.role] || '未知角色'
-        }
-
-        const roleNameA = getPrimaryRoleName(a)
-        const roleNameB = getPrimaryRoleName(b)
-        
-        // 先按角色名稱排序（升序）
-        if (roleNameA !== roleNameB) {
-          return roleNameA.localeCompare(roleNameB)
-        }
-        
-        // 如果角色名稱相同，按姓名排序（升序）
-        const nameA = a.name || ''
-        const nameB = b.name || ''
-        return nameA.localeCompare(nameB)
-      })
-    } catch (error) {
-      console.error('Failed to fetch user list:', error)
-      createSnackbar({
-        text: '獲取用戶列表失敗',
-        snackbarProps: { color: 'red-lighten-1' }
-      })
-    } finally {
-      isLoadingUsers.value = false
-    }
-  }
-
-  watch(showUserListDialog, (newVal) => {
-    if (newVal) fetchUserList()
-  })
 
   // 處理背景圖片變更
   const handleBackgroundChange = async (selectedBackground) => {
@@ -778,6 +613,11 @@ onMounted(async () => {
   :deep(.v-icon) {
     font-size: 22px !important;
   }
+}
+
+.profile-text-field {
+  border: 1px solid #90A4AE;
+  border-radius: 4px;
 }
 
 .v-col-sm-12 {
