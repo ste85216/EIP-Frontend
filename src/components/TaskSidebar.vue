@@ -11,8 +11,46 @@
       <!-- 標題區域 -->
       <div class="sidebar-header">
         <div class="d-flex align-center justify-space-between">
-          <div class="block-title font-weight-bold">
-            {{ task?.name || '任務詳情' }}
+          <!-- 編輯模式 -->
+          <div
+            v-if="editingField === 'title'"
+            class="edit-mode d-flex align-center flex-grow-1 me-2"
+          >
+            <v-text-field
+              v-model="editingTitle"
+              placeholder="輸入任務標題"
+              variant="outlined"
+              density="compact"
+              hide-details
+              class="flex-grow-1"
+              @keydown.enter="saveTitle"
+              @keydown.escape="cancelEditing"
+            />
+            <v-icon
+              size="16"
+              color="grey"
+              class="edit-icon ms-2"
+              @click="cancelEditing"
+            >
+              mdi-close
+            </v-icon>
+          </div>
+          <!-- 顯示模式 -->
+          <div
+            v-else
+            class="display-mode d-flex align-center flex-grow-1"
+          >
+            <div class="block-title font-weight-bold">
+              {{ task?.name || '任務詳情' }}
+            </div>
+            <v-icon
+              size="16"
+              color="grey"
+              class="edit-icon ms-4"
+              @click="startEditingTitle"
+            >
+              mdi-pencil
+            </v-icon>
           </div>
           <div class="d-flex align-center">
             <!-- 任務狀態 -->
@@ -692,6 +730,7 @@ const userStore = useUserStore()
 const newComment = ref('')
 const taskDescription = ref('')
 const editingField = ref(null)
+const editingTitle = ref(null)
 const editingAssignee = ref(null)
 const editingDueDate = ref(null)
 // const editingProject = ref(null) // 已移除，專案不允許修改
@@ -1230,6 +1269,12 @@ const truncateFileName = (fileName, maxLength = 15) => {
   return fileName.substring(0, maxLength) + '...'
 }
 
+// 開始編輯標題
+const startEditingTitle = () => {
+  editingField.value = 'title'
+  editingTitle.value = props.task?.name || ''
+}
+
 // 開始編輯指派對象
 const startEditingAssignee = async () => {
   editingField.value = 'assignee'
@@ -1264,6 +1309,32 @@ const clearDueDate = () => {
 //   editingProject.value = props.project?._id || null
 //   await fetchAvailableProjects()
 // }
+
+// 保存標題
+const saveTitle = async () => {
+  if (!props.task?._id) return
+
+  try {
+    const { data } = await apiAuth.put(`/tasks/${props.task._id}`, {
+      name: editingTitle.value
+    })
+
+    if (data.success) {
+      emit('task-updated', data.data)
+      editingField.value = null
+      createSnackbar({
+        text: '標題更新成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('更新標題失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '更新標題失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
 
 // 保存指派對象
 const saveAssignee = async () => {
@@ -1495,10 +1566,18 @@ const formatCommentWithMentions = (comment) => {
 // 監聽側邊欄開關，清空評論輸入或滾動到底部
 watch(drawerOpen, (newValue) => {
   if (!newValue) {
+    // 清空所有編輯狀態
+    editingField.value = null
+    editingTitle.value = null
+    editingAssignee.value = null
+    editingDueDate.value = null
+
+    // 清空評論相關狀態
     newComment.value = ''
     selectedImages.value = []
     showImageUpload.value = false
     isCommentsExpanded.value = false
+
     // 清空圖片上傳組件
     if (commentImageUploadRef.value) {
       commentImageUploadRef.value.clearImages()
@@ -1530,6 +1609,12 @@ const cancelEditing = () => {
 // 監聽任務變化，更新描述
 watch(() => props.task, (newTask, oldTask) => {
   if (newTask) {
+    // 清空所有編輯狀態（任務切換時）
+    editingField.value = null
+    editingTitle.value = null
+    editingAssignee.value = null
+    editingDueDate.value = null
+
     // 設置初始化標記，防止在設置描述時觸發更新
     isInitializing.value = true
 

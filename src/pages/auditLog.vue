@@ -915,12 +915,12 @@ const formatRole = (role) => {
   if (role === null || role === undefined) {
     return '(無)'
   }
-  
+
   // 如果是物件格式（新的 RBAC 角色）
   if (typeof role === 'object' && role !== null) {
     return role.name || role.code || '未知角色'
   }
-  
+
   // 如果是數字格式（舊的角色系統）
   const roleMap = {
     0: '一般用戶',
@@ -940,7 +940,7 @@ const formatRolesArray = (roles) => {
   if (!roles || !Array.isArray(roles) || roles.length === 0) {
     return '(無)'
   }
-  
+
   return roles.map(role => formatRole(role)).join('、')
 }
 
@@ -1052,7 +1052,11 @@ const formatTarget = (item) => {
   }
 
   if (item.targetModel === 'marketingBudgets') {
-    const { year, theme } = item.targetInfo || {}
+    // 優先從 targetInfo 取得，如果沒有則從 changes.after 取得
+    const targetInfo = item.targetInfo || {}
+    const changesAfter = item.changes?.after || {}
+    const year = targetInfo.year || changesAfter.year
+    const theme = targetInfo.theme || changesAfter.theme?.name || changesAfter.theme
     return `${year}年度 - ${theme}`
   }
 
@@ -2049,7 +2053,7 @@ const clearTargetSearch = () => {
   searchCriteria.value.targetId = null
 }
 
-const resetSearch = () => {
+const resetSearch = async () => {
   searchCriteria.value = {
     operatorId: null,
     targetId: null,
@@ -2059,10 +2063,15 @@ const resetSearch = () => {
   }
   clearOperatorSearch()
   clearTargetSearch()
+  // 清空快速搜尋
+  quickSearchText.value = ''
   // 清空表格資料
   tableItems.value = []
   tableItemsLength.value = 0
   hasSearched.value = false // 重置搜尋狀態
+
+  // 重置後自動執行搜尋，顯示所有異動紀錄
+  await performSearch()
 }
 
 // 新增 quickSearchText 和 isLoading
@@ -2190,7 +2199,8 @@ const shouldShowBudgetTable = computed(() => {
 // 初始載入
 onMounted(async () => {
   await loadAllUsers()
-  // 不自動載入資料，等待使用者手動搜尋
+  // 自動載入資料
+  await performSearch()
 })
 
 // 修改 formatUserDisplay 函數，支援系統使用者和員工

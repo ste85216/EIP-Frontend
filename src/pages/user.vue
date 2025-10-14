@@ -227,7 +227,7 @@
                     <v-switch
                       v-model="item.isActive"
                       :color="item.isActive ? 'teal-darken-1' : 'grey-darken-4'"
-                      :label="item.isActive ? '啟用' : '停用'"
+                      :label="smAndUp ? (item.isActive ? '啟用' : '停用') : undefined"
                       hide-details
                       @click.prevent="handleStatusChange(item)"
                     />

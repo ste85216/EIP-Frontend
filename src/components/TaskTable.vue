@@ -293,8 +293,7 @@
                         />
                         <div
                           v-else
-                          class="d-flex align-center cursor-pointer task-name-container"
-                          @click.stop="startEditingTaskName(item)"
+                          class="d-flex align-center task-name-container"
                         >
                           <span
                             class="task-name"
@@ -304,7 +303,8 @@
                           </span>
                           <v-icon
                             size="14"
-                            class="ms-1 task-name-edit-btn"
+                            class="ms-1 task-name-edit-btn cursor-pointer"
+                            @click.stop="startEditingTaskName(item)"
                           >
                             mdi-pencil
                           </v-icon>
@@ -359,8 +359,7 @@
                         </v-select>
                         <div
                           v-else
-                          class="d-flex align-center cursor-pointer assignee-container"
-                          @click.stop="startEditingAssignee(item)"
+                          class="d-flex align-center assignee-container"
                         >
                           <v-tooltip
                             v-if="item.assignee"
@@ -390,7 +389,8 @@
                           </v-avatar>
                           <v-icon
                             size="14"
-                            class="ms-1 assignee-edit-btn"
+                            class="ms-1 assignee-edit-btn cursor-pointer"
+                            @click.stop="startEditingAssignee(item)"
                           >
                             mdi-pencil
                           </v-icon>
@@ -417,8 +417,7 @@
                         />
                         <div
                           v-else
-                          class="d-flex align-center cursor-pointer due-date-container"
-                          @click.stop="startEditingDueDate(item)"
+                          class="d-flex align-center due-date-container"
                         >
                           <v-icon
                             v-if="item.dueDate"
@@ -436,7 +435,8 @@
                           </span>
                           <v-icon
                             size="14"
-                            class="ms-1 due-date-edit-btn"
+                            class="ms-1 due-date-edit-btn cursor-pointer"
+                            @click.stop="startEditingDueDate(item)"
                           >
                             mdi-pencil
                           </v-icon>
@@ -489,8 +489,7 @@
                           <template #activator="{ props: tooltipProps }">
                             <div
                               v-bind="tooltipProps"
-                              class="d-flex align-center cursor-pointer collaborators-container"
-                              @click.stop="startEditingCollaborators(item)"
+                              class="d-flex align-center collaborators-container"
                             >
                               <UserAvatar
                                 v-for="(collaborator, idx) in getDisplayCollaborators(item)?.slice(0, 3)"
@@ -508,7 +507,8 @@
                               </span>
                               <v-icon
                                 size="14"
-                                class="ms-1 collaborators-edit-btn"
+                                class="ms-1 collaborators-edit-btn cursor-pointer"
+                                @click.stop="startEditingCollaborators(item)"
                               >
                                 mdi-pencil
                               </v-icon>
