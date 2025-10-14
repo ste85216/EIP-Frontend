@@ -84,9 +84,9 @@
                   <v-autocomplete
                     v-model="searchCriteria.applicant"
                     class="ms-4"
-                    :items="employees"
-                    item-title="label"
-                    item-value="value"
+                    :items="applicantUsers"
+                    :item-title="item => item && item.name && item.userId ? `${item.name} (${item.userId})` : item && item.name ? item.name : ''"
+                    item-value="_id"
                     variant="outlined"
                     density="compact"
                     clearable
@@ -176,8 +176,8 @@
                     v-model="searchCriteria.assignedDesigner"
                     class="ms-4"
                     :items="marketingDesigners"
-                    item-title="label"
-                    item-value="value"
+                    :item-title="item => item && item.name && item.userId ? `${item.name} (${item.userId})` : item && item.name ? item.name : ''"
+                    item-value="_id"
                     variant="outlined"
                     density="compact"
                     clearable
@@ -259,7 +259,7 @@
                       </div>
                     </div>
                   </td>
-                  <td>{{ item.applicant?.name }} ({{ item.applicant?.employeeCode }})</td>
+                  <td>{{ item.applicant?.name }} ({{ item.applicant?.userId }})</td>
                   <td>{{ getProductTypeText(item.productType, item) }}</td>
                   <td class="text-center">
                     <v-menu
@@ -356,10 +356,10 @@
                       <v-list>
                         <v-list-item
                           v-for="designer in marketingDesigners"
-                          :key="designer.value"
-                          @click="updateAssignedDesigner(item._id, designer.value)"
+                          :key="designer._id"
+                          @click="updateAssignedDesigner(item._id, designer._id)"
                         >
-                          <v-list-item-title>{{ designer.label }}</v-list-item-title>
+                          <v-list-item-title>{{ designer.name }}{{ designer.userId ? ` (${designer.userId})` : '' }}</v-list-item-title>
                         </v-list-item>
                         <v-divider />
                         <v-list-item
@@ -559,7 +559,6 @@
                   disabled
                   clearable
                   :menu-props="{ maxHeight: 400 }"
-                  :filter="customFilter"
                 />
               </v-col>
             </v-row>
@@ -1400,7 +1399,7 @@
                       <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">申請人</span>
                     </div>
                     <div class="text-body-2">
-                      {{ viewFormData.applicant?.name ? `${viewFormData.applicant.name} (${viewFormData.applicant.employeeCode})` : '( 無 )' }}
+                      {{ viewFormData.applicant?.name ? `${viewFormData.applicant.name} (${viewFormData.applicant.userId})` : '( 無 )' }}
                     </div>
                   </v-card>
                 </v-col>
@@ -2053,7 +2052,7 @@
                       :key="category.value"
                       cols="12"
                       sm="6"
-                      md="4"
+                      md="2"
                     >
                       <v-checkbox
                         :model-value="notificationEmailForm.categories.includes(category.value)"
@@ -2512,7 +2511,8 @@ const originalEditData = ref({}) // 新增：記錄原始資料
 const formFields = ref([])
 const visibleFormFields = computed(() => formFields.value.filter(field => field.name !== 'needAirlineHighlight' && field.name !== 'needUseLogo'))
 const productTypeConfig = ref(null)
-const employees = ref([])
+const employees = ref([]) // 用於編輯對話框顯示申請人（改為 users 資料）
+const applicantUsers = ref([])
 const marketingDesigners = ref([])
 const productTypeOptions = ref([])
 // 大分類選項
@@ -2642,6 +2642,9 @@ const fetchTableData = async () => {
   if (loading.value) return
   loading.value = true
   try {
+    // 現在後端也改用 users，直接送 user._id
+    const assignedDesignerParam = searchCriteria.assignedDesigner || ''
+
     const params = {
       page: tableOptions.page,
       itemsPerPage: tableOptions.itemsPerPage,
@@ -2652,7 +2655,7 @@ const fetchTableData = async () => {
     if (searchCriteria.productCategory) params.productCategory = searchCriteria.productCategory
     if (searchCriteria.productType) params.productType = searchCriteria.productType
     if (searchCriteria.status) params.status = searchCriteria.status
-    if (searchCriteria.assignedDesigner) params.assignedDesigner = searchCriteria.assignedDesigner
+    if (assignedDesignerParam) params.assignedDesigner = assignedDesignerParam
     if (searchCriteria.applicationDate?.length > 0) {
       const dates = Array.from(searchCriteria.applicationDate)
       const start = dates[0]
@@ -2676,6 +2679,11 @@ const fetchTableData = async () => {
     if (data.success) {
       tableItems.value = data.result.data
       totalItems.value = data.result.totalItems
+      // 診斷：抽樣輸出 assignedDesigner
+      // do nothing when console fails
+      try {
+        console.log('[MD-Manage] fetchTableData sample:', (tableItems.value || []).slice(0, 5).map(it => ({ id: it._id, no: it.designRequestNumber, assignedDesigner: it.assignedDesigner ? { _id: it.assignedDesigner._id, name: it.assignedDesigner.name, userId: it.assignedDesigner.userId } : null })))
+      } catch { /* noop */ }
     }
   } catch (error) {
     createSnackbar({ text: error?.response?.data?.message || '取得表格資料失敗', snackbarProps: { color: 'red-lighten-1' } })
@@ -2721,13 +2729,12 @@ const handleProductCategoryChange = () => {
 
 const fetchEmployees = async () => {
   try {
-    const { data } = await apiAuth.get('/employees/active')
+    // 以 users 為準，提供編輯對話框顯示的 label/value
+    const { data } = await apiAuth.get('/users/public/all')
     if (data.success) {
-      // 將員工資料轉換為 v-autocomplete 需要的格式
-      employees.value = data.result.map(employee => ({
-        label: `${employee.name} (${employee.employeeCode})`,
-        value: employee._id
-      }))
+      const users = (data.result?.data || []).slice().sort((a, b) => String(a?.userId ?? '').localeCompare(String(b?.userId ?? '')))
+      applicantUsers.value = users.map(u => ({ _id: u._id, name: u.name, userId: u.userId }))
+      employees.value = users.map(u => ({ label: `${u.name} (${u.userId})`, value: u._id }))
     }
   } catch {
     // 忽略錯誤
@@ -2736,25 +2743,24 @@ const fetchEmployees = async () => {
 
 const fetchMarketingDesigners = async () => {
   try {
-    const { data } = await apiAuth.get('/employees/marketing-design')
+    const { data } = await apiAuth.get('/permissions/users-by-role', { params: { permission: 'MARKETING_DESIGN_REQUEST_DESIGNER_TAG' } })
     if (data.success) {
-      // 將行銷美編人員資料轉換為 v-autocomplete 需要的格式
-      marketingDesigners.value = data.result.map(employee => ({
-        label: `${employee.name} (${employee.employeeCode})`,
-        value: employee._id,
-        ...employee // 保留原始資料以備其他用途
-      }))
+      const users = Array.isArray(data.result?.data) ? data.result.data.slice() : []
+      users.sort((a, b) => String(a?.userId ?? '').localeCompare(String(b?.userId ?? '')))
+      marketingDesigners.value = users.map(u => ({ _id: u._id, name: u.name, userId: u.userId }))
+      try { console.log('[MD-Manage] designers(users):', marketingDesigners.value) } catch { /* noop */ }
     }
   } catch {
-    // 忽略錯誤
+    marketingDesigners.value = []
   }
 }
 
 const customFilter = (item, queryText) => {
-  const textToSearch = queryText.toLowerCase()
-  const itemText = item.raw && item.raw.name && item.raw.employeeCode
-    ? `${item.raw.name} ${item.raw.employeeCode}`.toLowerCase()
-    : ''
+  const textToSearch = (queryText || '').toLowerCase()
+  const raw = item.raw || item
+  const itemText = raw && raw.name && (raw.userId || raw.employeeCode)
+    ? `${raw.name} ${raw.userId || raw.employeeCode}`.toLowerCase()
+    : raw && raw.name ? raw.name.toLowerCase() : ''
   return itemText.includes(textToSearch)
 }
 
@@ -2976,11 +2982,8 @@ const openEditDialog = async (item) => {
 
   // 處理申請人資料，轉換為 v-autocomplete 需要的格式
   if (processedItem.applicant && typeof processedItem.applicant === 'object') {
-    // 將申請人物件轉換為 { label, value } 格式
-    processedItem.applicant = {
-      label: `${processedItem.applicant.name} (${processedItem.applicant.employeeCode})`,
-      value: processedItem.applicant._id || processedItem.applicant.id
-    }
+    // v-autocomplete 使用 item-value/value 綁定 _id
+    processedItem.applicant = processedItem.applicant._id || processedItem.applicant.id
   }
 
   // 特殊處理：印刷相關類型
@@ -3186,29 +3189,27 @@ const updateAssignedDesigner = async (designRequestId, newDesignerId) => {
     })
 
     if (data.success) {
-      // 更新本地資料，包括處理人員和可能的狀態更新
-      if (data.result) {
-        currentItem.assignedDesigner = data.result.assignedDesigner
-        // 如果後端自動更新了狀態，也要同步更新本地狀態
-        if (data.result.status && data.result.status !== currentItem.status) {
-          currentItem.status = data.result.status
-          console.log('狀態已自動更新:', data.result.status)
-        }
+      try { console.log('[MD-Manage] updateAssignedDesigner resp:', { designRequestId, newDesignerId, result: data.result }) } catch { /* noop */ }
+      // 以後端回傳為優先；若未附上 assignedDesigner，採本地 fallback
+      let nextAssigned = null
+      if (newDesignerId === null) {
+        nextAssigned = null
+      } else if (data.result && data.result.assignedDesigner) {
+        nextAssigned = data.result.assignedDesigner
       } else {
-        // 如果沒有回傳完整資料，使用原有邏輯
-        if (newDesignerId === null) {
-          currentItem.assignedDesigner = null
-        } else {
-          const updatedDesigner = marketingDesigners.value.find(d => d.value === newDesignerId)
-          if (updatedDesigner) {
-            currentItem.assignedDesigner = {
-              _id: newDesignerId,
-              name: updatedDesigner.name
-            }
-          } else {
-            currentItem.assignedDesigner = null
-          }
+        const updatedDesigner = marketingDesigners.value.find(d => d._id === newDesignerId)
+        if (updatedDesigner) {
+          nextAssigned = { _id: updatedDesigner._id, name: updatedDesigner.name, userId: updatedDesigner.userId, employeeCode: updatedDesigner.employeeCode }
         }
+      }
+
+      currentItem.assignedDesigner = nextAssigned
+      try { console.log('[MD-Manage] updateAssignedDesigner applied:', { id: currentItem._id, assignedDesigner: currentItem.assignedDesigner }) } catch { /* noop */ }
+
+      // 同步可能的狀態更新
+      if (data.result && data.result.status && data.result.status !== currentItem.status) {
+        currentItem.status = data.result.status
+        console.log('狀態已自動更新:', data.result.status)
       }
 
       if (newDesignerId === null) {
@@ -3327,6 +3328,13 @@ const openViewDialog = async (item) => {
       processedItem[field] = new Date(processedItem[field])
     }
   })
+  if (processedItem.applicant && typeof processedItem.applicant === 'object') {
+    processedItem.applicant = {
+      name: processedItem.applicant.name,
+      userId: processedItem.applicant.userId,
+      _id: processedItem.applicant._id || processedItem.applicant.id
+    }
+  }
   Object.assign(viewFormData, processedItem)
   // 先取得 config，確保 productTypeConfig 有值
   await fetchViewProductTypeFields(item.productType)

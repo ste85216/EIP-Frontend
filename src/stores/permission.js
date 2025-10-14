@@ -79,7 +79,18 @@ export const usePermissionStore = defineStore('permission', () => {
       const { data } = await apiAuth.get('/permissions/permissions', { params: requestParams })
 
       if (data.success) {
-        return data.result.data || data.result
+        const list = data.result.data || data.result || []
+        // 以 _id 去重，避免 UI 元件報 duplicate id 警告
+        const seen = new Set()
+        const deduped = []
+        list.forEach(item => {
+          const id = item && item._id
+          if (!id) return
+          if (seen.has(id)) return
+          seen.add(id)
+          deduped.push(item)
+        })
+        return deduped
       }
       throw new Error(data.message || '獲取權限失敗')
     } catch (error) {
@@ -120,6 +131,21 @@ export const usePermissionStore = defineStore('permission', () => {
       console.error('更新權限失敗:', error)
       // 提取後端返回的具體錯誤訊息
       const errorMessage = error.response?.data?.message || error.message || '更新權限失敗'
+      throw new Error(errorMessage)
+    }
+  }
+
+  // 將指定權限套用到所有角色（批次）
+  const applyPermissionToAllRoles = async (permissionId) => {
+    try {
+      const { data } = await apiAuth.post(`/permissions/permissions/${permissionId}/apply-to-all-roles`)
+      if (data.success) {
+        return data.result
+      }
+      throw new Error(data.message || '批次套用權限失敗')
+    } catch (error) {
+      console.error('批次套用權限失敗:', error)
+      const errorMessage = error.response?.data?.message || error.message || '批次套用權限失敗'
       throw new Error(errorMessage)
     }
   }
@@ -317,7 +343,8 @@ export const usePermissionStore = defineStore('permission', () => {
     delete: '刪除',
     export: '匯出',
     import: '匯入',
-    manage: '管理'
+    manage: '管理',
+    tag: '標註'
   }
 
 
@@ -347,6 +374,7 @@ export const usePermissionStore = defineStore('permission', () => {
     createPermission,
     updatePermission,
     deletePermission,
+    applyPermissionToAllRoles,
 
     // 角色管理
     getAllRoles,

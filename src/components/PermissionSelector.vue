@@ -341,6 +341,16 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'marketingDesignRequest',
+    name: '行銷美編需求申請',
+    icon: 'mdi-form-select',
+    pagePermission: 'MARKETING_DESIGN_REQUEST_PAGE_READ',
+    features: [
+      { key: 'read', name: '查看需求申請', permission: 'MARKETING_DESIGN_REQUEST_APPLY_READ' },
+      { key: 'designerTag', name: '標註為處理人員', permission: 'MARKETING_DESIGN_REQUEST_DESIGNER_TAG' },
+    ]
+  },
+  {
     key: 'marketingAnalysis',
     name: '行銷費用分析',
     icon: 'mdi-chart-multiple',

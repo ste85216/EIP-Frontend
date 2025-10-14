@@ -893,12 +893,12 @@ const getDisplayRole = () => {
   const sortedRoles = userRbacRoles.value.sort((a, b) => {
     const levelA = a.role?.level || 0
     const levelB = b.role?.level || 0
-    
+
     // 先按 level 排序（降序）
     if (levelA !== levelB) {
       return levelB - levelA
     }
-    
+
     // 如果 level 相同，按角色名稱排序（升序）
     const nameA = a.role?.name || ''
     const nameB = b.role?.name || ''
@@ -987,6 +987,12 @@ const coreItems = [
     text: '專案與任務管理',
     icon: 'mdi-chart-box-outline',
     permission: 'PROJECT_AND_TASK_MANAGEMENT_READ'
+  },
+  {
+    to: '/marketingDesignRequest',
+    text: '行銷美編需求申請',
+    icon: 'mdi-form-select',
+    permission: 'MARKETING_DESIGN_REQUEST_PAGE_READ'
   }
 ]
 

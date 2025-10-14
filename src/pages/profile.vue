@@ -119,14 +119,9 @@
                     cols="9"
                     sm="12"
                   >
-                    <v-text-field
-                      variant="text"
-                      density="compact"
-                      class="profile-text-field"
-                      hide-details
-                      readonly
-                      :model-value="user.name"
-                    />
+                    <div class="profile-text-field">
+                      {{ user.name }}
+                    </div>
                   </v-col>
                 </v-row>
               </v-col>
@@ -149,14 +144,9 @@
                     cols="9"
                     sm="12"
                   >
-                    <v-text-field
-                      variant="text"
-                      density="compact"
-                      class="profile-text-field"
-                      hide-details
-                      readonly
-                      :model-value="user.email"
-                    />
+                    <div class="profile-text-field">
+                      {{ user.email }}
+                    </div>
                   </v-col>
                 </v-row>
               </v-col>
@@ -179,14 +169,9 @@
                     cols="9"
                     sm="12"
                   >
-                    <v-text-field
-                      variant="text"
-                      density="compact"
-                      class="profile-text-field"
-                      hide-details
-                      readonly
-                      :model-value="user.isAdmin ? user.adminId : user.userId"
-                    />
+                    <div class="profile-text-field">
+                      {{ user.isAdmin ? user.adminId : user.userId }}
+                    </div>
                   </v-col>
                 </v-row>
               </v-col>
@@ -209,14 +194,9 @@
                     cols="9"
                     sm="12"
                   >
-                    <v-text-field
-                      variant="text"
-                      class="profile-text-field"
-                      density="compact"
-                      hide-details
-                      readonly
-                      :model-value="getDisplayRole()"
-                    />
+                    <div class="profile-text-field">
+                      {{ getDisplayRole() }}
+                    </div>
                   </v-col>
                 </v-row>
               </v-col>
@@ -618,6 +598,7 @@ onMounted(async () => {
 .profile-text-field {
   border: 1px solid #90A4AE;
   border-radius: 4px;
+  padding: 8px 16px;
 }
 
 .v-col-sm-12 {
