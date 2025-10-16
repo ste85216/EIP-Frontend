@@ -425,6 +425,7 @@
               placeholder="輸入任務描述..."
               :height="200"
               @update:model-value="updateDescription"
+              @blur="handleDescriptionBlur"
             />
           </div>
         </div>
@@ -760,6 +761,10 @@ const showUserMenu = ref(false)
 const hoveredUser = ref(null)
 const menuPosition = ref({ x: 0, y: 0 })
 
+// 詳情載入狀態與已載入任務ID
+const isLoadingDetails = ref(false)
+const lastLoadedTaskId = ref(null)
+
 // 計算屬性
 const drawerOpen = computed({
   get: () => props.modelValue,
@@ -853,13 +858,79 @@ const checkForNewComments = (newTask) => {
 
 // 關閉側邊欄
 const closeSidebar = () => {
+  // 關閉前沖刷一次未送出的描述
+  flushDescriptionSave()
   drawerOpen.value = false
+}
+
+// 取得單筆任務詳情（開啟側欄時才載入重資料）
+const fetchTaskDetails = async () => {
+  if (!drawerOpen.value || !props.task || !props.task._id) return
+  if (isLoadingDetails.value) return
+  if (lastLoadedTaskId.value === props.task._id) return
+
+  try {
+    isLoadingDetails.value = true
+    const { data } = await apiAuth.get(`/tasks/${props.task._id}`)
+    if (data.success && data.data) {
+      // 回填至父層，父層會同步更新選中任務與分類中的對應任務
+      emit('task-updated', data.data)
+      lastLoadedTaskId.value = props.task._id
+      // 直接以詳情回填描述（避免首次載入因限制只在 ID 變更時回填而空白）
+      if (!isSavingDescription.value) {
+        const incomingDesc = data.data.description || ''
+        if ((taskDescription.value || '') !== incomingDesc) {
+          taskDescription.value = incomingDesc
+        }
+      }
+    }
+  } catch (error) {
+    console.error('載入任務詳情失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '載入任務詳情失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isLoadingDetails.value = false
+  }
 }
 
 // 更新描述
 // 防抖動計時器
 let descriptionUpdateTimer = null
-let isInitializing = ref(false) // 新增初始化標記
+let isInitializing = ref(false) // 新增初始化標記（僅在任務 ID 變更時使用）
+const isSavingDescription = ref(false) // 本地保存期間避免被覆寫
+
+// 立即送出描述（用於失焦/關閉側欄時沖刷）
+const flushDescriptionSave = async () => {
+  if (!props.task || !props.task._id) return
+  if (isSavingDescription.value) return
+  if (descriptionUpdateTimer) {
+    clearTimeout(descriptionUpdateTimer)
+    descriptionUpdateTimer = null
+  }
+  try {
+    isSavingDescription.value = true
+    const { data } = await apiAuth.put(`/tasks/${props.task._id}`, {
+      description: taskDescription.value
+    })
+    if (data.success) {
+      emit('task-updated', data.data)
+    }
+  } catch (error) {
+    console.error('保存描述失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '保存描述失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isSavingDescription.value = false
+  }
+}
+
+const handleDescriptionBlur = () => {
+  flushDescriptionSave()
+}
 
 const updateDescription = async (newDescription) => {
   if (!props.task || !props.task._id) return
@@ -875,6 +946,7 @@ const updateDescription = async (newDescription) => {
   // 設定新的計時器，延遲 1 秒後保存
   descriptionUpdateTimer = setTimeout(async () => {
     try {
+      isSavingDescription.value = true
       const { data } = await apiAuth.put(`/tasks/${props.task._id}`, {
         description: newDescription
       })
@@ -893,6 +965,9 @@ const updateDescription = async (newDescription) => {
         text: error?.response?.data?.message || '更新描述失敗',
         snackbarProps: { color: 'red-lighten-1' }
       })
+    }
+    finally {
+      isSavingDescription.value = false
     }
   }, 1000) // 1 秒延遲
 }
@@ -1582,6 +1657,8 @@ watch(drawerOpen, (newValue) => {
     if (commentImageUploadRef.value) {
       commentImageUploadRef.value.clearImages()
     }
+    // 側欄關閉時再保險沖刷一次
+    flushDescriptionSave()
   } else {
     // 側邊欄開啟時，重置自動滾動狀態並滾動到底部
     shouldAutoScroll.value = true
@@ -1589,6 +1666,9 @@ watch(drawerOpen, (newValue) => {
     setTimeout(() => {
       scrollCommentsToBottom()
     }, 50)
+
+    // 開啟時載入單筆詳情（取得評論、附件等重資料）
+    fetchTaskDetails()
   }
 })
 
@@ -1615,10 +1695,18 @@ watch(() => props.task, (newTask, oldTask) => {
     editingAssignee.value = null
     editingDueDate.value = null
 
-    // 設置初始化標記，防止在設置描述時觸發更新
-    isInitializing.value = true
+    // 僅在任務 ID 變更時設置初始化標記
+    if (!oldTask || newTask._id !== oldTask._id) {
+      isInitializing.value = true
+    }
 
-    taskDescription.value = newTask.description || ''
+    // 僅在非本地保存期間且內容確實不同時，才回填描述，避免輸入時閃爍
+    // 僅在任務 ID 變更時回填描述，避免同一任務編輯期間被覆寫
+    if (!oldTask || newTask._id !== oldTask._id) {
+      if (!isSavingDescription.value) {
+        taskDescription.value = newTask.description || ''
+      }
+    }
     console.log('TaskSidebar 接收到的任務資料:', newTask)
 
     // 檢查是否有新評論
@@ -1631,11 +1719,20 @@ watch(() => props.task, (newTask, oldTask) => {
     }
 
     // 使用 nextTick 確保 DOM 更新完成後再取消初始化標記
-    nextTick(() => {
-      setTimeout(() => {
-        isInitializing.value = false
-      }, 100) // 稍微延遲，確保 RichTextEditor 完全初始化
-    })
+    if (!oldTask || newTask._id !== oldTask._id) {
+      nextTick(() => {
+        setTimeout(() => {
+          isInitializing.value = false
+        }, 100) // 稍微延遲，確保 RichTextEditor 完全初始化
+      })
+    }
+
+    // 若側欄已開啟且任務 ID 改變，重新載入詳情
+    if (drawerOpen.value && (!oldTask || newTask._id !== oldTask._id)) {
+      // 重置已載入標記，確保新任務會抓詳情
+      lastLoadedTaskId.value = null
+      fetchTaskDetails()
+    }
   }
 }, { immediate: true })
 
@@ -1651,6 +1748,8 @@ onUnmounted(() => {
   if (descriptionUpdateTimer) {
     clearTimeout(descriptionUpdateTimer)
   }
+  // 元件卸載時沖刷未送出的描述
+  flushDescriptionSave()
 })
 </script>
 

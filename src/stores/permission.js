@@ -150,6 +150,21 @@ export const usePermissionStore = defineStore('permission', () => {
     }
   }
 
+  // 將指定權限套用到特定角色
+  const applyPermissionToRole = async (roleId, permissionId) => {
+    try {
+      const { data } = await apiAuth.post(`/permissions/roles/${roleId}/permissions/${permissionId}`)
+      if (data.success) {
+        return data.result
+      }
+      throw new Error(data.message || '套用權限失敗')
+    } catch (error) {
+      console.error('套用權限失敗:', error)
+      const errorMessage = error.response?.data?.message || error.message || '套用權限失敗'
+      throw new Error(errorMessage)
+    }
+  }
+
   // 刪除權限
   const deletePermission = async (id) => {
     try {
@@ -375,6 +390,7 @@ export const usePermissionStore = defineStore('permission', () => {
     updatePermission,
     deletePermission,
     applyPermissionToAllRoles,
+    applyPermissionToRole,
 
     // 角色管理
     getAllRoles,

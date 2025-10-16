@@ -7,7 +7,7 @@
   >
     <v-card class="rounded-lg">
       <div class="d-flex align-center justify-space-between px-6 py-4 bg-teal-darken-1 text-white">
-        <div class="d-flex align-center">
+        <div class="d-flex align-center card-title">
           <v-icon class="me-2">
             mdi-shield-account
           </v-icon>
@@ -348,6 +348,15 @@ const permissionModules = ref([
     features: [
       { key: 'read', name: '查看需求申請', permission: 'MARKETING_DESIGN_REQUEST_APPLY_READ' },
       { key: 'designerTag', name: '標註為處理人員', permission: 'MARKETING_DESIGN_REQUEST_DESIGNER_TAG' },
+    ]
+  },
+  {
+    key: 'B2CStatistics',
+    name: '直客詢問統計表',
+    icon: 'mdi-account-question',
+    pagePermission: 'B2C_STATISTICS_READ',
+    features: [
+      { key: 'read', name: '查看直客詢問', permission: 'CUSTOMER_INQUIRY_STATISTICS_READ' },
     ]
   },
   {

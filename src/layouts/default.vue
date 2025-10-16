@@ -172,6 +172,65 @@
             </v-list-item>
           </template>
 
+          <!-- 業務選單 -->
+          <v-divider
+            v-if="filteredBusinessItems.length > 0"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
+          />
+          <template
+            v-for="businessItem in filteredBusinessItems"
+            :key="businessItem.text"
+          >
+            <!-- 有子選單的項目 -->
+            <v-list-group
+              v-if="businessItem.children"
+              v-model="openedGroups"
+              :value="businessItem.text"
+              :persistent="true"
+              fluid
+            >
+              <template #activator="{ props }">
+                <v-list-item
+                  v-bind="props"
+                  color="grey-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ businessItem.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ businessItem.text }}</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <v-list-item
+                v-for="child in businessItem.children"
+                :key="child.to"
+                :to="child.to"
+                color="grey-darken-3"
+                base-color="green-darken-2"
+              >
+                <template #prepend>
+                  <v-icon>{{ child.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ child.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list-group>
+
+            <!-- 沒有子選單的項目 -->
+            <v-list-item
+              v-else
+              :to="businessItem.to"
+              color="grey-darken-3"
+              class="mt-2"
+            >
+              <template #prepend>
+                <v-icon>{{ businessItem.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ businessItem.text }}</v-list-item-title>
+            </v-list-item>
+          </template>
+
           <!-- 行銷管理選單 -->
           <v-divider
             v-if="filteredMarketingItems.length > 0"
@@ -524,6 +583,65 @@
                 <v-icon>{{ coreItem.icon }}</v-icon>
               </template>
               <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
+            </v-list-item>
+          </template>
+
+          <!-- 業務選單 -->
+          <v-divider
+            v-if="filteredBusinessItems.length > 0"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
+          />
+          <template
+            v-for="businessItem in filteredBusinessItems"
+            :key="businessItem.text"
+          >
+            <!-- 有子選單的項目 -->
+            <v-list-group
+              v-if="businessItem.children"
+              v-model="openedGroups"
+              :value="businessItem.text"
+              :persistent="true"
+              fluid
+            >
+              <template #activator="{ props }">
+                <v-list-item
+                  v-bind="props"
+                  color="grey-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ businessItem.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ businessItem.text }}</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <v-list-item
+                v-for="child in businessItem.children"
+                :key="child.to"
+                :to="child.to"
+                color="grey-darken-3"
+                base-color="green-darken-2"
+              >
+                <template #prepend>
+                  <v-icon>{{ child.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ child.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list-group>
+
+            <!-- 沒有子選單的項目 -->
+            <v-list-item
+              v-else
+              :to="businessItem.to"
+              color="grey-darken-3"
+              class="mt-2"
+            >
+              <template #prepend>
+                <v-icon>{{ businessItem.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ businessItem.text }}</v-list-item-title>
             </v-list-item>
           </template>
 
@@ -996,6 +1114,16 @@ const coreItems = [
   }
 ]
 
+// 業務選單
+const businessItems = [
+  {
+    to: '/B2CStatistics',
+    text: '直客詢問統計表',
+    icon: 'mdi-account-question',
+    permission: 'B2C_STATISTICS_READ'
+  }
+]
+
 // 行銷管理選單
 const marketingItems = [
   {
@@ -1155,6 +1283,15 @@ const filteredCoreItems = computed(() => {
   })
 })
 
+// 業務選單過濾
+const filteredBusinessItems = computed(() => {
+  return businessItems.filter(item => {
+    return Array.isArray(item.permission)
+      ? permissionStore.hasAnyPermission(item.permission)
+      : permissionStore.hasPermission(item.permission)
+  })
+})
+
 // 行銷管理選單過濾
 const filteredMarketingItems = computed(() => {
   return marketingItems.filter(item => {
@@ -1249,6 +1386,11 @@ const filteredSettingsItems = computed(() => {
 
 // 修改 watch 函數
 watch(() => route.path, (newPath) => {
+  // 業務相關頁面展開業務選單
+  if (newPath.includes('/B2CStatistics')) {
+    // 業務選單沒有子選單，所以不需要展開邏輯
+  }
+
   // 行銷相關頁面展開行銷費用管理
   if (
     newPath.includes('/marketing') &&

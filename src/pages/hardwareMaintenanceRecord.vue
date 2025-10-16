@@ -586,7 +586,7 @@
               <template #prepend-item>
                 <v-list-item
                   title="全選"
-                  color="deep-purple-darken-2"
+                  color="teal-darken-1"
                   prepend-icon="mdi-checkbox-multiple-marked"
                   :active="exportExcelDialog.hardwareCategories.length === categories.length"
                   @click="selectAllHardwareCategories"

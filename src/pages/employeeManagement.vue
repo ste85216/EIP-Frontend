@@ -1475,7 +1475,7 @@
                 <template #prepend-item>
                   <v-list-item
                     title="全選"
-                    color="deep-purple-darken-2"
+                    color="deep-orange-darken-2"
                     prepend-icon="mdi-checkbox-multiple-marked"
                     :active="exportDialog.employmentStatus.length === statusOptions.length"
                     @click="selectAllEmploymentStatus"

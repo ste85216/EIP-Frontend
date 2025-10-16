@@ -14,7 +14,7 @@
                 <v-card class="elevation-4 rounded-lg py-2 py-sm-7 px-0">
                   <div class="d-flex align-center px-6 px-sm-10 py-3">
                     <h3 class="me-4">
-                      直客詢問統計表管理
+                      直客詢問管理
                     </h3>
                     <v-spacer />
                     <v-btn

@@ -580,10 +580,10 @@
       @copy="handlePermissionCopy"
     />
 
-    <!-- 批次套用權限至所有角色對話框 -->
+    <!-- 批次套用權限至選定角色對話框 -->
     <v-dialog
       v-model="bulkApplyDialogOpen"
-      max-width="440"
+      max-width="480"
       :no-click-animation="bulkApplySubmitting"
     >
       <v-card class="rounded-lg">
@@ -595,7 +595,7 @@
           >
             mdi-shield-key
           </v-icon>
-          套用權限至所有角色
+          一鍵套用權限
           <v-spacer />
           <v-btn
             icon
@@ -613,22 +613,55 @@
           <div
             class="mb-6 text-teal-darken-2 font-weight-bold"
           >
-            * 系統將把所選權限套用到所有啟用中的角色。
+            * 選擇權限後，再選擇要套用的角色。
           </div>
-          <v-autocomplete
-            v-model="bulkApplySelectedPermission"
-            :items="permissionOptions"
-            item-title="name"
-            item-value="_id"
-            label="選擇權限（可搜尋，可多選）"
-            multiple
-            chips
-            closable-chips
-            variant="outlined"
-            density="compact"
-            clearable
-            :rules="[v => (v && v.length > 0) || '請選擇至少一個權限']"
-          />
+
+          <!-- 步驟1：選擇權限 -->
+          <div class="mb-4">
+            <v-autocomplete
+              v-model="bulkApplySelectedPermission"
+              :items="permissionOptions"
+              item-title="name"
+              item-value="_id"
+              label="選擇權限（可搜尋，可多選）"
+              multiple
+              chips
+              closable-chips
+              variant="outlined"
+              density="compact"
+              clearable
+              :rules="[v => (v && v.length > 0) || '請選擇至少一個權限']"
+            />
+          </div>
+
+          <!-- 步驟2：選擇角色 -->
+          <div>
+            <v-autocomplete
+              v-model="bulkApplySelectedRoles"
+              :items="roleOptions"
+              item-title="name"
+              item-value="_id"
+              label="選擇角色（可搜尋，可多選）"
+              multiple
+              chips
+              closable-chips
+              variant="outlined"
+              density="compact"
+              clearable
+              :rules="[v => (v && v.length > 0) || '請選擇至少一個角色']"
+            >
+              <template #prepend-item>
+                <v-list-item
+                  title="全選"
+                  color="teal-darken-1"
+                  prepend-icon="mdi-checkbox-multiple-marked"
+                  :active="bulkApplySelectedRoles.length === roleOptions.length"
+                  @click="selectAllRoles"
+                />
+                <v-divider class="mt-2" />
+              </template>
+            </v-autocomplete>
+          </div>
         </v-card-text>
         <v-card-actions class="px-6 pb-5">
           <v-spacer />
@@ -645,6 +678,7 @@
             variant="outlined"
             :size="buttonSize"
             :loading="bulkApplySubmitting"
+            :disabled="bulkApplySelectedPermission.length === 0 || bulkApplySelectedRoles.length === 0"
             @click="submitBulkApply"
           >
             套用
@@ -729,10 +763,11 @@ const roleForm = ref({
   level: 0
 })
 
-// 批次套用權限至所有角色對話框
+// 批次套用權限至選定角色對話框
 const bulkApplyDialogOpen = ref(false)
 const bulkApplySubmitting = ref(false)
 const bulkApplySelectedPermission = ref([])
+const bulkApplySelectedRoles = ref([])
 
 // 去重後的權限選項（避免重複 _id 造成 Vuetify multiple id 警告）
 const permissionOptions = computed(() => {
@@ -747,6 +782,17 @@ const permissionOptions = computed(() => {
   })
   return options
 })
+
+// 角色選項（用於批次套用）
+const roleOptions = computed(() => {
+  return roles.value
+    .filter(role => role.isActive !== false) // 只顯示啟用的角色
+    .map(role => ({
+      name: role.name,
+      _id: role._id
+    }))
+})
+
 
 // 表格標題
 const permissionHeaders = [
@@ -1085,27 +1131,44 @@ const handlePermissionCopy = async () => {
 // 批次套用：UI 與行為
 const openBulkApplyDialog = () => {
   bulkApplySelectedPermission.value = []
+  bulkApplySelectedRoles.value = []
   bulkApplyDialogOpen.value = true
+}
+
+// 全選角色
+const selectAllRoles = () => {
+  if (bulkApplySelectedRoles.value.length === roleOptions.value.length) {
+    bulkApplySelectedRoles.value = []
+  } else {
+    bulkApplySelectedRoles.value = roleOptions.value.map(role => role._id)
+  }
 }
 
 const closeBulkApplyDialog = () => {
   bulkApplyDialogOpen.value = false
   bulkApplySelectedPermission.value = []
+  bulkApplySelectedRoles.value = []
 }
 
 const submitBulkApply = async () => {
   if (!bulkApplySelectedPermission.value || bulkApplySelectedPermission.value.length === 0) return
+  if (!bulkApplySelectedRoles.value || bulkApplySelectedRoles.value.length === 0) return
+
   bulkApplySubmitting.value = true
   try {
     // 送出前確保所選清單去重
-    const uniqueSelected = Array.from(new Set(bulkApplySelectedPermission.value))
-    for (const permissionId of uniqueSelected) {
-      // 逐一套用每個選中的權限
-      // 後端端點本身具冪等性，已有者會被跳過
-      await permissionStore.applyPermissionToAllRoles(permissionId)
+    const uniquePermissions = Array.from(new Set(bulkApplySelectedPermission.value))
+    const uniqueRoles = Array.from(new Set(bulkApplySelectedRoles.value))
+
+    // 為每個選中的角色套用每個選中的權限
+    for (const roleId of uniqueRoles) {
+      for (const permissionId of uniquePermissions) {
+        await permissionStore.applyPermissionToRole(roleId, permissionId)
+      }
     }
+
     createSnackbar({
-      text: '已將選中權限套用至所有角色',
+      text: `已將 ${uniquePermissions.length} 個權限套用至 ${uniqueRoles.length} 個角色`,
       snackbarProps: { color: 'teal' }
     })
     closeBulkApplyDialog()
