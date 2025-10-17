@@ -19,12 +19,10 @@
       >
         <v-img
           src="/src/assets/image/Ys_favicon.png"
-          width="44"
+          :width="smAndUp ? 44 : 36"
           style="margin-left: 2px;"
         />
-        <span
-          style="font-size: 24px; font-weight: 600; margin-left: 6px; letter-spacing: 1.5px;"
-        >永信生活旅遊事業</span>
+        <span class="nav-title">永信生活旅遊事業</span>
       </router-link>
       <v-spacer />
       <!-- <v-icon
@@ -160,7 +158,43 @@
             v-for="coreItem in filteredCoreItems"
             :key="coreItem.text"
           >
+            <!-- 有子選單的項目 -->
+            <v-list-group
+              v-if="coreItem.children"
+              v-model="openedGroups"
+              :value="coreItem.text"
+              :persistent="true"
+              fluid
+            >
+              <template #activator="{ props }">
+                <v-list-item
+                  v-bind="props"
+                  color="grey-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ coreItem.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <v-list-item
+                v-for="child in coreItem.children"
+                :key="child.to"
+                :to="child.to"
+                color="grey-darken-3"
+                base-color="orange-darken-4"
+              >
+                <template #prepend>
+                  <v-icon>{{ child.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ child.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list-group>
+
+            <!-- 沒有子選單的項目 -->
             <v-list-item
+              v-else
               :to="coreItem.to"
               color="grey-darken-3"
               class="mt-2"
@@ -574,7 +608,43 @@
             v-for="coreItem in filteredCoreItems"
             :key="coreItem.text"
           >
+            <!-- 有子選單的項目 -->
+            <v-list-group
+              v-if="coreItem.children"
+              v-model="openedGroups"
+              :value="coreItem.text"
+              :persistent="true"
+              fluid
+            >
+              <template #activator="{ props }">
+                <v-list-item
+                  v-bind="props"
+                  color="grey-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ coreItem.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
+                </v-list-item>
+              </template>
+
+              <v-list-item
+                v-for="child in coreItem.children"
+                :key="child.to"
+                :to="child.to"
+                color="grey-darken-3"
+                base-color="blue-darken-2"
+              >
+                <template #prepend>
+                  <v-icon>{{ child.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ child.text }}</v-list-item-title>
+              </v-list-item>
+            </v-list-group>
+
+            <!-- 沒有子選單的項目 -->
             <v-list-item
+              v-else
               :to="coreItem.to"
               color="grey-darken-3"
               class="mt-2"
@@ -954,7 +1024,7 @@ import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
 import UserAvatar from '@/components/UserAvatar.vue'
 
-const { mdAndUp, xlAndUp, name: breakpoint } = useDisplay()
+const { smAndUp, mdAndUp, lgAndUp, name: breakpoint } = useDisplay()
 
 const drawer = ref(true)
 const mdDrawer = ref(false)
@@ -1107,10 +1177,17 @@ const coreItems = [
     permission: 'PROJECT_AND_TASK_MANAGEMENT_READ'
   },
   {
-    to: '/marketingDesignRequest',
-    text: '行銷美編需求申請',
-    icon: 'mdi-form-select',
-    permission: 'MARKETING_DESIGN_REQUEST_PAGE_READ'
+    text: '申請相關',
+    icon: 'mdi-file-document-outline',
+    permission: ['MARKETING_DESIGN_REQUEST_PAGE_READ'],
+    children: [
+      {
+        to: '/marketingDesignRequest',
+        text: '行銷美編需求申請',
+        icon: 'mdi-form-select',
+        permission: 'MARKETING_DESIGN_REQUEST_PAGE_READ'
+      }
+    ]
   }
 ]
 
@@ -1277,6 +1354,17 @@ const settingsItems = [
 // 核心功能選單過濾
 const filteredCoreItems = computed(() => {
   return coreItems.filter(item => {
+    // 有子項目：只要任一子項目可見，就顯示父項
+    if (item.children) {
+      item.children = item.children.filter(child => {
+        return Array.isArray(child.permission)
+          ? permissionStore.hasAnyPermission(child.permission)
+          : permissionStore.hasPermission(child.permission)
+      })
+      return item.children.length > 0
+    }
+
+    // 沒有子項目：檢查自身權限
     return Array.isArray(item.permission)
       ? permissionStore.hasAnyPermission(item.permission)
       : permissionStore.hasPermission(item.permission)
@@ -1386,6 +1474,13 @@ const filteredSettingsItems = computed(() => {
 
 // 修改 watch 函數
 watch(() => route.path, (newPath) => {
+  // 申請相關頁面展開申請相關選單
+  if (newPath.includes('/marketingDesignRequest')) {
+    if (!openedGroups.value.includes('申請相關')) {
+      openedGroups.value.push('申請相關')
+    }
+  }
+
   // 業務相關頁面展開業務選單
   if (newPath.includes('/B2CStatistics')) {
     // 業務選單沒有子選單，所以不需要展開邏輯
@@ -1432,11 +1527,11 @@ watch(() => route.path, (newPath) => {
 
 // 監聽螢幕尺寸變化
 watch(() => breakpoint.value, () => {
-  if (xlAndUp.value) {
-    // XL 以上，預設展開
+  if (lgAndUp.value) {
+    // LG 以上，預設展開
     rail.value = false
   } else if (mdAndUp.value) {
-    // SM 到 XL 之間，預設收合（只顯示圖示）
+    // MD 到 LG 之間，預設收合（只顯示圖示）
     rail.value = true
   }
 }, { immediate: true })
@@ -1455,10 +1550,10 @@ const toggleDrawer = () => {
 
 // 組件掛載時設置初始狀態
 onMounted(async () => {
-  if (xlAndUp.value) {
-    rail.value = false // XL 以上，預設展開
+  if (lgAndUp.value) {
+    rail.value = false // LG 以上，預設展開
   } else if (mdAndUp.value) {
-    rail.value = true // SM 到 XL 之間，預設收合
+    rail.value = true // MD 到 LG 之間，預設收合
   }
 
   // 載入用戶 RBAC 角色
@@ -1501,6 +1596,22 @@ watch(() => user.avatar, (newAvatar) => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/_rwd' as *;
+
+.nav-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-left: 4px;
+  letter-spacing: 1px;
+  color: #333;
+  @include sm {
+    margin-left: 6px;
+    font-size: 24px;
+    letter-spacing: 1.5px;
+  }
+
+}
+
 .card-bg {
   background-size: cover;
   transition: opacity 0.3s ease;

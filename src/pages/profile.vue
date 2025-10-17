@@ -60,7 +60,8 @@
               <v-row>
                 <v-col>
                   <v-btn
-                    v-tooltip:top="mdAndUp ? '變更背景圖片' : ''"
+                    v-if="mdAndUp"
+                    v-tooltip:top="'變更背景圖片'"
                     icon
                     color="blue-grey-darken-2"
                     size="32"
@@ -73,7 +74,33 @@
                     </v-icon>
                   </v-btn>
                   <v-btn
-                    v-tooltip:top="mdAndUp ? '修改密碼' : ''"
+                    v-else
+                    icon
+                    color="blue-grey-darken-2"
+                    size="32"
+                    class="me-4"
+                    elevation="2"
+                    @click="showBackgroundDialog = true"
+                  >
+                    <v-icon size="18">
+                      mdi-image
+                    </v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-if="mdAndUp"
+                    v-tooltip:top="'修改密碼'"
+                    icon
+                    color="light-blue-darken-3"
+                    size="32"
+                    elevation="2"
+                    @click="showPasswordDialog = true"
+                  >
+                    <v-icon size="18">
+                      mdi-pencil
+                    </v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-else
                     icon
                     color="light-blue-darken-3"
                     size="32"
@@ -161,7 +188,7 @@
                   <v-col
                     cols="3"
                     sm="12"
-                    class="align-self-center py-0"
+                    class="align-self-center py-0 pe-0 pe-sm-2"
                   >
                     用戶編號 :
                   </v-col>

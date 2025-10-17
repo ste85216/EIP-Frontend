@@ -2,32 +2,33 @@
 <template>
   <v-container max-width="2400">
     <!-- 頁面標題和功能按鈕區 -->
-    <v-row class="pt-md-6 px-4">
+    <v-row class="pt-md-6 px-0 px-md-4">
       <v-col cols="12">
-        <v-card class="elevation-4 rounded-lg py-7 px-0">
-          <div class="d-flex align-center px-7">
-            <h3 class="me-4">
+        <v-card class="elevation-4 rounded-lg pt-6 py-md-7 px-0">
+          <div class="d-flex align-center px-4 px-sm-6">
+            <h3>
               行銷美編需求申請
             </h3>
             <v-spacer />
             <!-- 移除員工登入相關 UI -->
           </div>
-          <v-divider class="mt-5 mb-6" />
+          <v-divider class="mt-5 mb-1 mb-sm-3" />
 
           <!-- 搜尋條件區塊 -->
-          <v-card-text class="pt-4 px-9 pb-2">
+          <v-card-text class="pt-4 px-6 px-sm-7 px-md-9 pb-2">
             <v-row class="mb-2">
               <!-- 申請日期 -->
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex  flex-column">
                   <span class="text-label">申請日期 :</span>
                   <v-date-input
                     v-model="searchCriteria.applicationDate"
-                    class="ms-4"
                     variant="outlined"
                     density="compact"
                     prepend-icon
@@ -45,13 +46,14 @@
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">申請人 :</span>
                   <v-autocomplete
                     v-model="searchCriteria.applicant"
-                    class="ms-4"
                     :items="employees"
                     :item-title="item => item && item.name && item.userId ? `${item.name} (${item.userId})` : item && item.name ? item.name : ''"
                     item-value="_id"
@@ -70,13 +72,14 @@
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">申請類型 (大) :</span>
                   <v-select
                     v-model="searchCriteria.productCategory"
-                    class="ms-4"
                     :items="productCategoryOptions"
                     item-title="label"
                     item-value="value"
@@ -95,13 +98,14 @@
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">申請類型 :</span>
                   <v-select
                     v-model="searchCriteria.productType"
-                    class="ms-4"
                     :items="filteredProductTypeOptions"
                     item-title="label"
                     item-value="value"
@@ -119,13 +123,14 @@
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">狀態 :</span>
                   <v-select
                     v-model="searchCriteria.status"
-                    class="ms-4"
                     :items="[
                       { value: 'pending', text: '待處理' },
                       { value: 'in_progress', text: '處理中' },
@@ -148,13 +153,14 @@
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">處理人員 :</span>
                   <v-autocomplete
                     v-model="searchCriteria.assignedDesigner"
-                    class="ms-4"
                     :items="marketingDesigners"
                     :item-title="item => item && item.name && item.userId ? `${item.name} (${item.userId})` : item && item.name ? item.name : ''"
                     item-value="_id"
@@ -168,17 +174,22 @@
                   />
                 </div>
               </v-col>
-              <v-col />
+              <v-col
+                lg="10"
+                class="d-none d-md-block"
+              />
               <!-- 搜尋按鈕 -->
               <v-col
                 cols="12"
-                sm="6"
-                md="2"
+                md="8"
+                lg="2"
               >
-                <v-row class="d-flex justify-end">
+                <v-row class="d-sm-flex justify-sm-end">
                   <v-col
                     cols="8"
-                    class="ps-0"
+                    sm="4"
+                    lg="8"
+                    class="ps-1 pe-0"
                   >
                     <v-btn
                       color="cyan-darken-2"
@@ -192,8 +203,10 @@
                     </v-btn>
                   </v-col>
                   <v-col
-                    cols="3"
-                    class="ps-0"
+                    cols="4"
+                    sm="2"
+                    lg="4"
+                    class="pe-1"
                   >
                     <v-btn
                       color="grey"
@@ -209,7 +222,7 @@
               </v-col>
             </v-row>
           </v-card-text>
-          <v-divider class="my-2" />
+          <v-divider class="my-0" />
 
           <!-- 功能按鈕和快速搜尋區 -->
           <v-row class="px-1 px-md-7 mt-1 bg-white">
@@ -217,7 +230,7 @@
               cols="12"
               class="ps-4 pb-sm-4"
             >
-              <v-row class="d-flex align-center ps-1 my-1">
+              <v-row class="d-flex align-center px-5 px-md-2">
                 <v-btn
                   color="teal-darken-2"
                   prepend-icon="mdi-plus"
@@ -228,9 +241,17 @@
                   新增申請
                 </v-btn>
                 <v-spacer />
-                <v-col cols="2">
+                <v-col
+                  cols="7"
+                  sm="6"
+                  md="5"
+                  lg="3"
+                  xl="2"
+                  class="pe-1 my-1"
+                >
                   <div class="d-flex align-center">
                     <v-icon
+                      v-if="smAndUp"
                       v-tooltip:start="'可搜尋申請編號、申請詳細資訊'"
                       icon="mdi-information"
                       size="small"
@@ -255,7 +276,7 @@
           </v-row>
 
           <!-- 表格區塊 -->
-          <v-card-text class="px-6">
+          <v-card-text class="px-md-7">
             <v-data-table-server
               v-model:items-per-page="tableOptions.itemsPerPage"
               v-model:page="tableOptions.page"
@@ -272,7 +293,12 @@
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
-                  <td>{{ item.designRequestNumber }}</td>
+                  <!-- 申請編號 -->
+                  <td v-if="mdAndUp">
+                    {{ item.designRequestNumber }}
+                  </td>
+
+                  <!-- 申請日期 -->
                   <td>
                     <div v-if="item.applicationDate">
                       <div>{{ formatDate(item.applicationDate) }}</div>
@@ -286,9 +312,17 @@
                       </div>
                     </div>
                   </td>
+
+                  <!-- 申請人 -->
                   <td>{{ item.applicant?.name }} ({{ item.applicant?.userId || 'N/A' }})</td>
-                  <td>{{ getProductTypeText(item.productType, item) }}</td>
-                  <td>
+
+                  <!-- 申請類型 -->
+                  <td v-if="smAndUp">
+                    {{ getProductTypeText(item.productType, item) }}
+                  </td>
+
+                  <!-- 狀態 -->
+                  <td v-if="smAndUp">
                     <v-chip
                       :color="getStatusColor(item.status)"
                       size="small"
@@ -298,7 +332,9 @@
                       {{ getStatusText(item.status) }}
                     </v-chip>
                   </td>
-                  <td>
+
+                  <!-- 處理人員 -->
+                  <td v-if="mdAndUp">
                     <v-chip
                       v-if="item.assignedDesigner?.name"
                       color="blue-darken-1"
@@ -318,7 +354,9 @@
                       尚未指派
                     </v-chip>
                   </td>
-                  <td>
+
+                  <!-- 部門備註 -->
+                  <td v-if="mdAndUp">
                     <div
                       v-if="item.departmentNote"
                       class="department-note-display"
@@ -335,6 +373,8 @@
                       <span class="text-grey-lighten-1">( 無 )</span>
                     </div>
                   </td>
+
+                  <!-- 查看 -->
                   <td class="text-center">
                     <v-btn
                       icon
@@ -343,7 +383,7 @@
                       color="light-blue-darken-2"
                       @click="openDialog(item)"
                     >
-                      <v-icon>mdi-eye</v-icon>
+                      <v-icon>mdi-book-open-variant-outline</v-icon>
                     </v-btn>
                   </td>
                 </tr>
@@ -373,9 +413,12 @@
             icon
             variant="text"
             color="white"
+            :size="smAndUp ? '40' : '36'"
             @click="closeDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '24' : '20'">
+              mdi-close
+            </v-icon>
           </v-btn>
         </v-card-title>
 
@@ -933,6 +976,7 @@
           <v-btn
             variant="outlined"
             color="grey"
+            :size="smAndUp ? 'default' : 'small'"
             @click="closeDialog"
           >
             關閉
@@ -959,14 +1003,17 @@
           <v-spacer />
           <v-btn
             icon
+            :size="smAndUp ? '40' : '36'"
             variant="text"
             @click="closeDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '24' : '20'">
+              mdi-close
+            </v-icon>
           </v-btn>
         </v-card-title>
 
-        <v-card-text class="px-6 py-7">
+        <v-card-text class="px-4 px-sm-6  py-4 py-sm-7">
           <v-form
             ref="form"
             v-model="formValid"
@@ -979,7 +1026,9 @@
               >
                 <v-row>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="4"
+                    md="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -988,7 +1037,9 @@
                     />
                   </v-col>
                   <v-col
-                    cols="2"
+                    cols="6"
+                    sm="4"
+                    md="2"
                     class="d-flex align-center justify-center text-teal-darken-2"
                   >
                     <v-icon
@@ -999,7 +1050,9 @@
                     </v-icon> 基本資訊
                   </v-col>
                   <v-col
-                    cols="5"
+                    cols="3"
+                    sm="4"
+                    md="5"
                     class="d-flex align-center justify-center"
                   >
                     <v-divider
@@ -1040,7 +1093,9 @@
                 >
                   <v-row>
                     <v-col
-                      cols="5"
+                      cols="3"
+                      sm="4"
+                      md="5"
                       class="d-flex align-center justify-center"
                     >
                       <v-divider
@@ -1049,7 +1104,9 @@
                       />
                     </v-col>
                     <v-col
-                      cols="2"
+                      cols="6"
+                      sm="4"
+                      md="2"
                       class="d-flex align-center justify-center text-teal-darken-2"
                     >
                       <v-icon
@@ -1060,7 +1117,9 @@
                       </v-icon> 申請資訊
                     </v-col>
                     <v-col
-                      cols="5"
+                      cols="3"
+                      sm="4"
+                      md="5"
                       class="d-flex align-center justify-center"
                     >
                       <v-divider
@@ -1073,7 +1132,10 @@
 
                 <!-- 印刷相關特殊處理 -->
                 <template v-if="formData.productType === 'printing'">
-                  <v-col cols="12">
+                  <v-col
+                    cols="12"
+                    class="pb-0"
+                  >
                     <v-card class="mb-4 printing-checkbox-card elevation-0">
                       <v-card-text class="py-4">
                         <div class="card-title text-teal-darken-2 mb-3">
@@ -1088,9 +1150,9 @@
                           <v-col
                             v-for="subType in productTypeConfig?.subTypes"
                             :key="subType.name"
-                            cols="12"
-                            sm="6"
+                            cols="6"
                             md="3"
+                            class="py-0 py-sm-2"
                           >
                             <v-checkbox
                               v-model="formData.printingTypes[subType.name]"
@@ -1297,15 +1359,15 @@
                       />
                       <div
                         v-if="field.illustrations && field.illustrations.length"
-                        class="d-flex flex-wrap mt-2"
-                        style="gap: 16px;"
+                        class="mt-2 text-center"
+                        style="gap: 16px; overflow-x: auto; padding-bottom: 8px;"
                       >
                         <img
                           v-for="(img, idx) in field.illustrations"
                           :key="img"
                           :src="basePath + img.replace(/^\//, '')"
                           :alt="field.label + ' 示意圖' + (idx+1)"
-                          style="max-width: 560px; border-radius: 8px;"
+                          style="max-width: 550px; min-width: 280px; border-radius: 8px; flex-shrink: 0;"
                         >
                       </div>
                     </template>
@@ -1331,15 +1393,15 @@
                       />
                       <div
                         v-if="field.illustrations && field.illustrations.length"
-                        class="d-flex flex-wrap mt-2"
-                        style="gap: 16px;"
+                        class="mt-2 text-center"
+                        style="gap: 16px; overflow-x: auto; padding-bottom: 8px;"
                       >
                         <img
                           v-for="(img, idx) in field.illustrations"
                           :key="img"
                           :src="basePath + img.replace(/^\//, '')"
                           :alt="field.label + ' 示意圖' + (idx+1)"
-                          style="max-width: 560px; border-radius: 8px;"
+                          style="max-width: 550px; min-width: 280px; border-radius: 8px; flex-shrink: 0;"
                         >
                       </div>
                     </template>
@@ -1362,7 +1424,7 @@
                           "
                         />
                         <div
-                          class="d-flex flex-wrap mt-2"
+                          class="mt-2 overflow-x-auto text-center"
                           style="gap: 16px;"
                         >
                           <img
@@ -1370,7 +1432,7 @@
                             :key="img"
                             :src="basePath + img.replace(/^\//, '')"
                             :alt="field.label + ' 示意圖' + (idx+1)"
-                            style="max-width: 560px; border-radius: 8px;"
+                            style="max-width: 550px; border-radius: 8px;"
                           >
                         </div>
                       </div>
@@ -1733,7 +1795,9 @@
                 >
                   <v-row>
                     <v-col
-                      cols="5"
+                      cols="3"
+                      sm="4"
+                      md="5"
                       class="d-flex align-center justify-center"
                     >
                       <v-divider
@@ -1742,7 +1806,9 @@
                       />
                     </v-col>
                     <v-col
-                      cols="2"
+                      cols="6"
+                      sm="4"
+                      md="2"
                       class="d-flex align-center justify-center text-orange-darken-2"
                     >
                       <v-icon
@@ -1753,7 +1819,9 @@
                       </v-icon> 注意事項
                     </v-col>
                     <v-col
-                      cols="5"
+                      cols="3"
+                      sm="4"
+                      md="5"
                       class="d-flex align-center justify-center"
                     >
                       <v-divider
@@ -1782,7 +1850,7 @@
                       color="orange-darken-2"
                       class="me-2"
                     />
-                    <span class="text-body-2 text-grey-darken-1">{{ notice }}</span>
+                    <span class="notice-text text-grey-darken-1">{{ notice }}</span>
                   </div>
                 </v-card-text>
               </v-card>
@@ -1795,6 +1863,7 @@
           <v-btn
             variant="outlined"
             color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
             @click="closeDialog"
           >
             取消
@@ -1803,6 +1872,7 @@
             color="teal-darken-1"
             variant="outlined"
             class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
             :loading="submitting"
             @click="confirmSubmit"
           >
@@ -1885,6 +1955,7 @@ import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
 import { debounce } from 'lodash'
+import { useDisplay } from 'vuetify'
 // import EmployeeLogin from '@/components/EmployeeLogin.vue' // 移除員工登入組件
 
 // 頁面定義
@@ -1899,6 +1970,7 @@ definePage({
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 
+const { smAndUp, mdAndUp } = useDisplay()
 // 移除員工登入相關變數
 
 // 表格相關
@@ -1912,16 +1984,26 @@ const tableOptions = reactive({
 })
 
 // 表格欄位定義
-const tableHeaders = [
-  { title: '申請編號', key: 'designRequestNumber', sortable: true },
-  { title: '申請日期', key: 'applicationDate', sortable: true },
-  { title: '申請人', key: 'applicant.name', sortable: false },
-  { title: '申請類型', key: 'productType', sortable: false },
-  { title: '狀態', key: 'status', sortable: true },
-  { title: '處理人員', key: 'assignedDesigner.name', sortable: false },
-  { title: '部門備註', key: 'departmentNote', width: 300, align: 'center', sortable: false },
-  { title: '查看', key: 'actions', align: 'center', sortable: false }
+const allHeaders = [
+  { title: '申請編號', key: 'designRequestNumber', sortable: true, show: 'md' },
+  { title: '申請日期', key: 'applicationDate', sortable: true, show: 'all' },
+  { title: '申請人', key: 'applicant.name', sortable: false, show: 'all' },
+  { title: '申請類型', key: 'productType', sortable: false, show: 'sm' },
+  { title: '狀態', key: 'status', sortable: true, show: 'sm' },
+  { title: '處理人員', key: 'assignedDesigner.name', sortable: false, show: 'md' },
+  { title: '部門備註', key: 'departmentNote', width: 300, align: 'center', sortable: false, show: 'md' },
+  { title: '查看', key: 'actions', align: 'center', sortable: false, show: 'all' }
 ]
+
+// 計算屬性：根據螢幕大小過濾欄位
+const tableHeaders = computed(() => {
+  return allHeaders.filter(header => {
+    if (header.show === 'all') return true
+    if (header.show === 'sm' && smAndUp.value) return true
+    if (header.show === 'md' && mdAndUp.value) return true
+    return false
+  })
+})
 
 // 對話框相關
 const dialog = reactive({
@@ -2818,6 +2900,8 @@ const getPrintingTypeText = (printingTypes) => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/_rwd' as *;
+
 :deep(.v-data-table) {
   thead {
     height: 48px;
@@ -2846,12 +2930,38 @@ const getPrintingTypeText = (printingTypes) => {
   background-color: #fffaf0;
 }
 
+:deep(.v-field :not(.v-textarea .v-field)) {
+  .v-field__input {
+    font-size: 13px;
+    height: 36px !important;
+    padding-top: 4px !important;
+  }
+
+  .v-field__field {
+    height: 36px !important;
+  }
+  @include sm {
+    .v-field__input {
+      height: 40px !important;
+      padding-top: 8px !important;
+      font-size: 14px;
+    }
+    .v-field__field {
+      height: 40px !important;
+    }
+  }
+}
+
 /* 搜尋區域樣式 */
 .text-label {
   color: #455a64;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
+  margin-bottom: 8px;
+  @include sm {
+    font-size: 14px;
+  }
 }
 
 /* :deep(.v-field) {
@@ -2875,7 +2985,7 @@ const getPrintingTypeText = (printingTypes) => {
 }
 
 /* 內容區域白色背景 */
-.info-item-card .text-body-2 {
+.info-item-card {
   background: white;
   padding: 8px 12px;
   border-radius: 6px;
@@ -2910,6 +3020,25 @@ const getPrintingTypeText = (printingTypes) => {
   margin-top: 4px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   min-height: 38px;
+}
+
+.v-checkbox  {
+  color: #666;
+  :deep(.v-label) {
+    font-size: 14px !important;
+    color: #333;
+    @include sm {
+      font-size: 15px !important;
+    }
+  }
+}
+
+.notice-text {
+  font-size: 12px;
+  color: #455a64;
+  @include sm {
+    font-size: 14px !important;
+  }
 }
 
 /* 確認送出對話框樣式 */
