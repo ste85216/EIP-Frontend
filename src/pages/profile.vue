@@ -30,7 +30,10 @@
                 >
                   {{ getDisplayRole() }}
                 </div>
-                <v-row class="justify-center">
+                <v-row
+                  v-if="isLgmUp"
+                  class="justify-center"
+                >
                   <v-col class="py-3">
                     <FileUploadButton />
                   </v-col>
@@ -58,7 +61,11 @@
 
             <div>
               <v-row>
-                <v-col>
+                <v-col class="d-flex justify-center">
+                  <!-- 更換大頭貼按鈕 - 只在 1500px 以下顯示 -->
+                  <FileUploadButton v-if="!isLgmUp" />
+
+                  <!-- 更換背景圖片按鈕 -->
                   <v-btn
                     v-if="mdAndUp"
                     v-tooltip:top="'變更背景圖片'"
@@ -86,6 +93,8 @@
                       mdi-image
                     </v-icon>
                   </v-btn>
+
+                  <!-- 修改密碼按鈕 -->
                   <v-btn
                     v-if="mdAndUp"
                     v-tooltip:top="'修改密碼'"

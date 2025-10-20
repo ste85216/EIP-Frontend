@@ -15,7 +15,7 @@
           <v-divider class="mt-5 mb-1 mb-sm-3" />
 
           <!-- 搜尋條件區塊 -->
-          <v-card-text class="pt-4 px-6 px-sm-7 px-md-9 pb-2">
+          <v-card-text class="pt-4 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
             <v-row class="mb-2">
               <!-- 申請日期 -->
               <v-col
@@ -206,7 +206,7 @@
                     cols="4"
                     sm="2"
                     lg="4"
-                    class="pe-1"
+                    class="pe-2"
                   >
                     <v-btn
                       color="grey"
@@ -225,7 +225,7 @@
           <v-divider class="my-0" />
 
           <!-- 功能按鈕和快速搜尋區 -->
-          <v-row class="px-1 px-md-7 mt-1 bg-white">
+          <v-row class="px-1 px-sm-3 px-md-7 mt-1 bg-white">
             <v-col
               cols="12"
               class="ps-4 pb-sm-4"
@@ -276,7 +276,7 @@
           </v-row>
 
           <!-- 表格區塊 -->
-          <v-card-text class="px-md-7">
+          <v-card-text class="px-sm-6 px-md-7">
             <v-data-table-server
               v-model:items-per-page="tableOptions.itemsPerPage"
               v-model:page="tableOptions.page"

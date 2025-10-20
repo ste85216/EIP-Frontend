@@ -2,7 +2,7 @@
 <template>
   <v-container max-width="2400">
     <!-- 搜尋條件區塊 -->
-    <v-row class="pt-md-5 px-4">
+    <v-row class="pt-md-5 px-lg-0 px-xxl-6">
       <v-col cols="12">
         <v-row>
           <v-col cols="12">
@@ -11,19 +11,24 @@
                 cols="12"
                 class="mt-1 px-lg-6 px-xl-4 px-xxl-2"
               >
-                <v-card class="elevation-4 rounded-lg py-7 px-0">
-                  <div class="d-flex align-center px-7">
+                <v-card class="elevation-4 rounded-lg py-3 py-sm-7 px-0">
+                  <div class="d-flex align-center pt-2 pt-sm-0 px-4 px-sm-7">
                     <h3 class="me-4">
                       直客詢問統計表
                     </h3>
-                    <v-spacer />
                   </div>
                   <v-divider class="mt-5 mb-6" />
-                  <v-card-text class="pt-4 px-9">
+                  <v-card-text class="pt-0 pt-lg-3 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
                     <v-row class="mb-2">
                       <!-- 來源選擇 -->
-                      <v-col cols="2">
-                        <div class="d-flex align-center">
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="px-1 pe-sm-2 py-1"
+                      >
+                        <div class="d-flex flex-column">
                           <span class="text-label">來源 :</span>
                           <v-select
                             v-model="searchCriteria.source"
@@ -35,18 +40,23 @@
                             placeholder="請選擇來源"
                             hide-details
                             clearable
-                            class="ms-4"
+                            :disabled="false"
                           />
                         </div>
                       </v-col>
 
                       <!-- 業務選擇 -->
-                      <v-col cols="2">
-                        <div class="d-flex align-center">
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="px-1 pe-sm-2 py-1"
+                      >
+                        <div class="d-flex flex-column">
                           <span class="text-label">業務 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.salesPerson"
-                            class="ms-4"
                             :items="searchSalesPersons"
                             :item-title="item => {
                               if (!item) return '';
@@ -59,6 +69,7 @@
                             placeholder="請選擇業務"
                             hide-details
                             clearable
+                            :disabled="false"
                             @update:model-value="handleSalesPersonChange"
                           />
                         </div>
@@ -66,14 +77,16 @@
 
                       <!-- 日期區間 -->
                       <v-col
-                        cols="2"
-                        class="pe-1"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="px-1 pe-sm-2 py-1"
                       >
-                        <div class="d-flex align-center">
+                        <div class="d-flex flex-column">
                           <span class="text-label">日期 :</span>
                           <v-date-input
                             v-model="searchCriteria.dateRange"
-                            class="ms-4"
                             variant="outlined"
                             density="compact"
                             prepend-icon
@@ -83,35 +96,47 @@
                             multiple="range"
                             :cancel-text="'取消'"
                             :ok-text="'確認'"
+                            :disabled="false"
                             @update:model-value="handleDateRangeChange"
                           />
                         </div>
                       </v-col>
 
                       <!-- 地區 -->
-                      <v-col cols="2">
-                        <div class="d-flex align-center">
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="px-1 pe-sm-2 py-1"
+                      >
+                        <div class="d-flex flex-column">
                           <span class="text-label">地區 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.inquiryPlace"
-                            class="ms-4"
                             :items="placeOptions"
                             variant="outlined"
                             density="compact"
                             clearable
                             placeholder="請選擇地區"
                             hide-details
+                            :disabled="false"
                           />
                         </div>
                       </v-col>
 
                       <!-- 詢問結果 -->
-                      <v-col cols="2">
-                        <div class="d-flex align-center">
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="px-1 pe-sm-2 py-1"
+                      >
+                        <div class="d-flex flex-column">
                           <span class="text-label">結果 :</span>
                           <v-select
                             v-model="searchCriteria.inquiryResult"
-                            class="ms-4"
                             :items="inquiryResultOptions"
                             item-title="text"
                             item-value="value"
@@ -120,19 +145,30 @@
                             clearable
                             placeholder="請選擇結果"
                             hide-details
+                            :disabled="false"
                           />
                         </div>
                       </v-col>
-                      <v-col cols="2">
-                        <v-row class="d-flex justify-end">
+                      <!-- 搜尋按鈕 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="pe-sm-4 d-flex"
+                      >
+                        <v-row>
                           <v-col
                             cols="8"
-                            class="ps-0"
+                            sm="8"
+                            lg="8"
+                            class="ps-1 pe-0 pb-2 d-flex align-end"
                           >
                             <v-btn
                               color="cyan-darken-2"
                               prepend-icon="mdi-magnify"
                               :loading="tableLoading"
+                              :disabled="false"
                               block
                               @click="performSearch"
                             >
@@ -140,13 +176,16 @@
                             </v-btn>
                           </v-col>
                           <v-col
-                            cols="3"
-                            class="ps-0"
+                            cols="4"
+                            sm="4"
+                            lg="4"
+                            class="pe-1 pb-2 d-flex align-end"
                           >
                             <v-btn
                               color="grey"
                               width="40"
                               block
+                              :disabled="false"
                               @click="resetSearch"
                             >
                               <v-icon>mdi-refresh</v-icon>
@@ -156,47 +195,58 @@
                       </v-col>
                     </v-row>
                   </v-card-text>
-                  <v-divider class="my-2" />
-                  <v-row class="px-1 px-md-7 mt-1 bg-white">
-                    <!-- 標題和功能按鈕區 -->
+                  <v-divider class="my-0 my-lg-3" />
+
+                  <!-- 功能按鈕和快速搜尋區 -->
+                  <v-row class="px-1 px-sm-3 px-md-7 mt-1 bg-white">
                     <v-col
                       cols="12"
                       class="ps-4 pb-sm-4"
                     >
-                      <v-row>
-                        <v-col class="d-flex justify-space-between align-center">
-                          <div class="d-flex justify-space-between align-center">
-                            <v-btn
-                              prepend-icon="mdi-account-switch"
-                              variant="outlined"
-                              color="blue-grey-darken-2"
-                              class="me-4"
-                              @click="openSalesRotationDialog"
-                            >
-                              業務輪流表
-                            </v-btn>
-                            <v-btn
-                              v-tooltip="isCurrentMonthActive ? '取消本月篩選' : '查看本月'"
-                              icon
-                              :color="isCurrentMonthActive ? 'orange-darken-2' : 'cyan-darken-2'"
-                              variant="text"
-                              size="34"
-                              class="me-4"
-                              @click="toggleCurrentMonth"
-                            >
-                              <v-icon
-                                size="20"
-                                style="padding-top: 2px;"
-                              >
-                                {{ isCurrentMonthActive ? 'mdi-calendar-remove' : 'mdi-calendar-month' }}
-                              </v-icon>
-                            </v-btn>
-                          </div>
-                          <v-col
-                            cols="2"
-                            class="d-flex align-center pe-1"
+                      <v-row class="d-flex align-center px-5 px-md-2">
+                        <v-col
+                          cols="6"
+                          md="4"
+                          lg="3"
+                          class="px-0"
+                        >
+                          <v-btn
+                            prepend-icon="mdi-account-switch"
+                            variant="outlined"
+                            color="blue-grey-darken-2"
+                            class="me-sm-4"
+                            @click="openSalesRotationDialog"
+                          >
+                            業務輪流表
+                          </v-btn>
+                          <v-btn
+                            v-if="smAndUp"
+                            v-tooltip="isCurrentMonthActive ? '取消本月篩選' : '查看本月'"
+                            icon
+                            :color="isCurrentMonthActive ? 'orange-darken-2' : 'cyan-darken-2'"
+                            variant="text"
+                            size="34"
+                            @click="toggleCurrentMonth"
                           >
                             <v-icon
+                              size="20"
+                              style="padding-top: 2px;"
+                            >
+                              {{ isCurrentMonthActive ? 'mdi-calendar-remove' : 'mdi-calendar-month' }}
+                            </v-icon>
+                          </v-btn>
+                        </v-col>
+                        <v-spacer />
+                        <v-col
+                          cols="6"
+                          md="5"
+                          lg="3"
+                          xl="2"
+                          class="ps-0 pe-1 my-1"
+                        >
+                          <div class="d-flex align-center">
+                            <v-icon
+                              v-if="smAndUp"
                               v-tooltip:start="'可搜尋客戶姓名、電話、Email、Line ID、詢問內容、進度 / 備註'"
                               icon="mdi-information"
                               size="small"
@@ -212,197 +262,198 @@
                               append-inner-icon="mdi-magnify"
                               hide-details
                               clearable
+                              :disabled="false"
                             />
-                          </v-col>
+                          </div>
                         </v-col>
                       </v-row>
                     </v-col>
-
-                    <!-- 表格區 -->
-                    <v-col cols="12">
-                      <v-data-table-server
-                        v-model:items-per-page="tableItemsPerPage"
-                        v-model:sort-by="tableSortBy"
-                        :items-per-page-options="[10, 20, 50, 100]"
-                        :items="tableItems"
-                        :headers="filteredHeaders"
-                        :loading="tableLoading"
-                        :items-length="tableItemsLength"
-                        :page="tablePage"
-                        hover
-                        density="compact"
-                        class="rounded-ts-lg rounded-te-lg"
-                        @update:options="handleTableOptionsChange"
-                      >
-                        <template #item="{ item, index }">
-                          <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
-                            <td>
-                              <!-- inquiryDate column -->
-                              <div v-if="item.inquiryDate">
-                                <div>{{ formatDatePart(item.inquiryDate) }}</div>
-                                <div class="text-caption text-grey-darken-1">
-                                  <v-icon
-                                    size="14"
-                                    style="padding-bottom: 2px;"
-                                  >
-                                    mdi-clock-outline
-                                  </v-icon> {{ formatTimePart(item.inquiryDate) }}
-                                </div>
-                              </div>
-                            </td>
-                            <td>{{ item.source }}</td>
-                            <td>{{ item.inquiryPlace }}</td>
-                            <td>
-                              <div
-                                class="white-space-pre-wrap"
-                                v-html="formatInquiryContent(item.inquiryContent)"
-                              />
-                            </td>
-                            <td>{{ item.customerName }}</td>
-                            <td>
-                              <v-menu>
-                                <template #activator="{ props }">
-                                  <v-btn
-                                    v-bind="props"
-                                    :color="getCustomerTitleColor(item.customerTitle)"
-                                    variant="outlined"
-                                    class="px-2"
-                                    size="small"
-                                    :loading="updatingCustomerTitles.has(item._id)"
-                                  >
-                                    {{ item.customerTitle || '選擇稱謂' }}
-                                  </v-btn>
-                                </template>
-                                <v-list>
-                                  <v-list-item
-                                    v-for="title in titleOptions"
-                                    :key="title"
-                                    @click="updateCustomerTitle(item._id, title)"
-                                  >
-                                    <v-list-item-title>{{ title }}</v-list-item-title>
-                                  </v-list-item>
-                                </v-list>
-                              </v-menu>
-                            </td>
-                            <td>{{ item.customerPhone }}</td>
-                            <td>{{ item.customerLineId }}</td>
-                            <td>{{ item.customerEmail }}</td>
-                            <td>
-                              <v-menu max-height="320">
-                                <template #activator="{ props }">
-                                  <v-btn
-                                    v-if="item.salesPerson"
-                                    v-bind="props"
-                                    color="blue-darken-1"
-                                    variant="outlined"
-                                    class="px-2"
-                                    size="small"
-                                    :loading="updatingSalesPersons.has(item._id)"
-                                  >
-                                    {{ getSalesPersonIndex(item.salesPerson) }} {{ item.salesPerson.nickname || item.salesPerson.name }}
-                                  </v-btn>
-                                  <v-btn
-                                    v-else
-                                    v-bind="props"
-                                    color="grey"
-                                    variant="outlined"
-                                    class="px-2"
-                                    size="small"
-                                    :loading="updatingSalesPersons.has(item._id)"
-                                  >
-                                    選擇業務
-                                  </v-btn>
-                                </template>
-                                <v-list>
-                                  <v-list-item
-                                    v-for="person in companySalesPersonsMap.get(item.company._id) || []"
-                                    :key="person._id"
-                                    @click="updateSalesPerson(item._id, person._id)"
-                                  >
-                                    <v-list-item-title>{{ getSalesPersonIndex(person) }} {{ person.nickname || person.name }} ({{ person.employeeCode }})</v-list-item-title>
-                                  </v-list-item>
-                                </v-list>
-                              </v-menu>
-                            </td>
-                            <td>
-                              <v-menu max-height="360">
-                                <template #activator="{ props }">
-                                  <v-btn
-                                    v-if="item.inquiryResult"
-                                    v-bind="props"
-                                    :color="getInquiryResultColor(item.inquiryResult)"
-                                    variant="outlined"
-                                    class="px-2 opacity-100"
-                                    size="small"
-                                    :loading="updatingInquiryResults.has(item._id)"
-                                  >
-                                    {{ item.inquiryResult }}
-                                  </v-btn>
-                                  <v-btn
-                                    v-else
-                                    v-bind="props"
-                                    color="grey"
-                                    variant="outlined"
-                                    class="px-2 opacity-100"
-                                    size="small"
-                                    :loading="updatingInquiryResults.has(item._id)"
-                                  >
-                                    選擇結果
-                                  </v-btn>
-                                </template>
-                                <v-list>
-                                  <v-list-item
-                                    v-for="option in inquiryResultOptions"
-                                    :key="option.value"
-                                    @click="updateInquiryResult(item._id, option.value)"
-                                  >
-                                    <v-list-item-title>{{ option.text }}</v-list-item-title>
-                                  </v-list-item>
-                                </v-list>
-                              </v-menu>
-                            </td>
-                            <td>
-                              <div class="d-flex align-center">
-                                <div class="white-space-pre-wrap flex-grow-1">
-                                  <template v-if="item.latestProgressNote?.content">
-                                    {{ item.latestProgressNote.content }}
-                                    <div
-                                      v-if="item.latestProgressNote"
-                                      class="text-caption text-grey-darken-1"
-                                    >
-                                      <v-icon
-                                        size="14"
-                                        style="padding-bottom: 2px;"
-                                      >
-                                        mdi-clock-outline
-                                      </v-icon> <span>{{ formatProgressNoteTime(item.latestProgressNote.createdAt) }}</span>
-                                    </div>
-                                  </template>
-                                  <template v-else>
-                                    <div class="text-grey">
-                                      【 請點擊右方按鈕新增 】
-                                    </div>
-                                  </template>
-                                </div>
-                                <v-btn
-                                  v-tooltip:top="'新增及查看紀錄'"
-                                  icon
-                                  color="blue-grey-darken-3"
-                                  variant="plain"
-                                  size="15"
-                                  class="ms-2"
-                                  :ripple="false"
-                                  @click="openSimpleDialog(item)"
-                                >
-                                  <v-icon>mdi-history</v-icon>
-                                </v-btn>
-                              </div>
-                            </td>
-                          </tr>
-                        </template>
-                      </v-data-table-server>
-                    </v-col>
                   </v-row>
+
+                  <!-- 表格區塊 -->
+                  <v-card-text class="px-sm-6 px-md-7">
+                    <v-data-table-server
+                      v-model:items-per-page="tableItemsPerPage"
+                      v-model:sort-by="tableSortBy"
+                      :items-per-page-options="[10, 20, 50, 100]"
+                      :items="tableItems"
+                      :headers="filteredHeaders"
+                      :loading="tableLoading"
+                      :items-length="tableItemsLength"
+                      :page="tablePage"
+                      hover
+                      density="compact"
+                      class="rounded-ts-lg rounded-te-lg"
+                      @update:options="handleTableOptionsChange"
+                    >
+                      <template #item="{ item, index }">
+                        <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                          <td>
+                            <!-- inquiryDate column -->
+                            <div v-if="item.inquiryDate">
+                              <div>{{ formatDatePart(item.inquiryDate) }}</div>
+                              <div class="text-caption text-grey-darken-1">
+                                <v-icon
+                                  size="14"
+                                  style="padding-bottom: 2px;"
+                                >
+                                  mdi-clock-outline
+                                </v-icon> {{ formatTimePart(item.inquiryDate) }}
+                              </div>
+                            </div>
+                          </td>
+                          <td>{{ item.source }}</td>
+                          <td>{{ item.inquiryPlace }}</td>
+                          <td>
+                            <div
+                              class="white-space-pre-wrap"
+                              v-html="formatInquiryContent(item.inquiryContent)"
+                            />
+                          </td>
+                          <td>{{ item.customerName }}</td>
+                          <td>
+                            <v-menu>
+                              <template #activator="{ props }">
+                                <v-btn
+                                  v-bind="props"
+                                  :color="getCustomerTitleColor(item.customerTitle)"
+                                  variant="outlined"
+                                  class="px-2"
+                                  size="small"
+                                  :loading="updatingCustomerTitles.has(item._id)"
+                                >
+                                  {{ item.customerTitle || '選擇稱謂' }}
+                                </v-btn>
+                              </template>
+                              <v-list>
+                                <v-list-item
+                                  v-for="title in titleOptions"
+                                  :key="title"
+                                  @click="updateCustomerTitle(item._id, title)"
+                                >
+                                  <v-list-item-title>{{ title }}</v-list-item-title>
+                                </v-list-item>
+                              </v-list>
+                            </v-menu>
+                          </td>
+                          <td>{{ item.customerPhone }}</td>
+                          <td>{{ item.customerLineId }}</td>
+                          <td>{{ item.customerEmail }}</td>
+                          <td>
+                            <v-menu max-height="320">
+                              <template #activator="{ props }">
+                                <v-btn
+                                  v-if="item.salesPerson"
+                                  v-bind="props"
+                                  color="blue-darken-1"
+                                  variant="outlined"
+                                  class="px-2"
+                                  size="small"
+                                  :loading="updatingSalesPersons.has(item._id)"
+                                >
+                                  {{ getSalesPersonIndex(item.salesPerson) }} {{ item.salesPerson.nickname || item.salesPerson.name }}
+                                </v-btn>
+                                <v-btn
+                                  v-else
+                                  v-bind="props"
+                                  color="grey"
+                                  variant="outlined"
+                                  class="px-2"
+                                  size="small"
+                                  :loading="updatingSalesPersons.has(item._id)"
+                                >
+                                  選擇業務
+                                </v-btn>
+                              </template>
+                              <v-list>
+                                <v-list-item
+                                  v-for="person in companySalesPersonsMap.get(item.company._id) || []"
+                                  :key="person._id"
+                                  @click="updateSalesPerson(item._id, person._id)"
+                                >
+                                  <v-list-item-title>{{ getSalesPersonIndex(person) }} {{ person.nickname || person.name }} ({{ person.employeeCode }})</v-list-item-title>
+                                </v-list-item>
+                              </v-list>
+                            </v-menu>
+                          </td>
+                          <td>
+                            <v-menu max-height="360">
+                              <template #activator="{ props }">
+                                <v-btn
+                                  v-if="item.inquiryResult"
+                                  v-bind="props"
+                                  :color="getInquiryResultColor(item.inquiryResult)"
+                                  variant="outlined"
+                                  class="px-2 opacity-100"
+                                  size="small"
+                                  :loading="updatingInquiryResults.has(item._id)"
+                                >
+                                  {{ item.inquiryResult }}
+                                </v-btn>
+                                <v-btn
+                                  v-else
+                                  v-bind="props"
+                                  color="grey"
+                                  variant="outlined"
+                                  class="px-2 opacity-100"
+                                  size="small"
+                                  :loading="updatingInquiryResults.has(item._id)"
+                                >
+                                  選擇結果
+                                </v-btn>
+                              </template>
+                              <v-list>
+                                <v-list-item
+                                  v-for="option in inquiryResultOptions"
+                                  :key="option.value"
+                                  @click="updateInquiryResult(item._id, option.value)"
+                                >
+                                  <v-list-item-title>{{ option.text }}</v-list-item-title>
+                                </v-list-item>
+                              </v-list>
+                            </v-menu>
+                          </td>
+                          <td>
+                            <div class="d-flex align-center">
+                              <div class="white-space-pre-wrap flex-grow-1">
+                                <template v-if="item.latestProgressNote?.content">
+                                  {{ item.latestProgressNote.content }}
+                                  <div
+                                    v-if="item.latestProgressNote"
+                                    class="text-caption text-grey-darken-1"
+                                  >
+                                    <v-icon
+                                      size="14"
+                                      style="padding-bottom: 2px;"
+                                    >
+                                      mdi-clock-outline
+                                    </v-icon> <span>{{ formatProgressNoteTime(item.latestProgressNote.createdAt) }}</span>
+                                  </div>
+                                </template>
+                                <template v-else>
+                                  <div class="text-grey">
+                                    【 請點擊右方按鈕新增 】
+                                  </div>
+                                </template>
+                              </div>
+                              <v-btn
+                                v-tooltip:top="'新增及查看紀錄'"
+                                icon
+                                color="blue-grey-darken-3"
+                                variant="plain"
+                                size="15"
+                                class="ms-2"
+                                :ripple="false"
+                                @click="openSimpleDialog(item)"
+                              >
+                                <v-icon>mdi-history</v-icon>
+                              </v-btn>
+                            </div>
+                          </td>
+                        </tr>
+                      </template>
+                    </v-data-table-server>
+                  </v-card-text>
                 </v-card>
               </v-col>
             </v-row>
@@ -418,26 +469,29 @@
       max-width="720"
     >
       <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
           <v-icon
-            size="20"
+            icon="mdi-history"
+            size="18"
+            color="white"
             class="me-2"
-          >
-            mdi-history
-          </v-icon>
-          <span class="card-title text-white">進度 / 備註 - 歷史紀錄</span>
+          />
+          <span class="card-title">進度 / 備註 - 歷史紀錄</span>
           <v-spacer />
           <v-btn
             icon
             variant="text"
             color="white"
+            :size="smAndUp ? '40' : '36'"
             @click="closeSimpleDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '24' : '20'">
+              mdi-close
+            </v-icon>
           </v-btn>
         </v-card-title>
 
-        <v-card-text class="px-6 py-7">
+        <v-card-text class="px-6 pt-6 pb-0">
           <!-- 加入載入中動畫 -->
           <div
             v-if="isDialogLoading"
@@ -464,7 +518,7 @@
                 :error-messages="progressNoteError"
                 rows="2"
                 hide-details="auto"
-                class="flex-grow-1 me-2"
+                class="me-2"
                 :disabled="isAddingNote"
               />
               <v-btn
@@ -494,6 +548,18 @@
             </v-data-table>
           </div>
         </v-card-text>
+
+        <v-card-actions class="px-6 py-4">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="closeSimpleDialog"
+          >
+            關閉
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -562,22 +628,25 @@
       max-width="890"
     >
       <v-card class="rounded-lg pb-2">
-        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
           <v-icon
-            size="20"
+            icon="mdi-account-switch"
+            size="18"
+            color="white"
             class="me-2"
-          >
-            mdi-account-switch
-          </v-icon>
-          <span class="card-title text-white">業務輪流表</span>
+          />
+          <span class="card-title">業務輪流表</span>
           <v-spacer />
           <v-btn
             icon
             variant="text"
             color="white"
+            :size="smAndUp ? '40' : '36'"
             @click="closeSalesRotationDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '24' : '20'">
+              mdi-close
+            </v-icon>
           </v-btn>
         </v-card-title>
 
@@ -639,8 +708,9 @@
         <v-card-actions class="px-6 py-4">
           <v-spacer />
           <v-btn
-            color="grey-darken-1"
             variant="outlined"
+            color="grey"
+            :size="smAndUp ? 'default' : 'small'"
             @click="closeSalesRotationDialog"
           >
             關閉
@@ -734,7 +804,7 @@ definePage({
 // API 與工具初始化
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
-const { smAndUp, mdAndUp } = useDisplay()
+const { smAndUp } = useDisplay()
 
 // 響應式變數
 const isSearching = ref(false)
@@ -797,22 +867,9 @@ const placeOptions = ref([])
 // 稱謂選項
 const titleOptions = ['先生', '小姐', '其他']
 
-// 修改響應式表格標頭
+// 使用完整的表格標頭，不進行過濾
 const filteredHeaders = computed(() => {
-  let headers = tableHeaders
-
-  // 根據螢幕大小過濾欄位
-  if (!smAndUp.value) {
-    headers = headers.filter(header =>
-      ['inquiryDate', 'customerName'].includes(header.key)
-    )
-  }
-  if (!mdAndUp.value) {
-    headers = headers.filter(header =>
-      !['inquiryPlace'].includes(header.key)
-    )
-  }
-  return headers
+  return tableHeaders
 })
 
 // 對話框相關響應式變數
@@ -1678,6 +1735,7 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/_rwd' as *;
 .white-space-pre-wrap {
   padding: 12px 0;
   white-space: pre-wrap;
@@ -1748,9 +1806,42 @@ onUnmounted(() => {
   }
 }
 
+/* 搜尋區域樣式 */
 .text-label {
+  color: #455a64;
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
+  margin-bottom: 8px;
+  @include sm {
+    font-size: 14px;
+  }
 }
+
+:deep(.v-field :not(:deep(.v-textarea .v-field))) {
+  .v-field__input {
+    font-size: 13px;
+    height: 36px !important;
+    padding-top: 4px !important;
+  }
+
+  .v-field__field {
+    height: 36px !important;
+  }
+  @include sm {
+    .v-field__input {
+      height: 40px !important;
+      padding-top: 8px !important;
+      font-size: 14px;
+    }
+    .v-field__field {
+      height: 40px !important;
+    }
+  }
+}
+
+
+
 
 .progress-notes-table {
   :deep(thead) {
@@ -1780,6 +1871,14 @@ onUnmounted(() => {
   font-size: 16px;
   font-weight: 600;
   color: #fff;
+}
+
+/* 業務輪流表對話框樣式 */
+.sales-rotation-dialog {
+  .v-card-title {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
 }
 
 </style>

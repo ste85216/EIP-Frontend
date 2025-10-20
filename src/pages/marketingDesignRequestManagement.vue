@@ -47,19 +47,20 @@
           </v-row>
           <v-divider class="mt-2 mt-sm-5 mb-2 mb-sm-6" />
           <!-- 搜尋條件區塊 -->
-          <v-card-text class="pt-4 px-6 px-sm-10 pb-1 pb-sm-4">
+          <v-card-text class="pt-4 px-6 px-sm-7 px-md-9 pb-2">
             <v-row class="mb-2">
               <!-- 申請日期 -->
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">申請日期 :</span>
                   <v-date-input
                     v-model="searchCriteria.applicationDate"
-                    class="ms-4"
                     variant="outlined"
                     density="compact"
                     prepend-icon
@@ -68,22 +69,25 @@
                     multiple="range"
                     :cancel-text="'取消'"
                     :ok-text="'確認'"
+                    :disabled="false"
                     @update:model-value="handleApplicationDateChange"
                     @click:clear="handleApplicationDateClear"
                   />
                 </div>
               </v-col>
+
               <!-- 申請人 -->
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">申請人 :</span>
                   <v-autocomplete
                     v-model="searchCriteria.applicant"
-                    class="ms-4"
                     :items="applicantUsers"
                     :item-title="item => item && item.name && item.userId ? `${item.name} (${item.userId})` : item && item.name ? item.name : ''"
                     item-value="_id"
@@ -93,20 +97,23 @@
                     placeholder="請選擇申請人"
                     hide-details
                     :filter="customFilter"
+                    :disabled="false"
                   />
                 </div>
               </v-col>
+
               <!-- 大分類 -->
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">申請類型 (大) :</span>
                   <v-select
                     v-model="searchCriteria.productCategory"
-                    class="ms-4"
                     :items="productCategoryOptions"
                     item-title="label"
                     item-value="value"
@@ -115,6 +122,7 @@
                     clearable
                     placeholder="請選擇大分類"
                     hide-details
+                    :disabled="false"
                     @update:model-value="handleProductCategoryChange"
                   />
                 </div>
@@ -124,13 +132,14 @@
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">申請類型 :</span>
                   <v-select
                     v-model="searchCriteria.productType"
-                    class="ms-4"
                     :items="filteredProductTypeOptions"
                     item-title="label"
                     item-value="value"
@@ -139,20 +148,23 @@
                     clearable
                     placeholder="請選擇申請類型"
                     hide-details
+                    :disabled="false"
                   />
                 </div>
               </v-col>
+
               <!-- 狀態 -->
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">狀態 :</span>
                   <v-select
                     v-model="searchCriteria.status"
-                    class="ms-4"
                     :items="statusOptions"
                     item-title="text"
                     item-value="value"
@@ -161,20 +173,23 @@
                     clearable
                     placeholder="請選擇狀態"
                     hide-details
+                    :disabled="false"
                   />
                 </div>
               </v-col>
+
               <!-- 處理人員 -->
               <v-col
                 cols="12"
                 sm="6"
-                md="2"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <div class="d-flex align-center">
+                <div class="d-flex flex-column">
                   <span class="text-label">處理人員 :</span>
                   <v-autocomplete
                     v-model="searchCriteria.assignedDesigner"
-                    class="ms-4"
                     :items="marketingDesigners"
                     :item-title="item => item && item.name && item.userId ? `${item.name} (${item.userId})` : item && item.name ? item.name : ''"
                     item-value="_id"
@@ -184,25 +199,32 @@
                     placeholder="請選擇處理人員"
                     hide-details
                     :filter="customFilter"
+                    :disabled="false"
                   />
                 </div>
               </v-col>
-              <v-col />
+              <v-col
+                lg="10"
+                class="d-none d-md-block"
+              />
               <!-- 搜尋按鈕 -->
               <v-col
                 cols="12"
-                sm="6"
-                md="2"
+                md="8"
+                lg="2"
               >
-                <v-row class="d-flex justify-end">
+                <v-row class="d-sm-flex justify-sm-end">
                   <v-col
                     cols="8"
-                    class="ps-0"
+                    sm="4"
+                    lg="8"
+                    class="ps-1 pe-0"
                   >
                     <v-btn
                       color="cyan-darken-2"
                       prepend-icon="mdi-magnify"
                       :loading="loading"
+                      :disabled="false"
                       block
                       @click="fetchTableData"
                     >
@@ -210,13 +232,16 @@
                     </v-btn>
                   </v-col>
                   <v-col
-                    cols="3"
-                    class="ps-0"
+                    cols="4"
+                    sm="2"
+                    lg="4"
+                    class="pe-1"
                   >
                     <v-btn
                       color="grey"
                       width="40"
                       block
+                      :disabled="false"
                       @click="resetSearch"
                     >
                       <v-icon>mdi-refresh</v-icon>
@@ -3977,11 +4002,39 @@ const confirmUpdateDepartmentNote = async () => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/_rwd' as *;
+/* 搜尋區域樣式 */
 .text-label {
   color: #455a64;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
+  margin-bottom: 8px;
+  @include sm {
+    font-size: 14px;
+  }
+}
+
+:deep(.v-field :not(.v-textarea .v-field)) {
+  .v-field__input {
+    font-size: 13px;
+    height: 36px !important;
+    padding-top: 4px !important;
+  }
+
+  .v-field__field {
+    height: 36px !important;
+  }
+  @include sm {
+    .v-field__input {
+      height: 40px !important;
+      padding-top: 8px !important;
+      font-size: 14px;
+    }
+    .v-field__field {
+      height: 40px !important;
+    }
+  }
 }
 :deep(.v-data-table) {
   thead {

@@ -30,17 +30,18 @@
     <!-- 小螢幕版本 -->
     <v-btn
       v-else
+      v-tooltip:top="'更換大頭貼'"
+      icon
       color="blue-grey-darken-2"
-      size="24"
-      elevation="0"
-      rounded="xl"
+      size="32"
+      class="me-4"
+      elevation="2"
       :loading="isUploading"
       @click="$refs.fileInput.click()"
     >
-      <v-icon
-        icon="mdi-camera-outline"
-        size="14"
-      />
+      <v-icon size="18">
+        mdi-camera-outline
+      </v-icon>
     </v-btn>
   </div>
 </template>

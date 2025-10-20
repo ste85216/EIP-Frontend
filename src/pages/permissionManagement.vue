@@ -587,7 +587,7 @@
       :no-click-animation="bulkApplySubmitting"
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-8 py-4 bg-teal-darken-1 d-flex align-center">
+        <div class="card-title px-6 py-4 bg-teal-darken-1 d-flex align-center">
           <v-icon
             size="20"
             color="white"
@@ -678,7 +678,7 @@
             variant="outlined"
             :size="buttonSize"
             :loading="bulkApplySubmitting"
-            :disabled="bulkApplySelectedPermission.length === 0 || bulkApplySelectedRoles.length === 0"
+            :disabled="bulkApplySubmitting || bulkApplySelectedPermission.length === 0 || bulkApplySelectedRoles.length === 0"
             @click="submitBulkApply"
           >
             套用
@@ -1160,17 +1160,38 @@ const submitBulkApply = async () => {
     const uniquePermissions = Array.from(new Set(bulkApplySelectedPermission.value))
     const uniqueRoles = Array.from(new Set(bulkApplySelectedRoles.value))
 
+    let hasOtherErrors = false
+
     // 為每個選中的角色套用每個選中的權限
     for (const roleId of uniqueRoles) {
       for (const permissionId of uniquePermissions) {
-        await permissionStore.applyPermissionToRole(roleId, permissionId)
+        try {
+          await permissionStore.applyPermissionToRole(roleId, permissionId)
+        } catch (error) {
+          // 如果是「角色已經擁有此權限」的錯誤，則跳過不計入錯誤
+          if (error.message && error.message.includes('角色已經擁有此權限')) {
+            // 忽略已存在權限
+          } else {
+            // 其他錯誤標記為部分完成
+            hasOtherErrors = true
+          }
+        }
       }
     }
 
-    createSnackbar({
-      text: `已將 ${uniquePermissions.length} 個權限套用至 ${uniqueRoles.length} 個角色`,
-      snackbarProps: { color: 'teal' }
-    })
+    // 顯示結果
+    if (!hasOtherErrors) {
+      createSnackbar({
+        text: '批次套用完成',
+        snackbarProps: { color: 'teal' }
+      })
+    } else {
+      createSnackbar({
+        text: '批次套用部分完成',
+        snackbarProps: { color: 'orange' }
+      })
+    }
+
     closeBulkApplyDialog()
     await loadRoles()
   } catch (error) {

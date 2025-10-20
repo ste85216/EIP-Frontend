@@ -70,7 +70,7 @@
               rounded="0"
               height="172"
               width="260"
-              class="pa-0 card-bg position-relative"
+              class="pa-0 mb-2 card-bg position-relative"
               :class="{ 'loaded': isBackgroundLoaded }"
               :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
               to="/profile"
@@ -145,7 +145,6 @@
             <v-list-item
               to="/profile"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>mdi-account-circle-outline</v-icon>
@@ -197,12 +196,33 @@
               v-else
               :to="coreItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ coreItem.icon }}</v-icon>
               </template>
               <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
+            </v-list-item>
+          </template>
+
+          <!-- 共用選單 -->
+          <v-divider
+            v-if="filteredCommonItems.length > 0"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
+          />
+          <template
+            v-for="commonItem in filteredCommonItems"
+            :key="commonItem.text"
+          >
+            <v-list-item
+              :to="commonItem.to"
+              color="grey-darken-3"
+            >
+              <template #prepend>
+                <v-icon>{{ commonItem.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ commonItem.text }}</v-list-item-title>
             </v-list-item>
           </template>
 
@@ -256,7 +276,6 @@
               v-else
               :to="businessItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ businessItem.icon }}</v-icon>
@@ -315,7 +334,6 @@
               v-else
               :to="marketingItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ marketingItem.icon }}</v-icon>
@@ -374,7 +392,6 @@
               v-else
               :to="hrItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ hrItem.icon }}</v-icon>
@@ -433,7 +450,6 @@
               v-else
               :to="otherItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ otherItem.icon }}</v-icon>
@@ -492,7 +508,6 @@
               v-else
               :to="itItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ itItem.icon }}</v-icon>
@@ -516,7 +531,6 @@
               <v-list-item
                 :to="settingsItem.to"
                 color="grey-darken-3"
-                class="mt-2"
               >
                 <template #prepend>
                   <v-icon>{{ settingsItem.icon }}</v-icon>
@@ -633,7 +647,7 @@
                 :key="child.to"
                 :to="child.to"
                 color="grey-darken-3"
-                base-color="blue-darken-2"
+                base-color="orange-darken-4"
               >
                 <template #prepend>
                   <v-icon>{{ child.icon }}</v-icon>
@@ -647,12 +661,33 @@
               v-else
               :to="coreItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ coreItem.icon }}</v-icon>
               </template>
               <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
+            </v-list-item>
+          </template>
+
+          <!-- 共用選單 -->
+          <v-divider
+            v-if="filteredCommonItems.length > 0"
+            color="grey-darken-3"
+            opacity="0.3"
+            class="my-2"
+          />
+          <template
+            v-for="commonItem in filteredCommonItems"
+            :key="commonItem.text"
+          >
+            <v-list-item
+              :to="commonItem.to"
+              color="grey-darken-3"
+            >
+              <template #prepend>
+                <v-icon>{{ commonItem.icon }}</v-icon>
+              </template>
+              <v-list-item-title>{{ commonItem.text }}</v-list-item-title>
             </v-list-item>
           </template>
 
@@ -706,7 +741,6 @@
               v-else
               :to="businessItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ businessItem.icon }}</v-icon>
@@ -765,7 +799,6 @@
               v-else
               :to="marketingItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ marketingItem.icon }}</v-icon>
@@ -824,7 +857,6 @@
               v-else
               :to="hrItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ hrItem.icon }}</v-icon>
@@ -883,7 +915,6 @@
               v-else
               :to="otherItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ otherItem.icon }}</v-icon>
@@ -942,7 +973,6 @@
               v-else
               :to="itItem.to"
               color="grey-darken-3"
-              class="mt-2"
             >
               <template #prepend>
                 <v-icon>{{ itItem.icon }}</v-icon>
@@ -966,7 +996,6 @@
               <v-list-item
                 :to="settingsItem.to"
                 color="grey-darken-3"
-                class="mt-2"
               >
                 <template #prepend>
                   <v-icon>{{ settingsItem.icon }}</v-icon>
@@ -1165,16 +1194,10 @@ const coreItems = [
     permission: 'HOME_READ'
   },
   {
-    to: '/employeeList',
-    text: '公司員工列表',
-    icon: 'mdi-account-details',
-    permission: 'EMPLOYEE_LIST_READ'
-  },
-  {
-    to: '/projectAndTaskManagement',
-    text: '專案與任務管理',
-    icon: 'mdi-chart-box-outline',
-    permission: 'PROJECT_AND_TASK_MANAGEMENT_READ'
+    to: '/extensionList',
+    text: '分機表',
+    icon: 'mdi-phone-outline',
+    permission: 'EXTENSION_LIST_READ'
   },
   {
     text: '申請相關',
@@ -1188,6 +1211,16 @@ const coreItems = [
         permission: 'MARKETING_DESIGN_REQUEST_PAGE_READ'
       }
     ]
+  }
+]
+
+// 共用選單
+const commonItems = [
+  {
+    to: '/projectAndTaskManagement',
+    text: '專案與任務管理',
+    icon: 'mdi-chart-box-outline',
+    permission: 'PROJECT_AND_TASK_MANAGEMENT_READ'
   }
 ]
 
@@ -1304,6 +1337,12 @@ const otherItems = [
 // IT管理選單
 const itItems = [
   {
+    to: '/employeeList',
+    text: '公司員工列表',
+    icon: 'mdi-account-details',
+    permission: 'EMPLOYEE_LIST_READ'
+  },
+  {
     text: '公司硬體管理',
     icon: 'mdi-server-network-outline',
     permission: ['HARDWARE_DEVICE_MANAGEMENT_READ', 'HARDWARE_MAINTENANCE_RECORD_PAGE_READ', 'HARDWARE_CATEGORY_MANAGEMENT_READ'],
@@ -1365,6 +1404,15 @@ const filteredCoreItems = computed(() => {
     }
 
     // 沒有子項目：檢查自身權限
+    return Array.isArray(item.permission)
+      ? permissionStore.hasAnyPermission(item.permission)
+      : permissionStore.hasPermission(item.permission)
+  })
+})
+
+// 共用選單過濾
+const filteredCommonItems = computed(() => {
+  return commonItems.filter(item => {
     return Array.isArray(item.permission)
       ? permissionStore.hasAnyPermission(item.permission)
       : permissionStore.hasPermission(item.permission)

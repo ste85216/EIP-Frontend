@@ -309,6 +309,14 @@ const permissionModules = ref([
       }
     ]
   },
+  {
+    key: 'extensionList',
+    name: '分機表',
+    icon: 'mdi-phone-outline',
+    pagePermission: 'EXTENSION_LIST_READ',
+    features: [
+    ]
+  },
   { key: 'employeeList',
     name: '公司員工列表',
     icon: 'mdi-account-group',
