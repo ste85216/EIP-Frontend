@@ -60,7 +60,7 @@
                     variant="outlined"
                     density="compact"
                     clearable
-                    placeholder="請選擇部門"
+                    :placeholder="!searchCriteria.company ? '請先選擇公司' : '請選擇部門'"
                     hide-details
                     :disabled="!searchCriteria.company"
                   />
@@ -263,8 +263,8 @@ const departments = ref([])
 
 // 搜尋條件
 const searchCriteria = reactive({
-  company: '',
-  department: ''
+  company: null,
+  department: null
 })
 
 // 快速搜尋
@@ -274,26 +274,16 @@ const quickSearch = ref('')
 
 // 計算屬性：過濾後的員工列表
 const filteredEmployees = computed(() => {
-  console.log('計算 filteredEmployees...')
-  console.log('原始員工資料:', employees.value.length, '筆')
-  console.log('搜尋條件:', {
-    company: searchCriteria.company,
-    department: searchCriteria.department,
-    quickSearch: quickSearch.value
-  })
-
   let result = employees.value
 
   // 公司篩選
   if (searchCriteria.company) {
     result = result.filter(emp => emp.company._id === searchCriteria.company)
-    console.log('公司篩選後:', result.length, '筆')
   }
 
   // 部門篩選
   if (searchCriteria.department) {
     result = result.filter(emp => emp.department._id === searchCriteria.department)
-    console.log('部門篩選後:', result.length, '筆')
   }
 
   // 快速搜尋
@@ -304,10 +294,8 @@ const filteredEmployees = computed(() => {
       emp.extNumber.includes(searchTerm) ||
       emp.employeeCode.toLowerCase().includes(searchTerm)
     )
-    console.log('快速搜尋後:', result.length, '筆')
   }
 
-  console.log('最終過濾結果:', result.length, '筆')
   return result
 })
 
@@ -315,13 +303,9 @@ const filteredEmployees = computed(() => {
 const groupedEmployees = computed(() => {
   const groups = {}
 
-  console.log('開始分組員工資料:', filteredEmployees.value.length, '筆')
-  console.log('員工資料結構檢查:', filteredEmployees.value.slice(0, 2))
-
   filteredEmployees.value.forEach(employee => {
     // 檢查員工資料結構
     if (!employee.company || !employee.department) {
-      console.warn('員工資料缺少公司或部門資訊:', employee)
       return
     }
 
@@ -361,15 +345,13 @@ const groupedEmployees = computed(() => {
     })
   }))
 
-  console.log('分組完成:', result.length, '個公司')
-  console.log('分組結果範例:', result[0])
   return result
 })
 
 // 重置搜尋條件
 const resetSearch = () => {
-  searchCriteria.company = ''
-  searchCriteria.department = ''
+  searchCriteria.company = null
+  searchCriteria.department = null
   quickSearch.value = ''
   fetchEmployees()
 }
@@ -377,7 +359,7 @@ const resetSearch = () => {
 // 公司變更處理
 const handleCompanyChange = async () => {
   // 當公司變更時，清空部門選擇
-  searchCriteria.department = ''
+  searchCriteria.department = null
 
   if (!searchCriteria.company) {
     departments.value = []
@@ -390,7 +372,6 @@ const handleCompanyChange = async () => {
     })
     if (data.success) {
       departments.value = data.result
-      console.log('載入部門成功:', departments.value.length, '筆')
     }
   } catch (error) {
     console.error('載入部門列表失敗:', error)
@@ -404,15 +385,11 @@ const handleCompanyChange = async () => {
 
 // 取得員工資料
 const fetchEmployees = async () => {
-  console.log('fetchEmployees 被調用，loading 狀態:', loading.value)
   if (loading.value) {
-    console.log('loading 為 true，跳過執行')
     return
   }
-  console.log('設定 loading 為 true')
   loading.value = true
   try {
-    console.log('開始載入員工資料...')
     // 使用 /employees/all 端點，並加上查詢參數只取得在職員工
     const { data } = await apiAuth.get('/employees/all', {
       params: {
@@ -420,38 +397,21 @@ const fetchEmployees = async () => {
         itemsPerPage: -1  // 取得所有資料，不分頁
       }
     })
-    console.log('API 回應:', data)
 
     if (data.success) {
-      console.log('API 成功，處理資料結構...')
-      console.log('data.result 類型:', typeof data.result)
-      console.log('data.result 是否為陣列:', Array.isArray(data.result))
-
       // 處理不同的資料結構
       if (Array.isArray(data.result)) {
         employees.value = data.result
-        console.log('直接陣列格式，載入員工:', employees.value.length, '筆')
       } else if (data.result && Array.isArray(data.result.data)) {
         employees.value = data.result.data
-        console.log('巢狀資料格式，載入員工:', employees.value.length, '筆')
       } else {
-        console.log('未知資料格式，設定為空陣列')
         employees.value = []
       }
-
-      console.log('最終員工資料:', employees.value.length, '筆')
-      if (employees.value.length > 0) {
-        console.log('員工資料範例:', employees.value[0])
-        console.log('員工公司資訊:', employees.value[0]?.company)
-        console.log('員工部門資訊:', employees.value[0]?.department)
-      }
     } else {
-      console.error('API 回應失敗:', data)
       employees.value = []
     }
   } catch (error) {
     console.error('取得員工資料失敗:', error)
-    console.error('錯誤詳情:', error.response?.data)
     createSnackbar({
       text: error?.response?.data?.message || '取得員工資料失敗',
       snackbarProps: { color: 'red-lighten-1' }
@@ -466,9 +426,7 @@ const fetchEmployees = async () => {
 // 取得公司列表
 const fetchCompanies = async () => {
   try {
-    console.log('開始載入公司資料...')
     const { data } = await apiAuth.get('/companies/all')
-    console.log('公司 API 回應:', data)
     if (data.success) {
       // 處理不同的資料結構
       if (Array.isArray(data.result)) {
@@ -478,9 +436,7 @@ const fetchCompanies = async () => {
       } else {
         companies.value = []
       }
-      console.log('公司資料載入成功:', companies.value.length, '筆')
     } else {
-      console.error('公司 API 回應失敗:', data)
       companies.value = []
     }
   } catch (error) {
@@ -498,6 +454,7 @@ const fetchCompanies = async () => {
 // 監聽快速搜尋
 const debouncedSearch = debounce(() => {
   // 觸發重新計算 filteredEmployees
+  isSearching.value = false
 }, 300)
 
 // 監聽快速搜尋變更
@@ -511,23 +468,10 @@ watch(quickSearch, (newValue) => {
 // 頁面載入時初始化
 onMounted(async () => {
   try {
-    console.log('分機表頁面開始初始化...')
-
     // 載入基本資料（移除 fetchDepartments，改為動態載入）
-    console.log('開始載入公司和員工資料...')
-
     // 分別執行，避免 Promise.all 中的錯誤被忽略
-    console.log('執行 fetchCompanies...')
     await fetchCompanies()
-
-    console.log('執行 fetchEmployees...')
     await fetchEmployees()
-
-    console.log('分機表載入完成')
-    console.log('最終狀態檢查:')
-    console.log('- 員工資料:', employees.value.length, '筆')
-    console.log('- 公司資料:', companies.value.length, '筆')
-    console.log('- 部門資料:', departments.value.length, '筆')
   } catch (error) {
     console.error('初始化失敗:', error)
     createSnackbar({
@@ -582,7 +526,7 @@ onMounted(async () => {
   .company-section {
     .company-title-section {
       position: relative;
-      background: #6f8591;
+      background: #637781;
       width: 150px;
       border-radius: 8px 8px 0 0;
       &::before {
@@ -593,7 +537,7 @@ onMounted(async () => {
         border-radius: 0 4px 0 0;
         transform: translateX(64px) skew(30deg);
 
-        background-color: #6f8591;
+        background-color: #637781;
         z-index: -1;
       }
       .company-title {

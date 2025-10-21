@@ -7,7 +7,7 @@
       style="display: none"
       @change="handleFileChange"
     >
-    <!-- 大螢幕版本 -->
+    <!-- 大螢幕版本 (≥1500px) -->
     <v-btn
       v-if="isLgmUp"
       prepend-icon="mdi-camera-outline"
@@ -27,10 +27,26 @@
       更換大頭貼
     </v-btn>
 
-    <!-- 小螢幕版本 -->
+    <!-- 中等螢幕版本 (≥768px 且 <1500px) -->
+    <v-btn
+      v-else-if="mdAndUp"
+      v-tooltip:top="'更換大頭貼'"
+      icon
+      color="blue-grey-darken-2"
+      size="32"
+      class="me-4"
+      elevation="2"
+      :loading="isUploading"
+      @click="$refs.fileInput.click()"
+    >
+      <v-icon size="18">
+        mdi-camera-outline
+      </v-icon>
+    </v-btn>
+
+    <!-- 小螢幕版本 (<768px) -->
     <v-btn
       v-else
-      v-tooltip:top="'更換大頭貼'"
       icon
       color="blue-grey-darken-2"
       size="32"
@@ -56,7 +72,7 @@ const fileInput = ref(null)
 const user = useUserStore()
 const createSnackbar = useSnackbar()
 const isUploading = ref(false)
-const { width } = useDisplay()
+const { mdAndUp, width } = useDisplay()
 const isLgmUp = computed(() => width.value >= 1500)
 
 const handleFileChange = async (event) => {

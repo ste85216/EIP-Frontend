@@ -56,7 +56,7 @@
       :rail="rail"
       permanent
       :expand-on-hover="rail"
-      class="position-fixed"
+      class="position-fixed border-0"
     >
       <v-list
         v-model:opened="openedGroups"
