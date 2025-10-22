@@ -528,7 +528,43 @@
               v-for="settingsItem in filteredSettingsItems"
               :key="settingsItem.text"
             >
+              <!-- 有子選單的項目 -->
+              <v-list-group
+                v-if="settingsItem.children"
+                v-model="openedGroups"
+                :value="settingsItem.text"
+                :persistent="true"
+                fluid
+              >
+                <template #activator="{ props }">
+                  <v-list-item
+                    v-bind="props"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ settingsItem.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ settingsItem.text }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+
+                <v-list-item
+                  v-for="child in settingsItem.children"
+                  :key="child.to"
+                  :to="child.to"
+                  color="grey-darken-3"
+                  base-color="blue-grey-darken-2"
+                >
+                  <template #prepend>
+                    <v-icon>{{ child.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list-group>
+
+              <!-- 沒有子選單的項目 -->
               <v-list-item
+                v-else
                 :to="settingsItem.to"
                 color="grey-darken-3"
               >
@@ -993,7 +1029,43 @@
               v-for="settingsItem in filteredSettingsItems"
               :key="settingsItem.text"
             >
+              <!-- 有子選單的項目 -->
+              <v-list-group
+                v-if="settingsItem.children"
+                v-model="openedGroups"
+                :value="settingsItem.text"
+                :persistent="true"
+                fluid
+              >
+                <template #activator="{ props }">
+                  <v-list-item
+                    v-bind="props"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ settingsItem.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ settingsItem.text }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+
+                <v-list-item
+                  v-for="child in settingsItem.children"
+                  :key="child.to"
+                  :to="child.to"
+                  color="grey-darken-3"
+                  base-color="blue-grey-darken-2"
+                >
+                  <template #prepend>
+                    <v-icon>{{ child.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list-group>
+
+              <!-- 沒有子選單的項目 -->
               <v-list-item
+                v-else
                 :to="settingsItem.to"
                 color="grey-darken-3"
               >
@@ -1384,6 +1456,19 @@ const settingsItems = [
     permission: 'PERMISSION_MANAGEMENT_READ'
   },
   {
+    text: '首頁管理',
+    icon: 'mdi-home-edit',
+    permission: ['CAROUSEL_MANAGEMENT_READ'],
+    children: [
+      {
+        to: '/carouselManagement',
+        text: '輪播圖管理',
+        icon: 'mdi-image-multiple',
+        permission: 'CAROUSEL_MANAGEMENT_READ'
+      }
+    ]
+  },
+  {
     to: '/auditLog',
     text: '異動紀錄',
     icon: 'mdi-history',
@@ -1514,6 +1599,17 @@ const filteredItItems = computed(() => {
 // 系統設定選單過濾
 const filteredSettingsItems = computed(() => {
   return settingsItems.filter(item => {
+    // 有子項目：只要任一子項目可見，就顯示父項
+    if (item.children) {
+      item.children = item.children.filter(child => {
+        return Array.isArray(child.permission)
+          ? permissionStore.hasAnyPermission(child.permission)
+          : permissionStore.hasPermission(child.permission)
+      })
+      return item.children.length > 0
+    }
+
+    // 沒有子項目：檢查自身權限
     return Array.isArray(item.permission)
       ? permissionStore.hasAnyPermission(item.permission)
       : permissionStore.hasPermission(item.permission)

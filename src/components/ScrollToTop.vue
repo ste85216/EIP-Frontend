@@ -56,8 +56,8 @@ onUnmounted(() => {
   .scroll-to-top {
     height: 48px;
     width: 48px;
-    bottom: 80px;
-    right: 30px;
+    bottom: 68px;
+    right: 20px;
   }
 }
 

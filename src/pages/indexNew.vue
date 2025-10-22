@@ -8,19 +8,21 @@
       <!-- 左側：時間和天氣 -->
       <v-col
         cols="12"
+        sm="3"
         md="2"
-        class="pb-2"
+        class="pb-2 d-none d-md-block"
       >
         <v-row>
           <!-- 時間卡片 -->
           <v-col
             cols="12"
-            class="pb-2"
+            sm="6"
+            lg="12"
+            class="pb-2 d-none d-lg-block"
           >
             <v-card
               class="dashboard-card time-card"
               elevation="2"
-              height="110"
             >
               <v-card-text class="d-flex flex-column align-center justify-center h-100 pa-4">
                 <div class="time-display">
@@ -42,8 +44,9 @@
           >
             <v-card
               class="dashboard-card weather-card"
+              :class="{ 'weather-card-loading': weatherLoading }"
               elevation="2"
-              height="269"
+              :style="weatherLoading ? {} : { backgroundImage: `url(${weatherBackground})` }"
             >
               <v-card-text class="d-flex flex-column align-center justify-center h-100 pa-4">
                 <v-skeleton-loader
@@ -52,45 +55,38 @@
                   class="w-100"
                 />
                 <template v-else>
-                  <v-icon
-                    size="44"
-                    :color="getWeatherIconColor(weatherData.condition)"
-                    class="mb-0"
-                  >
-                    {{ getWeatherIcon(weatherData.condition) }}
-                  </v-icon>
                   <div class="temperature-display mb-1">
                     {{ weatherData.temperature }}°C
                   </div>
-                  <div class="feels-like text-body-2 text-grey-darken-1 mb-1">
+                  <div class="feels-like  mb-1">
                     體感 {{ weatherData.feelsLike }}°C
                   </div>
-                  <div class="location-display text-body-2 text-grey-darken-1 mb-1">
+                  <div class="location-display  mb-1">
                     {{ weatherData.location }}
                   </div>
-                  <div class="weather-description text-body-2 text-grey-darken-1 mb-1">
+                  <div class="weather-description mb-1">
                     {{ weatherData.description }}
                   </div>
                   <div class="weather-details">
                     <div class="d-flex align-center mb-1">
                       <v-icon
                         size="16"
-                        color="blue-grey"
+                        color="white"
                         class="me-2"
                       >
                         mdi-water
                       </v-icon>
-                      <span class="text-body-2">濕度 {{ weatherData.humidity }}%</span>
+                      <span class="humidity-display">濕度 {{ weatherData.humidity }}%</span>
                     </div>
                     <div class="d-flex align-center">
                       <v-icon
                         size="16"
-                        color="blue-grey"
+                        color="white"
                         class="me-2"
                       >
                         mdi-weather-windy
                       </v-icon>
-                      <span class="text-body-2">風速 {{ weatherData.windSpeed }} km/h</span>
+                      <span class="wind-speed-display">風速 {{ weatherData.windSpeed }} km/h</span>
                     </div>
                   </div>
                   <v-alert
@@ -118,27 +114,33 @@
         <v-card
           class="dashboard-card swiper-card"
           elevation="2"
-          height="400"
         >
+          <v-skeleton-loader
+            v-if="carouselLoading"
+            type="image"
+            class="h-100"
+          />
           <v-carousel
+            v-else
             v-model="currentSlide"
-            height="400"
             cycle
-            interval="5000"
+            color="#999"
+            interval="6000"
             show-arrows="hover"
             hide-delimiter-background
-            delimiter-icon="mdi-circle"
+            :height="carouselHeight"
             touch
           >
             <template #prev="{ props }">
               <v-btn
                 v-bind="props"
                 class="custom-carousel-btn"
+                :size="buttonSize"
                 variant="text"
               >
                 <v-icon
                   size="28"
-                  color="white"
+                  color="amber-darken-1"
                 >
                   mdi-chevron-left
                 </v-icon>
@@ -149,11 +151,12 @@
               <v-btn
                 v-bind="props"
                 class="custom-carousel-btn"
+                :size="buttonSize"
                 variant="text"
               >
                 <v-icon
                   size="28"
-                  color="white"
+                  color="amber-darken-1"
                 >
                   mdi-chevron-right
                 </v-icon>
@@ -166,15 +169,9 @@
               :src="slide.image"
               cover
               draggable="true"
-            >
-              <div class="carousel-overlay">
-                <div class="carousel-content">
-                  <h3 class="carousel-title">
-                    {{ slide.title }}
-                  </h3>
-                </div>
-              </div>
-            </v-carousel-item>
+              :class="{ 'has-link': slide.link }"
+              @click="handleCarouselClick(slide)"
+            />
           </v-carousel>
         </v-card>
       </v-col>
@@ -191,7 +188,6 @@
         <v-card
           class="dashboard-card todo-card pt-4 px-3"
           elevation="2"
-          height="400"
         >
           <v-card-title class="d-flex align-center">
             <span class="block-title">代辦事項</span>
@@ -211,7 +207,7 @@
               <v-list-item
                 v-for="item in todoItems"
                 :key="item.id"
-                class="px-0"
+                class="px-0 py-0"
                 @click="toggleTodo(item.id)"
               >
                 <template #prepend>
@@ -249,7 +245,6 @@
         <v-card
           class="dashboard-card news-card pt-4 px-3"
           elevation="2"
-          height="400"
         >
           <v-card-title class="d-flex align-center">
             <!-- <v-icon
@@ -315,7 +310,6 @@
         <v-card
           class="dashboard-card quick-links-card pt-4 px-3"
           elevation="2"
-          height="400"
         >
           <v-card-title class="d-flex align-center">
             <!-- <v-icon
@@ -506,6 +500,7 @@ import { useRouter } from 'vue-router'
 import { ref, onMounted, nextTick, computed, onUnmounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { useSnackbar } from 'vuetify-use-dialog'
+import { useApi } from '@/composables/axios'
 
 // 頁面定義
 definePage({
@@ -516,13 +511,19 @@ definePage({
   }
 })
 
-const { mdAndUp } = useDisplay()
+const { mdAndUp, smAndUp, lgAndUp } = useDisplay()
 
 const buttonSize = computed(() => mdAndUp.value ? 'default' : 'small')
 
+const carouselHeight = computed(() => {
+  if (lgAndUp.value) return '360px'
+  if (smAndUp.value) return '240px'
+  return '200px'
+})
 const router = useRouter()
 const user = useUserStore()
 const createSnackbar = useSnackbar()
+const { apiAuth } = useApi()
 
 // 時間顯示相關
 const currentTime = ref('')
@@ -546,15 +547,46 @@ const weatherData = ref({
 const weatherLoading = ref(false)
 const weatherError = ref('')
 
+// 根據天氣狀況返回背景圖片
+const getWeatherBackgroundUrl = (condition) => {
+  try {
+    switch (condition) {
+      case 'sunny':
+      case 'clear':
+        return new URL('@/assets/image/sunny.jpg', import.meta.url).href
+      case 'cloudy':
+      case 'clouds':
+        return new URL('@/assets/image/cloudy.jpg', import.meta.url).href
+      case 'rainy':
+      case 'rain':
+        return new URL('@/assets/image/rainy.jpg', import.meta.url).href
+      case 'snowy':
+      case 'snow':
+        return new URL('@/assets/image/snowy.jpg', import.meta.url).href
+      case 'stormy':
+      case 'thunderstorm':
+        return new URL('@/assets/image/stormy.jpg', import.meta.url).href
+      case 'foggy':
+      case 'mist':
+        return new URL('@/assets/image/foggy.jpg', import.meta.url).href
+      default:
+        return new URL('@/assets/image/rainy.jpg', import.meta.url).href
+    }
+  } catch (error) {
+    console.error('載入天氣背景圖片失敗:', error)
+    // 如果圖片不存在，返回 rainy.jpg
+    return new URL('@/assets/image/rainy.jpg', import.meta.url).href
+  }
+}
+
+const weatherBackground = computed(() => {
+  return getWeatherBackgroundUrl(weatherData.value.condition)
+})
+
 // 輪播圖相關
 const currentSlide = ref(0)
-const slides = ref([
-  { id: 1, image: 'https://picsum.photos/800/400?random=1', title: '輪播項目 1' },
-  { id: 2, image: 'https://picsum.photos/800/400?random=2', title: '輪播項目 2' },
-  { id: 3, image: 'https://picsum.photos/800/400?random=3', title: '輪播項目 3' },
-  { id: 4, image: 'https://picsum.photos/800/400?random=4', title: '輪播項目 4' },
-  { id: 5, image: 'https://picsum.photos/800/400?random=5', title: '輪播項目 5' }
-])
+const slides = ref([])
+const carouselLoading = ref(false)
 
 // 代辦事項相關
 const todoItems = ref([
@@ -616,7 +648,12 @@ const updateTime = () => {
   currentDay.value = weekdays[now.getDay()]
 }
 
-// 輪播圖現在由 v-carousel 自動控制
+// 處理輪播圖點擊
+const handleCarouselClick = (slide) => {
+  if (slide.link) {
+    window.open(slide.link, '_blank')
+  }
+}
 
 // 代辦事項相關函數
 const toggleTodo = (id) => {
@@ -635,12 +672,46 @@ const getPriorityColor = (priority) => {
   }
 }
 
-// 天氣 API 配置
-const WEATHER_API_KEY = 'ac54897d6fc1bd290b2c8c57757e8bb2' // 請替換為您的 API Key
-const WEATHER_API_URL = 'https://api.openweathermap.org/data/2.5/weather'
+// 天氣 API 配置 (已移除 OpenWeatherMap，優先使用台灣官方 API)
+
+// 中央氣象署開放資料 API (台灣官方，最準確)
+const CWA_API_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore'
+const CWA_API_KEY = 'CWA-75827C23-971A-4752-A41C-30CFB98F9FB1' // 需要申請
 
 // 備用天氣 API (免費，無需註冊)
 const BACKUP_WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast'
+
+// 只使用中央氣象署官方 API
+
+// 獲取輪播圖數據
+const fetchCarouselData = async () => {
+  try {
+    carouselLoading.value = true
+    const { data } = await apiAuth.get('/carousels/active')
+
+    if (data.success) {
+      slides.value = data.result.map(item => ({
+        id: item._id,
+        image: item.image,
+        title: item.title,
+        description: item.description,
+        link: item.link
+      }))
+    }
+  } catch (error) {
+    console.error('獲取輪播圖數據失敗:', error)
+    // 如果 API 失敗，使用預設數據
+    slides.value = [
+      { id: 1, image: 'https://picsum.photos/800/400?random=1', title: '輪播項目 1' },
+      { id: 2, image: 'https://picsum.photos/800/400?random=2', title: '輪播項目 2' },
+      { id: 3, image: 'https://picsum.photos/800/400?random=3', title: '輪播項目 3' },
+      { id: 4, image: 'https://picsum.photos/800/400?random=4', title: '輪播項目 4' },
+      { id: 5, image: 'https://picsum.photos/800/400?random=5', title: '輪播項目 5' }
+    ]
+  } finally {
+    carouselLoading.value = false
+  }
+}
 
 // 獲取天氣數據
 const fetchWeatherData = async () => {
@@ -650,45 +721,59 @@ const fetchWeatherData = async () => {
 
     console.log('正在獲取天氣數據...')
 
-    // 首先嘗試 OpenWeatherMap API
+    // 優先嘗試中央氣象署 API (台灣官方，最準確)
     try {
-      console.log('嘗試 OpenWeatherMap API...')
-      const response = await fetch(
-        `${WEATHER_API_URL}?q=Taipei,TW&appid=${WEATHER_API_KEY}&units=metric&lang=zh_tw`
+      console.log('嘗試中央氣象署 API...')
+      const cwaResponse = await fetch(
+        `${CWA_API_URL}/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&locationName=臺北市`
       )
 
-      if (response.ok) {
-        const data = await response.json()
-        console.log('OpenWeatherMap API 成功:', data)
+      if (cwaResponse.ok) {
+        const cwaData = await cwaResponse.json()
+        console.log('中央氣象署 API 成功:', cwaData)
 
-        // 使用坐標獲取詳細地址
-        const detailedLocation = await getDetailedLocationFromCoords(data.coord.lat, data.coord.lon)
+        if (cwaData.success && cwaData.records && cwaData.records.Station) {
+          // 找到台北市的觀測站數據
+          const taipeiStation = cwaData.records.Station.find(station =>
+            station.CountyName === '臺北市' || station.CountyName === '台北市'
+          )
 
-        weatherData.value = {
-          temperature: Math.round(data.main.temp),
-          condition: getWeatherCondition(data.weather[0].main),
-          humidity: data.main.humidity,
-          windSpeed: Math.round(data.wind.speed * 3.6),
-          location: detailedLocation || getFormattedLocation(data),
-          description: data.weather[0].description,
-          feelsLike: Math.round(data.main.feels_like),
-          pressure: data.main.pressure,
-          visibility: Math.round(data.visibility / 1000)
+          if (taipeiStation) {
+            console.log('找到台北市觀測站數據:', taipeiStation)
+
+            weatherData.value = {
+              temperature: Math.round(parseFloat(taipeiStation.AirTemperature || 0)),
+              condition: getTaiwanWeatherConditionFromStation(taipeiStation),
+              humidity: Math.round(parseFloat(taipeiStation.RelativeHumidity || 0)),
+              windSpeed: Math.round(parseFloat(taipeiStation.WindSpeed || 0)),
+              location: taipeiStation.StationName || '台北市',
+              description: getTaiwanWeatherDescriptionFromStation(taipeiStation),
+              feelsLike: Math.round(parseFloat(taipeiStation.AirTemperature || 0)),
+              pressure: Math.round(parseFloat(taipeiStation.AirPressure || 0)),
+              visibility: 10
+            }
+            console.log('中央氣象署天氣數據更新成功:', weatherData.value)
+            return
+          }
         }
-        return
       }
     } catch (error) {
-      console.log('OpenWeatherMap API 失敗，嘗試備用 API...', error.message)
+      console.log('中央氣象署 API 失敗，嘗試其他 API...', error.message)
     }
 
-    // 如果 OpenWeatherMap 失敗，使用備用 API
+    // 只使用中央氣象署官方 API，跳過其他服務
+
+    // 跳過 OpenWeatherMap API，直接使用備用 API
+    console.log('跳過國際 API，直接使用備用 API...')
+
+    // 如果所有 API 都失敗，使用備用 API
     console.log('使用備用天氣 API...')
     const backupResponse = await fetch(
       `${BACKUP_WEATHER_API_URL}?latitude=25.0478&longitude=121.5319&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=Asia%2FTaipei`
     )
 
     if (!backupResponse.ok) {
-      throw new Error('備用 API 也失敗了')
+      throw new Error('所有 API 都失敗了')
     }
 
     const backupData = await backupResponse.json()
@@ -730,36 +815,49 @@ const fetchWeatherData = async () => {
   }
 }
 
-// 根據天氣狀況獲取圖標
-const getWeatherIcon = (condition) => {
-  switch (condition) {
-    case 'sunny':
-    case 'clear': return 'mdi-weather-sunny'
-    case 'cloudy':
-    case 'clouds': return 'mdi-weather-cloudy'
-    case 'rainy':
-    case 'rain': return 'mdi-weather-rainy'
-    case 'snowy':
-    case 'snow': return 'mdi-weather-snowy'
-    case 'stormy':
-    case 'thunderstorm': return 'mdi-weather-lightning'
-    case 'foggy':
-    case 'mist': return 'mdi-weather-fog'
-    default: return 'mdi-weather-sunny'
-  }
-}
+// 只使用中央氣象署官方 API
 
-// 將 API 天氣狀況轉換為本地條件
-const getWeatherCondition = (apiCondition) => {
-  const condition = apiCondition.toLowerCase()
-  if (condition.includes('clear')) return 'sunny'
-  if (condition.includes('cloud')) return 'cloudy'
-  if (condition.includes('rain')) return 'rainy'
-  if (condition.includes('snow')) return 'snowy'
-  if (condition.includes('storm')) return 'stormy'
-  if (condition.includes('fog') || condition.includes('mist')) return 'foggy'
+// 中央氣象署觀測站數據專用函數
+const getTaiwanWeatherConditionFromStation = (station) => {
+  const weather = station.Weather
+  const precipitation = parseFloat(station.Precipitation || 0)
+
+  // 如果有降雨量，判斷為雨天
+  if (precipitation > 0) {
+    return 'rainy'
+  }
+
+  // 根據天氣描述判斷
+  if (weather) {
+    const weatherLower = weather.toLowerCase()
+    if (weatherLower.includes('雨') || weatherLower.includes('rain')) return 'rainy'
+    if (weatherLower.includes('雷') || weatherLower.includes('thunder')) return 'stormy'
+    if (weatherLower.includes('霧') || weatherLower.includes('fog')) return 'foggy'
+    if (weatherLower.includes('雲') || weatherLower.includes('cloud')) return 'cloudy'
+    if (weatherLower.includes('晴') || weatherLower.includes('sunny')) return 'sunny'
+  }
+
   return 'sunny'
 }
+
+const getTaiwanWeatherDescriptionFromStation = (station) => {
+  const weather = station.Weather
+  const precipitation = parseFloat(station.Precipitation || 0)
+
+  // 如果有降雨量，顯示降雨
+  if (precipitation > 0) {
+    return `降雨 ${precipitation}mm`
+  }
+
+  // 使用觀測站的天氣描述
+  if (weather) {
+    return weather
+  }
+
+  return '晴朗'
+}
+
+// 已移除 OpenWeatherMap 相關函數，優先使用台灣官方 API
 
 // 根據天氣代碼獲取天氣狀況 (Open-Meteo API)
 const getWeatherConditionFromCode = (code) => {
@@ -785,97 +883,9 @@ const getWeatherDescriptionFromCode = (code) => {
   return '晴朗'
 }
 
-// 格式化位置信息
-const getFormattedLocation = (data) => {
-  console.log('OpenWeatherMap 位置數據:', data)
+// 已移除 OpenWeatherMap 相關函數，優先使用台灣官方 API
 
-  // 將英文城市名轉換為中文
-  const cityName = data.name
-  const countryCode = data.sys?.country
-
-  console.log('城市名:', cityName)
-  console.log('國家代碼:', countryCode)
-
-  // 轉換常見的英文城市名為中文
-  const cityTranslations = {
-    'Taipei': '台北市',
-    'New Taipei': '新北市',
-    'Kaohsiung': '高雄市',
-    'Taichung': '台中市',
-    'Tainan': '台南市',
-    'Taoyuan': '桃園市',
-    'Hsinchu': '新竹市',
-    'Chiayi': '嘉義市',
-    'Keelung': '基隆市',
-    'Yilan': '宜蘭縣'
-  }
-
-  // 如果 API 返回的地名包含地區信息，直接使用
-  if (data.name && data.name.includes('區')) {
-    return data.name
-  }
-
-  // 如果找到對應的中文名稱，使用中文
-  if (cityTranslations[cityName]) {
-    return cityTranslations[cityName]
-  }
-
-  // 如果有國家代碼，組合顯示
-  if (countryCode) {
-    return `${cityName}, ${countryCode}`
-  }
-
-  // 否則使用預設的台北市
-  return '台北市'
-}
-
-// 根據坐標獲取詳細地址
-const getDetailedLocationFromCoords = async (lat, lon) => {
-  try {
-    console.log('使用坐標獲取詳細地址:', lat, lon)
-
-    const response = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`
-    )
-
-    if (response.ok) {
-      const data = await response.json()
-      console.log('詳細地址數據:', data)
-
-      // 檢查並組合地址信息
-      const city = data.city || data.locality
-      const country = data.countryName || data.principalSubdivision
-
-      console.log('城市:', city)
-      console.log('國家:', country)
-      console.log('行政區信息:', data.localityInfo?.administrative)
-
-      // 嘗試從行政區信息中獲取區級信息
-      const administrative = data.localityInfo?.administrative
-      if (administrative && administrative.length > 0) {
-        // 尋找區級信息（通常是 administrative[1] 或 administrative[2]）
-        for (let i = 1; i < administrative.length; i++) {
-          const admin = administrative[i]
-          if (admin && admin.name && admin.name.includes('區')) {
-            console.log('找到區級信息:', admin.name)
-            return `${city}, ${admin.name}`
-          }
-        }
-      }
-
-      // 如果沒有找到區級信息，只顯示城市
-      if (city && city !== country) {
-        return city
-      } else if (city) {
-        return city
-      }
-    }
-  } catch (error) {
-    console.log('無法獲取詳細地址:', error.message)
-  }
-
-  return null
-}
+// 已移除 OpenWeatherMap 相關函數，優先使用台灣官方 API
 
 // 獲取當前位置
 const getCurrentLocation = async () => {
@@ -934,25 +944,6 @@ const getCurrentLocation = async () => {
 
   // 如果無法獲取位置，返回預設值
   return '台北市'
-}
-
-// 根據天氣狀況獲取圖標顏色
-const getWeatherIconColor = (condition) => {
-  switch (condition) {
-    case 'sunny':
-    case 'clear': return 'orange'
-    case 'cloudy':
-    case 'clouds': return 'blue-grey'
-    case 'rainy':
-    case 'rain': return 'blue'
-    case 'snowy':
-    case 'snow': return 'blue-lighten-3'
-    case 'stormy':
-    case 'thunderstorm': return 'purple'
-    case 'foggy':
-    case 'mist': return 'grey'
-    default: return 'orange'
-  }
 }
 
 // 消息類型顏色
@@ -1052,8 +1043,11 @@ onMounted(async () => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
 
-  // 獲取天氣數據
-  await fetchWeatherData()
+  // 獲取天氣數據和輪播圖數據
+  await Promise.all([
+    fetchWeatherData(),
+    fetchCarouselData()
+  ])
 
   if (user.isLogin && !user.isDefaultPasswordChanged) {
     showDefaultPasswordDialog.value = true
@@ -1069,6 +1063,7 @@ onUnmounted(() => {
 </script>
 
 <style lang="scss" scoped>
+@use '@/styles/_rwd' as *;
 // 卡片通用樣式
 .dashboard-card {
   border-radius: 8px;
@@ -1079,13 +1074,14 @@ onUnmounted(() => {
   font-weight: 600;
   color: #333;
 }
+
 // 時間卡片樣式
 .time-card {
   .time-display {
-    font-size: 2.2rem;
-    font-weight: 700;
-    color: #333;
-    font-family: 'Roboto Mono', monospace;
+    font-size: 32px;
+    font-weight: 400;
+    color: #363636;
+    font-family: 'Quantico', monospace;
   }
 
   .date-display,
@@ -1096,39 +1092,57 @@ onUnmounted(() => {
 
 // 輪播圖卡片樣式
 .swiper-card {
+  height: 200px;
+
   .v-carousel {
     overflow: hidden;
   }
 
-  .carousel-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-    padding: 20px;
+  // 有連結的輪播項目顯示 pointer
+  :deep(.v-carousel-item.has-link) {
+    cursor: pointer;
   }
 
-  .carousel-content {
-    text-align: center;
-  }
+  // 調整分頁指示器 (dots) 的大小和間距
+  :deep(.v-carousel__controls) {
+    .v-btn {
+      width: 10px !important;   // 調整寬度
+      height: 10px !important;  // 調整高度
+      margin: 0 6px !important;  // 調整間距 (預設是 0 8px)
+      opacity: 0.8 !important;  // 未選中的透明度
+      color: #000 !important;
+      border-radius: 50% !important;
+      overflow: hidden !important;
+      transition: all 0.3s ease !important;
 
-  .carousel-title {
-    color: white;
-    font-size: 1.8rem;
-    font-weight: 600;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-    margin: 0;
+      .v-icon {
+        font-size: 12px !important;
+      }
+
+      // 選中狀態（active）
+      &.v-btn--active {
+        opacity: 1 !important;
+        width: 13px !important;
+        height: 13px !important;
+        color: transparent !important;
+        .v-icon {
+          font-size: 13px !important;  // 圖標稍微大一點
+          color: orange !important;
+          opacity: 1 !important;
+        }
+      }
+
+      // hover 效果
+      &:hover:not(.v-btn--active) {
+        opacity: 0.7 !important;
+      }
+    }
   }
 }
 
 // 客製化 carousel 按鈕樣式
 .custom-carousel-btn {
-  background-color: rgba(255, 255, 255, 0.2) !important;
+  background-color: rgba(0,0,0,0.2) !important;
   backdrop-filter: blur(10px);
   color: white !important;
   border-radius: 50% !important;
@@ -1142,22 +1156,60 @@ onUnmounted(() => {
 
 // 天氣卡片樣式
 .weather-card {
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  height: 240px;
+  position: relative;
+  transition: none !important; // 移除 transition 避免背景圖滑動效果
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 1;
+    border-radius: 8px;
+  }
+
+  :deep(.v-card-text) {
+    position: relative;
+    z-index: 2;
+  }
+
+  // 載入中狀態：白色背景，移除遮罩
+  &.weather-card-loading {
+    background: #fff !important;
+
+    &::before {
+      display: none !important;
+    }
+  }
+
   .temperature-display {
-  font-size: 2rem;
+    font-size: 20px;
     font-weight: 700;
-    color: #333;
+    color: #fff;
   }
 
   .feels-like {
+    font-size: 12px;
     font-weight: 500;
+    color: #fff;
   }
 
   .location-display {
     font-weight: 500;
+    color: #fff;
   }
 
   .weather-description {
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
     text-transform: capitalize;
   }
 
@@ -1165,6 +1217,18 @@ onUnmounted(() => {
     font-size: 0.85rem;
     line-height: 1.4;
   }
+}
+
+.humidity-display {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wind-speed-display {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 // 代辦事項卡片樣式
@@ -1206,48 +1270,46 @@ onUnmounted(() => {
   }
 }
 
-// 響應式設計
-@media (max-width: 960px) {
-  .dashboard-grid {
-    gap: 12px;
-  }
 
-  .dashboard-card {
-    height: 100px !important;
+@include sm {
+  .time-card {
+    height: 240px;
   }
-
-  .time-display {
-    font-size: 2rem !important;
-  }
-
-  .swiper-label,
-  .weather-label,
-  .todo-label,
-  .news-label,
-  .quick-links-label {
-    font-size: 1rem !important;
+  .swiper-card {
+    height: 240px;
   }
 }
 
-@media (max-width: 600px) {
-  .dashboard-grid {
-    gap: 8px;
+@include lg {
+  .swiper-card {
+    height: 360px;
   }
-
-  .dashboard-card {
-    height: 80px !important;
+  .time-card {
+    height: 109px;
   }
-
-  .time-display {
-    font-size: 1.5rem !important;
-  }
-
-  .swiper-label,
-  .weather-label,
-  .todo-label,
-  .news-label,
-  .quick-links-label {
-    font-size: 0.9rem !important;
+  .weather-card {
+    height: 230px;
+    .temperature-display {
+      font-size: 40px;
+    }
+    .feels-like {
+      font-size: 16px;
+    }
+    .location-display {
+      font-size: 15px;
+    }
+    .weather-description {
+      font-size: 16px;
+    }
+    .humidity-display {
+      font-size: 14px;
+    }
+    .wind-speed-display {
+      font-size: 14px;
+    }
   }
 }
+
+
+
 </style>

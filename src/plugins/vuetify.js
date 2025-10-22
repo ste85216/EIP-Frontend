@@ -13,6 +13,7 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import { zhHant } from 'vuetify/locale'
 import { VDateInput } from 'vuetify/labs/VDateInput'
+import { VTimePicker } from 'vuetify/labs/VTimePicker'
 
 const myCustomLightTheme = {
   dark: false,
@@ -65,6 +66,7 @@ export default createVuetify({
     messages: { zhHant }
   },
   components: {
-    VDateInput
+    VDateInput,
+    VTimePicker
   }
 })

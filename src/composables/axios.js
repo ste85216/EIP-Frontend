@@ -8,11 +8,11 @@ import { useRouter } from 'vue-router'
 // axios.post('http://localhost:4000/user')
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API
+  baseURL: import.meta.env.VITE_API || 'http://localhost:4002'
 })
 
 const apiAuth = axios.create({
-  baseURL: import.meta.env.VITE_API
+  baseURL: import.meta.env.VITE_API || 'http://localhost:4002'
 })
 
 // 1. axios.get / axios.post ...

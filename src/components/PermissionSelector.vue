@@ -557,6 +557,18 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'carouselManagement',
+    name: '輪播圖管理',
+    icon: 'mdi-image-multiple',
+    pagePermission: 'CAROUSEL_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看輪播圖', permission: 'CAROUSEL_READ' },
+      { key: 'create', name: '新增輪播圖', permission: 'CAROUSEL_CREATE' },
+      { key: 'update', name: '編輯輪播圖', permission: 'CAROUSEL_UPDATE' },
+      { key: 'delete', name: '刪除輪播圖', permission: 'CAROUSEL_DELETE' },
+    ]
+  },
+  {
     key: 'auditLog',
     name: '異動紀錄',
     icon: 'mdi-history',
