@@ -206,7 +206,7 @@
       max-width="600"
       persistent
     >
-      <v-card class="rounded-lg">
+      <v-card class="rounded-lg pb-2">
         <v-card-title class="d-flex align-center px-6 py-1 bg-teal-darken-1">
           <v-icon
             icon="mdi-image-plus"
@@ -319,6 +319,7 @@
                   variant="outlined"
                   density="compact"
                   prepend-icon="mdi-calendar-clock"
+                  hide-details
                   clearable
                 />
               </v-col>
@@ -333,6 +334,7 @@
                   variant="outlined"
                   density="compact"
                   prepend-icon="mdi-calendar-clock"
+                  hide-details
                   clearable
                 />
               </v-col>

@@ -1,5 +1,8 @@
 <template>
-  <div class="rich-text-editor">
+  <div
+    class="rich-text-editor"
+    :style="{ '--editor-height': editorHeight }"
+  >
     <div
       ref="editorContainer"
       class="editor-container"
@@ -8,7 +11,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
 
@@ -24,6 +27,10 @@ const props = defineProps({
   readonly: {
     type: Boolean,
     default: false
+  },
+  height: {
+    type: [Number, String],
+    default: 150
   }
 })
 
@@ -31,6 +38,12 @@ const emit = defineEmits(['update:modelValue'])
 
 const editorContainer = ref(null)
 let quill = null
+
+// 計算編輯器高度
+const editorHeight = computed(() => {
+  const height = props.height
+  return typeof height === 'number' ? `${height}px` : height
+})
 
 // Quill 配置
 const quillOptions = {
@@ -241,7 +254,7 @@ defineExpose({
 :deep(.ql-editor) {
   border: 1px solid #ccc;
   border-top: none;
-  min-height: 150px;
+  min-height: var(--editor-height, 150px);
   padding: 16px;
 }
 

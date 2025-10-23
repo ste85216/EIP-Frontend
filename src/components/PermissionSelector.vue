@@ -317,6 +317,14 @@ const permissionModules = ref([
     features: [
     ]
   },
+  {
+    key: 'announcement',
+    name: '所有公告',
+    icon: 'mdi-bullhorn',
+    pagePermission: 'ANNOUNCEMENT_PAGE_READ',
+    features: [
+    ]
+  },
   { key: 'employeeList',
     name: '公司員工列表',
     icon: 'mdi-account-group',
@@ -557,6 +565,18 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'announcementManagement',
+    name: '公告管理',
+    icon: 'mdi-bullhorn',
+    pagePermission: 'ANNOUNCEMENT_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看公告', permission: 'ANNOUNCEMENT_READ' },
+      { key: 'create', name: '新增公告', permission: 'ANNOUNCEMENT_CREATE' },
+      { key: 'update', name: '編輯公告', permission: 'ANNOUNCEMENT_UPDATE' },
+      { key: 'delete', name: '刪除公告', permission: 'ANNOUNCEMENT_DELETE' },
+    ]
+  },
+  {
     key: 'carouselManagement',
     name: '輪播圖管理',
     icon: 'mdi-image-multiple',
@@ -566,6 +586,18 @@ const permissionModules = ref([
       { key: 'create', name: '新增輪播圖', permission: 'CAROUSEL_CREATE' },
       { key: 'update', name: '編輯輪播圖', permission: 'CAROUSEL_UPDATE' },
       { key: 'delete', name: '刪除輪播圖', permission: 'CAROUSEL_DELETE' },
+    ]
+  },
+  {
+    key: 'sharedResourceManagement',
+    name: '共享資源管理',
+    icon: 'mdi-share-all',
+    pagePermission: 'SHARED_RESOURCE_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看共享資源', permission: 'SHARED_RESOURCE_READ' },
+      { key: 'create', name: '新增共享資源', permission: 'SHARED_RESOURCE_CREATE' },
+      { key: 'update', name: '編輯共享資源', permission: 'SHARED_RESOURCE_UPDATE' },
+      { key: 'delete', name: '刪除共享資源', permission: 'SHARED_RESOURCE_DELETE' },
     ]
   },
   {

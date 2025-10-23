@@ -1,368 +1,480 @@
 <template>
   <v-container
-    max-width="1920"
     class="px-6"
+    max-width="2280px"
   >
-    <!-- 上方區域：時間+天氣 和 輪播圖 -->
-    <v-row class="mt-3">
-      <!-- 左側：時間和天氣 -->
+    <!-- 整體布局：左側（時間+天氣+輪播+最新消息） + 右側（尚未決定+共享資源） -->
+    <v-row class="mt-md-3">
+      <!-- 左側大區塊 -->
       <v-col
         cols="12"
-        sm="3"
-        md="2"
-        class="pb-2 d-none d-md-block"
+        lg="9"
       >
+        <!-- 第一排：時間+天氣+輪播圖 -->
         <v-row>
-          <!-- 時間卡片 -->
+          <!-- 左側：時間和天氣 -->
           <v-col
             cols="12"
-            sm="6"
-            lg="12"
-            class="pb-2 d-none d-lg-block"
+            sm="3"
+            class="pb-2 d-none d-md-block"
           >
-            <v-card
-              class="dashboard-card time-card"
-              elevation="2"
-            >
-              <v-card-text class="d-flex flex-column align-center justify-center h-100 pa-4">
-                <div class="time-display">
-                  {{ currentTime }}
-                </div>
-                <div class="date-display text-body-2 text-grey-darken-1">
-                  {{ currentDate }}
-                </div>
-                <div class="day-display text-body-2 text-grey-darken-1">
-                  {{ currentDay }}
-                </div>
-              </v-card-text>
-            </v-card>
+            <v-row>
+              <!-- 時間卡片 -->
+              <v-col
+                cols="12"
+                sm="6"
+                lg="12"
+                class="pb-2 d-none d-lg-block"
+              >
+                <v-card
+                  class="dashboard-card time-card"
+                  elevation="2"
+                >
+                  <v-card-text class="d-flex flex-column align-center justify-center h-100">
+                    <div class="time-display">
+                      {{ currentTime }}
+                    </div>
+                    <div class="date-display text-grey-darken-2">
+                      {{ currentDate }} {{ currentDay }}
+                    </div>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <!-- 天氣卡片 -->
+              <v-col
+                cols="12"
+              >
+                <v-card
+                  class="dashboard-card weather-card"
+                  :class="{ 'weather-card-loading': weatherLoading }"
+                  elevation="2"
+                  :style="weatherLoading ? {} : { backgroundImage: `url(${weatherBackground})` }"
+                >
+                  <v-card-text class="d-flex flex-column align-center justify-center h-100 px-4 pt-2 pb-4">
+                    <v-skeleton-loader
+                      v-if="weatherLoading"
+                      type="image, text, text"
+                      class="w-100"
+                    />
+                    <template v-else>
+                      <div class="temperature-display mb-1">
+                        {{ weatherData.temperature }}°C
+                      </div>
+                      <div class="feels-like  mb-1">
+                        體感 {{ weatherData.feelsLike }}°C
+                      </div>
+                      <div class="location-display  mb-2">
+                        {{ weatherData.location }}
+                      </div>
+                      <div class="weather-description mb-2">
+                        {{ weatherData.description }}
+                      </div>
+                      <div class="weather-details">
+                        <div class="d-flex align-center mb-1">
+                          <v-icon
+                            size="16"
+                            color="white"
+                            class="me-2"
+                          >
+                            mdi-water
+                          </v-icon>
+                          <span class="humidity-display">濕度 {{ weatherData.humidity }}%</span>
+                        </div>
+                        <div class="d-flex align-center">
+                          <v-icon
+                            size="16"
+                            color="white"
+                            class="me-2"
+                          >
+                            mdi-weather-windy
+                          </v-icon>
+                          <span class="wind-speed-display">風速 {{ weatherData.windSpeed }} km/h</span>
+                        </div>
+                      </div>
+                      <v-alert
+                        v-if="weatherError"
+                        type="warning"
+                        variant="tonal"
+                        size="small"
+                        class="mt-2"
+                      >
+                        {{ weatherError }}
+                      </v-alert>
+                    </template>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
           </v-col>
 
-          <!-- 天氣卡片 -->
+          <!-- 右側：輪播圖 -->
           <v-col
             cols="12"
+            md="9"
+            class="pb-md-0"
           >
             <v-card
-              class="dashboard-card weather-card"
-              :class="{ 'weather-card-loading': weatherLoading }"
+              class="dashboard-card swiper-card"
               elevation="2"
-              :style="weatherLoading ? {} : { backgroundImage: `url(${weatherBackground})` }"
             >
-              <v-card-text class="d-flex flex-column align-center justify-center h-100 pa-4">
-                <v-skeleton-loader
-                  v-if="weatherLoading"
-                  type="image, text, text"
-                  class="w-100"
-                />
-                <template v-else>
-                  <div class="temperature-display mb-1">
-                    {{ weatherData.temperature }}°C
-                  </div>
-                  <div class="feels-like  mb-1">
-                    體感 {{ weatherData.feelsLike }}°C
-                  </div>
-                  <div class="location-display  mb-1">
-                    {{ weatherData.location }}
-                  </div>
-                  <div class="weather-description mb-1">
-                    {{ weatherData.description }}
-                  </div>
-                  <div class="weather-details">
-                    <div class="d-flex align-center mb-1">
-                      <v-icon
-                        size="16"
-                        color="white"
-                        class="me-2"
-                      >
-                        mdi-water
-                      </v-icon>
-                      <span class="humidity-display">濕度 {{ weatherData.humidity }}%</span>
-                    </div>
-                    <div class="d-flex align-center">
-                      <v-icon
-                        size="16"
-                        color="white"
-                        class="me-2"
-                      >
-                        mdi-weather-windy
-                      </v-icon>
-                      <span class="wind-speed-display">風速 {{ weatherData.windSpeed }} km/h</span>
-                    </div>
-                  </div>
-                  <v-alert
-                    v-if="weatherError"
-                    type="warning"
-                    variant="tonal"
-                    size="small"
-                    class="mt-2"
+              <v-skeleton-loader
+                v-if="carouselLoading"
+                type="image"
+              />
+              <v-carousel
+                v-else
+                v-model="currentSlide"
+                cycle
+                color="#999"
+                interval="6000"
+                show-arrows="hover"
+                hide-delimiter-background
+                :height="carouselHeight"
+                touch
+              >
+                <template #prev="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    class="custom-carousel-btn"
+                    :size="buttonSize"
+                    variant="text"
                   >
-                    {{ weatherError }}
-                  </v-alert>
+                    <v-icon
+                      size="28"
+                      color="amber-darken-1"
+                    >
+                      mdi-chevron-left
+                    </v-icon>
+                  </v-btn>
                 </template>
+
+                <template #next="{ props }">
+                  <v-btn
+                    v-bind="props"
+                    class="custom-carousel-btn"
+                    :size="buttonSize"
+                    variant="text"
+                  >
+                    <v-icon
+                      size="28"
+                      color="amber-darken-1"
+                    >
+                      mdi-chevron-right
+                    </v-icon>
+                  </v-btn>
+                </template>
+
+                <v-carousel-item
+                  v-for="slide in slides"
+                  :key="slide.id"
+                  :src="slide.image"
+                  cover
+                  draggable="true"
+                  :class="{ 'has-link': slide.link }"
+                  @click="handleCarouselClick(slide)"
+                />
+              </v-carousel>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <!-- 第二排：最新消息 -->
+        <v-row>
+          <v-col cols="12">
+            <v-card
+              class="dashboard-card news-card pa-0"
+              elevation="2"
+            >
+              <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
+                <v-icon
+                  size="18"
+                  color="white"
+                  class="me-2"
+                >
+                  mdi-newspaper-variant
+                </v-icon>
+                <span class="home-card-title">最新消息</span>
+                <v-spacer />
+                <v-chip
+                  label
+                  size="small"
+                  color="white"
+                  variant="outlined"
+                >
+                  {{ newsItems.length }} 則消息
+                </v-chip>
+              </v-card-title>
+              <v-card-text class="pa-4">
+                <v-skeleton-loader
+                  v-if="newsLoading"
+                  type="list-item@3"
+                />
+                <v-list
+                  v-else
+                  class="pa-0"
+                >
+                  <v-list-item
+                    v-for="item in newsItems"
+                    :key="item._id"
+                    class="px-3 mb-2 news-item"
+                    @click="viewAnnouncement(item)"
+                  >
+                    <v-list-item-title class="d-flex align-center flex-wrap gap-2">
+                      <v-chip
+                        v-if="item.isPinned"
+                        label
+                        color="red-darken-1"
+                        size="small"
+                        class="me-1"
+                      >
+                        <v-icon
+                          icon="mdi-pin"
+                          size="10"
+                          class="me-1"
+                        />
+                        置頂
+                      </v-chip>
+                      <v-chip
+                        :color="getAnnouncementTypeColor(item.type)"
+                        label
+                        size="small"
+                        class="me-4"
+                      >
+                        {{ getAnnouncementTypeText(item.type) }}
+                      </v-chip>
+                      <span class="sub-title-1">{{ item.title }}</span>
+                      <v-spacer />
+                      <div class="d-flex align-center">
+                        <div
+                          class="me-4 info-item-tag"
+                        >
+                          <v-icon
+                            icon="mdi-account"
+                            size="12"
+                            class="me-1"
+                          />
+                          <span class="sub-title-2">{{ item.creator?.name || '未知' }}</span>
+                        </div>
+                        <div class="info-item-tag">
+                          <v-icon
+                            icon="mdi-clock-outline"
+                            size="12"
+                            class="me-1 "
+                          />
+                          <span class="sub-title-2">{{ formatAnnouncementDate(item.createdAt) }}</span>
+                        </div>
+                      </div>
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item
+                    v-if="newsItems.length === 0"
+                    class="text-center text-grey"
+                  >
+                    暫無公告
+                  </v-list-item>
+                </v-list>
+                <div class="text-center">
+                  <v-btn
+                    variant="text"
+                    color="blue-grey-darken-2"
+                    size="small"
+                    @click="$router.push('/announcement')"
+                  >
+                    查看更多
+                    <v-icon
+                      icon="mdi-chevron-right"
+                      size="18"
+                      class="ms-1"
+                    />
+                  </v-btn>
+                </div>
               </v-card-text>
             </v-card>
           </v-col>
         </v-row>
       </v-col>
 
-      <!-- 右側：輪播圖 -->
+      <!-- 右側區塊 -->
       <v-col
         cols="12"
-        md="10"
-        class="pb-0"
+        lg="3"
       >
+        <!-- 分機表 -->
         <v-card
-          class="dashboard-card swiper-card"
+          class="dashboard-card extension-card pb-4 mb-4"
           elevation="2"
         >
-          <v-skeleton-loader
-            v-if="carouselLoading"
-            type="image"
-            class="h-100"
-          />
-          <v-carousel
-            v-else
-            v-model="currentSlide"
-            cycle
-            color="#999"
-            interval="6000"
-            show-arrows="hover"
-            hide-delimiter-background
-            :height="carouselHeight"
-            touch
-          >
-            <template #prev="{ props }">
-              <v-btn
-                v-bind="props"
-                class="custom-carousel-btn"
-                :size="buttonSize"
-                variant="text"
-              >
-                <v-icon
-                  size="28"
-                  color="amber-darken-1"
-                >
-                  mdi-chevron-left
-                </v-icon>
-              </v-btn>
-            </template>
-
-            <template #next="{ props }">
-              <v-btn
-                v-bind="props"
-                class="custom-carousel-btn"
-                :size="buttonSize"
-                variant="text"
-              >
-                <v-icon
-                  size="28"
-                  color="amber-darken-1"
-                >
-                  mdi-chevron-right
-                </v-icon>
-              </v-btn>
-            </template>
-
-            <v-carousel-item
-              v-for="slide in slides"
-              :key="slide.id"
-              :src="slide.image"
-              cover
-              draggable="true"
-              :class="{ 'has-link': slide.link }"
-              @click="handleCarouselClick(slide)"
-            />
-          </v-carousel>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- 下方區域：代辦事項、最新消息、快速連結 -->
-    <v-row>
-      <!-- 代辦事項 -->
-      <v-col
-        cols="12"
-        sm="6"
-        md="3"
-      >
-        <v-card
-          class="dashboard-card todo-card pt-4 px-3"
-          elevation="2"
-        >
-          <v-card-title class="d-flex align-center">
-            <span class="block-title">代辦事項</span>
+          <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
+            <v-icon
+              size="18"
+              color="white"
+              class="me-2"
+            >
+              mdi-phone
+            </v-icon>
+            <span class="home-card-title">分機查詢</span>
             <v-spacer />
             <v-chip
+              label
               size="small"
-              color="grey-darken-1"
+              color="white"
               variant="outlined"
             >
-              {{ todoItems.filter(item => !item.completed).length }} 項待辦
+              {{ filteredExtensions.length }} 人
             </v-chip>
           </v-card-title>
-          <v-card-text class="ps-2 pe-6">
+          <!-- 搜尋欄位 -->
+          <v-text-field
+            v-model="extensionSearch"
+            density="compact"
+            variant="outlined"
+            placeholder="搜尋姓名或分機"
+            prepend-inner-icon="mdi-magnify"
+            hide-details
+            clearable
+            class="mb-3 px-3 pt-2"
+          />
+          <v-card-text
+            class="me-2 ps-3 pe-2 pt-0 pb-2 overflow-y-auto"
+            style="height: 230px;"
+          >
+            <!-- 分機列表 -->
+            <div
+              v-if="extensionLoading"
+              class="text-center py-4"
+            >
+              <v-progress-circular
+                indeterminate
+                color="blue-grey-darken-1"
+                size="32"
+                width="3"
+              />
+            </div>
+
             <v-list
-              class="pa-0"
+              v-else
+              class="pa-0 extension-list-scroll"
             >
               <v-list-item
-                v-for="item in todoItems"
-                :key="item.id"
-                class="px-0 py-0"
-                @click="toggleTodo(item.id)"
+                v-for="ext in filteredExtensions"
+                :key="ext._id"
+                class="px-3 py-1 mb-1 rounded extension-item"
+                density="compact"
               >
-                <template #prepend>
-                  <v-checkbox
-                    :model-value="item.completed"
-                    color="orange"
-                    hide-details
-                  />
-                </template>
-                <v-list-item-title
-                  :class="{ 'text-decoration-line-through text-grey': item.completed }"
-                >
-                  {{ item.title }}
+                <v-list-item-title class="text-body-2 font-weight-medium d-flex align-center">
+                  <v-chip
+                    size="x-small"
+                    :color="ext.companyColor"
+                    class="me-2"
+                  >
+                    {{ ext.companyName }}
+                  </v-chip>
+                  <span class="sub-title-1">{{ ext.name }}</span>
+                  <span class="ms-2 sub-title-2">({{ ext.jobTitle }})</span>
                 </v-list-item-title>
                 <template #append>
                   <v-chip
-                    :color="getPriorityColor(item.priority)"
-                    size="x-small"
-                    variant="outlined"
+                    label
+                    size="small"
+                    color="blue-darken-1"
+                    style="border: 1px solid #1E88E5;"
                   >
-                    {{ item.priority === 'high' ? '高' : item.priority === 'medium' ? '中' : '低' }}
+                    <v-icon
+                      size="12"
+                      class="me-1"
+                    >
+                      mdi-phone
+                    </v-icon>
+                    {{ ext.extNumber }}
                   </v-chip>
                 </template>
               </v-list-item>
+
+              <div
+                v-if="filteredExtensions.length === 0"
+                class="text-center py-4 text-grey"
+              >
+                查無資料
+              </div>
             </v-list>
           </v-card-text>
         </v-card>
-      </v-col>
 
-      <!-- 最新消息 -->
-      <v-col
-        cols="12"
-        sm="6"
-      >
+        <!-- 共享資源 -->
         <v-card
-          class="dashboard-card news-card pt-4 px-3"
+          class="dashboard-card shared-resources-card pa-0"
           elevation="2"
         >
-          <v-card-title class="d-flex align-center">
-            <!-- <v-icon
-              size="24"
-              color="green-darken-2"
+          <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
+            <v-icon
+              size="18"
+              color="white"
               class="me-2"
             >
-              mdi-newspaper-variant
-            </v-icon> -->
-            <span class="block-title">最新消息</span>
+              mdi-folder-outline
+            </v-icon>
+            <span class="home-card-title">共享資源</span>
             <v-spacer />
             <v-chip
+              label
               size="small"
-              color="grey-darken-1"
+              color="white"
               variant="outlined"
             >
-              {{ newsItems.length }} 則消息
+              {{ sharedResources.length }} 個檔案
             </v-chip>
           </v-card-title>
           <v-card-text class="pa-4">
-            <v-list class="pa-0">
+            <v-skeleton-loader
+              v-if="sharedResourcesLoading"
+              type="list-item@4"
+            />
+            <v-list
+              v-else
+              class="pa-0"
+            >
               <v-list-item
-                v-for="item in newsItems"
-                :key="item.id"
-                class="px-0 mb-2"
+                v-for="resource in sharedResources"
+                :key="resource.id"
+                class="px-2 mb-2 resource-item"
+                @click="handleResourceDownload(resource)"
               >
                 <template #prepend>
                   <v-avatar
-                    :color="getNewsTypeColor(item.type)"
-                    size="32"
+                    :color="getFileTypeColor(resource.type)"
+                    size="36"
                   >
                     <v-icon
-                      size="16"
+                      size="18"
                       color="white"
                     >
-                      {{ item.type === 'system' ? 'mdi-cog' : item.type === 'update' ? 'mdi-update' : 'mdi-bullhorn' }}
+                      {{ getFileTypeIcon(resource.type) }}
                     </v-icon>
                   </v-avatar>
                 </template>
-                <v-list-item-title class="text-body-1 font-weight-medium">
-                  {{ item.title }}
+                <v-list-item-title class="text-body-2 font-weight-medium">
+                  {{ resource.name }}
                 </v-list-item-title>
-                <v-list-item-subtitle class="text-body-2 text-grey-darken-1">
-                  {{ item.content }}
+                <v-list-item-subtitle class="text-caption text-grey-darken-1">
+                  {{ resource.size }}
                 </v-list-item-subtitle>
                 <template #append>
-                  <div class="text-caption text-grey">
-                    {{ item.time }}
-                  </div>
+                  <v-icon
+                    size="20"
+                    color="grey-darken-1"
+                  >
+                    mdi-download
+                  </v-icon>
                 </template>
               </v-list-item>
-            </v-list>
-          </v-card-text>
-        </v-card>
-      </v-col>
-
-      <!-- 快速連結 -->
-      <v-col
-        cols="12"
-        sm="6"
-        md="3"
-      >
-        <v-card
-          class="dashboard-card quick-links-card pt-4 px-3"
-          elevation="2"
-        >
-          <v-card-title class="d-flex align-center">
-            <!-- <v-icon
-              size="24"
-              color="purple-darken-2"
-              class="me-2"
-            >
-              mdi-link-variant
-            </v-icon> -->
-            <span class="block-title">快速連結</span>
-            <v-spacer />
-            <v-chip
-              size="small"
-              color="grey-darken-1"
-              variant="outlined"
-            >
-              {{ quickLinks.length }} 個連結
-            </v-chip>
-          </v-card-title>
-          <v-card-text class="pa-4">
-            <v-row>
-              <v-col
-                v-for="link in quickLinks"
-                :key="link.id"
-                cols="6"
-                class="pa-1"
+              <div
+                v-if="sharedResources.length === 0"
+                class="text-center py-4 text-grey"
               >
-                <v-card
-                  class="quick-link-item"
-                  elevation="1"
-                  hover
-                  @click="router.push(link.to)"
-                >
-                  <v-card-text class="text-center pa-3">
-                    <v-avatar
-                      :color="link.color"
-                      size="40"
-                      class="mb-2"
-                    >
-                      <v-icon
-                        size="20"
-                        color="white"
-                      >
-                        {{ link.icon }}
-                      </v-icon>
-                    </v-avatar>
-                    <div class="text-body-2 font-weight-medium">
-                      {{ link.title }}
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
+                暫無共享資源
+              </div>
+            </v-list>
           </v-card-text>
         </v-card>
       </v-col>
@@ -496,8 +608,8 @@
 <script setup>
 import { useDisplay } from 'vuetify'
 import { definePage } from 'vue-router/auto'
-import { useRouter } from 'vue-router'
 import { ref, onMounted, nextTick, computed, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useApi } from '@/composables/axios'
@@ -588,28 +700,32 @@ const currentSlide = ref(0)
 const slides = ref([])
 const carouselLoading = ref(false)
 
-// 代辦事項相關
-const todoItems = ref([
-  { id: 1, title: '完成專案報告', completed: false, priority: 'high' },
-  { id: 2, title: '回覆客戶郵件', completed: false, priority: 'medium' },
-  { id: 3, title: '準備會議資料', completed: true, priority: 'low' },
-  { id: 4, title: '更新系統文檔', completed: false, priority: 'medium' }
-])
-
 // 最新消息相關
-const newsItems = ref([
-  { id: 1, title: '系統維護通知', content: '系統將於本週末進行例行維護', time: '2小時前', type: 'system' },
-  { id: 2, title: '新功能發布', content: '最新版本已上線，包含多項改進', time: '1天前', type: 'update' },
-  { id: 3, title: '重要公告', content: '請注意新的安全政策更新', time: '3天前', type: 'announcement' }
-])
+const newsItems = ref([])
+const newsLoading = ref(false)
 
-// 快速連結相關
-const quickLinks = ref([
-  { id: 1, title: '專案管理', icon: 'mdi-chart-box-outline', color: 'teal', to: '/projectAndTaskManagement' },
-  { id: 2, title: '員工列表', icon: 'mdi-account-group', color: 'blue', to: '/employeeList' },
-  { id: 3, title: '統計報表', icon: 'mdi-chart-line', color: 'green', to: '/B2CStatistics' },
-  { id: 4, title: '系統設定', icon: 'mdi-cog', color: 'purple', to: '/user' }
-])
+// 分機表相關
+const extensions = ref([])
+const extensionLoading = ref(false)
+const extensionSearch = ref('')
+
+// 過濾後的分機列表
+const filteredExtensions = computed(() => {
+  if (!extensionSearch.value) {
+    return extensions.value
+  }
+
+  const searchTerm = extensionSearch.value.toLowerCase()
+  return extensions.value.filter(ext =>
+    ext.name.toLowerCase().includes(searchTerm) ||
+    ext.extNumber.includes(searchTerm) ||
+    ext.jobTitle?.toLowerCase().includes(searchTerm)
+  )
+})
+
+// 共享資源相關
+const sharedResources = ref([])
+const sharedResourcesLoading = ref(false)
 
 // 預設密碼提醒相關
 const showDefaultPasswordDialog = ref(false)
@@ -655,21 +771,73 @@ const handleCarouselClick = (slide) => {
   }
 }
 
-// 代辦事項相關函數
-const toggleTodo = (id) => {
-  const item = todoItems.value.find(item => item.id === id)
-  if (item) {
-    item.completed = !item.completed
+// 共享資源相關函數
+const handleResourceDownload = async (resource) => {
+  try {
+    createSnackbar({
+      text: `正在下載 ${resource.name}...`,
+      snackbarProps: { color: 'blue-lighten-1' }
+    })
+
+    // 使用 API 下載檔案
+    const response = await apiAuth.get(`/sharedResources/${resource.url}/download`, {
+      responseType: 'blob'
+    })
+
+    // 創建下載連結
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', resource.name)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+
+    createSnackbar({
+      text: `${resource.name} 下載成功`,
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+  } catch (error) {
+    console.error('下載檔案失敗:', error)
+    createSnackbar({
+      text: error.response?.data?.message || '下載檔案失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
   }
 }
 
-const getPriorityColor = (priority) => {
-  switch (priority) {
-    case 'high': return 'red'
-    case 'medium': return 'orange'
-    case 'low': return 'green'
+const getFileTypeIcon = (type) => {
+  switch (type) {
+    case 'pdf': return 'mdi-file-pdf-box'
+    case 'word': return 'mdi-file-word-box'
+    case 'excel': return 'mdi-file-excel-box'
+    case 'powerpoint': return 'mdi-file-powerpoint-box'
+    case 'image': return 'mdi-file-image-box'
+    case 'zip': return 'mdi-folder-zip'
+    default: return 'mdi-file-document'
+  }
+}
+
+const getFileTypeColor = (type) => {
+  switch (type) {
+    case 'pdf': return 'red'
+    case 'word': return 'blue'
+    case 'excel': return 'green'
+    case 'powerpoint': return 'orange'
+    case 'image': return 'purple'
+    case 'zip': return 'amber'
     default: return 'grey'
   }
+}
+
+// 格式化檔案大小
+const formatFileSize = (bytes) => {
+  if (!bytes) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
 }
 
 // 天氣 API 配置 (已移除 OpenWeatherMap，優先使用台灣官方 API)
@@ -682,6 +850,92 @@ const CWA_API_KEY = 'CWA-75827C23-971A-4752-A41C-30CFB98F9FB1' // 需要申請
 const BACKUP_WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast'
 
 // 只使用中央氣象署官方 API
+
+// 獲取共享資源數據
+const fetchSharedResources = async () => {
+  try {
+    sharedResourcesLoading.value = true
+    const { data } = await apiAuth.get('/sharedResources/active', {
+      params: {
+        limit: 10
+      }
+    })
+
+    if (data.success) {
+      sharedResources.value = data.result.map(item => ({
+        id: item._id,
+        name: item.name,
+        type: item.type,
+        size: formatFileSize(item.file?.size || 0),
+        url: item._id,
+        description: item.description
+      }))
+    }
+  } catch (error) {
+    console.error('獲取共享資源數據失敗:', error)
+    // 如果 API 失敗，使用空陣列
+    sharedResources.value = []
+  } finally {
+    sharedResourcesLoading.value = false
+  }
+}
+
+// 獲取分機表數據
+const fetchExtensions = async () => {
+  try {
+    extensionLoading.value = true
+    const { data } = await apiAuth.get('/employees/all', {
+      params: {
+        status: '在職',
+        itemsPerPage: -1
+      }
+    })
+
+    if (data.success) {
+      // 處理不同的資料結構
+      let employeeData = []
+      if (Array.isArray(data.result)) {
+        employeeData = data.result
+      } else if (data.result && Array.isArray(data.result.data)) {
+        employeeData = data.result.data
+      }
+
+      // 公司顏色對應
+      const companyColors = {
+        '永信台北': 'cyan-darken-2',
+        '永信高雄': 'orange-darken-2',
+        '永信台中': 'pink-darken-1',
+        '永信桃園': 'indigo-darken-2',
+        default: 'grey-darken-1'
+      }
+
+      // 只保留有分機號碼的員工，並按姓名排序
+      extensions.value = employeeData
+        .filter(emp => emp.extNumber)
+        .map(emp => {
+          const companyName = emp.company?.name || '其他'
+          const companyColor = companyColors[companyName] || companyColors.default
+
+          return {
+            _id: emp._id,
+            name: emp.name,
+            extNumber: emp.extNumber,
+            jobTitle: emp.jobTitle || '職員',
+            department: emp.department?.name || '',
+            companyName: companyName,
+            companyColor: companyColor
+          }
+        })
+        .sort((a, b) => a.name.localeCompare(b.name, 'zh-Hant'))
+    }
+  } catch (error) {
+    console.error('獲取分機表數據失敗:', error)
+    // 如果 API 失敗，使用空陣列
+    extensions.value = []
+  } finally {
+    extensionLoading.value = false
+  }
+}
 
 // 獲取輪播圖數據
 const fetchCarouselData = async () => {
@@ -710,6 +964,35 @@ const fetchCarouselData = async () => {
     ]
   } finally {
     carouselLoading.value = false
+  }
+}
+
+// 載入公告數據
+const fetchAnnouncements = async () => {
+  try {
+    newsLoading.value = true
+    const { data } = await apiAuth.get('/announcements', {
+      params: {
+        isActive: true,
+        page: 1,
+        itemsPerPage: 5,
+        sortBy: 'createdAt',
+        sortOrder: 'desc'
+      }
+    })
+
+    if (data.success) {
+      // 將置頂公告排在前面
+      newsItems.value = data.result.data.sort((a, b) => {
+        if (a.isPinned && !b.isPinned) return -1
+        if (!a.isPinned && b.isPinned) return 1
+        return 0
+      })
+    }
+  } catch (error) {
+    console.error('載入公告錯誤:', error)
+  } finally {
+    newsLoading.value = false
   }
 }
 
@@ -946,14 +1229,62 @@ const getCurrentLocation = async () => {
   return '台北市'
 }
 
-// 消息類型顏色
-const getNewsTypeColor = (type) => {
-  switch (type) {
-    case 'system': return 'blue'
-    case 'update': return 'green'
-    case 'announcement': return 'orange'
-    default: return 'grey'
+// 公告類型顏色
+const getAnnouncementTypeColor = (type) => {
+  const colorMap = {
+    system: 'red-darken-1',
+    update: 'blue-darken-1',
+    announcement: 'green-darken-1',
+    maintenance: 'orange-darken-1',
+    event: 'purple-darken-1'
   }
+  return colorMap[type] || 'grey-darken-1'
+}
+
+// 公告類型文字
+const getAnnouncementTypeText = (type) => {
+  const typeMap = {
+    system: '系統',
+    update: '更新',
+    announcement: '一般',
+    maintenance: '維護',
+    event: '活動'
+  }
+  return typeMap[type] || '一般'
+}
+
+// 格式化公告日期
+const formatAnnouncementDate = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  const now = new Date()
+  const diff = now - d
+
+  // 如果是今天
+  if (diff < 86400000 && now.getDate() === d.getDate()) {
+    const hours = Math.floor(diff / 3600000)
+    if (hours === 0) {
+      const minutes = Math.floor(diff / 60000)
+      return `${minutes}分鐘前`
+    }
+    return `${hours}小時前`
+  }
+
+  // 如果是昨天
+  if (diff < 172800000 && now.getDate() - d.getDate() === 1) {
+    return '昨天'
+  }
+
+  // 顯示完整日期
+  return d.toLocaleDateString('zh-TW', {
+    month: '2-digit',
+    day: '2-digit'
+  })
+}
+
+// 查看公告詳情
+const viewAnnouncement = (announcement) => {
+  router.push(`/announcement/${announcement._id}`)
 }
 
 // 密碼驗證函數
@@ -1043,10 +1374,13 @@ onMounted(async () => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
 
-  // 獲取天氣數據和輪播圖數據
+  // 獲取天氣數據、輪播圖數據、公告數據、分機表數據和共享資源數據
   await Promise.all([
     fetchWeatherData(),
-    fetchCarouselData()
+    fetchCarouselData(),
+    fetchAnnouncements(),
+    fetchExtensions(),
+    fetchSharedResources()
   ])
 
   if (user.isLogin && !user.isDefaultPasswordChanged) {
@@ -1077,16 +1411,35 @@ onUnmounted(() => {
 
 // 時間卡片樣式
 .time-card {
+  background: url('/src/assets/image/bg_monster_2.png');
+  background-position: center;
+  background-size: cover;
   .time-display {
-    font-size: 32px;
-    font-weight: 400;
-    color: #363636;
-    font-family: 'Quantico', monospace;
+    text-align: center;
+    width: 126px;
+    font-size: 36px;
+    font-weight: 100;
+    letter-spacing: 4px;
+    color: #0097A7;
+    font-family: 'Spicy Rice', sans-serif;
+    background: rgba(255, 255, 255, 0.98);
+    padding: 0px 8px;
+    margin-top: 4px;
+    margin-bottom: 6px;
+    border-radius: 4px;
   }
 
   .date-display,
   .day-display {
-    font-weight: 500;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.98);
+    margin-bottom: 2px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    letter-spacing: 0.4px;
   }
 }
 
@@ -1190,86 +1543,133 @@ onUnmounted(() => {
   }
 
   .temperature-display {
-    font-size: 20px;
+    font-size: 32px;
     font-weight: 700;
     color: #fff;
+    font-family: 'Quantico', sans-serif;
   }
 
   .feels-like {
-    font-size: 12px;
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 300;
     color: #fff;
+    font-family:'Noto Sans TC', sans-serif;
   }
 
   .location-display {
-    font-weight: 500;
+    font-size: 13px;
+    font-weight: 300;
     color: #fff;
+    font-family:'Noto Sans TC', sans-serif;
+
   }
 
   .weather-description {
-    font-size: 12px;
-    font-weight: 600;
+    font-weight: 400;
     color: #fff;
     text-transform: capitalize;
+    font-family:'Noto Sans TC', sans-serif;
+
   }
 
   .weather-details {
-    font-size: 0.85rem;
     line-height: 1.4;
   }
 }
 
 .humidity-display {
   color: #fff;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 300;
+  font-family:'Noto Sans TC', sans-serif;
 }
 
 .wind-speed-display {
   color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-// 代辦事項卡片樣式
-.todo-card {
-  .v-list-item {
-    border-radius: 8px;
-    margin-bottom: 4px;
-
-    &:hover {
-      background-color: rgba(255, 152, 0, 0.1);
-    }
-  }
+  font-size: 11px;
+  font-weight: 300;
+  font-family:'Noto Sans TC', sans-serif;
 }
 
 // 最新消息卡片樣式
 .news-card {
-  .v-list-item {
-    border-radius: 8px;
+  height: auto;
+  min-height: 300px;
+
+  .news-item {
+    border-radius: 4px !important;
     margin-bottom: 8px;
-  border: 1px solid #f0f0f0;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: all 0.1s ease;
 
     &:hover {
-      background-color: rgba(76, 175, 80, 0.1);
+      background-color: rgba(139, 139, 139, 0.08);
+      border-color: rgba(114, 114, 114, 0.3);
+    }
+  }
+  .info-item-tag {
+    width: 80px;
+  }
+}
+
+// 分機表卡片樣式
+.extension-card {
+  height: 360px;
+  .extension-list-scroll {
+    overflow-y: auto;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 3px;
+
+      &:hover {
+        background: #555;
+      }
+    }
+  }
+
+  .extension-item {
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: rgba(96, 125, 139, 0.08);
+      border-color: rgba(96, 125, 139, 0.3);
     }
   }
 }
 
-// 快速連結卡片樣式
-.quick-links-card {
-  .quick-link-item {
-    border-radius: 12px;
+// 共享資源卡片樣式
+.shared-resources-card {
+  .resource-item {
+    border-radius: 8px;
+    border: 1px solid #f0f0f0;
     transition: all 0.3s ease;
     cursor: pointer;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      background-color: rgba(33, 150, 243, 0.08);
+      border-color: rgba(33, 150, 243, 0.3);
+      transform: translateX(4px);
     }
   }
 }
 
+.home-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+}
 
 @include sm {
   .time-card {
@@ -1290,23 +1690,36 @@ onUnmounted(() => {
   .weather-card {
     height: 230px;
     .temperature-display {
-      font-size: 40px;
+      font-size: 36px;
     }
     .feels-like {
-      font-size: 16px;
+      font-size: 14px;
     }
     .location-display {
-      font-size: 15px;
+      font-size: 13px;
     }
     .weather-description {
-      font-size: 16px;
+      font-size: 15px;
     }
     .humidity-display {
-      font-size: 14px;
+      font-size: 13px;
     }
     .wind-speed-display {
-      font-size: 14px;
+      font-size: 13px;
     }
+  }
+
+  .news-card {
+    height: 400px;
+  }
+
+  .home-card-title {
+  font-size: 16px;
+  font-weight: 700;
+  }
+
+  .v-card-title {
+  padding: 10px 16px;
   }
 }
 

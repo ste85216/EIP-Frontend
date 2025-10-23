@@ -553,7 +553,7 @@
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
-                  base-color="blue-grey-darken-2"
+                  base-color="cyan-darken-3"
                 >
                   <template #prepend>
                     <v-icon>{{ child.icon }}</v-icon>
@@ -1054,7 +1054,7 @@
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
-                  base-color="blue-grey-darken-2"
+                  base-color="cyan-darken-3"
                 >
                   <template #prepend>
                     <v-icon>{{ child.icon }}</v-icon>
@@ -1272,6 +1272,12 @@ const coreItems = [
     permission: 'EXTENSION_LIST_READ'
   },
   {
+    to: '/announcement',
+    text: '所有公告',
+    icon: 'mdi-bullhorn',
+    permission: 'ANNOUNCEMENT_PAGE_READ'
+  },
+  {
     text: '申請相關',
     icon: 'mdi-file-document-outline',
     permission: ['MARKETING_DESIGN_REQUEST_PAGE_READ'],
@@ -1458,13 +1464,25 @@ const settingsItems = [
   {
     text: '首頁管理',
     icon: 'mdi-home-edit',
-    permission: ['CAROUSEL_MANAGEMENT_READ'],
+    permission: ['CAROUSEL_READ', 'ANNOUNCEMENT_READ'],
     children: [
+      {
+        to: '/announcementManagement',
+        text: '公告管理',
+        icon: 'mdi-bullhorn',
+        permission: 'ANNOUNCEMENT_READ'
+      },
       {
         to: '/carouselManagement',
         text: '輪播圖管理',
         icon: 'mdi-image-multiple',
-        permission: 'CAROUSEL_MANAGEMENT_READ'
+        permission: 'CAROUSEL_READ'
+      },
+      {
+        to: '/sharedResourceManagement',
+        text: '共享資源管理',
+        icon: 'mdi-share-all',
+        permission: 'SHARED_RESOURCE_MANAGEMENT_READ'
       }
     ]
   },
