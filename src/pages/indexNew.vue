@@ -215,9 +215,10 @@
                   class="pa-0"
                 >
                   <v-list-item
-                    v-for="item in newsItems"
+                    v-for="(item, index) in newsItems"
                     :key="item._id"
-                    class="px-3 mb-2 news-item"
+                    class="px-3  news-item"
+                    :class="{ 'news-item-even': index % 2 === 0, 'news-item-odd': index % 2 === 1 }"
                     @click="viewAnnouncement(item)"
                   >
                     <v-list-item-title class="d-flex align-center flex-wrap gap-2">
@@ -1416,7 +1417,7 @@ onUnmounted(() => {
   background-size: cover;
   .time-display {
     text-align: center;
-    width: 126px;
+    width: 136px;
     font-size: 36px;
     font-weight: 100;
     letter-spacing: 4px;
@@ -1434,10 +1435,10 @@ onUnmounted(() => {
     text-align: center;
     background: rgba(255, 255, 255, 0.98);
     margin-bottom: 2px;
-    padding: 1px 6px;
+    padding: 1px 8px;
     border-radius: 4px;
     font-family: 'Noto Sans TC', sans-serif;
-    font-weight: 400;
+    font-weight: 500;
     font-size: 13px;
     letter-spacing: 0.4px;
   }
@@ -1597,14 +1598,27 @@ onUnmounted(() => {
   min-height: 300px;
 
   .news-item {
-    border-radius: 4px !important;
-    margin-bottom: 8px;
     border-bottom: 1px solid #eee;
     cursor: pointer;
     transition: all 0.1s ease;
 
     &:hover {
       background-color: rgba(139, 139, 139, 0.08);
+      border-color: rgba(114, 114, 114, 0.3);
+    }
+
+    // 交錯底色樣式
+    &.news-item-even {
+      background-color: rgba(250, 250, 250, 0.8);
+    }
+
+    &.news-item-odd {
+      background-color: rgba(255, 188, 188, 0.6);
+    }
+
+    // hover 時覆蓋交錯底色
+    &:hover {
+      background-color: rgba(139, 139, 139, 0.08) !important;
       border-color: rgba(114, 114, 114, 0.3);
     }
   }
