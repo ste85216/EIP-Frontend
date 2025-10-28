@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-v-html -->
 <template>
   <v-container max-width="1200">
     <v-row class="elevation-4 rounded-lg py-4 py-sm-6 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white">
@@ -144,6 +145,7 @@
               <span class="card-title">公告內容</span>
             </v-card-title>
             <v-card-text class="pa-6">
+              <!-- eslint-disable-next-line vue/no-v-html -->
               <div
                 class="announcement-content"
                 v-html="announcement.content"
@@ -333,8 +335,29 @@ const getFileIcon = (mimetype) => {
 }
 
 // 下載附件
-const downloadAttachment = (attachment) => {
-  window.open(attachment.path, '_blank')
+const downloadAttachment = async (attachment) => {
+  try {
+    // 使用 apiAuth 下載檔案，responseType 設為 blob
+    const response = await apiAuth.get(`/announcements/${route.params.id}/download/${attachment.filename}`, {
+      responseType: 'blob'
+    })
+
+    // 創建下載連結
+    const url = window.URL.createObjectURL(response.data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = attachment.originalName // 使用原始檔名
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('下載失敗:', error)
+    createSnackbar({
+      text: error.response?.data?.message || '下載失敗，請稍後再試',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
 }
 
 // 組件掛載時載入資料

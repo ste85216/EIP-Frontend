@@ -355,9 +355,23 @@
             </v-btn>
           </div>
 
+          <!-- 附件載入中 -->
+          <div
+            v-if="isLoadingDetails"
+            class="d-flex justify-center align-center py-6"
+          >
+            <v-progress-circular
+              indeterminate
+              color="blue-grey"
+              size="32"
+              width="3"
+            />
+            <span class="text-caption text-grey ms-3">載入附件中...</span>
+          </div>
+
           <!-- 現有附件列表 -->
           <div
-            v-if="task?.attachments && task.attachments.length > 0"
+            v-else-if="task?.attachments && task.attachments.length > 0"
             class="attachment-list"
           >
             <div class="text-caption text-grey mb-2">
@@ -419,7 +433,23 @@
         <!-- 描述區域 -->
         <div class="field-section full-width">
           <label class="field-label">描述</label>
-          <div>
+
+          <!-- 描述載入中 -->
+          <div
+            v-if="isLoadingDetails"
+            class="description-loading d-flex justify-center align-center"
+          >
+            <v-progress-circular
+              indeterminate
+              color="blue-grey"
+              size="32"
+              width="3"
+            />
+            <span class="text-caption text-grey ms-3">載入描述中...</span>
+          </div>
+
+          <!-- 描述編輯器 -->
+          <div v-else>
             <RichTextEditor
               v-model="taskDescription"
               placeholder="輸入任務描述..."
@@ -455,9 +485,23 @@
           </v-btn>
         </div>
 
+        <!-- 評論載入中 -->
+        <div
+          v-if="isLoadingDetails"
+          class="d-flex justify-center align-center py-6"
+        >
+          <v-progress-circular
+            indeterminate
+            color="blue-grey"
+            size="32"
+            width="3"
+          />
+          <span class="text-caption text-grey ms-3">載入評論中...</span>
+        </div>
+
         <!-- 評論列表 -->
         <div
-          v-if="task?.comments && task.comments.length > 0"
+          v-else-if="task?.comments && task.comments.length > 0"
           ref="commentsListRef"
           class="comments-list"
           :class="{ 'comments-expanded': isCommentsExpanded }"
@@ -764,6 +808,9 @@ const menuPosition = ref({ x: 0, y: 0 })
 // 詳情載入狀態與已載入任務ID
 const isLoadingDetails = ref(false)
 const lastLoadedTaskId = ref(null)
+const isLoadingTask = ref(false) // 新增：標記是否正在載入任務（用於防止自動更新）
+const lastLoadedDescription = ref('') // 記錄最後載入的描述內容
+const currentTaskIdForDescription = ref(null) // 記錄 taskDescription 對應的任務ID
 
 // 計算屬性
 const drawerOpen = computed({
@@ -871,18 +918,32 @@ const fetchTaskDetails = async () => {
 
   try {
     isLoadingDetails.value = true
+    isLoadingTask.value = true // 標記開始載入任務
+
     const { data } = await apiAuth.get(`/tasks/${props.task._id}`)
     if (data.success && data.data) {
-      // 回填至父層，父層會同步更新選中任務與分類中的對應任務
-      emit('task-updated', data.data)
+      console.log('📦 fetchTaskDetails 成功載入', {
+        taskId: data.data._id,
+        hasAttachments: data.data.attachments?.length || 0,
+        hasComments: data.data.comments?.length || 0
+      })
+
       lastLoadedTaskId.value = props.task._id
-      // 直接以詳情回填描述（避免首次載入因限制只在 ID 變更時回填而空白）
+
+      // 直接本地更新 taskDescription，不觸發父組件更新
       if (!isSavingDescription.value) {
         const incomingDesc = data.data.description || ''
         if ((taskDescription.value || '') !== incomingDesc) {
           taskDescription.value = incomingDesc
+          // 記錄最後載入的描述內容和對應的任務ID
+          lastLoadedDescription.value = incomingDesc
+          currentTaskIdForDescription.value = props.task._id
         }
       }
+
+      // 發送 task-updated 事件，讓父組件更新附件、評論等資料
+      // 這是必要的，否則附件、評論等資料無法顯示
+      emit('task-updated', data.data)
     }
   } catch (error) {
     console.error('載入任務詳情失敗:', error)
@@ -892,6 +953,10 @@ const fetchTaskDetails = async () => {
     })
   } finally {
     isLoadingDetails.value = false
+    // 延遲取消載入標記，確保 RichTextEditor 完全初始化
+    setTimeout(() => {
+      isLoadingTask.value = false
+    }, 200)
   }
 }
 
@@ -909,12 +974,39 @@ const flushDescriptionSave = async () => {
     clearTimeout(descriptionUpdateTimer)
     descriptionUpdateTimer = null
   }
+
+  // 🔒 關鍵檢查：確保 taskDescription 對應的任務ID 和當前任務ID 一致
+  // 防止切換任務時把A任務的描述保存到B任務中
+  if (currentTaskIdForDescription.value !== props.task._id) {
+    console.log('⏭️ flushDescriptionSave 跳過：任務ID不匹配', {
+      currentTaskId: currentTaskIdForDescription.value,
+      propsTaskId: props.task._id
+    })
+    return
+  }
+
+  // 檢查描述是否真的有變化
+  if (taskDescription.value === lastLoadedDescription.value) {
+    console.log('⏭️ flushDescriptionSave 跳過：描述未變化')
+    return
+  }
+
+  console.log('💾 flushDescriptionSave 開始保存', {
+    taskId: props.task._id,
+    taskName: props.task?.name,
+    descriptionLength: taskDescription.value?.length || 0
+  })
+
   try {
     isSavingDescription.value = true
     const { data } = await apiAuth.put(`/tasks/${props.task._id}`, {
       description: taskDescription.value
     })
     if (data.success) {
+      console.log('✅ flushDescriptionSave 保存成功')
+      // 更新最後載入的描述內容和對應的任務ID
+      lastLoadedDescription.value = taskDescription.value
+      currentTaskIdForDescription.value = props.task._id
       emit('task-updated', data.data)
     }
   } catch (error) {
@@ -935,8 +1027,11 @@ const handleDescriptionBlur = () => {
 const updateDescription = async (newDescription) => {
   if (!props.task || !props.task._id) return
 
-  // 如果正在初始化，不執行更新
-  if (isInitializing.value) return
+  // 如果正在初始化或正在載入任務，不執行更新
+  if (isInitializing.value || isLoadingTask.value) return
+
+  // 檢查描述內容是否真的改變了（與最後載入的內容比較）
+  if (newDescription === lastLoadedDescription.value) return
 
   // 清除之前的計時器
   if (descriptionUpdateTimer) {
@@ -952,6 +1047,9 @@ const updateDescription = async (newDescription) => {
       })
 
       if (data.success) {
+        // 更新最後載入的描述內容和對應的任務ID
+        lastLoadedDescription.value = newDescription
+        currentTaskIdForDescription.value = props.task._id
         emit('task-updated', data.data)
         // 移除成功訊息，避免頻繁提示
         // createSnackbar({
@@ -1659,6 +1757,10 @@ watch(drawerOpen, (newValue) => {
     }
     // 側欄關閉時再保險沖刷一次
     flushDescriptionSave()
+    // 重置載入標記
+    // 不要清空 lastLoadedDescription 和 currentTaskIdForDescription
+    // 保持它們的值，以便下次打開時正確比較和防止數據覆蓋
+    isLoadingTask.value = false
   } else {
     // 側邊欄開啟時，重置自動滾動狀態並滾動到底部
     shouldAutoScroll.value = true
@@ -1695,19 +1797,44 @@ watch(() => props.task, (newTask, oldTask) => {
     editingAssignee.value = null
     editingDueDate.value = null
 
-    // 僅在任務 ID 變更時設置初始化標記
+    // 僅在任務 ID 變更時設置初始化標記和載入標記
     if (!oldTask || newTask._id !== oldTask._id) {
       isInitializing.value = true
+      isLoadingTask.value = true
     }
 
     // 僅在非本地保存期間且內容確實不同時，才回填描述，避免輸入時閃爍
     // 僅在任務 ID 變更時回填描述，避免同一任務編輯期間被覆寫
     if (!oldTask || newTask._id !== oldTask._id) {
+      console.log('📝 watch props.task: 任務切換', {
+        oldTaskId: oldTask?._id,
+        newTaskId: newTask._id,
+        newTaskName: newTask.name
+      })
       if (!isSavingDescription.value) {
-        taskDescription.value = newTask.description || ''
+        const desc = newTask.description || ''
+        taskDescription.value = desc
+        // 記錄最後載入的描述內容和對應的任務ID
+        lastLoadedDescription.value = desc
+        currentTaskIdForDescription.value = newTask._id
+        console.log('📝 已更新描述和ID追蹤', {
+          descLength: desc.length,
+          taskId: newTask._id
+        })
+      }
+    } else {
+      // 即使是相同任務，也要確保 lastLoadedDescription 是最新的（避免關閉後重開時比較失敗）
+      if (!isSavingDescription.value && lastLoadedDescription.value !== newTask.description) {
+        console.log('📝 watch props.task: 同一任務，更新描述', {
+          taskId: newTask._id,
+          oldDescLength: lastLoadedDescription.value?.length || 0,
+          newDescLength: newTask.description?.length || 0
+        })
+        const desc = newTask.description || ''
+        lastLoadedDescription.value = desc
+        currentTaskIdForDescription.value = newTask._id
       }
     }
-    console.log('TaskSidebar 接收到的任務資料:', newTask)
 
     // 檢查是否有新評論
     const hasNewComments = checkForNewComments(newTask)
@@ -1718,12 +1845,13 @@ watch(() => props.task, (newTask, oldTask) => {
       scrollCommentsToBottom()
     }
 
-    // 使用 nextTick 確保 DOM 更新完成後再取消初始化標記
+    // 使用 nextTick 確保 DOM 更新完成後再取消初始化標記和載入標記
     if (!oldTask || newTask._id !== oldTask._id) {
       nextTick(() => {
         setTimeout(() => {
           isInitializing.value = false
-        }, 100) // 稍微延遲，確保 RichTextEditor 完全初始化
+          isLoadingTask.value = false
+        }, 200) // 稍微延遲，確保 RichTextEditor 完全初始化
       })
     }
 
@@ -1960,6 +2088,14 @@ onUnmounted(() => {
 
 .comment-toolbar .v-btn--icon.text-primary {
   background-color: rgb(var(--v-theme-primary-container));
+}
+
+/* Loading 狀態樣式 */
+.description-loading {
+  min-height: 200px;
+  border: 1px solid rgb(var(--v-theme-outline-variant));
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 /* 附件相關樣式 */

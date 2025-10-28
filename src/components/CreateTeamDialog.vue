@@ -90,26 +90,27 @@
                 <template #chip="{ props: chipProps, item }">
                   <v-chip
                     v-bind="chipProps"
-                    :prepend-avatar="item.raw.avatar"
                     color="primary"
                     variant="tonal"
                   >
+                    <template #prepend>
+                      <UserAvatar
+                        :user="item.raw"
+                        :size="24"
+                        avatar-class="me-2"
+                      />
+                    </template>
                     {{ item.raw.name }}
                   </v-chip>
                 </template>
                 <template #item="{ props: itemProps, item }">
                   <v-list-item v-bind="itemProps">
                     <template #prepend>
-                      <v-avatar size="32">
-                        <v-img
-                          v-if="item.raw.avatar"
-                          :src="item.raw.avatar"
-                          :alt="item.raw.name"
-                        />
-                        <v-icon v-else>
-                          mdi-account
-                        </v-icon>
-                      </v-avatar>
+                      <UserAvatar
+                        :user="item.raw"
+                        :size="32"
+                        avatar-class="me-3"
+                      />
                     </template>
                     <v-list-item-subtitle>{{ item.raw.email }}</v-list-item-subtitle>
                   </v-list-item>
@@ -153,6 +154,7 @@ import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useUserStore } from '@/stores/user'
 import { useDisplay } from 'vuetify'
+import UserAvatar from '@/components/UserAvatar.vue'
 
 const props = defineProps({
   modelValue: {

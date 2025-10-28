@@ -552,22 +552,35 @@ const handleTableOptions = (options) => {
 }
 
 // 開啟新增對話框
-const openCreateDialog = () => {
-  showCreateForm()
+const openCreateDialog = async () => {
+  await showCreateForm()
   showCreateDialog.value = true
 }
 
 // 新增共享資源
-const showCreateForm = () => {
+const showCreateForm = async () => {
   isEditing.value = false
 
   // 重置表單
   resetForm()
 
+  // 取得目前最大的排序值
+  try {
+    const response = await apiAuth.get('/sharedResources/max-order')
+    const maxOrder = response.data.result || 0
+    order.value.value = maxOrder + 1
+  } catch (error) {
+    console.error('取得最大排序值錯誤:', error)
+    // 如果取得失敗，使用現有列表計算
+    const maxOrder = resources.value.length > 0
+      ? Math.max(...resources.value.map(r => r.order || 0))
+      : 0
+    order.value.value = maxOrder + 1
+  }
+
   // 設定預設值
   name.value.value = ''
   description.value.value = ''
-  order.value.value = 0
   isActive.value.value = true
   file.value.value = null
   existingFile.value = null
@@ -622,7 +635,7 @@ const handleSubmit = validateForm(async (values) => {
       // 新增模式下必須上傳檔案
       createSnackbar({
         text: '請選擇要上傳的檔案',
-        snackbarProps: { color: 'orange-lighten-1' }
+        snackbarProps: { color: 'orange-darken-1' }
       })
       isSubmitting.value = false
       return

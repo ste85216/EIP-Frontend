@@ -408,7 +408,7 @@
             </v-icon>
           </v-btn>
         </div>
-        <v-card-text class="mt-6  px-6">
+        <v-card-text class="mt-3 px-6">
           <v-combobox
             v-model="selectedMembers"
             :items="availableUsers"
