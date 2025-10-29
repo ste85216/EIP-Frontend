@@ -713,7 +713,8 @@ const modelOptions = [
   { title: '行銷美編需求申請', value: 'designRequests' },
   { title: '通知 EMAIL', value: 'notificationEmails' },
   { title: '權限', value: 'permissions' },
-  { title: '角色', value: 'roles' }
+  { title: '角色', value: 'roles' },
+  { title: '輪播圖', value: 'carousels' }
 ]
 
 // 表格標頭
@@ -876,6 +877,7 @@ const fieldTranslations = {
   module: '模組',
   resource: '資源',
   action: '操作類型',
+  image: '圖片',
 }
 
 // 行銷分類類型對應
@@ -994,7 +996,8 @@ const getModelDisplay = (model) => {
     designRequests: '行銷美編需求申請',
     notificationEmails: '通知 EMAIL',
     permissions: '權限',
-    roles: '角色'
+    roles: '角色',
+    carousels: '輪播圖'
   }
   return modelMap[model] || model
 }
@@ -1049,6 +1052,14 @@ const formatTarget = (item) => {
       const userId = info.userId || (after.user && (after.user.userId || after.user.adminId)) || ''
       return `${userName}${userId ? ` (${userId})` : ''}`
     }
+    if (item.targetModel === 'carousels') {
+      const before = item.changes.before
+      const title = before.title || '(無標題)'
+      const order = before.order || 0
+      const isActive = before.isActive !== undefined ? before.isActive : true
+      const status = isActive ? '啟用' : '停用'
+      return `${title} (排序: ${order}, ${status})`
+    }
   }
 
   if (item.targetModel === 'marketingBudgets') {
@@ -1093,6 +1104,15 @@ const formatTarget = (item) => {
     const userName = info.name || (after.user && after.user.name) || '(無)'
     const userId = info.userId || (after.user && (after.user.userId || after.user.adminId)) || ''
     return `${userName}${userId ? ` (${userId})` : ''}`
+  }
+  if (item.targetModel === 'carousels') {
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    const title = info.name || after.title || '(無標題)'
+    const order = info.order || after.order || 0
+    const isActive = info.isActive !== undefined ? info.isActive : (after.isActive !== undefined ? after.isActive : true)
+    const status = isActive ? '啟用' : '停用'
+    return `${title} (排序: ${order}, ${status})`
   }
   return `${name}${userId ? ` (${userId})` : ''}`
 }

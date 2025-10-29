@@ -1350,11 +1350,11 @@ const overdueTasksCount = computed(() => {
   return overdueTasks.value.length
 })
 
-// 取得我的任務
+// 取得我的任務（輕量，不含描述/評論/附件）
 const fetchMyTasks = async () => {
   try {
     loading.value = true
-    const { data } = await apiAuth.get('/tasks/my-tasks')
+    const { data } = await apiAuth.get('/tasks/my-tasks', { params: { lite: true } })
     if (data.success) {
       myTasks.value = data.data
     }

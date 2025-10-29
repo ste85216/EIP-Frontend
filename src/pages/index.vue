@@ -55,14 +55,11 @@
                     <v-skeleton-loader
                       v-if="weatherLoading"
                       type="image, text, text"
-                      class="w-100"
+                      class="w-100 mt-5"
                     />
                     <template v-else>
                       <div class="temperature-display mb-1">
                         {{ weatherData.temperature }}°C
-                      </div>
-                      <div class="feels-like  mb-1">
-                        體感 {{ weatherData.feelsLike }}°C
                       </div>
                       <div class="location-display  mb-2">
                         {{ weatherData.location }}
@@ -212,7 +209,7 @@
                 />
                 <template v-else>
                   <!-- 表頭 -->
-                  <div class="news-header d-flex align-center px-5 py-2 bg-grey-lighten-4">
+                  <div class="news-header d-flex align-center px-5 py-2">
                     <div class="news-header-type">
                       類型
                     </div>
@@ -224,6 +221,9 @@
                     </div>
                     <div class="news-header-time">
                       發布時間
+                    </div>
+                    <div class="news-header-views d-none d-sm-block">
+                      瀏覽
                     </div>
                   </div>
 
@@ -264,6 +264,14 @@
                             class="me-1"
                           />
                           <span class="sub-title-2">{{ formatAnnouncementDate(item.createdAt) }}</span>
+                        </div>
+                        <div class="news-item-views d-none d-sm-flex">
+                          <v-icon
+                            icon="mdi-eye"
+                            size="12"
+                            class="me-1"
+                          />
+                          <span class="sub-title-2">{{ item.viewCount || 0 }}</span>
                         </div>
                       </v-list-item-title>
                     </v-list-item>
@@ -428,10 +436,21 @@
               color="white"
               variant="outlined"
             >
-              {{ sharedResources.length }} 個檔案
+              {{ filteredSharedResources.length }} 個檔案
             </v-chip>
           </v-card-title>
-          <v-card-text class="px-0">
+          <!-- 搜尋欄位 -->
+          <v-text-field
+            v-model="sharedResourceSearch"
+            density="compact"
+            variant="outlined"
+            placeholder="搜尋檔案名稱"
+            prepend-inner-icon="mdi-magnify"
+            hide-details
+            clearable
+            class="px-3 pt-2"
+          />
+          <v-card-text class="px-0 pt-3">
             <v-skeleton-loader
               v-if="sharedResourcesLoading"
               type="list-item@4"
@@ -441,7 +460,7 @@
               class="pa-0 list-scroll"
             >
               <v-list-item
-                v-for="(resource, index) in sharedResources"
+                v-for="(resource, index) in filteredSharedResources"
                 :key="resource.id"
                 class="px-5 resource-item"
                 :class="index % 2 === 0 ? 'odd-row' : 'even-row'"
@@ -477,10 +496,10 @@
                 </template>
               </v-list-item>
               <div
-                v-if="sharedResources.length === 0"
+                v-if="filteredSharedResources.length === 0"
                 class="text-center pt-6 pb-2 text-grey"
               >
-                暫無共享資源
+                {{ sharedResourceSearch ? '查無符合條件的檔案' : '暫無共享資源' }}
               </div>
             </v-list>
           </v-card-text>
@@ -535,7 +554,6 @@ const weatherData = ref({
   windSpeed: 0,
   location: '台北市',
   description: '',
-  feelsLike: 0,
   pressure: 0,
   visibility: 0
 })
@@ -610,6 +628,20 @@ const filteredExtensions = computed(() => {
 // 共享資源相關
 const sharedResources = ref([])
 const sharedResourcesLoading = ref(false)
+const sharedResourceSearch = ref('')
+
+// 過濾後的共享資源列表
+const filteredSharedResources = computed(() => {
+  if (!sharedResourceSearch.value) {
+    return sharedResources.value
+  }
+
+  const searchTerm = sharedResourceSearch.value.toLowerCase()
+  return sharedResources.value.filter(resource =>
+    resource.name.toLowerCase().includes(searchTerm) ||
+    resource.description?.toLowerCase().includes(searchTerm)
+  )
+})
 
 // 已移除預設密碼提醒與修改密碼相關狀態
 
@@ -733,7 +765,7 @@ const getFileTypeIcon = (type) => {
     case 'word': return 'mdi-file-word-box'
     case 'excel': return 'mdi-file-excel-box'
     case 'powerpoint': return 'mdi-file-powerpoint-box'
-    case 'image': return 'mdi-file-image-box'
+    case 'image': return 'mdi-file-image'
     case 'zip': return 'mdi-folder-zip'
     default: return 'mdi-file-document'
   }
@@ -741,11 +773,11 @@ const getFileTypeIcon = (type) => {
 
 const getFileTypeColor = (type) => {
   switch (type) {
-    case 'pdf': return 'red'
+    case 'pdf': return 'red-lighten-1'
     case 'word': return 'blue'
-    case 'excel': return 'green'
-    case 'powerpoint': return 'orange'
-    case 'image': return 'purple'
+    case 'excel': return 'green-darken-1'
+    case 'powerpoint': return 'orange-darken-1'
+    case 'image': return 'purple-lighten-1'
     case 'zip': return 'amber'
     default: return 'grey'
   }
@@ -948,7 +980,6 @@ const fetchWeatherData = async () => {
               windSpeed: Math.round(parseFloat(taipeiStation.WindSpeed || 0)),
               location: taipeiStation.StationName || '台北市',
               description: getTaiwanWeatherDescriptionFromStation(taipeiStation),
-              feelsLike: Math.round(parseFloat(taipeiStation.AirTemperature || 0)),
               pressure: Math.round(parseFloat(taipeiStation.AirPressure || 0)),
               visibility: 10
             }
@@ -988,7 +1019,6 @@ const fetchWeatherData = async () => {
       windSpeed: Math.round(backupData.current.wind_speed_10m * 3.6),
       location: await getCurrentLocation(),
       description: getWeatherDescriptionFromCode(weatherCode),
-      feelsLike: Math.round(backupData.current.temperature_2m),
       pressure: 1013,
       visibility: 10
     }
@@ -1006,7 +1036,6 @@ const fetchWeatherData = async () => {
       windSpeed: 12,
       location: '台北市',
       description: '晴朗',
-      feelsLike: 30,
       pressure: 1013,
       visibility: 10
     }
@@ -1149,13 +1178,13 @@ const getCurrentLocation = async () => {
 // 公告類型顏色
 const getAnnouncementTypeColor = (type) => {
   const colorMap = {
-    system: 'red-darken-1',
-    update: 'blue-darken-1',
-    announcement: 'green-darken-1',
-    maintenance: 'orange-darken-1',
+    system: 'blue-darken-2',
+    update: 'green-darken-2',
+    announcement: 'grey-darken-2',
+    maintenance: 'orange-darken-2',
     event: 'purple-darken-1'
   }
-  return colorMap[type] || 'grey-darken-1'
+  return colorMap[type] || 'grey'
 }
 
 // 公告類型文字
@@ -1235,7 +1264,7 @@ onUnmounted(() => {
   background-size: cover;
   .time-display {
     text-align: center;
-    width: 126px;
+    width: 136px;
     font-size: 36px;
     font-weight: 100;
     letter-spacing: 4px;
@@ -1258,7 +1287,7 @@ onUnmounted(() => {
     font-family: 'Noto Sans TC', sans-serif;
     font-weight: 400;
     font-size: 13px;
-    letter-spacing: 0.4px;
+    letter-spacing: 0.6px;
   }
 }
 
@@ -1445,6 +1474,12 @@ onUnmounted(() => {
       flex-shrink: 0;
       text-align: center;
     }
+
+    .news-header-views {
+      width: 100px;
+      flex-shrink: 0;
+      text-align: center;
+    }
   }
 
   .news-item {
@@ -1493,6 +1528,16 @@ onUnmounted(() => {
       align-items: center;
       justify-content: center;
     }
+
+    .news-item-views {
+      color: #333;
+      width: 100px;
+      flex-shrink: 0;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
   }
 }
 
@@ -1502,7 +1547,7 @@ onUnmounted(() => {
 }
 
 .even-row {
-  background-color: #fff8f4;
+  background-color: #fefefe;
 }
 
 // 分機表卡片樣式

@@ -764,7 +764,7 @@ const getFileTypeIcon = (type) => {
     case 'word': return 'mdi-file-word-box'
     case 'excel': return 'mdi-file-excel-box'
     case 'powerpoint': return 'mdi-file-powerpoint-box'
-    case 'image': return 'mdi-file-image-box'
+    case 'image': return 'mdi-file-image'
     case 'zip': return 'mdi-folder-zip'
     default: return 'mdi-file-document'
   }

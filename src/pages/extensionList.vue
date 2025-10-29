@@ -499,7 +499,7 @@ onMounted(async () => {
   }
 }
 
-:deep(.v-field :not(.v-textarea .v-field)) {
+:deep(.v-field :not(.v-textarea .v-field) :not(.v-select .v-field)) {
   .v-field__input {
     font-size: 13px;
     height: 36px !important;

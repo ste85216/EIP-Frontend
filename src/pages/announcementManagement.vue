@@ -934,10 +934,10 @@ const getTypeText = (type) => {
 // 取得公告類型顏色
 const getTypeColor = (type) => {
   const colorMap = {
-    system: 'blue-darken-1',
-    update: 'green-darken-1',
-    announcement: 'grey-darken-1',
-    maintenance: 'orange-darken-1',
+    system: 'blue-darken-2',
+    update: 'green-darken-2',
+    announcement: 'grey-darken-2',
+    maintenance: 'orange-darken-2',
     event: 'purple-darken-1'
   }
   return colorMap[type] || 'grey'

@@ -1,19 +1,19 @@
 <template>
   <v-container max-width="1600">
-    <v-row class="elevation-4 rounded-lg py-4 py-sm-6 px-1 px-sm-8 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white">
+    <v-row class="elevation-4 rounded-lg py-4 pt-sm-7 pb-sm-4 px-1 px-sm-6 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white">
       <!-- 標題 -->
-      <v-col
-        cols="12"
-        class="ps-3 pb-6"
-      >
-        <h3>所有公告</h3>
-      </v-col>
-
       <v-col cols="12">
         <v-row>
           <!-- 篩選和搜尋區 -->
-          <v-col>
-            <v-row>
+          <v-col class="mb-4">
+            <v-row class="d-flex align-center">
+              <v-col
+                cols="2"
+                class="ps-3 pb-6"
+              >
+                <h3>所有公告</h3>
+              </v-col>
+              <v-spacer />
               <v-col
                 sm="3"
                 lg="2"
@@ -270,13 +270,13 @@ const getTypeText = (type) => {
 // 類型顏色
 const getTypeColor = (type) => {
   const colorMap = {
-    system: 'red-darken-1',
-    update: 'blue-darken-1',
-    announcement: 'green-darken-1',
-    maintenance: 'orange-darken-1',
+    system: 'blue-darken-2',
+    update: 'green-darken-2',
+    announcement: 'grey-darken-2',
+    maintenance: 'orange-darken-2',
     event: 'purple-darken-1'
   }
-  return colorMap[type] || 'grey-darken-1'
+  return colorMap[type] || 'grey'
 }
 
 // 格式化日期
