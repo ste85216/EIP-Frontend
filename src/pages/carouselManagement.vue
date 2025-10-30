@@ -29,7 +29,7 @@
                   color="blue-grey-darken-2"
                   @click="openSortDialog"
                 >
-                  排序管理
+                  排序
                 </v-btn>
               </v-col>
               <v-col

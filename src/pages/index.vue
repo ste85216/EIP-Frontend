@@ -185,7 +185,7 @@
             >
               <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
                 <v-icon
-                  size="18"
+                  :size="smAndUp ? '18' : '16'"
                   color="white"
                   class="me-2"
                 >
@@ -195,7 +195,7 @@
                 <v-spacer />
                 <v-chip
                   label
-                  size="small"
+                  :size="smAndUp ? 'small' : 'x-small'"
                   color="white"
                   variant="outlined"
                 >
@@ -241,8 +241,13 @@
                           <v-chip
                             :color="getAnnouncementTypeColor(item.type)"
                             label
-                            size="small"
+                            :size="smAndUp ? 'small' : 'x-small'"
                           >
+                            <v-icon
+                              :icon="getAnnouncementTypeIcon(item.type)"
+                              :size="smAndUp ? '14' : '12'"
+                              class="me-1"
+                            />
                             {{ getAnnouncementTypeText(item.type) }}
                           </v-chip>
                         </div>
@@ -263,7 +268,7 @@
                             size="12"
                             class="me-1"
                           />
-                          <span class="sub-title-2">{{ formatAnnouncementDate(item.createdAt) }}</span>
+                          <span class="sub-title-2">{{ smAndUp ? formatAnnouncementDate(item.createdAt) : formatAnnouncementDateCompact(item.createdAt) }}</span>
                         </div>
                         <div class="news-item-views d-none d-sm-flex">
                           <v-icon
@@ -321,7 +326,7 @@
         >
           <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
             <v-icon
-              size="18"
+              :size="smAndUp ? '18' : '16'"
               color="white"
               class="me-2"
             >
@@ -331,7 +336,7 @@
             <v-spacer />
             <v-chip
               label
-              size="small"
+              :size="smAndUp ? 'small' : 'x-small'"
               color="white"
               variant="outlined"
             >
@@ -422,7 +427,7 @@
         >
           <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
             <v-icon
-              size="18"
+              :size="smAndUp ? '18' : '16'"
               color="white"
               class="me-2"
             >
@@ -432,7 +437,7 @@
             <v-spacer />
             <v-chip
               label
-              size="small"
+              :size="smAndUp ? 'small' : 'x-small'"
               color="white"
               variant="outlined"
             >
@@ -951,18 +956,15 @@ const fetchWeatherData = async () => {
     weatherLoading.value = true
     weatherError.value = ''
 
-    console.log('正在獲取天氣數據...')
 
     // 優先嘗試中央氣象署 API (台灣官方，最準確)
     try {
-      console.log('嘗試中央氣象署 API...')
       const cwaResponse = await fetch(
         `${CWA_API_URL}/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&locationName=臺北市`
       )
 
       if (cwaResponse.ok) {
         const cwaData = await cwaResponse.json()
-        console.log('中央氣象署 API 成功:', cwaData)
 
         if (cwaData.success && cwaData.records && cwaData.records.Station) {
           // 找到台北市的觀測站數據
@@ -971,8 +973,6 @@ const fetchWeatherData = async () => {
           )
 
           if (taipeiStation) {
-            console.log('找到台北市觀測站數據:', taipeiStation)
-
             weatherData.value = {
               temperature: Math.round(parseFloat(taipeiStation.AirTemperature || 0)),
               condition: getTaiwanWeatherConditionFromStation(taipeiStation),
@@ -983,22 +983,20 @@ const fetchWeatherData = async () => {
               pressure: Math.round(parseFloat(taipeiStation.AirPressure || 0)),
               visibility: 10
             }
-            console.log('中央氣象署天氣數據更新成功:', weatherData.value)
             return
           }
         }
       }
     } catch (error) {
-      console.log('中央氣象署 API 失敗，嘗試其他 API...', error.message)
+      console.warn('中央氣象署 API 失敗，嘗試其他 API...', error?.message)
     }
 
     // 只使用中央氣象署官方 API，跳過其他服務
 
     // 跳過 OpenWeatherMap API，直接使用備用 API
-    console.log('跳過國際 API，直接使用備用 API...')
+
 
     // 如果所有 API 都失敗，使用備用 API
-    console.log('使用備用天氣 API...')
     const backupResponse = await fetch(
       `${BACKUP_WEATHER_API_URL}?latitude=25.0478&longitude=121.5319&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=Asia%2FTaipei`
     )
@@ -1008,7 +1006,6 @@ const fetchWeatherData = async () => {
     }
 
     const backupData = await backupResponse.json()
-    console.log('備用 API 響應:', backupData)
 
     // 轉換備用 API 數據格式
     const weatherCode = backupData.current.weather_code
@@ -1023,7 +1020,6 @@ const fetchWeatherData = async () => {
       visibility: 10
     }
 
-    console.log('天氣數據更新成功:', weatherData.value)
   } catch (error) {
     console.error('所有天氣 API 都失敗:', error)
     weatherError.value = '無法獲取天氣數據，使用預設資料'
@@ -1136,16 +1132,10 @@ const getCurrentLocation = async () => {
 
     if (response.ok) {
       const data = await response.json()
-      console.log('地理位置數據:', data)
 
       // 檢查並組合地址信息
       const city = data.city || data.locality
       const country = data.countryName || data.principalSubdivision
-
-      console.log('完整地理位置數據:', data)
-      console.log('城市:', city)
-      console.log('國家:', country)
-      console.log('行政區信息:', data.localityInfo?.administrative)
 
       // 嘗試從行政區信息中獲取區級信息
       const administrative = data.localityInfo?.administrative
@@ -1154,7 +1144,6 @@ const getCurrentLocation = async () => {
         for (let i = 1; i < administrative.length; i++) {
           const admin = administrative[i]
           if (admin && admin.name && admin.name.includes('區')) {
-            console.log('找到區級信息:', admin.name)
             return `${city}, ${admin.name}`
           }
         }
@@ -1168,7 +1157,7 @@ const getCurrentLocation = async () => {
       }
     }
   } catch (error) {
-    console.log('無法獲取地理位置:', error.message)
+    console.warn('無法獲取地理位置:', error?.message)
   }
 
   // 如果無法獲取位置，返回預設值
@@ -1179,10 +1168,10 @@ const getCurrentLocation = async () => {
 const getAnnouncementTypeColor = (type) => {
   const colorMap = {
     system: 'blue-darken-2',
-    update: 'green-darken-2',
+    update: 'cyan-darken-3',
     announcement: 'grey-darken-2',
-    maintenance: 'orange-darken-2',
-    event: 'purple-darken-1'
+    maintenance: 'red-darken-1',
+    event: 'indigo-darken-1'
   }
   return colorMap[type] || 'grey'
 }
@@ -1199,6 +1188,18 @@ const getAnnouncementTypeText = (type) => {
   return typeMap[type] || '一般'
 }
 
+// 公告類型圖示
+const getAnnouncementTypeIcon = (type) => {
+  const iconMap = {
+    system: 'mdi-cog-outline',
+    update: 'mdi-refresh',
+    announcement: 'mdi-bullhorn-outline',
+    maintenance: 'mdi-wrench-outline',
+    event: 'mdi-calendar-star'
+  }
+  return iconMap[type] || 'mdi-file-document-outline'
+}
+
 // 格式化公告日期
 const formatAnnouncementDate = (date) => {
   if (!date) return '-'
@@ -1211,6 +1212,15 @@ const formatAnnouncementDate = (date) => {
   const minutes = d.getMinutes().toString().padStart(2, '0')
 
   return `${year}/${month}/${day} ${hours}:${minutes}`
+}
+
+// 簡易日期（MM/DD），用於 sm 以下
+const formatAnnouncementDateCompact = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  const month = (d.getMonth() + 1).toString().padStart(2, '0')
+  const day = d.getDate().toString().padStart(2, '0')
+  return `${month}/${day}`
 }
 
 // 查看公告詳情
@@ -1448,13 +1458,13 @@ onUnmounted(() => {
   .news-header {
     font-family: 'Noto Sans TC', sans-serif;
     font-weight: 400;
-    font-size: 14px;
+    font-size: 13px;
     color: #37474F;
     border-bottom: 1px solid #eee;
     text-align: center;
 
     .news-header-type {
-      width: 80px;
+      width: 56px;
       flex-shrink: 0;
     }
 
@@ -1470,7 +1480,7 @@ onUnmounted(() => {
     }
 
     .news-header-time {
-      width: 140px;
+      width: 80px;
       flex-shrink: 0;
       text-align: center;
     }
@@ -1492,7 +1502,7 @@ onUnmounted(() => {
     }
 
     .news-item-type {
-      width: 80px;
+      width: 56px;
       flex-shrink: 0;
       display: flex;
       align-items: center;
@@ -1521,7 +1531,7 @@ onUnmounted(() => {
     }
 
     .news-item-time {
-      width: 140px;
+      width: 80px;
       flex-shrink: 0;
       text-align: center;
       display: flex;
@@ -1618,17 +1628,40 @@ onUnmounted(() => {
 }
 
 .home-card-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #fff;
 }
 
 @include sm {
+  .home-card-title {
+    font-size: 16px;
+  }
   .time-card {
     height: 240px;
   }
   .swiper-card {
     height: 240px;
+  }
+  .news-card {
+
+    .news-header {
+      font-size: 14px;
+      .news-header-type {
+        width: 80px;
+      }
+      .news-header-time {
+        width: 140px;
+      }
+    }
+    .news-item {
+      .news-item-type {
+        width: 80px;
+      }
+      .news-item-time {
+        width: 140px;
+      }
+    }
   }
 }
 

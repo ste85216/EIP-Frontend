@@ -1110,6 +1110,7 @@
       </v-list>
     </v-navigation-drawer>
     <v-main>
+      <MarqueeBar />
       <router-view />
     </v-main>
   </v-app>
@@ -1124,6 +1125,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
 import UserAvatar from '@/components/UserAvatar.vue'
+import MarqueeBar from '@/components/MarqueeBar.vue'
 
 const { smAndUp, mdAndUp, lgAndUp, name: breakpoint } = useDisplay()
 
@@ -1462,15 +1464,21 @@ const settingsItems = [
     permission: 'PERMISSION_MANAGEMENT_READ'
   },
   {
-    text: '首頁管理',
-    icon: 'mdi-home-edit',
-    permission: ['CAROUSEL_READ', 'ANNOUNCEMENT_READ'],
+    text: '系統管理',
+    icon: 'mdi-cog-outline',
+    permission: ['CAROUSEL_READ', 'ANNOUNCEMENT_READ', 'MARQUEE_MANAGEMENT_READ', 'SHARED_RESOURCE_MANAGEMENT_READ'],
     children: [
       {
         to: '/announcementManagement',
         text: '公告管理',
         icon: 'mdi-bullhorn',
         permission: 'ANNOUNCEMENT_READ'
+      },
+      {
+        to: '/marqueeManagement',
+        text: '跑馬燈管理',
+        icon: 'mdi-bullhorn-outline',
+        permission: 'MARQUEE_MANAGEMENT_READ'
       },
       {
         to: '/carouselManagement',

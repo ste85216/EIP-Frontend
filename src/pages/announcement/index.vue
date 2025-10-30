@@ -1,21 +1,23 @@
 <template>
-  <v-container max-width="1600">
-    <v-row class="elevation-4 rounded-lg py-4 pt-sm-7 pb-sm-4 px-1 px-sm-6 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white">
+  <v-container max-width="1400">
+    <v-row class="elevation-4 rounded-lg py-4 pt-sm-6 pb-sm-4 px-1 px-sm-6 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white">
       <!-- 標題 -->
       <v-col cols="12">
         <v-row>
           <!-- 篩選和搜尋區 -->
-          <v-col class="mb-4">
+          <v-col class="mb-sm-3">
             <v-row class="d-flex align-center">
               <v-col
-                cols="2"
-                class="ps-3 pb-6"
+                cols="12"
+                sm="3"
+                class="ps-3"
               >
                 <h3>所有公告</h3>
               </v-col>
               <v-spacer />
               <v-col
-                sm="3"
+                sm="4"
+                md="3"
                 lg="2"
                 class="pe-1"
               >
@@ -72,20 +74,58 @@
               :page="currentPage"
               :server-items-length="totalItems"
               class="elevation-0 rounded"
+              density="compact"
               @update:options="handleTableOptions"
             >
               <template #item="{ item, index }">
                 <tr
                   :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }"
-                  class="cursor-pointer"
+                  class="announcement-table"
                   @click="viewAnnouncement(item)"
                 >
                   <td>
                     <div class="d-flex align-center">
+                      <span>
+                        <v-chip
+                          label
+                          :color="getTypeColor(item.type)"
+                          :size="smAndUp ? 'small' : 'x-small'"
+                        >
+                          <v-icon
+                            :icon="getTypeIcon(item.type)"
+                            :size="smAndUp ? '16' : '12'"
+                            class="me-1"
+                          />
+                          {{ getTypeShortText(item.type) }}
+                        </v-chip>
+                      </span>
                       <span
                         v-if="item.isPinned"
-                        class=" me-2"
-                      >📌</span>
+                        class="ms-3"
+                      >
+                        <div
+                          v-if="smAndUp"
+                          class="pinned-badge"
+                        >
+                          <v-icon
+                            icon="mdi-arrow-up-bold"
+                            size="12"
+                            color="white"
+                            style="margin-right: 1px;"
+                          />
+                          置頂
+                        </div>
+                        <v-icon
+                          v-else
+                          icon="mdi-arrow-up-bold"
+                          size="14"
+                          color="blue-grey-darken-1"
+                        />
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-center">
                       <div
                         class="text-truncate"
                         style="max-width: 400px;"
@@ -94,20 +134,14 @@
                       </div>
                     </div>
                   </td>
-                  <td>
-                    <v-chip
-                      :color="getTypeColor(item.type)"
-                      size="small"
-                    >
-                      {{ getTypeText(item.type) }}
-                    </v-chip>
+                  <td v-if="mdAndUp">
+                    {{ item.creator?.name || '未知' }}
                   </td>
-                  <td>{{ item.creator?.name || '未知' }}</td>
-                  <td>{{ formatDate(item.createdAt) }}</td>
-                  <td>
+                  <td>{{ mdAndUp ? formatDate(item.createdAt) : (smAndUp ? formatDateOnly(item.createdAt) : formatDateCompact(item.createdAt)) }}</td>
+                  <td v-if="lgAndUp">
                     <v-chip
                       size="small"
-                      color="blue-grey-lighten-2"
+                      color="blue-grey-lighten-1"
                     >
                       <v-icon
                         icon="mdi-eye"
@@ -129,7 +163,7 @@
 
 <script setup>
 import { definePage } from 'vue-router/auto'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
@@ -146,12 +180,12 @@ definePage({
 const router = useRouter()
 const createSnackbar = useSnackbar()
 const { apiAuth } = useApi()
-const { mdAndUp } = useDisplay()
+const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 
 // 響應式資料
 const announcements = ref([])
 const tableLoading = ref(false)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(25)
 const currentPage = ref(1)
 const totalItems = ref(0)
 
@@ -171,14 +205,22 @@ const typeOptions = [
   { title: '活動公告', value: 'event' }
 ]
 
-// 表格標題
-const headers = [
-  { title: '標題', key: 'title', sortable: false },
-  { title: '類型', key: 'type', sortable: false, minWidth: '120px' },
-  { title: '建立者', key: 'creator', sortable: false, minWidth: '120px' },
-  { title: '發布時間', key: 'createdAt', sortable: true},
-  { title: '瀏覽次數', key: 'viewCount', sortable: true, minWidth: '120px' }
-]
+// 表格標題（將「類型」與「標題」交換順序）
+const headers = computed(() => {
+  const base = [
+    { title: '類型', key: 'type', sortable: false },
+    { title: '標題', key: 'title', sortable: false },
+    { title: '建立者', key: 'creator', sortable: false, minWidth: '120px' },
+    { title: '發布時間', key: 'createdAt', sortable: true, minWidth: '120px' },
+    { title: '瀏覽次數', key: 'viewCount', sortable: true, minWidth: '120px' }
+  ]
+
+  return base.filter(h => {
+    if (h.key === 'creator' && !mdAndUp.value) return false // md 以下隱藏
+    if (h.key === 'viewCount' && !lgAndUp.value) return false // md 以下隱藏（僅 lg+ 顯示）
+    return true
+  })
+})
 
 // 載入公告列表
 const loadAnnouncements = async () => {
@@ -255,28 +297,41 @@ const viewAnnouncement = (announcement) => {
   router.push(`/announcement/${announcement._id}`)
 }
 
-// 類型文字
-const getTypeText = (type) => {
-  const typeMap = {
-    system: '系統公告',
-    update: '更新公告',
-    announcement: '一般公告',
-    maintenance: '維護公告',
-    event: '活動公告'
+
+// 類型短文字（sm 以下顯示，移除「公告」字樣）
+const getTypeShortText = (type) => {
+  const shortMap = {
+    system: '系統',
+    update: '更新',
+    announcement: '一般',
+    maintenance: '維護',
+    event: '活動'
   }
-  return typeMap[type] || '一般公告'
+  return shortMap[type] || '一般'
 }
 
 // 類型顏色
 const getTypeColor = (type) => {
   const colorMap = {
     system: 'blue-darken-2',
-    update: 'green-darken-2',
+    update: 'cyan-darken-3',
     announcement: 'grey-darken-2',
-    maintenance: 'orange-darken-2',
-    event: 'purple-darken-1'
+    maintenance: 'red-darken-1',
+    event: 'indigo-darken-1'
   }
   return colorMap[type] || 'grey'
+}
+
+// 類型圖示
+const getTypeIcon = (type) => {
+  const iconMap = {
+    system: 'mdi-cog-outline',
+    update: 'mdi-refresh',
+    announcement: 'mdi-bullhorn-outline',
+    maintenance: 'mdi-wrench-outline',
+    event: 'mdi-calendar-star'
+  }
+  return iconMap[type] || 'mdi-file-document-outline'
 }
 
 // 格式化日期
@@ -289,6 +344,25 @@ const formatDate = (date) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// 僅日期（YYYY/MM/DD），用於 sm（不含時間）
+const formatDateOnly = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  const year = d.getFullYear()
+  const month = (d.getMonth() + 1).toString().padStart(2, '0')
+  const day = d.getDate().toString().padStart(2, '0')
+  return `${year}/${month}/${day}`
+}
+
+// 簡易日期（MM/DD），用於 sm 以下
+const formatDateCompact = (date) => {
+  if (!date) return '-'
+  const d = new Date(date)
+  const month = (d.getMonth() + 1).toString().padStart(2, '0')
+  const day = d.getDate().toString().padStart(2, '0')
+  return `${month}/${day}`
 }
 
 // 監聽搜尋條件變化
@@ -317,16 +391,13 @@ onMounted(() => {
 
 :deep(.v-data-table) {
   thead {
-    height: 48px;
     background-color: #455a64 !important;
     color: #fff !important;
     th {
       font-size: 13px !important;
     }
   }
-  tbody tr {
-    min-height: 48px;
-  }
+
   td {
     height: 48px !important;
     div {
@@ -335,26 +406,24 @@ onMounted(() => {
   }
 }
 
-:deep(.v-data-table__tbody) {
-  td {
-    font-size: 13px !important;
-  }
-}
-
 .odd-row {
   background-color: #f6f8fa;
 }
 
 .even-row {
-  background-color: #fffaf0;
+  background-color: #ffffff;
 }
 
-.cursor-pointer {
+.announcement-table {
   cursor: pointer;
   transition: background-color 0.2s ease;
+  td {
+    color: #555 !important;
+    font-size: 13px !important;
+  }
 
   &:hover {
-    background-color: #e3f2fd !important;
+    background-color: #eee !important;
   }
 }
 
@@ -362,6 +431,16 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.pinned-badge {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  background-color: #607D8B;
+  color: #fff;
+  padding: 3px 6px 3px 4px;
+  border-radius: 4px;
 }
 </style>
 

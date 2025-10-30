@@ -34,14 +34,17 @@
       <!-- 公告內容 -->
       <template v-else-if="announcement">
         <!-- 標題區 -->
-        <v-col cols="12">
+        <v-col
+          cols="12"
+          class="pb-0"
+        >
           <div class="mb-2 announcement-title">
             {{ announcement.title }}
           </div>
 
           <!-- 類型和狀態標籤 -->
           <div class="d-flex align-center gap-2">
-            <v-chip
+            <!-- <v-chip
               v-if="announcement.isPinned"
               label
               color="red-darken-1"
@@ -54,12 +57,17 @@
                 class="me-1"
               />
               置頂
-            </v-chip>
+            </v-chip> -->
             <v-chip
               :color="getTypeColor(announcement.type)"
               label
               size="small"
             >
+              <v-icon
+                :icon="getTypeIcon(announcement.type)"
+                size="16"
+                class="me-1"
+              />
               {{ getTypeText(announcement.type) }}
             </v-chip>
           </div>
@@ -170,12 +178,12 @@
               />
               <span class="card-title">附件</span><span class="text-grey-darken-2 sub-title-1 font-weight-bold ms-1">({{ announcement.attachments.length }})</span>
             </v-card-title>
-            <v-card-text>
+            <v-card-text class="px-0">
               <v-list>
                 <v-list-item
                   v-for="(attachment, index) in announcement.attachments"
                   :key="index"
-                  class="attachment-item"
+                  class="attachment-item px-6"
                 >
                   <v-list-item-title>
                     <v-icon
@@ -191,11 +199,11 @@
                     <v-btn
                       icon
                       variant="text"
-                      color="blue-darken-1"
-                      size="small"
+                      color="blue-grey-darken-2"
+                      size="32"
                       @click="downloadAttachment(attachment)"
                     >
-                      <v-icon size="20">
+                      <v-icon size="18">
                         mdi-download
                       </v-icon>
                     </v-btn>
@@ -272,7 +280,7 @@ const goBack = () => {
   router.push('/announcement')
 }
 
-// 類型文字
+//類型文字
 const getTypeText = (type) => {
   const typeMap = {
     system: '系統公告',
@@ -287,13 +295,25 @@ const getTypeText = (type) => {
 // 類型顏色
 const getTypeColor = (type) => {
   const colorMap = {
-    system: 'red-darken-1',
-    update: 'blue-darken-1',
-    announcement: 'green-darken-1',
-    maintenance: 'orange-darken-1',
-    event: 'purple-darken-1'
+    system: 'blue-darken-2',
+    update: 'cyan-darken-3',
+    announcement: 'grey-darken-2',
+    maintenance: 'red-darken-1',
+    event: 'indigo-darken-1'
   }
-  return colorMap[type] || 'grey-darken-1'
+  return colorMap[type] || 'grey'
+}
+
+// 類型圖示
+const getTypeIcon = (type) => {
+  const iconMap = {
+    system: 'mdi-cog-outline',
+    update: 'mdi-refresh',
+    announcement: 'mdi-bullhorn-outline',
+    maintenance: 'mdi-wrench-outline',
+    event: 'mdi-calendar-star'
+  }
+  return iconMap[type] || 'mdi-file-document-outline'
 }
 
 // 格式化日期
@@ -367,12 +387,12 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/_rwd' as rwd;
-@use '@/styles/settings' as *;
+@use '@/styles/_rwd' as *;
 
 .announcement-title {
-  font-size: 24px;
-  font-weight: 600;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
   color: #333;
 }
 
@@ -469,6 +489,18 @@ onMounted(() => {
 
   &:hover {
     background-color: #f5f5f5;
+  }
+}
+
+@include sm {
+  .announcement-title {
+    font-size: 22px;
+  }
+}
+
+@include md {
+  .announcement-title {
+    font-size: 24px;
   }
 }
 </style>

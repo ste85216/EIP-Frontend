@@ -95,14 +95,14 @@
             >
               <div class="feature-list">
                 <v-checkbox
-                  v-for="(feature, index) in module.features"
+                  v-for="feature in module.features"
                   :key="feature.key"
                   v-model="modulePermissions[module.key][feature.key]"
                   :label="feature.name"
                   color="teal"
                   hide-details
                   density="compact"
-                  :class="['feature-checkbox', { 'feature-left': index % 2 === 0, 'feature-right': index % 2 === 1 }]"
+                  class="feature-checkbox"
                 />
               </div>
             </v-card-text>
@@ -577,6 +577,18 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'marqueeManagement',
+    name: '跑馬燈管理',
+    icon: 'mdi-bullhorn-outline',
+    pagePermission: 'MARQUEE_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看跑馬燈', permission: 'MARQUEE_READ' },
+      { key: 'create', name: '新增跑馬燈', permission: 'MARQUEE_CREATE' },
+      { key: 'update', name: '編輯跑馬燈', permission: 'MARQUEE_UPDATE' },
+      { key: 'delete', name: '刪除跑馬燈', permission: 'MARQUEE_DELETE' },
+    ]
+  },
+  {
     key: 'carouselManagement',
     name: '輪播圖管理',
     icon: 'mdi-image-multiple',
@@ -915,21 +927,12 @@ watch(() => props.modelValue, (newValue) => {
   min-width: 100px;
   max-width: calc(50% - 8px);
   height: 24px;
-
-  &.feature-left {
-    order: 1;
-  }
-
-  &.feature-right {
-    order: 2;
-  }
   :deep(.v-label) {
     font-size: 14px !important;
   }
 
   @media (max-width: 768px) {
     max-width: 100%;
-    order: unset !important;
   }
 }
 

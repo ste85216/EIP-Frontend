@@ -714,7 +714,8 @@ const modelOptions = [
   { title: '通知 EMAIL', value: 'notificationEmails' },
   { title: '權限', value: 'permissions' },
   { title: '角色', value: 'roles' },
-  { title: '輪播圖', value: 'carousels' }
+  { title: '輪播圖', value: 'carousels' },
+  { title: '跑馬燈', value: 'marquees' }
 ]
 
 // 表格標頭
@@ -878,6 +879,8 @@ const fieldTranslations = {
   resource: '資源',
   action: '操作類型',
   image: '圖片',
+  startDate: '開始日期',
+  endDate: '結束日期',
 }
 
 // 行銷分類類型對應
@@ -997,7 +1000,8 @@ const getModelDisplay = (model) => {
     notificationEmails: '通知 EMAIL',
     permissions: '權限',
     roles: '角色',
-    carousels: '輪播圖'
+    carousels: '輪播圖',
+    marquees: '跑馬燈'
   }
   return modelMap[model] || model
 }
