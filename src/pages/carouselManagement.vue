@@ -141,7 +141,18 @@
                       {{ item.order }}
                     </v-chip>
                   </td>
-                  <td>{{ new Date(item.createdAt).toLocaleDateString('zh-TW') }}</td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ formatDateOnly(item.startDate) }}</span>
+                      <span class="text-caption text-medium-emphasis">{{ formatTimeOnly(item.startDate) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ formatDateOnly(item.endDate) }}</span>
+                      <span class="text-caption text-medium-emphasis">{{ formatTimeOnly(item.endDate) }}</span>
+                    </div>
+                  </td>
                   <td>
                     <div class="d-flex align-center gap-1">
                       <v-btn
@@ -524,7 +535,8 @@ const headers = [
   { title: '描述', key: 'description', sortable: false },
   { title: '狀態', key: 'isActive', sortable: true },
   { title: '排序', key: 'order', sortable: true },
-  { title: '建立時間', key: 'createdAt', sortable: true },
+  { title: '開始時間', key: 'startDate', sortable: true, width: '120px' },
+  { title: '結束時間', key: 'endDate', sortable: true, width: '120px' },
   { title: '操作', key: 'actions', sortable: false, width: '120px' }
 ]
 
@@ -932,6 +944,20 @@ const getStatusColor = (item) => {
     return 'orange-darken-1'
   }
   return item.isActive ? 'green-darken-1' : 'grey-darken-1'
+}
+
+// 格式化日期（僅日期）
+const formatDateOnly = (dateString) => {
+  if (!dateString) return ''
+  const d = new Date(dateString)
+  return d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+// 格式化時間（僅時間）
+const formatTimeOnly = (dateString) => {
+  if (!dateString) return ''
+  const d = new Date(dateString)
+  return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
 // 監聽搜尋條件變化

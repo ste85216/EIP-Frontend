@@ -5,7 +5,10 @@
     persistent
     @update:model-value="$emit('update:modelValue', $event)"
   >
-    <v-card class="rounded-lg">
+    <v-card
+      class="rounded-lg"
+      style="min-height: calc(100vh - 48px) !important;"
+    >
       <div class="d-flex align-center justify-space-between px-6 py-4 bg-teal-darken-1 text-white">
         <div class="d-flex align-center card-title">
           <v-icon class="me-2">
@@ -46,68 +49,208 @@
         </div>
       </div>
 
-      <v-card-text class="px-6 pt-6">
-        <!-- 使用自適應網格，根據內容動態調整 -->
-        <div class="permission-grid">
-          <v-card
-            v-for="module in permissionModules"
-            :key="module.key"
-            elevation="0"
-            class="permission-card"
-            :class="{ 'has-features': module.features && module.features.length > 0 }"
+      <v-card-text class="px-6 pt-4">
+        <!-- 分類切換 -->
+        <div class="d-flex align-center mb-4">
+          <v-chip-group
+            v-model="activeCategory"
+            selected-class="text-white"
           >
-            <v-card-title class="d-flex align-center px-5 pt-2 pb-0">
-              <v-icon
-                class="me-2"
-                size="18"
-              >
-                {{ module.icon }}
-              </v-icon>
-              <span class="card-title text-subtitle-2">{{ module.name }}</span>
-              <v-spacer />
-              <div class="d-flex align-center">
-                <v-btn
-                  v-if="module.features && module.features.length > 0 && modulePermissions[module.key].pageAccess"
-                  icon
-                  color="teal"
-                  variant="text"
-                  size="x-small"
-                  class="me-3"
-                  title="全選/取消此模組的功能權限"
-                  @click="selectAllModuleFeatures(module.key)"
-                >
-                  <v-icon size="16">
-                    mdi-check-all
-                  </v-icon>
-                </v-btn>
-                <v-switch
-                  v-model="modulePermissions[module.key].pageAccess"
-                  color="teal"
-                  density="compact"
-                  hide-details
-                  @change="handlePageAccessToggle(module.key)"
-                />
-              </div>
-            </v-card-title>
-            <v-card-text
-              v-if="modulePermissions[module.key].pageAccess && module.features && module.features.length > 0"
-              class="px-4 pb-5"
+            <v-chip
+              label
+              value="all"
+              color="teal-darken-2"
+              variant="outlined"
             >
-              <div class="feature-list">
-                <v-checkbox
-                  v-for="feature in module.features"
-                  :key="feature.key"
-                  v-model="modulePermissions[module.key][feature.key]"
-                  :label="feature.name"
-                  color="teal"
-                  hide-details
-                  density="compact"
-                  class="feature-checkbox"
-                />
-              </div>
-            </v-card-text>
-          </v-card>
+              全部
+            </v-chip>
+            <v-chip
+              label
+              value="common"
+              color="teal-darken-2"
+              variant="outlined"
+            >
+              常用
+            </v-chip>
+            <v-chip
+              label
+              value="application"
+              color="teal-darken-2"
+              variant="outlined"
+            >
+              應用
+            </v-chip>
+            <v-chip
+              label
+              value="business"
+              color="teal-darken-2"
+              variant="outlined"
+            >
+              業務
+            </v-chip>
+            <v-chip
+              label
+              value="organization"
+              color="teal-darken-2"
+              variant="outlined"
+            >
+              組織
+            </v-chip>
+            <v-chip
+              label
+              value="system"
+              color="teal-darken-2"
+              variant="outlined"
+            >
+              系統
+            </v-chip>
+          </v-chip-group>
         </div>
+
+        <!-- 顯示全部：分群渲染 -->
+        <template v-if="activeCategory === 'all'">
+          <div
+            v-for="group in groupedModules"
+            :key="group.id"
+            class="mb-12"
+          >
+            <div class="d-flex align-center mb-2">
+              <v-icon
+                class="ms-1 me-2"
+                size="20"
+                color="teal-darken-2"
+              >
+                mdi-folder-multiple-outline
+              </v-icon>
+              <span class="bock-title text-teal-darken-2 font-weight-bold">{{ group.label }}</span>
+            </div>
+            <div class="permission-grid">
+              <v-card
+                v-for="module in group.items"
+                :key="module.key"
+                elevation="0"
+                class="permission-card"
+                :class="{ 'has-features': module.features && module.features.length > 0 }"
+              >
+                <v-card-title class="d-flex align-center px-5 pt-2 pb-0">
+                  <v-icon
+                    class="me-2"
+                    size="18"
+                  >
+                    {{ module.icon }}
+                  </v-icon>
+                  <span class="card-title text-subtitle-2">{{ module.name }}</span>
+                  <v-spacer />
+                  <div class="d-flex align-center ms-3">
+                    <v-btn
+                      v-if="module.features && module.features.length > 0 && modulePermissions[module.key].pageAccess"
+                      icon
+                      color="teal"
+                      variant="text"
+                      size="x-small"
+                      class="me-3"
+                      title="全選/取消此模組的功能權限"
+                      @click="selectAllModuleFeatures(module.key)"
+                    >
+                      <v-icon size="16">
+                        mdi-check-all
+                      </v-icon>
+                    </v-btn>
+                    <v-switch
+                      v-model="modulePermissions[module.key].pageAccess"
+                      color="teal"
+                      density="compact"
+                      hide-details
+                      @change="handlePageAccessToggle(module.key)"
+                    />
+                  </div>
+                </v-card-title>
+                <v-card-text
+                  v-if="modulePermissions[module.key].pageAccess && module.features && module.features.length > 0"
+                  class="px-4 pb-5"
+                >
+                  <div class="feature-list">
+                    <v-checkbox
+                      v-for="feature in module.features"
+                      :key="feature.key"
+                      v-model="modulePermissions[module.key][feature.key]"
+                      :label="feature.name"
+                      color="teal"
+                      hide-details
+                      density="compact"
+                      class="feature-checkbox"
+                    />
+                  </div>
+                </v-card-text>
+              </v-card>
+            </div>
+          </div>
+        </template>
+
+        <!-- 單一分類：過濾渲染 -->
+        <template v-else>
+          <div class="permission-grid">
+            <v-card
+              v-for="module in filteredModules"
+              :key="module.key"
+              elevation="0"
+              class="permission-card"
+              :class="{ 'has-features': module.features && module.features.length > 0 }"
+            >
+              <v-card-title class="d-flex align-center px-5 pt-2 pb-0">
+                <v-icon
+                  class="me-2"
+                  size="18"
+                >
+                  {{ module.icon }}
+                </v-icon>
+                <span class="card-title text-subtitle-2">{{ module.name }}</span>
+                <v-spacer />
+
+                <div class="d-flex align-center ms-3">
+                  <v-btn
+                    v-if="module.features && module.features.length > 0 && modulePermissions[module.key].pageAccess"
+                    icon
+                    color="teal"
+                    variant="text"
+                    size="x-small"
+                    class="me-3"
+                    title="全選/取消此模組的功能權限"
+                    @click="selectAllModuleFeatures(module.key)"
+                  >
+                    <v-icon size="16">
+                      mdi-check-all
+                    </v-icon>
+                  </v-btn>
+                  <v-switch
+                    v-model="modulePermissions[module.key].pageAccess"
+                    color="teal"
+                    density="compact"
+                    hide-details
+                    @change="handlePageAccessToggle(module.key)"
+                  />
+                </div>
+              </v-card-title>
+              <v-card-text
+                v-if="modulePermissions[module.key].pageAccess && module.features && module.features.length > 0"
+                class="px-4 pb-5"
+              >
+                <div class="feature-list">
+                  <v-checkbox
+                    v-for="feature in module.features"
+                    :key="feature.key"
+                    v-model="modulePermissions[module.key][feature.key]"
+                    :label="feature.name"
+                    color="teal"
+                    hide-details
+                    density="compact"
+                    class="feature-checkbox"
+                  />
+                </div>
+              </v-card-text>
+            </v-card>
+          </div>
+        </template>
       </v-card-text>
 
       <v-card-actions class="px-6 pb-6">
@@ -289,17 +432,10 @@ const allRoles = ref([])
 // 權限模組配置
 const permissionModules = ref([
   {
-    key: 'home',
-    name: '首頁',
-    icon: 'mdi-home',
-    pagePermission: 'HOME_READ',
-    features: [
-    ]
-  },
-  {
     key: 'profile',
     name: '個人資料管理',
     icon: 'mdi-account-circle',
+    category: 'common',
     pagePermission: 'PROFILE_READ',
     features: [
     {
@@ -310,9 +446,19 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'home',
+    name: '首頁',
+    icon: 'mdi-home',
+    category: 'common',
+    pagePermission: 'HOME_READ',
+    features: [
+    ]
+  },
+  {
     key: 'extensionList',
     name: '分機表',
     icon: 'mdi-phone-outline',
+    category: 'common',
     pagePermission: 'EXTENSION_LIST_READ',
     features: [
     ]
@@ -321,21 +467,27 @@ const permissionModules = ref([
     key: 'announcement',
     name: '所有公告',
     icon: 'mdi-bullhorn',
+    category: 'common',
     pagePermission: 'ANNOUNCEMENT_PAGE_READ',
     features: [
     ]
   },
-  { key: 'employeeList',
-    name: '公司員工列表',
-    icon: 'mdi-account-group',
-    pagePermission: 'EMPLOYEE_LIST_READ',
+  {
+    key: 'marketingDesignRequest',
+    name: '行銷美編需求申請',
+    icon: 'mdi-form-select',
+    category: 'common',
+    pagePermission: 'MARKETING_DESIGN_REQUEST_PAGE_READ',
     features: [
+      { key: 'read', name: '查看需求申請', permission: 'MARKETING_DESIGN_REQUEST_APPLY_READ' },
+      { key: 'designerTag', name: '標註為處理人員', permission: 'MARKETING_DESIGN_REQUEST_DESIGNER_TAG' },
     ]
   },
   {
     key: 'projectAndTaskManagement',
     name: '專案與任務管理',
     icon: 'mdi-chart-box-outline',
+    category: 'application',
     pagePermission: 'PROJECT_AND_TASK_MANAGEMENT_READ',
     features: [
       // { key: 'teamRead', name: '查看團隊', permission: 'TEAM_READ' },
@@ -357,19 +509,10 @@ const permissionModules = ref([
     ]
   },
   {
-    key: 'marketingDesignRequest',
-    name: '行銷美編需求申請',
-    icon: 'mdi-form-select',
-    pagePermission: 'MARKETING_DESIGN_REQUEST_PAGE_READ',
-    features: [
-      { key: 'read', name: '查看需求申請', permission: 'MARKETING_DESIGN_REQUEST_APPLY_READ' },
-      { key: 'designerTag', name: '標註為處理人員', permission: 'MARKETING_DESIGN_REQUEST_DESIGNER_TAG' },
-    ]
-  },
-  {
     key: 'B2CStatistics',
     name: '直客詢問統計表',
     icon: 'mdi-account-question',
+    category: 'business',
     pagePermission: 'B2C_STATISTICS_READ',
     features: [
       { key: 'read', name: '查看直客詢問', permission: 'CUSTOMER_INQUIRY_STATISTICS_READ' },
@@ -379,6 +522,7 @@ const permissionModules = ref([
     key: 'marketingAnalysis',
     name: '行銷費用分析',
     icon: 'mdi-chart-multiple',
+    category: 'business',
     pagePermission: 'MARKETING_ANALYSIS_READ',
     features: [
     ]
@@ -387,6 +531,7 @@ const permissionModules = ref([
     key: 'marketingExpenseManagement',
     name: '實際支出管理',
     icon: 'mdi-cash-100',
+    category: 'business',
     pagePermission: 'MARKETING_EXPENSE_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看實際支出', permission: 'MARKETING_EXPENSE_READ' },
@@ -399,6 +544,7 @@ const permissionModules = ref([
     key: 'marketingBudgetManagement',
     name: '行銷預算管理',
     icon: 'mdi-table-edit',
+    category: 'business',
     pagePermission: 'MARKETING_BUDGET_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看行銷預算', permission: 'MARKETING_BUDGET_READ' },
@@ -411,6 +557,7 @@ const permissionModules = ref([
     key: 'marketingCategoryManagement',
     name: '行銷分類管理',
     icon: 'mdi-shape-plus-outline',
+    category: 'business',
     pagePermission: 'MARKETING_CATEGORY_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看行銷分類', permission: 'MARKETING_CATEGORY_READ' },
@@ -420,9 +567,67 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'b2CStatisticsManagement',
+    name: '直客詢問管理',
+    icon: 'mdi-account-question',
+    category: 'business',
+    pagePermission: 'B2C_STATISTICS_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看直客詢問', permission: 'CUSTOMER_INQUIRY_READ' },
+      { key: 'create', name: '新增直客詢問', permission: 'CUSTOMER_INQUIRY_CREATE' },
+      { key: 'update', name: '編輯直客詢問', permission: 'CUSTOMER_INQUIRY_UPDATE' },
+      { key: 'delete', name: '刪除直客詢問', permission: 'CUSTOMER_INQUIRY_DELETE' },
+      { key: 'export', name: '匯出直客詢問', permission: 'CUSTOMER_INQUIRY_EXPORT' },
+      { key: 'import', name: '匯入直客詢問', permission: 'CUSTOMER_INQUIRY_IMPORT' },
+    ]
+  },
+  {
+    key: 'marketingDesignRequestManagement',
+    name: '行銷美編需求申請管理',
+    icon: 'mdi-form-select',
+    category: 'business',
+    pagePermission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看行美申請', permission: 'MARKETING_DESIGN_REQUEST_READ' },
+      { key: 'update', name: '編輯行美申請', permission: 'MARKETING_DESIGN_REQUEST_UPDATE' },
+      { key: 'notificationManage', name: '通知設定管理', permission: 'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE' },
+    ]
+  },
+  {
+    key: 'formGenerator',
+    name: '表單產生器',
+    icon: 'mdi-list-box-outline',
+    category: 'business',
+    pagePermission: 'FORM_GENERATOR_READ',
+    features: [
+    ]
+  },
+  {
+    key: 'lineCategoryManagement',
+    name: '線別分類管理',
+    icon: 'mdi-shape-plus-outline',
+    category: 'business',
+    pagePermission: 'LINE_CATEGORY_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看線別分類', permission: 'LINE_CATEGORY_READ' },
+      { key: 'create', name: '新增線別分類', permission: 'LINE_CATEGORY_CREATE' },
+      { key: 'update', name: '編輯線別分類', permission: 'LINE_CATEGORY_UPDATE' },
+      { key: 'delete', name: '刪除線別分類', permission: 'LINE_CATEGORY_DELETE' },
+    ]
+  },
+  { key: 'employeeList',
+    name: '公司員工列表',
+    icon: 'mdi-account-group',
+    category: 'organization',
+    pagePermission: 'EMPLOYEE_LIST_READ',
+    features: [
+    ]
+  },
+  {
     key: 'employeeManagement',
     name: '員工管理',
     icon: 'mdi-account-group',
+    category: 'organization',
     pagePermission: 'EMPLOYEE_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看員工', permission: 'EMPLOYEE_READ' },
@@ -437,6 +642,7 @@ const permissionModules = ref([
     key: 'companyAndDepartmentManagement',
     name: '公司部門管理',
     icon: 'mdi-office-building-cog',
+    category: 'organization',
     pagePermission: 'COMPANY_AND_DEPARTMENT_MANAGEMENT_READ',
     features: [
       { key: 'companyRead', name: '查看公司', permission: 'COMPANY_READ' },
@@ -452,55 +658,12 @@ const permissionModules = ref([
       { key: 'locationDelete', name: '刪除公司地點', permission: 'COMPANY_LOCATION_DELETE' }
     ]
   },
-  {
-    key: 'formGenerator',
-    name: '表單產生器',
-    icon: 'mdi-list-box-outline',
-    pagePermission: 'FORM_GENERATOR_READ',
-    features: [
-    ]
-  },
-  {
-    key: 'lineCategoryManagement',
-    name: '線別分類管理',
-    icon: 'mdi-shape-plus-outline',
-    pagePermission: 'LINE_CATEGORY_MANAGEMENT_READ',
-    features: [
-      { key: 'read', name: '查看線別分類', permission: 'LINE_CATEGORY_READ' },
-      { key: 'create', name: '新增線別分類', permission: 'LINE_CATEGORY_CREATE' },
-      { key: 'update', name: '編輯線別分類', permission: 'LINE_CATEGORY_UPDATE' },
-      { key: 'delete', name: '刪除線別分類', permission: 'LINE_CATEGORY_DELETE' },
-    ]
-  },
-  {
-    key: 'b2CStatisticsManagement',
-    name: '直客詢問管理',
-    icon: 'mdi-account-question',
-    pagePermission: 'B2C_STATISTICS_MANAGEMENT_READ',
-    features: [
-      { key: 'read', name: '查看直客詢問', permission: 'CUSTOMER_INQUIRY_READ' },
-      { key: 'create', name: '新增直客詢問', permission: 'CUSTOMER_INQUIRY_CREATE' },
-      { key: 'update', name: '編輯直客詢問', permission: 'CUSTOMER_INQUIRY_UPDATE' },
-      { key: 'delete', name: '刪除直客詢問', permission: 'CUSTOMER_INQUIRY_DELETE' },
-      { key: 'export', name: '匯出直客詢問', permission: 'CUSTOMER_INQUIRY_EXPORT' },
-      { key: 'import', name: '匯入直客詢問', permission: 'CUSTOMER_INQUIRY_IMPORT' },
-    ]
-  },
-  {
-    key: 'marketingDesignRequestManagement',
-    name: '行銷美編需求申請管理',
-    icon: 'mdi-form-select',
-    pagePermission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ',
-    features: [
-      { key: 'read', name: '查看行美申請', permission: 'MARKETING_DESIGN_REQUEST_READ' },
-      { key: 'update', name: '編輯行美申請', permission: 'MARKETING_DESIGN_REQUEST_UPDATE' },
-      { key: 'notificationManage', name: '通知設定管理', permission: 'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE' },
-    ]
-  },
+
   {
     key: 'hardwareDeviceManagement',
     name: '硬體設備管理',
     icon: 'mdi-server-outline',
+    category: 'organization',
     pagePermission: 'HARDWARE_DEVICE_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看硬體設備', permission: 'HARDWARE_DEVICE_READ' },
@@ -515,6 +678,7 @@ const permissionModules = ref([
     key: 'hardwareMaintenanceRecord',
     name: '硬體維修記錄',
     icon: 'mdi-wrench',
+    category: 'organization',
     pagePermission: 'HARDWARE_MAINTENANCE_RECORD_PAGE_READ',
     features: [
       { key: 'read', name: '查看硬修記錄', permission: 'HARDWARE_MAINTENANCE_RECORD_READ' },
@@ -528,6 +692,7 @@ const permissionModules = ref([
     key: 'hardwareCategoryManagement',
     name: '硬體類型管理',
     icon: 'mdi-shape-plus-outline',
+    category: 'organization',
     pagePermission: 'HARDWARE_CATEGORY_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看硬體類型', permission: 'HARDWARE_CATEGORY_READ' },
@@ -540,6 +705,7 @@ const permissionModules = ref([
     key: 'userManagement',
     name: '用戶管理',
     icon: 'mdi-account-multiple',
+    category: 'system',
     pagePermission: 'USER_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看用戶', permission: 'SYSTEM_USER_READ' },
@@ -552,6 +718,7 @@ const permissionModules = ref([
     key: 'permissionManagement',
     name: '權限管理',
     icon: 'mdi-shield-account',
+    category: 'system',
     pagePermission: 'PERMISSION_MANAGEMENT_READ',
     features: [
       { key: 'permissionRead', name: '查看權限', permission: 'SYSTEM_PERMISSION_READ' },
@@ -568,6 +735,7 @@ const permissionModules = ref([
     key: 'announcementManagement',
     name: '公告管理',
     icon: 'mdi-bullhorn',
+    category: 'system',
     pagePermission: 'ANNOUNCEMENT_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看公告', permission: 'ANNOUNCEMENT_READ' },
@@ -580,6 +748,7 @@ const permissionModules = ref([
     key: 'marqueeManagement',
     name: '跑馬燈管理',
     icon: 'mdi-bullhorn-outline',
+    category: 'system',
     pagePermission: 'MARQUEE_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看跑馬燈', permission: 'MARQUEE_READ' },
@@ -592,6 +761,7 @@ const permissionModules = ref([
     key: 'carouselManagement',
     name: '輪播圖管理',
     icon: 'mdi-image-multiple',
+    category: 'system',
     pagePermission: 'CAROUSEL_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看輪播圖', permission: 'CAROUSEL_READ' },
@@ -604,6 +774,7 @@ const permissionModules = ref([
     key: 'sharedResourceManagement',
     name: '共享資源管理',
     icon: 'mdi-share-all',
+    category: 'system',
     pagePermission: 'SHARED_RESOURCE_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看共享資源', permission: 'SHARED_RESOURCE_READ' },
@@ -616,6 +787,7 @@ const permissionModules = ref([
     key: 'auditLog',
     name: '異動紀錄',
     icon: 'mdi-history',
+    category: 'system',
     pagePermission: 'AUDIT_LOG_PAGE_READ',
     features: [
       { key: 'read', name: '查看異動紀錄', permission: 'AUDIT_LOG_READ' },
@@ -636,6 +808,28 @@ const availableRoles = computed(() => {
   if (!props.currentRole) return allRoles.value
   return allRoles.value.filter(role => role._id !== props.currentRole._id)
 })
+
+// 分類切換與分群
+const activeCategory = ref('all')
+
+const groupedModules = computed(() => {
+  const groups = [
+    { id: 'common', label: '常用' },
+    { id: 'application', label: '應用' },
+    { id: 'business', label: '業務' },
+    { id: 'organization', label: '組織' },
+    { id: 'system', label: '系統' }
+  ]
+  return groups
+    .map(g => ({
+      ...g,
+      items: permissionModules.value.filter(m => m.category === g.id)
+    }))
+    .filter(g => g.items.length > 0)
+})
+const filteredModules = computed(() =>
+  permissionModules.value.filter(m => m.category === activeCategory.value)
+)
 
 // 初始化模組權限狀態
 const initializeModulePermissions = () => {
@@ -871,15 +1065,17 @@ watch(() => props.modelValue, (newValue) => {
 
 .permission-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  // 使用固定欄寬，避免單一卡片被撐滿一整列
+  grid-template-columns: repeat(auto-fill, minmax(320px, 334px));
   gap: 16px;
 
   // 響應式設計
   @media (max-width: 1200px) {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 320px));
   }
 
   @media (max-width: 768px) {
+    // 小螢幕改為單欄滿版顯示
     grid-template-columns: 1fr;
     gap: 12px;
   }

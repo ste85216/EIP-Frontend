@@ -27,6 +27,8 @@
       <div
         ref="wrapperRef"
         class="marquee-wrapper"
+        @mouseenter="pauseAnimation"
+        @mouseleave="resumeAnimation"
       >
         <div
           v-if="marqueeItems.length > 0"
@@ -39,7 +41,8 @@
             '--text': String(trackWidth),
             visibility: isAnimating ? 'visible' : 'hidden',
             opacity: isAnimating ? 1 : 0,
-            transform: 'translateX(' + (wrapperWidth) + 'px)'
+            transform: 'translateX(' + (wrapperWidth) + 'px)',
+            animationPlayState: isPaused ? 'paused' : 'running'
           }"
           @animationend="handleTrackEnd"
         >
@@ -92,7 +95,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useApi } from '@/composables/axios'
 
 
@@ -200,16 +203,39 @@ const measure = () => {
   }
 }
 
-const fetchActive = async () => {
+// 比較兩個項目列表是否相同
+const areItemsEqual = (oldItems, newItems) => {
+  if (oldItems.length !== newItems.length) return false
+  return oldItems.every((old, i) => {
+    const item = newItems[i]
+    return old.id === item.id && old.type === item.type && old.text === item.text
+  })
+}
+
+const fetchActive = async (shouldRestart = true) => {
   try {
     const { data } = await apiAuth.get('/marquees/active')
     if (data.success) {
       const list = data.result || []
-      marqueeItems.value = list.map(item => ({ id: item._id, type: item.type, text: item.content }))
+      const newItems = list.map(item => ({ id: item._id, type: item.type, text: item.content }))
+
+      // 檢查內容是否真的改變
+      const contentChanged = !areItemsEqual(marqueeItems.value, newItems)
+
+      marqueeItems.value = newItems
       await nextTick()
       measure()
       updateVisibility()
-      startIfAllowed()
+
+      // 只有在內容真的改變時才重啟動畫（避免不必要的重啟）
+      if (contentChanged && shouldRestart) {
+        // 內容改變，重啟動畫以顯示新內容
+        startIfAllowed()
+      } else if (!contentChanged && showMarquee.value && !isAnimating.value) {
+        // 內容沒變，但動畫未運行（可能是初次載入或意外停止），啟動動畫
+        startIfAllowed()
+      }
+      // 內容沒變且動畫正在運行，不做任何事（讓動畫繼續）
     }
   } catch {
     marqueeItems.value = []
@@ -228,11 +254,11 @@ const fetchVersionAndSync = async () => {
       const broadcastChangedRaw = prevBroadcast !== newBroadcast
       const suppressedAt = Number(localStorage.getItem(STORAGE_SUPPRESS_AT) || 0)
       const broadcastMs = newBroadcast ? new Date(newBroadcast).getTime() : 0
-      const broadcastChanged = broadcastChangedRaw && broadcastMs > suppressedAt && !!prevBroadcast
+      const broadcastChanged = broadcastChangedRaw && broadcastMs > suppressedAt && Boolean(prevBroadcast)
       contentVersion.value = newContent
       broadcastVersion.value = newBroadcast
       // 僅 content 改變時，不解除抑制，但仍更新 track 以符合最新內容
-      if (contentChanged) await fetchActive()
+      if (contentChanged) await fetchActive(true) // 內容版本改變，允許重啟
       // 無論如何更新可視狀態（抑制由 broadcast 判定）
       updateVisibility()
       if (broadcastChanged) {
@@ -262,7 +288,13 @@ const fetchVersionAndSync = async () => {
         }
         requestAnimationFrame(tryStart)
       } else {
-        startIfAllowed()
+        // 無廣播變更時，不要強制重啟動畫；僅在尚未運行時啟動
+        if (showMarquee.value && !isAnimating.value) {
+          startIfAllowed()
+        } else {
+          // 無變更且正在運行，保持現狀
+          // console.log('[Marquee] versionCheck: no changes, keep running')
+        }
       }
     }
   } catch {
@@ -277,7 +309,17 @@ onMounted(async () => {
   window.addEventListener('resize', onResize)
 })
 onUnmounted(() => { if (versionTimer) clearInterval(versionTimer); window.removeEventListener('resize', onResize) })
-const onResize = () => { measure(); restartAnimation() }
+const onResize = () => {
+  measure()
+  // 視窗大小改變時，只更新動畫參數，不重啟動畫（除非動畫未運行）
+  if (showMarquee.value && isAnimating.value) {
+    // 動畫運行中，只更新 CSS 變數（動畫會自動適應新的距離）
+    // 不需要重啟，因為 transform 和 animation-duration 會自動更新
+  } else if (showMarquee.value) {
+    // 動畫未運行，才重啟
+    restartAnimation()
+  }
+}
 
 const suppressToday = () => {
   try {
@@ -301,13 +343,19 @@ const suppressToday = () => {
 // 全部逐條連續播放（整輪一次）
 const marqueeKey = ref(0)
 const isAnimating = ref(false)
+const isPaused = ref(false)
 const marqueeDuration = computed(() => {
   const distance = wrapperWidth.value + trackWidth.value
   const speedPxPerSec = 60 // 慢速
   const seconds = Math.max(10, Math.min(60, distance / speedPxPerSec))
   return `${seconds}s`
 })
-const restartAnimation = () => { marqueeKey.value++; isAnimating.value = true }
+const restartAnimation = () => {
+  marqueeKey.value++
+  isAnimating.value = true
+}
+const pauseAnimation = () => { isPaused.value = true }
+const resumeAnimation = () => { isPaused.value = false }
 const handleTrackEnd = async () => {
   // 播完一輪，停頓 1 秒再重來（避免靜止時內容閃現，先隱藏）
   isAnimating.value = false
@@ -317,11 +365,8 @@ const handleTrackEnd = async () => {
     restartAnimation()
   })
 }
-watch(marqueeItems, async () => {
-  await nextTick()
-  measure()
-  restartAnimation()
-})
+// 移除 watch，改由 fetchActive 內部控制是否重啟
+// 避免不必要的動畫重啟
 
 // 類型樣式映射
 const getAnnouncementTypeColor = (type) => {

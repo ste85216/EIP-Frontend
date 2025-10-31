@@ -321,7 +321,7 @@
       >
         <!-- 分機表 -->
         <v-card
-          class="dashboard-card extension-card pb-4 mb-4"
+          class="dashboard-card extension-card pb-4"
           elevation="2"
         >
           <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
@@ -422,7 +422,7 @@
 
         <!-- 共享資源 -->
         <v-card
-          class="dashboard-card shared-resources-card pa-0"
+          class="dashboard-card shared-resources-card"
           elevation="2"
         >
           <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
@@ -1563,6 +1563,7 @@ onUnmounted(() => {
 // 分機表卡片樣式
 .extension-card {
   height: 360px;
+  margin-bottom: 18px !important;
   .extension-item {
     border: 1px solid #e0e0e0;
     transition: all 0.2s ease;

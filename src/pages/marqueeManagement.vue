@@ -140,8 +140,18 @@
                       {{ item.order }}
                     </v-chip>
                   </td>
-                  <td>{{ formatDate(item.startDate) }}</td>
-                  <td>{{ formatDate(item.endDate) }}</td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ formatDateOnly(item.startDate) }}</span>
+                      <span class="text-caption text-medium-emphasis">{{ formatTimeOnly(item.startDate) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ formatDateOnly(item.endDate) }}</span>
+                      <span class="text-caption text-medium-emphasis">{{ formatTimeOnly(item.endDate) }}</span>
+                    </div>
+                  </td>
                   <td>{{ item.publisher?.name || '未知' }}</td>
                   <td>
                     <div class="d-flex align-center gap-1">
@@ -512,8 +522,8 @@ const headers = [
   { title: '內容', key: 'content', sortable: false },
   { title: '狀態', key: 'isActive', sortable: true, width: '100px' },
   { title: '排序', key: 'order', sortable: true, width: '120px' },
-  { title: '開始', key: 'startDate', sortable: true, width: '120px' },
-  { title: '結束', key: 'endDate', sortable: true, width: '120px' },
+  { title: '開始時間', key: 'startDate', sortable: true, width: '120px' },
+  { title: '結束時間', key: 'endDate', sortable: true, width: '120px' },
   { title: '發布者', key: 'publisher', sortable: false, width: '100px' },
   { title: '操作', key: 'actions', sortable: false, align: 'center', width: '120px' }
 ]
@@ -694,7 +704,8 @@ const getStatusText = (item) => (isExpired(item) ? '已過期' : (item.isActive 
 const getStatusColor = (item) => (isExpired(item) ? 'orange-darken-1' : (item.isActive ? 'green-darken-1' : 'grey-darken-1'))
 const getTypeText = (type) => ({ system: '系統', update: '更新', announcement: '一般', maintenance: '維護', event: '活動' }[type] || type)
 const getTypeColor = (type) => ({ system: 'blue-darken-2', update: 'cyan-darken-3', announcement: 'grey-darken-2', maintenance: 'red-darken-1', event: 'indigo-darken-1' }[type] || 'grey')
-const formatDate = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }) }
+const formatDateOnly = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }) }
+const formatTimeOnly = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }) }
 const toLocalDatetime = (iso) => { const d = new Date(iso); const off = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - off).toISOString().slice(0,16) }
 
 // 監聽搜尋

@@ -135,8 +135,18 @@
                       {{ getStatusText(item) }}
                     </v-chip>
                   </td>
-                  <td>{{ formatDate(item.startDate) }}</td>
-                  <td>{{ formatDate(item.endDate) }}</td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ formatDateOnly(item.startDate) }}</span>
+                      <span class="text-caption text-medium-emphasis">{{ formatTimeOnly(item.startDate) }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-column">
+                      <span>{{ formatDateOnly(item.endDate) }}</span>
+                      <span class="text-caption text-medium-emphasis">{{ formatTimeOnly(item.endDate) }}</span>
+                    </div>
+                  </td>
                   <td>{{ item.creator?.name || '未知' }}</td>
                   <td>
                     <div class="d-flex align-center gap-1">
@@ -145,6 +155,8 @@
                         size="small"
                         color="blue"
                         variant="text"
+                        :loading="editingLoadingId === item._id"
+                        :disabled="editingLoadingId === item._id"
                         @click="editAnnouncement(item)"
                       >
                         <v-icon size="18">
@@ -226,6 +238,11 @@
           </v-btn>
         </v-card-title>
 
+        <v-progress-linear
+          v-if="dialogLoading"
+          color="teal-darken-1"
+          indeterminate
+        />
         <v-card-text class="px-6 py-4 mt-4">
           <v-form
             ref="formRef"
@@ -605,6 +622,8 @@ const isEditing = ref(false)
 const isSubmitting = ref(false)
 const isDeleting = ref(false)
 const selectedAnnouncement = ref(null)
+const editingLoadingId = ref(null)
+const dialogLoading = ref(false)
 
 // 表單引用
 const formRef = ref(null)
@@ -701,48 +720,69 @@ const showCreateForm = () => {
 
   // 結束時間不自動填寫，由使用者自行選擇
   endDate.value.value = ''
+
+  // 確保新增模式無載入狀態
+  dialogLoading.value = false
 }
 
 // 編輯公告
-const editAnnouncement = (announcement) => {
-  isEditing.value = true
+const editAnnouncement = async (announcement) => {
+  try {
+    editingLoadingId.value = announcement._id
+    isEditing.value = true
+    showCreateDialog.value = true
+    dialogLoading.value = true
 
-  // 處理開始時間（轉換為本地時間）
-  let startDateValue = ''
-  if (announcement.startDate) {
-    const start = new Date(announcement.startDate)
-    const offset = start.getTimezoneOffset() * 60000
-    const localStart = new Date(start.getTime() - offset)
-    startDateValue = localStart.toISOString().slice(0, 16)
+    // 以 ID 取得完整資料（含 content 與 attachments）
+    const response = await apiAuth.get(`/announcements/${announcement._id}`)
+    const full = response.data.result
+
+    // 處理開始時間（轉換為本地時間）
+    let startDateValue = ''
+    if (full.startDate) {
+      const start = new Date(full.startDate)
+      const offset = start.getTimezoneOffset() * 60000
+      const localStart = new Date(start.getTime() - offset)
+      startDateValue = localStart.toISOString().slice(0, 16)
+    }
+
+    // 處理結束時間（轉換為本地時間）
+    let endDateValue = ''
+    if (full.endDate) {
+      const end = new Date(full.endDate)
+      const offset = end.getTimezoneOffset() * 60000
+      const localEnd = new Date(end.getTime() - offset)
+      endDateValue = localEnd.toISOString().slice(0, 16)
+    }
+
+    // 設定表單欄位值
+    title.value.value = full.title
+    type.value.value = full.type
+    startDate.value.value = startDateValue
+    endDate.value.value = endDateValue
+    isPinned.value.value = full.isPinned
+    isActive.value.value = full.isActive
+    attachments.value.value = null
+    announcementContent.value = full.content || ''
+
+    // 設定現有附件
+    existingAttachments.value = full.attachments || []
+    attachmentsToRemove.value = []
+
+    formData.value = {
+      _id: full._id
+    }
+    dialogLoading.value = false
+    editingLoadingId.value = null
+  } catch (error) {
+    console.error('載入公告內容失敗:', error)
+    createSnackbar({
+      text: error.response?.data?.message || error.message || '載入公告內容失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    dialogLoading.value = false
+    editingLoadingId.value = null
   }
-
-  // 處理結束時間（轉換為本地時間）
-  let endDateValue = ''
-  if (announcement.endDate) {
-    const end = new Date(announcement.endDate)
-    const offset = end.getTimezoneOffset() * 60000
-    const localEnd = new Date(end.getTime() - offset)
-    endDateValue = localEnd.toISOString().slice(0, 16)
-  }
-
-  // 設定表單欄位值
-  title.value.value = announcement.title
-  type.value.value = announcement.type
-  startDate.value.value = startDateValue
-  endDate.value.value = endDateValue
-  isPinned.value.value = announcement.isPinned
-  isActive.value.value = announcement.isActive
-  attachments.value.value = null
-  announcementContent.value = announcement.content || ''
-
-  // 設定現有附件
-  existingAttachments.value = announcement.attachments || []
-  attachmentsToRemove.value = []
-
-  formData.value = {
-    _id: announcement._id
-  }
-  showCreateDialog.value = true
 }
 
 // 提交表單
@@ -943,15 +983,18 @@ const getTypeColor = (type) => {
   return colorMap[type] || 'grey'
 }
 
-// 格式化日期
-const formatDate = (dateString) => {
+// 格式化日期（僅日期）
+const formatDateOnly = (dateString) => {
   if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('zh-TW', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  })
+  const d = new Date(dateString)
+  return d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+// 格式化時間（僅時間）
+const formatTimeOnly = (dateString) => {
+  if (!dateString) return ''
+  const d = new Date(dateString)
+  return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })
 }
 
 // 取得檔案類型圖標

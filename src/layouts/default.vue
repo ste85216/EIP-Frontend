@@ -57,6 +57,8 @@
       permanent
       :expand-on-hover="rail"
       class="position-fixed border-0"
+      @mouseenter="railHovering = true"
+      @mouseleave="railHovering = false"
     >
       <v-list
         v-model:opened="openedGroups"
@@ -70,7 +72,7 @@
               rounded="0"
               height="172"
               width="260"
-              class="pa-0 mb-2 card-bg position-relative"
+              class="pa-0 card-bg position-relative"
               :class="{ 'loaded': isBackgroundLoaded }"
               :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
               to="/profile"
@@ -140,6 +142,20 @@
                 </v-card-text>
               </div>
             </v-card>
+            <!-- Tab 切換按鈕 -->
+            <div
+              v-if="visibleTabs.length > 0"
+              class="custom-tabs"
+            >
+              <button
+                v-for="tab in visibleTabs"
+                :key="tab.id"
+                :class="['tab-button', { active: activeTab === tab.id }]"
+                @click="activeTab = tab.id"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
           </template>
           <template v-else>
             <v-list-item
@@ -151,388 +167,33 @@
               </template>
               <v-list-item-title>個人資料管理</v-list-item-title>
             </v-list-item>
-          </template>
-          <!-- 核心功能選單 -->
-          <template
-            v-for="coreItem in filteredCoreItems"
-            :key="coreItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="coreItem.children"
-              v-model="openedGroups"
-              :value="coreItem.text"
-              :persistent="true"
-              fluid
+            <!-- rail 展開時的 Tab 切換按鈕 -->
+            <div
+              v-if="railHovering"
+              class="custom-tabs"
             >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ coreItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in coreItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="orange-darken-4"
+              <button
+                v-for="tab in visibleTabs"
+                :key="tab.id"
+                :class="['tab-button', { active: activeTab === tab.id }]"
+                @click="activeTab = tab.id"
               >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="coreItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ coreItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
-            </v-list-item>
+                {{ tab.label }}
+              </button>
+            </div>
           </template>
-
-          <!-- 共用選單 -->
-          <v-divider
-            v-if="filteredCommonItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="commonItem in filteredCommonItems"
-            :key="commonItem.text"
-          >
-            <v-list-item
-              :to="commonItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ commonItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ commonItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 業務選單 -->
-          <v-divider
-            v-if="filteredBusinessItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="businessItem in filteredBusinessItems"
-            :key="businessItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="businessItem.children"
-              v-model="openedGroups"
-              :value="businessItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ businessItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ businessItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in businessItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="green-darken-2"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="businessItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ businessItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ businessItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 行銷管理選單 -->
-          <v-divider
-            v-if="filteredMarketingItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="marketingItem in filteredMarketingItems"
-            :key="marketingItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="marketingItem.children"
-              v-model="openedGroups"
-              :value="marketingItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ marketingItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ marketingItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in marketingItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="purple-darken-2"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="marketingItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ marketingItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ marketingItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 人事管理選單 -->
-          <v-divider
-            v-if="filteredHrItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="hrItem in filteredHrItems"
-            :key="hrItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="hrItem.children"
-              v-model="openedGroups"
-              :value="hrItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ hrItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ hrItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in hrItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="blue-darken-3"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="hrItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ hrItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ hrItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 其他功能選單 -->
-          <v-divider
-            v-if="filteredOtherItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="otherItem in filteredOtherItems"
-            :key="otherItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="otherItem.children"
-              v-model="openedGroups"
-              :value="otherItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ otherItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ otherItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in otherItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="teal-darken-2"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="otherItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ otherItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ otherItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- IT管理選單 -->
-          <v-divider
-            v-if="filteredItItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="itItem in filteredItItems"
-            :key="itItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="itItem.children"
-              v-model="openedGroups"
-              :value="itItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ itItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ itItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in itItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="orange-darken-4"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="itItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ itItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ itItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 系統設定選單 -->
-          <v-divider
-            v-if="user.isLogin && filteredSettingsItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template v-if="user.isLogin">
+          <!-- Tab 內容 -->
+          <template v-if="visibleTabs.length <= 1 || activeTab === 'common'">
+            <!-- 常用 Tab -->
             <template
-              v-for="settingsItem in filteredSettingsItems"
-              :key="settingsItem.text"
+              v-for="item in filteredCommonTabItems"
+              :key="item.text"
             >
               <!-- 有子選單的項目 -->
               <v-list-group
-                v-if="settingsItem.children"
+                v-if="item.children"
                 v-model="openedGroups"
-                :value="settingsItem.text"
+                :value="item.text"
                 :persistent="true"
                 fluid
               >
@@ -542,14 +203,187 @@
                     color="grey-darken-3"
                   >
                     <template #prepend>
-                      <v-icon>{{ settingsItem.icon }}</v-icon>
+                      <v-icon>{{ item.icon }}</v-icon>
                     </template>
-                    <v-list-item-title>{{ settingsItem.text }}</v-list-item-title>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
                   </v-list-item>
                 </template>
-
                 <v-list-item
-                  v-for="child in settingsItem.children"
+                  v-for="child in item.children"
+                  :key="child.to"
+                  :to="child.to"
+                  color="grey-darken-3"
+                  base-color="orange-darken-4"
+                >
+                  <template #prepend>
+                    <v-icon>{{ child.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list-group>
+              <!-- 沒有子選單的項目 -->
+              <v-list-item
+                v-else
+                :to="item.to"
+                color="grey-darken-3"
+              >
+                <template #prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
+
+          <template v-if="activeTab === 'application'">
+            <!-- 應用 Tab -->
+            <template
+              v-for="item in filteredApplicationTabItems"
+              :key="item.text"
+            >
+              <v-list-item
+                :to="item.to"
+                color="grey-darken-3"
+              >
+                <template #prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
+
+          <template v-if="activeTab === 'business'">
+            <!-- 業務 Tab -->
+            <template
+              v-for="item in filteredBusinessTabItems"
+              :key="item.text"
+            >
+              <!-- 有子選單的項目 -->
+              <v-list-group
+                v-if="item.children"
+                v-model="openedGroups"
+                :value="item.text"
+                :persistent="true"
+                fluid
+              >
+                <template #activator="{ props }">
+                  <v-list-item
+                    v-bind="props"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ item.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+                <v-list-item
+                  v-for="child in item.children"
+                  :key="child.to"
+                  :to="child.to"
+                  color="grey-darken-3"
+                  base-color="purple-darken-2"
+                >
+                  <template #prepend>
+                    <v-icon>{{ child.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list-group>
+              <!-- 沒有子選單的項目 -->
+              <v-list-item
+                v-else
+                :to="item.to"
+                color="grey-darken-3"
+              >
+                <template #prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
+
+          <template v-if="activeTab === 'organization'">
+            <!-- 組織 Tab -->
+            <template
+              v-for="item in filteredOrganizationTabItems"
+              :key="item.text"
+            >
+              <!-- 有子選單的項目 -->
+              <v-list-group
+                v-if="item.children"
+                v-model="openedGroups"
+                :value="item.text"
+                :persistent="true"
+                fluid
+              >
+                <template #activator="{ props }">
+                  <v-list-item
+                    v-bind="props"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ item.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+                <v-list-item
+                  v-for="child in item.children"
+                  :key="child.to"
+                  :to="child.to"
+                  color="grey-darken-3"
+                  base-color="blue-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ child.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list-group>
+              <!-- 沒有子選單的項目 -->
+              <v-list-item
+                v-else
+                :to="item.to"
+                color="grey-darken-3"
+              >
+                <template #prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
+
+          <template v-if="activeTab === 'system'">
+            <!-- 系統 Tab -->
+            <template
+              v-for="item in filteredSystemTabItems"
+              :key="item.text"
+            >
+              <!-- 有子選單的項目 -->
+              <v-list-group
+                v-if="item.children"
+                v-model="openedGroups"
+                :value="item.text"
+                :persistent="true"
+                fluid
+              >
+                <template #activator="{ props }">
+                  <v-list-item
+                    v-bind="props"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ item.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+                <v-list-item
+                  v-for="child in item.children"
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
@@ -561,17 +395,16 @@
                   <v-list-item-title>{{ child.text }}</v-list-item-title>
                 </v-list-item>
               </v-list-group>
-
               <!-- 沒有子選單的項目 -->
               <v-list-item
                 v-else
-                :to="settingsItem.to"
+                :to="item.to"
                 color="grey-darken-3"
               >
                 <template #prepend>
-                  <v-icon>{{ settingsItem.icon }}</v-icon>
+                  <v-icon>{{ item.icon }}</v-icon>
                 </template>
-                <v-list-item-title>{{ settingsItem.text }}</v-list-item-title>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
               </v-list-item>
             </template>
           </template>
@@ -653,387 +486,17 @@
               </v-card-text>
             </div>
           </v-card>
-          <!-- 核心功能選單 -->
-          <template
-            v-for="coreItem in filteredCoreItems"
-            :key="coreItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="coreItem.children"
-              v-model="openedGroups"
-              :value="coreItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ coreItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in coreItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="orange-darken-4"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="coreItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ coreItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ coreItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 共用選單 -->
-          <v-divider
-            v-if="filteredCommonItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="commonItem in filteredCommonItems"
-            :key="commonItem.text"
-          >
-            <v-list-item
-              :to="commonItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ commonItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ commonItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 業務選單 -->
-          <v-divider
-            v-if="filteredBusinessItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="businessItem in filteredBusinessItems"
-            :key="businessItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="businessItem.children"
-              v-model="openedGroups"
-              :value="businessItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ businessItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ businessItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in businessItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="green-darken-2"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="businessItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ businessItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ businessItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 行銷管理選單 -->
-          <v-divider
-            v-if="filteredMarketingItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="marketingItem in filteredMarketingItems"
-            :key="marketingItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="marketingItem.children"
-              v-model="openedGroups"
-              :value="marketingItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ marketingItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ marketingItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in marketingItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="purple-darken-2"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="marketingItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ marketingItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ marketingItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 人事管理選單 -->
-          <v-divider
-            v-if="filteredHrItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="hrItem in filteredHrItems"
-            :key="hrItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="hrItem.children"
-              v-model="openedGroups"
-              :value="hrItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ hrItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ hrItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in hrItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="blue-darken-3"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="hrItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ hrItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ hrItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 其他功能選單 -->
-          <v-divider
-            v-if="filteredOtherItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="otherItem in filteredOtherItems"
-            :key="otherItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="otherItem.children"
-              v-model="openedGroups"
-              :value="otherItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ otherItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ otherItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in otherItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="teal-darken-2"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="otherItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ otherItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ otherItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- IT管理選單 -->
-          <v-divider
-            v-if="filteredItItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template
-            v-for="itItem in filteredItItems"
-            :key="itItem.text"
-          >
-            <!-- 有子選單的項目 -->
-            <v-list-group
-              v-if="itItem.children"
-              v-model="openedGroups"
-              :value="itItem.text"
-              :persistent="true"
-              fluid
-            >
-              <template #activator="{ props }">
-                <v-list-item
-                  v-bind="props"
-                  color="grey-darken-3"
-                >
-                  <template #prepend>
-                    <v-icon>{{ itItem.icon }}</v-icon>
-                  </template>
-                  <v-list-item-title>{{ itItem.text }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <v-list-item
-                v-for="child in itItem.children"
-                :key="child.to"
-                :to="child.to"
-                color="grey-darken-3"
-                base-color="orange-darken-4"
-              >
-                <template #prepend>
-                  <v-icon>{{ child.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ child.text }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <!-- 沒有子選單的項目 -->
-            <v-list-item
-              v-else
-              :to="itItem.to"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>{{ itItem.icon }}</v-icon>
-              </template>
-              <v-list-item-title>{{ itItem.text }}</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <!-- 系統設定選單 -->
-          <v-divider
-            v-if="user.isLogin && filteredSettingsItems.length > 0"
-            color="grey-darken-3"
-            opacity="0.3"
-            class="my-2"
-          />
-          <template v-if="user.isLogin">
+          <!-- 常用 -->
+          <template v-if="filteredCommonTabItems.length > 0">
+            <v-list-subheader>常用</v-list-subheader>
             <template
-              v-for="settingsItem in filteredSettingsItems"
-              :key="settingsItem.text"
+              v-for="item in filteredCommonTabItems"
+              :key="item.text"
             >
-              <!-- 有子選單的項目 -->
               <v-list-group
-                v-if="settingsItem.children"
+                v-if="item.children"
                 v-model="openedGroups"
-                :value="settingsItem.text"
+                :value="item.text"
                 :persistent="true"
                 fluid
               >
@@ -1043,14 +506,185 @@
                     color="grey-darken-3"
                   >
                     <template #prepend>
-                      <v-icon>{{ settingsItem.icon }}</v-icon>
+                      <v-icon>{{ item.icon }}</v-icon>
                     </template>
-                    <v-list-item-title>{{ settingsItem.text }}</v-list-item-title>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
                   </v-list-item>
                 </template>
-
                 <v-list-item
-                  v-for="child in settingsItem.children"
+                  v-for="child in item.children"
+                  :key="child.to"
+                  :to="child.to"
+                  color="grey-darken-3"
+                  base-color="orange-darken-4"
+                >
+                  <template #prepend>
+                    <v-icon>{{ child.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list-group>
+              <v-list-item
+                v-else
+                :to="item.to"
+                color="grey-darken-3"
+              >
+                <template #prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
+
+          <!-- 應用 -->
+          <template v-if="filteredApplicationTabItems.length > 0">
+            <v-list-subheader>應用</v-list-subheader>
+            <template
+              v-for="item in filteredApplicationTabItems"
+              :key="item.text"
+            >
+              <v-list-item
+                :to="item.to"
+                color="grey-darken-3"
+              >
+                <template #prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
+
+          <!-- 業務 -->
+          <template v-if="filteredBusinessTabItems.length > 0">
+            <v-list-subheader>業務</v-list-subheader>
+            <template
+              v-for="item in filteredBusinessTabItems"
+              :key="item.text"
+            >
+              <v-list-group
+                v-if="item.children"
+                v-model="openedGroups"
+                :value="item.text"
+                :persistent="true"
+                fluid
+              >
+                <template #activator="{ props }">
+                  <v-list-item
+                    v-bind="props"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ item.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+                <v-list-item
+                  v-for="child in item.children"
+                  :key="child.to"
+                  :to="child.to"
+                  color="grey-darken-3"
+                  base-color="green-darken-2"
+                >
+                  <template #prepend>
+                    <v-icon>{{ child.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list-group>
+              <v-list-item
+                v-else
+                :to="item.to"
+                color="grey-darken-3"
+              >
+                <template #prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
+
+          <!-- 組織 -->
+          <template v-if="filteredOrganizationTabItems.length > 0">
+            <v-list-subheader>組織</v-list-subheader>
+            <template
+              v-for="item in filteredOrganizationTabItems"
+              :key="item.text"
+            >
+              <v-list-group
+                v-if="item.children"
+                v-model="openedGroups"
+                :value="item.text"
+                :persistent="true"
+                fluid
+              >
+                <template #activator="{ props }">
+                  <v-list-item
+                    v-bind="props"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ item.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+                <v-list-item
+                  v-for="child in item.children"
+                  :key="child.to"
+                  :to="child.to"
+                  color="grey-darken-3"
+                  base-color="blue-darken-3"
+                >
+                  <template #prepend>
+                    <v-icon>{{ child.icon }}</v-icon>
+                  </template>
+                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                </v-list-item>
+              </v-list-group>
+              <v-list-item
+                v-else
+                :to="item.to"
+                color="grey-darken-3"
+              >
+                <template #prepend>
+                  <v-icon>{{ item.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
+
+          <!-- 系統 -->
+          <template v-if="filteredSystemTabItems.length > 0 && user.isLogin">
+            <v-list-subheader>系統</v-list-subheader>
+            <template
+              v-for="item in filteredSystemTabItems"
+              :key="item.text"
+            >
+              <v-list-group
+                v-if="item.children"
+                v-model="openedGroups"
+                :value="item.text"
+                :persistent="true"
+                fluid
+              >
+                <template #activator="{ props }">
+                  <v-list-item
+                    v-bind="props"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ item.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+                <v-list-item
+                  v-for="child in item.children"
                   :key="child.to"
                   :to="child.to"
                   color="grey-darken-3"
@@ -1062,17 +696,15 @@
                   <v-list-item-title>{{ child.text }}</v-list-item-title>
                 </v-list-item>
               </v-list-group>
-
-              <!-- 沒有子選單的項目 -->
               <v-list-item
                 v-else
-                :to="settingsItem.to"
+                :to="item.to"
                 color="grey-darken-3"
               >
                 <template #prepend>
-                  <v-icon>{{ settingsItem.icon }}</v-icon>
+                  <v-icon>{{ item.icon }}</v-icon>
                 </template>
-                <v-list-item-title>{{ settingsItem.text }}</v-list-item-title>
+                <v-list-item-title>{{ item.text }}</v-list-item-title>
               </v-list-item>
             </template>
           </template>
@@ -1142,6 +774,8 @@ const openedGroups = ref([]) // 初始值改為空數組
 const isBackgroundLoaded = ref(false)
 const isAvatarLoaded = ref(false)
 const userRbacRoles = ref([]) // 用戶的 RBAC 角色
+const activeTab = ref('common') // 當前活躍的Tab
+const railHovering = ref(false) // rail 模式下的展開狀態
 const handleImageLoad = () => {
   isBackgroundLoaded.value = true
 }
@@ -1259,8 +893,17 @@ const getBackgroundImage = () => {
   return 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_flame.png'
 }
 
-// 核心功能選單
-const coreItems = [
+// Tab 定義
+const tabs = [
+  { id: 'common', label: '常用' },
+  { id: 'application', label: '應用' },
+  { id: 'business', label: '業務' },
+  { id: 'organization', label: '組織' },
+  { id: 'system', label: '系統' }
+]
+
+// 常用 Tab 選單
+const commonTabItems = [
   {
     to: '/',
     text: '首頁',
@@ -1294,8 +937,8 @@ const coreItems = [
   }
 ]
 
-// 共用選單
-const commonItems = [
+// 應用 Tab 選單
+const applicationTabItems = [
   {
     to: '/projectAndTaskManagement',
     text: '專案與任務管理',
@@ -1304,18 +947,14 @@ const commonItems = [
   }
 ]
 
-// 業務選單
-const businessItems = [
+// 業務 Tab 選單
+const businessTabItems = [
   {
     to: '/B2CStatistics',
     text: '直客詢問統計表',
     icon: 'mdi-account-question',
     permission: 'B2C_STATISTICS_READ'
-  }
-]
-
-// 行銷管理選單
-const marketingItems = [
+  },
   {
     to: '/marketingAnalysis',
     text: '行銷費用分析',
@@ -1348,28 +987,39 @@ const marketingItems = [
     ]
   },
   {
-    text: '其他業務管理',
-    icon: 'mdi-clipboard-list-outline',
-    permission: ['B2C_STATISTICS_MANAGEMENT_READ', 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ'],
-    children: [
-      {
-        to: '/B2CStatisticsManagement',
-        text: '直客詢問管理',
-        icon: 'mdi-account-question',
-        permission: 'B2C_STATISTICS_MANAGEMENT_READ'
-      },
-      {
-        to: '/marketingDesignRequestManagement',
-        text: '行銷美編需求申請管理',
-        icon: 'mdi-form-select',
-        permission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ'
-      }
-    ]
+    to: '/B2CStatisticsManagement',
+    text: '直客詢問管理',
+    icon: 'mdi-account-question',
+    permission: 'B2C_STATISTICS_MANAGEMENT_READ'
+  },
+  {
+    to: '/marketingDesignRequestManagement',
+    text: '行銷美編需求申請管理',
+    icon: 'mdi-form-select',
+    permission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ'
+  },
+  {
+    to: '/formGenerator',
+    text: '表單產生器',
+    icon: 'mdi-list-box-outline',
+    permission: 'FORM_GENERATOR_READ'
+  },
+  {
+    to: '/lineCategoryManagement',
+    text: '線別分類管理',
+    icon: 'mdi-shape-plus-outline',
+    permission: 'LINE_CATEGORY_MANAGEMENT_READ'
   }
 ]
 
-// 人事管理選單
-const hrItems = [
+// 組織 Tab 選單
+const organizationTabItems = [
+{
+    to: '/employeeList',
+    text: '公司員工列表',
+    icon: 'mdi-account-details',
+    permission: 'EMPLOYEE_LIST_READ'
+  },
   {
     text: '人事管理',
     icon: 'mdi-account-group',
@@ -1388,42 +1038,9 @@ const hrItems = [
         permission: 'COMPANY_AND_DEPARTMENT_MANAGEMENT_READ'
       }
     ]
-  }
-]
-
-// 其他功能選單
-const otherItems = [
-  {
-    text: '其他功能',
-    icon: 'mdi-cog',
-    permission: ['FORM_GENERATOR_READ', 'LINE_CATEGORY_MANAGEMENT_READ'],
-    children: [
-      {
-        to: '/formGenerator',
-        text: '表單產生器',
-        icon: 'mdi-list-box-outline',
-        permission: 'FORM_GENERATOR_READ'
-      },
-      {
-        to: '/lineCategoryManagement',
-        text: '線別分類管理',
-        icon: 'mdi-shape-plus-outline',
-        permission: 'LINE_CATEGORY_MANAGEMENT_READ'
-      }
-    ]
-  }
-]
-
-// IT管理選單
-const itItems = [
-  {
-    to: '/employeeList',
-    text: '公司員工列表',
-    icon: 'mdi-account-details',
-    permission: 'EMPLOYEE_LIST_READ'
   },
   {
-    text: '公司硬體管理',
+    text: '硬體管理',
     icon: 'mdi-server-network-outline',
     permission: ['HARDWARE_DEVICE_MANAGEMENT_READ', 'HARDWARE_MAINTENANCE_RECORD_PAGE_READ', 'HARDWARE_CATEGORY_MANAGEMENT_READ'],
     children: [
@@ -1449,8 +1066,8 @@ const itItems = [
   }
 ]
 
-// 系統設定選單
-const settingsItems = [
+// 系統 Tab 選單
+const systemTabItems = [
   {
     to: '/user',
     text: '用戶管理',
@@ -1464,7 +1081,7 @@ const settingsItems = [
     permission: 'PERMISSION_MANAGEMENT_READ'
   },
   {
-    text: '系統管理',
+    text: '網站設定',
     icon: 'mdi-cog-outline',
     permission: ['CAROUSEL_READ', 'ANNOUNCEMENT_READ', 'MARQUEE_MANAGEMENT_READ', 'SHARED_RESOURCE_MANAGEMENT_READ'],
     children: [
@@ -1501,9 +1118,9 @@ const settingsItems = [
     permission: 'AUDIT_LOG_PAGE_READ'
   }
 ]
-// 核心功能選單過濾
-const filteredCoreItems = computed(() => {
-  return coreItems.filter(item => {
+// 通用的選單過濾函數
+const filterMenuItems = (items) => {
+  return items.filter(item => {
     // 有子項目：只要任一子項目可見，就顯示父項
     if (item.children) {
       item.children = item.children.filter(child => {
@@ -1519,178 +1136,138 @@ const filteredCoreItems = computed(() => {
       ? permissionStore.hasAnyPermission(item.permission)
       : permissionStore.hasPermission(item.permission)
   })
-})
+}
 
-// 共用選單過濾
-const filteredCommonItems = computed(() => {
-  return commonItems.filter(item => {
-    return Array.isArray(item.permission)
-      ? permissionStore.hasAnyPermission(item.permission)
-      : permissionStore.hasPermission(item.permission)
-  })
-})
+// 各 Tab 選單過濾
+const filteredCommonTabItems = computed(() => filterMenuItems(commonTabItems))
+const filteredApplicationTabItems = computed(() => filterMenuItems(applicationTabItems))
+const filteredBusinessTabItems = computed(() => filterMenuItems(businessTabItems))
+const filteredOrganizationTabItems = computed(() => filterMenuItems(organizationTabItems))
+const filteredSystemTabItems = computed(() => filterMenuItems(systemTabItems))
 
-// 業務選單過濾
-const filteredBusinessItems = computed(() => {
-  return businessItems.filter(item => {
-    return Array.isArray(item.permission)
-      ? permissionStore.hasAnyPermission(item.permission)
-      : permissionStore.hasPermission(item.permission)
-  })
-})
-
-// 行銷管理選單過濾
-const filteredMarketingItems = computed(() => {
-  return marketingItems.filter(item => {
-    // 有子項目：只要任一子項目可見，就顯示父項
+// 檢查 Tab 是否有可見項目
+const hasVisibleItems = (items) => {
+  return items.some(item => {
     if (item.children) {
-      item.children = item.children.filter(child => {
+      return item.children.some(child => {
         return Array.isArray(child.permission)
           ? permissionStore.hasAnyPermission(child.permission)
           : permissionStore.hasPermission(child.permission)
       })
-      return item.children.length > 0
     }
-
-    // 沒有子項目：檢查自身權限
     return Array.isArray(item.permission)
       ? permissionStore.hasAnyPermission(item.permission)
       : permissionStore.hasPermission(item.permission)
   })
-})
+}
 
-// 人事管理選單過濾
-const filteredHrItems = computed(() => {
-  return hrItems.filter(item => {
-    // 有子項目：只要任一子項目可見，就顯示父項
-    if (item.children) {
-      item.children = item.children.filter(child => {
-        return Array.isArray(child.permission)
-          ? permissionStore.hasAnyPermission(child.permission)
-          : permissionStore.hasPermission(child.permission)
-      })
-      return item.children.length > 0
+// 可見的 Tab 列表（只有當 Tab 下有至少一個項目有權限時才顯示）
+const visibleTabs = computed(() => {
+  return tabs.filter(tab => {
+    switch (tab.id) {
+      case 'common':
+        return hasVisibleItems(commonTabItems)
+      case 'application':
+        return hasVisibleItems(applicationTabItems)
+      case 'business':
+        return hasVisibleItems(businessTabItems)
+      case 'organization':
+        return hasVisibleItems(organizationTabItems)
+      case 'system':
+        return hasVisibleItems(systemTabItems)
+      default:
+        return false
     }
-
-    // 沒有子項目：檢查自身權限
-    return Array.isArray(item.permission)
-      ? permissionStore.hasAnyPermission(item.permission)
-      : permissionStore.hasPermission(item.permission)
   })
 })
 
+// 設置預設 Tab（當只有一個 Tab 可見時，自動選擇它）
+watch(visibleTabs, (newTabs) => {
+  if (newTabs.length === 1) {
+    activeTab.value = newTabs[0].id
+  } else if (newTabs.length > 1 && !newTabs.find(tab => tab.id === activeTab.value)) {
+    activeTab.value = newTabs[0].id
+  }
+}, { immediate: true })
 
-// 其他功能選單過濾
-const filteredOtherItems = computed(() => {
-  return otherItems.filter(item => {
-    // 有子項目：只要任一子項目可見，就顯示父項
-    if (item.children) {
-      item.children = item.children.filter(child => {
-        return Array.isArray(child.permission)
-          ? permissionStore.hasAnyPermission(child.permission)
-          : permissionStore.hasPermission(child.permission)
-      })
-      return item.children.length > 0
-    }
-
-    // 沒有子項目：檢查自身權限
-    return Array.isArray(item.permission)
-      ? permissionStore.hasAnyPermission(item.permission)
-      : permissionStore.hasPermission(item.permission)
-  })
-})
-
-// IT管理選單過濾
-const filteredItItems = computed(() => {
-  return itItems.filter(item => {
-    const hasPermission = Array.isArray(item.permission)
-      ? permissionStore.hasAnyPermission(item.permission)
-      : permissionStore.hasPermission(item.permission)
-
-    // 如果有子項目，也需要檢查子項目的權限
-    if (item.children) {
-      item.children = item.children.filter(child => {
-        return Array.isArray(child.permission)
-          ? permissionStore.hasAnyPermission(child.permission)
-          : permissionStore.hasPermission(child.permission)
-      })
-      // 只有當子項目不為空時才顯示父項目
-      return hasPermission && item.children.length > 0
-    }
-
-    return hasPermission
-  })
-})
-
-// 系統設定選單過濾
-const filteredSettingsItems = computed(() => {
-  return settingsItems.filter(item => {
-    // 有子項目：只要任一子項目可見，就顯示父項
-    if (item.children) {
-      item.children = item.children.filter(child => {
-        return Array.isArray(child.permission)
-          ? permissionStore.hasAnyPermission(child.permission)
-          : permissionStore.hasPermission(child.permission)
-      })
-      return item.children.length > 0
-    }
-
-    // 沒有子項目：檢查自身權限
-    return Array.isArray(item.permission)
-      ? permissionStore.hasAnyPermission(item.permission)
-      : permissionStore.hasPermission(item.permission)
-  })
-})
-
-// 修改 watch 函數
+// 根據路由自動切換 Tab 並展開對應選單
 watch(() => route.path, (newPath) => {
-  // 申請相關頁面展開申請相關選單
-  if (newPath.includes('/marketingDesignRequest')) {
+  // 申請相關頁面（常用Tab）
+  if (newPath.includes('/marketingDesignRequest') && !newPath.includes('Management')) {
+    activeTab.value = 'common'
     if (!openedGroups.value.includes('申請相關')) {
       openedGroups.value.push('申請相關')
     }
   }
 
-  // 業務相關頁面展開業務選單
-  if (newPath.includes('/B2CStatistics')) {
-    // 業務選單沒有子選單，所以不需要展開邏輯
+  // 專案與任務管理（應用Tab）
+  if (newPath.includes('/projectAndTaskManagement')) {
+    activeTab.value = 'application'
   }
 
-  // 行銷相關頁面展開行銷費用管理
+  // 業務相關頁面（業務Tab）
   if (
-    newPath.includes('/marketing') &&
-    newPath !== '/marketingDesignRequestManagement'
+    newPath.includes('/B2CStatistics') ||
+    newPath.includes('/marketingAnalysis') ||
+    newPath.includes('/marketingExpense') ||
+    newPath.includes('/marketingBudget') ||
+    newPath.includes('/marketingCategory') ||
+    newPath.includes('/marketingDesignRequestManagement') ||
+    newPath.includes('/formGenerator') ||
+    newPath.includes('/lineCategory')
   ) {
-    if (!openedGroups.value.includes('行銷費用管理')) {
-      openedGroups.value.push('行銷費用管理')
+    activeTab.value = 'business'
+    // 展開行銷費用管理
+    if (newPath.includes('/marketingExpense') || newPath.includes('/marketingBudget') || newPath.includes('/marketingCategory')) {
+      if (!openedGroups.value.includes('行銷費用管理')) {
+        openedGroups.value.push('行銷費用管理')
+      }
     }
   }
 
-  // 其他業務管理相關頁面展開其他業務管理
-  if (newPath.includes('/B2CStatisticsManagement') || newPath.includes('/marketingDesignRequestManagement')) {
-    if (!openedGroups.value.includes('其他業務管理')) {
-      openedGroups.value.push('其他業務管理')
+  // 組織相關頁面（組織Tab）
+  if (
+    newPath.includes('/employeeManagement') ||
+    newPath.includes('/companyAndDepartment') ||
+    newPath.includes('/employeeList') ||
+    newPath.includes('/hardware')
+  ) {
+    activeTab.value = 'organization'
+    // 展開人事管理
+    if (newPath.includes('/employeeManagement') || newPath.includes('/companyAndDepartment')) {
+      if (!openedGroups.value.includes('人事管理')) {
+        openedGroups.value.push('人事管理')
+      }
+    }
+    // 展開硬體管理
+    if (newPath.includes('/hardware')) {
+      if (!openedGroups.value.includes('硬體管理')) {
+        openedGroups.value.push('硬體管理')
+      }
     }
   }
 
-  // 人事相關頁面展開人事管理
-  if (newPath.includes('/employee') || newPath.includes('/companyAndDepartment')) {
-    if (!openedGroups.value.includes('人事管理')) {
-      openedGroups.value.push('人事管理')
-    }
-  }
-
-  // 其他功能相關頁面展開其他功能
-  if (newPath.includes('/formGenerator') || newPath.includes('/lineCategoryManagement')) {
-    if (!openedGroups.value.includes('其他功能')) {
-      openedGroups.value.push('其他功能')
-    }
-  }
-
-  // 硬體相關頁面展開公司硬體管理
-  if (newPath.includes('/hardware')) {
-    if (!openedGroups.value.includes('公司硬體管理')) {
-      openedGroups.value.push('公司硬體管理')
+  // 系統相關頁面（系統Tab）
+  if (
+    newPath.includes('/user') ||
+    newPath.includes('/permissionManagement') ||
+    newPath.includes('/announcementManagement') ||
+    newPath.includes('/carouselManagement') ||
+    newPath.includes('/marqueeManagement') ||
+    newPath.includes('/sharedResourceManagement') ||
+    newPath.includes('/auditLog')
+  ) {
+    activeTab.value = 'system'
+    // 展開網站設定
+    if (
+      newPath.includes('/announcementManagement') ||
+      newPath.includes('/carouselManagement') ||
+      newPath.includes('/marqueeManagement') ||
+      newPath.includes('/sharedResourceManagement')
+    ) {
+      if (!openedGroups.value.includes('網站設定')) {
+        openedGroups.value.push('網站設定')
+      }
     }
   }
 }, { immediate: true })
@@ -1779,7 +1356,6 @@ watch(() => user.avatar, (newAvatar) => {
     font-size: 24px;
     letter-spacing: 1.5px;
   }
-
 }
 
 .card-bg {
@@ -1794,6 +1370,37 @@ watch(() => user.avatar, (newAvatar) => {
     height: 100%;
     background: linear-gradient(90deg, rgba(0, 0, 0, 0.55) 10%, rgba(0, 0, 0, 0));
     z-index: -1;
+  }
+}
+
+.custom-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  background-color: #fff;
+  width: 256px;
+
+  .tab-button {
+    width: 20%;
+    padding: 6px 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.6);
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+    position: relative;
+
+    &:hover {
+      color: rgba(0, 0, 0, 0.87);
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    &.active {
+      color: #0097A7;
+      border-bottom-color: #0097A7;
+      font-weight: 500;
+    }
   }
 }
 
