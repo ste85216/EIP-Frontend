@@ -109,7 +109,7 @@
                         >
                           <v-icon
                             icon="mdi-arrow-up-bold"
-                            size="12"
+                            size="10"
                             color="white"
                             style="margin-right: 1px;"
                           />
@@ -117,8 +117,8 @@
                         </div>
                         <v-icon
                           v-else
-                          icon="mdi-arrow-up-bold"
-                          size="14"
+                          icon="mdi-arrow-up-bold-box"
+                          size="15"
                           color="blue-grey-darken-1"
                         />
                       </span>
@@ -436,10 +436,10 @@ onMounted(() => {
 .pinned-badge {
   display: flex;
   align-items: center;
-  font-size: 11px;
+  font-size: 10px;
   background-color: #607D8B;
   color: #fff;
-  padding: 3px 6px 3px 4px;
+  padding: 2px 4px 2px 2px;
   border-radius: 4px;
 }
 </style>
