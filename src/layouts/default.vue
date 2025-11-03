@@ -254,22 +254,19 @@
           </template>
 
           <template v-if="activeTab === 'business'">
-            <!-- 業務 Tab -->
-            <template
-              v-for="item in filteredBusinessTabItems"
-              :key="item.text"
-            >
-              <!-- 有子選單的項目 -->
-              <v-list-group
-                v-if="item.children"
-                v-model="openedGroups"
-                :value="item.text"
-                :persistent="true"
-                fluid
-              >
-                <template #activator="{ props }">
+            <!-- 非 rail：顯示小標分組 -->
+            <template v-if="!rail">
+              <template v-if="businessSalesItems.length > 0">
+                <div class="sub-header ">
+                  業務
+                </div>
+                <template
+                  v-for="item in businessSalesItems"
+                  :key="item.text"
+                >
                   <v-list-item
-                    v-bind="props"
+                    v-if="!item.children"
+                    :to="item.to"
                     color="grey-darken-3"
                   >
                     <template #prepend>
@@ -277,31 +274,193 @@
                     </template>
                     <v-list-item-title>{{ item.text }}</v-list-item-title>
                   </v-list-item>
+                  <v-list-group
+                    v-else
+                    v-model="openedGroups"
+                    :value="item.text"
+                    :persistent="true"
+                    fluid
+                  >
+                    <template #activator="{ props }">
+                      <v-list-item
+                        v-bind="props"
+                        color="grey-darken-3"
+                      >
+                        <template #prepend>
+                          <v-icon>{{ item.icon }}</v-icon>
+                        </template>
+                        <v-list-item-title>{{ item.text }}</v-list-item-title>
+                      </v-list-item>
+                    </template>
+                    <v-list-item
+                      v-for="child in item.children"
+                      :key="child.to"
+                      :to="child.to"
+                      color="grey-darken-3"
+                      base-color="purple-darken-2"
+                    >
+                      <template #prepend>
+                        <v-icon>{{ child.icon }}</v-icon>
+                      </template>
+                      <v-list-item-title>{{ child.text }}</v-list-item-title>
+                    </v-list-item>
+                  </v-list-group>
                 </template>
+              </template>
+
+              <template v-if="businessMarketingItems.length > 0">
+                <div class="sub-header">
+                  行銷美編
+                </div>
+                <template
+                  v-for="item in businessMarketingItems"
+                  :key="item.text"
+                >
+                  <v-list-item
+                    v-if="!item.children"
+                    :to="item.to"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ item.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                  </v-list-item>
+                  <v-list-group
+                    v-else
+                    v-model="openedGroups"
+                    :value="item.text"
+                    :persistent="true"
+                    fluid
+                  >
+                    <template #activator="{ props }">
+                      <v-list-item
+                        v-bind="props"
+                        color="grey-darken-3"
+                      >
+                        <template #prepend>
+                          <v-icon>{{ item.icon }}</v-icon>
+                        </template>
+                        <v-list-item-title>{{ item.text }}</v-list-item-title>
+                      </v-list-item>
+                    </template>
+                    <v-list-item
+                      v-for="child in item.children"
+                      :key="child.to"
+                      :to="child.to"
+                      color="grey-darken-3"
+                      base-color="purple-darken-2"
+                    >
+                      <template #prepend>
+                        <v-icon>{{ child.icon }}</v-icon>
+                      </template>
+                      <v-list-item-title>{{ child.text }}</v-list-item-title>
+                    </v-list-item>
+                  </v-list-group>
+                </template>
+              </template>
+
+              <template v-if="businessCommonItems.length > 0">
+                <div class="sub-header">
+                  共用
+                </div>
+                <template
+                  v-for="item in businessCommonItems"
+                  :key="item.text"
+                >
+                  <v-list-item
+                    v-if="!item.children"
+                    :to="item.to"
+                    color="grey-darken-3"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ item.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                  </v-list-item>
+                  <v-list-group
+                    v-else
+                    v-model="openedGroups"
+                    :value="item.text"
+                    :persistent="true"
+                    fluid
+                  >
+                    <template #activator="{ props }">
+                      <v-list-item
+                        v-bind="props"
+                        color="grey-darken-3"
+                      >
+                        <template #prepend>
+                          <v-icon>{{ item.icon }}</v-icon>
+                        </template>
+                        <v-list-item-title>{{ item.text }}</v-list-item-title>
+                      </v-list-item>
+                    </template>
+                    <v-list-item
+                      v-for="child in item.children"
+                      :key="child.to"
+                      :to="child.to"
+                      color="grey-darken-3"
+                      base-color="purple-darken-2"
+                    >
+                      <template #prepend>
+                        <v-icon>{{ child.icon }}</v-icon>
+                      </template>
+                      <v-list-item-title>{{ child.text }}</v-list-item-title>
+                    </v-list-item>
+                  </v-list-group>
+                </template>
+              </template>
+            </template>
+
+            <!-- rail：回退為原本平鋪清單（無小標） -->
+            <template v-else>
+              <template
+                v-for="item in filteredBusinessTabItems"
+                :key="item.text"
+              >
+                <v-list-group
+                  v-if="item.children"
+                  v-model="openedGroups"
+                  :value="item.text"
+                  :persistent="true"
+                  fluid
+                >
+                  <template #activator="{ props }">
+                    <v-list-item
+                      v-bind="props"
+                      color="grey-darken-3"
+                    >
+                      <template #prepend>
+                        <v-icon>{{ item.icon }}</v-icon>
+                      </template>
+                      <v-list-item-title>{{ item.text }}</v-list-item-title>
+                    </v-list-item>
+                  </template>
+                  <v-list-item
+                    v-for="child in item.children"
+                    :key="child.to"
+                    :to="child.to"
+                    color="grey-darken-3"
+                    base-color="purple-darken-2"
+                  >
+                    <template #prepend>
+                      <v-icon>{{ child.icon }}</v-icon>
+                    </template>
+                    <v-list-item-title>{{ child.text }}</v-list-item-title>
+                  </v-list-item>
+                </v-list-group>
                 <v-list-item
-                  v-for="child in item.children"
-                  :key="child.to"
-                  :to="child.to"
+                  v-else
+                  :to="item.to"
                   color="grey-darken-3"
-                  base-color="purple-darken-2"
                 >
                   <template #prepend>
-                    <v-icon>{{ child.icon }}</v-icon>
+                    <v-icon>{{ item.icon }}</v-icon>
                   </template>
-                  <v-list-item-title>{{ child.text }}</v-list-item-title>
+                  <v-list-item-title>{{ item.text }}</v-list-item-title>
                 </v-list-item>
-              </v-list-group>
-              <!-- 沒有子選單的項目 -->
-              <v-list-item
-                v-else
-                :to="item.to"
-                color="grey-darken-3"
-              >
-                <template #prepend>
-                  <v-icon>{{ item.icon }}</v-icon>
-                </template>
-                <v-list-item-title>{{ item.text }}</v-list-item-title>
-              </v-list-item>
+              </template>
             </template>
           </template>
 
@@ -897,7 +1056,7 @@ const getBackgroundImage = () => {
 const tabs = [
   { id: 'common', label: '常用' },
   { id: 'application', label: '應用' },
-  { id: 'business', label: '業務' },
+  { id: 'business', label: '營運' },
   { id: 'organization', label: '組織' },
   { id: 'system', label: '系統' }
 ]
@@ -1144,6 +1303,21 @@ const filteredApplicationTabItems = computed(() => filterMenuItems(applicationTa
 const filteredBusinessTabItems = computed(() => filterMenuItems(businessTabItems))
 const filteredOrganizationTabItems = computed(() => filterMenuItems(organizationTabItems))
 const filteredSystemTabItems = computed(() => filterMenuItems(systemTabItems))
+
+// 業務 Tab 小標分組（大螢幕使用）
+const businessSalesItems = computed(() => {
+  return filteredBusinessTabItems.value.filter(item => item.text === '直客詢問統計表')
+})
+
+const businessMarketingItems = computed(() => {
+  const marketingSet = new Set(['行銷費用分析', '行銷費用管理', '直客詢問管理', '行銷美編需求申請管理'])
+  return filteredBusinessTabItems.value.filter(item => marketingSet.has(item.text))
+})
+
+const businessCommonItems = computed(() => {
+  const commonSet = new Set(['表單產生器', '線別分類管理'])
+  return filteredBusinessTabItems.value.filter(item => commonSet.has(item.text))
+})
 
 // 檢查 Tab 是否有可見項目
 const hasVisibleItems = (items) => {
@@ -1404,4 +1578,12 @@ watch(() => user.avatar, (newAvatar) => {
   }
 }
 
+.sub-header {
+  height: 32px;
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 32px;
+  padding-left: 16px;
+}
 </style>
