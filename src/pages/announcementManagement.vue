@@ -96,6 +96,7 @@
               :items="announcements"
               :loading="tableLoading"
               :items-per-page="itemsPerPage"
+              :items-per-page-options="itemsPerPageOptions"
               :page="currentPage"
               :server-items-length="totalItems"
               class="elevation-0 rounded"
@@ -521,7 +522,7 @@ const { mdAndUp } = useDisplay()
 // 響應式資料
 const announcements = ref([])
 const tableLoading = ref(false)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(20)
 const currentPage = ref(1)
 const totalItems = ref(0)
 
@@ -548,6 +549,9 @@ const statusOptions = [
   { title: '啟用', value: true },
   { title: '停用', value: false }
 ]
+
+// 每頁選項（含全部）
+const itemsPerPageOptions = [10, 20, 50, 100, { value: -1, title: '全部' }]
 
 // 表格標題
 const headers = [
@@ -634,7 +638,7 @@ const loadAnnouncements = async () => {
     tableLoading.value = true
     const params = {
       page: currentPage.value,
-      itemsPerPage: itemsPerPage.value
+      itemsPerPage: itemsPerPage.value === -1 ? (totalItems.value > 0 ? totalItems.value : 999999) : itemsPerPage.value
     }
 
     if (searchCriteria.value.type) {
@@ -648,7 +652,13 @@ const loadAnnouncements = async () => {
     }
 
     const response = await apiAuth.get('/announcements', { params })
-    announcements.value = response.data.result.data
+    // 將置頂公告排在前面
+    const data = response.data.result.data || []
+    announcements.value = data.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1
+      if (!a.isPinned && b.isPinned) return 1
+      return 0
+    })
     totalItems.value = response.data.result.totalItems
   } catch (error) {
     console.error('載入公告錯誤:', error)
@@ -679,11 +689,14 @@ const debouncedQuickSearch = debounce(() => {
 
 // 表格選項變更
 const handleTableOptions = (options) => {
-  if (options.page !== undefined) {
-    currentPage.value = options.page
-  }
   if (options.itemsPerPage !== undefined) {
     itemsPerPage.value = options.itemsPerPage
+    if (options.itemsPerPage === -1) {
+      currentPage.value = 1
+    }
+  }
+  if (options.page !== undefined && options.itemsPerPage !== -1) {
+    currentPage.value = options.page
   }
   loadAnnouncements()
 }

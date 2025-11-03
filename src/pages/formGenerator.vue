@@ -40,7 +40,7 @@
                   class="d-flex align-center justify-end gap-2"
                 >
                   <v-btn
-                    v-if="user.isAdmin || user.isSuperAdmin"
+                    v-permission="'FORM_TEMPLATE_MANAGE'"
                     color="blue-grey-darken-1"
                     variant="outlined"
                     prepend-icon="mdi-file-cog"
@@ -739,11 +739,7 @@
                 <td>{{ formatDateTime(history?.updatedAt) }}</td>
                 <td class="text-center">
                   <v-btn
-                    v-if="(() => {
-                      const currentId = user.isAdmin ? user.adminId : user.userId
-                      const creatorId = history?.creator?.role === 2 ? history?.creator?.adminId : history?.creator?.userId
-                      return creatorId === currentId || user.role === 1 || user.role === 2
-                    })()"
+                    v-if="canEditForm(history)"
                     v-tooltip="'編輯表單'"
                     icon
                     variant="plain"
@@ -763,24 +759,17 @@
                   >
                     <v-icon>mdi-book-open-variant-outline</v-icon>
                   </v-btn>
-                  <template
-                    v-if="(() => {
-                      const currentId = user.isAdmin ? user.adminId : user.userId
-                      const creatorId = history?.creator?.role === 2 ? history?.creator?.adminId : history?.creator?.userId
-                      return creatorId === currentId || user.role === 1 || user.role === 2
-                    })()"
+                  <v-btn
+                    v-if="canDeleteForm(history)"
+                    icon
+                    variant="plain"
+                    color="red-lighten-1"
+                    :loading="deletingFormId === history._id"
+                    :disabled="deletingFormId === history._id"
+                    @click="deleteHistory(history)"
                   >
-                    <v-btn
-                      icon
-                      variant="plain"
-                      color="red-lighten-1"
-                      :loading="deletingFormId === history._id"
-                      :disabled="deletingFormId === history._id"
-                      @click="deleteHistory(history)"
-                    >
-                      <v-icon>mdi-delete</v-icon>
-                    </v-btn>
-                  </template>
+                    <v-icon>mdi-delete</v-icon>
+                  </v-btn>
                 </td>
               </tr>
               <tr v-if="!histories.length">
@@ -1029,6 +1018,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import { useApi } from '@/composables/axios'
 import { definePage } from 'vue-router/auto'
 import { useUserStore } from '@/stores/user'
+import { usePermissionStore } from '@/stores/permission'
 import { useDisplay } from 'vuetify'
 import { debounce } from 'lodash'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
@@ -1096,9 +1086,34 @@ const { smAndUp, lgAndUp } = useDisplay()
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 const user = useUserStore()
+const permissionStore = usePermissionStore()
 
 // 基本響應式變數
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
+
+// 檢查是否可以編輯表單
+const canEditForm = (history) => {
+  // 如果有 FORM_UPDATE 權限，可以編輯所有表單
+  if (permissionStore.hasPermission('FORM_UPDATE')) {
+    return true
+  }
+  // 否則只能編輯自己創建的表單
+  const currentId = user.isAdmin ? user.adminId : user.userId
+  const creatorId = history?.creator?.role === 2 ? history?.creator?.adminId : history?.creator?.userId
+  return creatorId === currentId
+}
+
+// 檢查是否可以刪除表單
+const canDeleteForm = (history) => {
+  // 如果有 FORM_DELETE 權限，可以刪除所有表單
+  if (permissionStore.hasPermission('FORM_DELETE')) {
+    return true
+  }
+  // 否則只能刪除自己創建的表單
+  const currentId = user.isAdmin ? user.adminId : user.userId
+  const creatorId = history?.creator?.role === 2 ? history?.creator?.adminId : history?.creator?.userId
+  return creatorId === currentId
+}
 
 // 表單收合狀態
 const isFormCollapsed = ref(false)

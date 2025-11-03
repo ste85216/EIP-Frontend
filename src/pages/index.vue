@@ -78,15 +78,25 @@
                           </v-icon>
                           <span class="humidity-display">濕度 {{ weatherData.humidity }}%</span>
                         </div>
+                        <div class="d-flex align-center mb-1">
+                          <v-icon
+                            size="16"
+                            color="white"
+                            class="me-2"
+                          >
+                            mdi-thermometer
+                          </v-icon>
+                          <span class="humidity-display">體感溫度 {{ weatherData.feelsLike }}°C</span>
+                        </div>
                         <div class="d-flex align-center">
                           <v-icon
                             size="16"
                             color="white"
                             class="me-2"
                           >
-                            mdi-weather-windy
+                            mdi-weather-rainy
                           </v-icon>
-                          <span class="wind-speed-display">風速 {{ weatherData.windSpeed }} km/h</span>
+                          <span class="humidity-display">降雨機率 {{ weatherData.precipitationProbability }}%</span>
                         </div>
                       </div>
                       <v-alert
@@ -556,7 +566,8 @@ const weatherData = ref({
   temperature: 0,
   condition: 'sunny',
   humidity: 0,
-  windSpeed: 0,
+  feelsLike: 0,
+  precipitationProbability: 0,
   location: '台北市',
   description: '',
   pressure: 0,
@@ -797,16 +808,9 @@ const formatFileSize = (bytes) => {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
 }
 
-// 天氣 API 配置 (已移除 OpenWeatherMap，優先使用台灣官方 API)
-
-// 中央氣象署開放資料 API (台灣官方，最準確)
+// 天氣 API 配置 - 只使用中央氣象署官方 API
 const CWA_API_URL = 'https://opendata.cwa.gov.tw/api/v1/rest/datastore'
-const CWA_API_KEY = 'CWA-75827C23-971A-4752-A41C-30CFB98F9FB1' // 需要申請
-
-// 備用天氣 API (免費，無需註冊)
-const BACKUP_WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast'
-
-// 只使用中央氣象署官方 API
+const CWA_API_KEY = 'CWA-75827C23-971A-4752-A41C-30CFB98F9FB1'
 
 // 獲取共享資源數據
 const fetchSharedResources = async () => {
@@ -950,78 +954,447 @@ const fetchAnnouncements = async () => {
   }
 }
 
+// 獲取 IP 定位（返回城市和座標）
+const getLocationByIP = async () => {
+  // 嘗試多個 IP 定位服務
+  const ipServices = [
+    {
+      url: 'https://ipinfo.io/json',
+      handler: (data) => {
+        const loc = data.loc?.split(',')
+        return {
+          countryCode: data.country,
+          city: data.city,
+          region: data.region,
+          latitude: loc?.[0],
+          longitude: loc?.[1]
+        }
+      }
+    },
+    {
+      url: 'https://ipapi.co/json/',
+      handler: (data) => ({
+        countryCode: data.country_code,
+        city: data.city,
+        region: data.region,
+        latitude: data.latitude,
+        longitude: data.longitude
+      })
+    }
+  ]
+
+  for (const service of ipServices) {
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+
+      const response = await fetch(service.url, {
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+
+      if (response.ok) {
+        const data = await response.json()
+        const locationInfo = service.handler(data)
+
+        // 檢查是否在台灣
+        if (locationInfo.countryCode === 'TW' || locationInfo.countryCode === 'Taiwan') {
+          // 使用座標進行反向地理編碼獲取更精確的位置
+          if (locationInfo.latitude && locationInfo.longitude) {
+            try {
+              const reverseGeocodeResponse = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${locationInfo.latitude}&lon=${locationInfo.longitude}&format=json&addressdetails=1&accept-language=zh-TW`,
+                {
+                  headers: {
+                    'User-Agent': 'WeatherApp/1.0'
+                  }
+                }
+              )
+
+              if (reverseGeocodeResponse.ok) {
+                const geocodeData = await reverseGeocodeResponse.json()
+                const address = geocodeData.address || {}
+                const city = address.city || address.county || address.city_district || locationInfo.city
+                const district = address.suburb || address.district || address.borough || address.neighbourhood
+
+                // 轉換為中央氣象署使用的格式
+                let cityName = city
+                if (city === 'Taipei' || city === '台北' || city === '臺北') {
+                  cityName = '臺北市'
+                } else if (city === 'New Taipei' || city === '新北') {
+                  cityName = '新北市'
+                } else if (city === 'Taoyuan' || city === '桃園') {
+                  cityName = '桃園市'
+                } else if (city === 'Taichung' || city === '台中' || city === '臺中') {
+                  cityName = '臺中市'
+                } else if (city === 'Tainan' || city === '台南' || city === '臺南') {
+                  cityName = '臺南市'
+                } else if (city === 'Kaohsiung' || city === '高雄') {
+                  cityName = '高雄市'
+                } else if (city === 'Keelung' || city === '基隆') {
+                  cityName = '基隆市'
+                }
+
+                return { cityName, district, latitude: locationInfo.latitude, longitude: locationInfo.longitude }
+              }
+            } catch (geocodeError) {
+              console.warn('反向地理編碼失敗:', geocodeError)
+            }
+          }
+
+          // 如果反向地理編碼失敗，使用原始城市名稱
+          const city = locationInfo.city
+          if (city === 'Taipei') {
+            return { cityName: '臺北市', district: null, latitude: locationInfo.latitude, longitude: locationInfo.longitude }
+          }
+          if (city) {
+            return { cityName: city, district: null, latitude: locationInfo.latitude, longitude: locationInfo.longitude }
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`IP 定位服務失敗 (${service.url}):`, error?.message)
+    }
+  }
+
+  // 所有服務都失敗，返回預設值
+  console.warn('所有 IP 定位服務都失敗，使用預設位置: 臺北市')
+  return { cityName: '臺北市', district: null, latitude: null, longitude: null }
+}
+
 // 獲取天氣數據
 const fetchWeatherData = async () => {
   try {
     weatherLoading.value = true
     weatherError.value = ''
 
+    // 使用 IP 定位獲取位置
+    const locationInfo = await getLocationByIP()
+    const cityName = locationInfo.cityName || '臺北市'
 
-    // 優先嘗試中央氣象署 API (台灣官方，最準確)
-    try {
-      const cwaResponse = await fetch(
-        `${CWA_API_URL}/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&locationName=臺北市`
-      )
-
-      if (cwaResponse.ok) {
-        const cwaData = await cwaResponse.json()
-
-        if (cwaData.success && cwaData.records && cwaData.records.Station) {
-          // 找到台北市的觀測站數據
-          const taipeiStation = cwaData.records.Station.find(station =>
-            station.CountyName === '臺北市' || station.CountyName === '台北市'
-          )
-
-          if (taipeiStation) {
-            weatherData.value = {
-              temperature: Math.round(parseFloat(taipeiStation.AirTemperature || 0)),
-              condition: getTaiwanWeatherConditionFromStation(taipeiStation),
-              humidity: Math.round(parseFloat(taipeiStation.RelativeHumidity || 0)),
-              windSpeed: Math.round(parseFloat(taipeiStation.WindSpeed || 0)),
-              location: taipeiStation.StationName || '台北市',
-              description: getTaiwanWeatherDescriptionFromStation(taipeiStation),
-              pressure: Math.round(parseFloat(taipeiStation.AirPressure || 0)),
-              visibility: 10
-            }
-            return
-          }
-        }
-      }
-    } catch (error) {
-      console.warn('中央氣象署 API 失敗，嘗試其他 API...', error?.message)
-    }
-
-    // 只使用中央氣象署官方 API，跳過其他服務
-
-    // 跳過 OpenWeatherMap API，直接使用備用 API
-
-
-    // 如果所有 API 都失敗，使用備用 API
-    const backupResponse = await fetch(
-      `${BACKUP_WEATHER_API_URL}?latitude=25.0478&longitude=121.5319&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=Asia%2FTaipei`
+    // 只使用中央氣象署 API
+    const cwaResponse = await fetch(
+      `${CWA_API_URL}/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&locationName=${encodeURIComponent(cityName)}`
     )
 
-    if (!backupResponse.ok) {
-      throw new Error('所有 API 都失敗了')
+    if (cwaResponse.ok) {
+      const cwaData = await cwaResponse.json()
+
+      if (cwaData.success && cwaData.records && cwaData.records.Station) {
+
+        let station = null
+
+        // 優先使用座標距離找最近的觀測站（最準確）
+        if (locationInfo.latitude && locationInfo.longitude) {
+          const userLat = parseFloat(locationInfo.latitude)
+          const userLon = parseFloat(locationInfo.longitude)
+
+          // 計算所有觀測站的距離，找最近的
+          const stationsWithDistance = cwaData.records.Station.map(s => {
+            const geoInfo = s.GeoInfo || {}
+            const coordinates = geoInfo.Coordinates || []
+            const stationAltitude = parseFloat(geoInfo.StationAltitude || 0)
+
+            // Coordinates 可能是物件陣列 [{CoordinateName: '緯度', CoordinateValue: '25.0'}, ...]
+            let stationLat = 0
+            let stationLon = 0
+
+            if (Array.isArray(coordinates) && coordinates.length > 0) {
+              // 檢查是否是物件陣列
+              if (typeof coordinates[0] === 'object' && coordinates[0] !== null) {
+                // 中央氣象署的座標格式：每個元素有 StationLatitude 和 StationLongitude
+                // 優先使用 WGS84（現代標準），否則使用 TWD67
+                let wgs84Coord = null
+                let twd67Coord = null
+
+                for (const coord of coordinates) {
+                  if (coord.CoordinateName === 'WGS84' || coord.coordinateName === 'WGS84') {
+                    wgs84Coord = coord
+                  } else if (coord.CoordinateName === 'TWD67' || coord.coordinateName === 'TWD67') {
+                    twd67Coord = coord
+                  }
+                }
+
+                // 優先使用 WGS84，如果沒有則使用 TWD67
+                const selectedCoord = wgs84Coord || twd67Coord || coordinates[0]
+
+                if (selectedCoord) {
+                  const lat = parseFloat(selectedCoord.StationLatitude || selectedCoord.stationLatitude || 0)
+                  const lon = parseFloat(selectedCoord.StationLongitude || selectedCoord.stationLongitude || 0)
+
+                  if (!isNaN(lat) && !isNaN(lon) && lat !== 0 && lon !== 0) {
+                    stationLat = lat
+                    stationLon = lon
+                  }
+                }
+              } else if (typeof coordinates[0] === 'number' || typeof coordinates[0] === 'string') {
+                // 簡單陣列格式：[緯度, 經度]
+                const lat = parseFloat(coordinates[0])
+                const lon = parseFloat(coordinates[1])
+                if (!isNaN(lat) && !isNaN(lon)) {
+                  stationLat = lat
+                  stationLon = lon
+                }
+              }
+            }
+
+            if (stationLat !== 0 && stationLon !== 0) {
+              // 使用 Haversine 公式計算距離
+              const R = 6371 // 地球半徑（公里）
+              const dLat = (stationLat - userLat) * Math.PI / 180
+              const dLon = (stationLon - userLon) * Math.PI / 180
+              const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                        Math.cos(userLat * Math.PI / 180) * Math.cos(stationLat * Math.PI / 180) *
+                        Math.sin(dLon / 2) * Math.sin(dLon / 2)
+              const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+              const distance = R * c
+
+              return { station: s, distance, lat: stationLat, lon: stationLon, altitude: stationAltitude }
+            }
+
+            return { station: s, distance: Infinity, altitude: stationAltitude }
+          })
+
+          // 過濾掉距離為無限大的，然後排序找出最近的
+          const validStations = stationsWithDistance.filter(s => s.distance !== Infinity)
+          if (validStations.length > 0) {
+            // 優先選擇同一城市且海拔較低的觀測站（避免選擇山上觀測站）
+            const sameCityStations = validStations.filter(item => {
+              const geoInfo = item.station.GeoInfo || {}
+              return geoInfo.CountyName === cityName && item.altitude < 200 // 優先選擇海拔低於200m的
+            })
+
+            let stationsToSort = sameCityStations.length > 0 ? sameCityStations : validStations
+
+            // 排序：先按距離，再按海拔（優先選擇低海拔）
+            stationsToSort.sort((a, b) => {
+              if (Math.abs(a.distance - b.distance) < 5) {
+                // 距離相近時，優先選擇海拔低的
+                return a.altitude - b.altitude
+              }
+              return a.distance - b.distance
+            })
+
+            station = stationsToSort[0]?.station
+          }
+        }
+
+        // 如果座標匹配失敗，使用城市名稱匹配作為備用
+        if (!station) {
+          // 找到同一城市的所有觀測站
+          const sameCityStations = cwaData.records.Station.filter(s => {
+            const geoInfo = s.GeoInfo || {}
+            const countyName = geoInfo.CountyName || ''
+            return countyName === cityName ||
+                   countyName === cityName.replace('臺', '台') ||
+                   countyName === cityName.replace('台', '臺')
+          })
+
+          if (sameCityStations.length > 0) {
+            // 優先選擇平地觀測站（海拔低於200m）
+            const flatStations = sameCityStations.filter(s => {
+              const geoInfo = s.GeoInfo || {}
+              const altitude = parseFloat(geoInfo.StationAltitude || 0)
+              return altitude < 200
+            })
+
+            if (flatStations.length > 0) {
+              // 在平地觀測站中，優先選擇名稱為城市名稱的（如「臺北」）
+              station = flatStations.find(s => {
+                const name = s.StationName || ''
+                return name === cityName.replace('市', '') ||
+                       name === cityName.replace('臺北市', '臺北') ||
+                       name === cityName.replace('台北市', '台北')
+              })
+
+              // 如果沒找到，選擇第一個平地觀測站
+              if (!station) {
+                station = flatStations[0]
+              }
+            } else {
+              // 如果沒有平地觀測站，至少選擇海拔最低的
+              sameCityStations.sort((a, b) => {
+                const altA = parseFloat(a.GeoInfo?.StationAltitude || 0)
+                const altB = parseFloat(b.GeoInfo?.StationAltitude || 0)
+                return altA - altB
+              })
+              station = sameCityStations[0]
+            }
+          }
+        }
+
+        // 如果還是找不到，使用第一個
+        if (!station) {
+          station = cwaData.records.Station[0]
+          console.warn('未找到匹配的觀測站，使用第一個:', station?.StationName)
+        }
+
+        if (station) {
+          // 從 WeatherElement 讀取資料（中央氣象署 API 的實際結構）
+          const weatherElement = station.WeatherElement || {}
+          const geoInfo = station.GeoInfo || {}
+          const nowData = weatherElement.Now || {}
+
+          // 讀取溫度（嘗試多種可能的欄位名稱）
+          let temperatureValue =
+            weatherElement.AirTemperature ||
+            weatherElement.Temperature ||
+            nowData.AirTemperature ||
+            nowData.Temperature ||
+            weatherElement.T ||
+            0
+
+          const temperature = Math.round(parseFloat(temperatureValue))
+
+          // 讀取濕度
+          let humidityValue =
+            weatherElement.RelativeHumidity ||
+            weatherElement.Humidity ||
+            nowData.RelativeHumidity ||
+            nowData.Humidity ||
+            weatherElement.RH ||
+            0
+
+          const humidity = Math.round(parseFloat(humidityValue))
+
+          // 讀取風速（用於計算體感溫度）
+          const windSpeed = parseFloat(
+            weatherElement.WindSpeed ||
+            weatherElement.WS ||
+            nowData.WindSpeed ||
+            nowData.WS ||
+            0
+          )
+
+          // 計算體感溫度（考慮溫度、濕度、風速）
+          // 使用更完整的公式
+          let feelsLike = temperature
+
+          if (temperature >= 27 && humidity >= 40) {
+            // 高溫高濕：使用 Heat Index (體感溫度)
+            const T = temperature
+            const H = humidity
+            const HI = -8.78469475556 +
+              1.61139411 * T +
+              2.33854883889 * H +
+              -0.14611605 * T * H +
+              -0.012308094 * Math.pow(T, 2) +
+              -0.0164248277778 * Math.pow(H, 2) +
+              0.002211732 * Math.pow(T, 2) * H +
+              0.00072546 * T * Math.pow(H, 2) +
+              -0.000003582 * Math.pow(T, 2) * Math.pow(H, 2)
+            feelsLike = Math.round(HI)
+          } else if (temperature <= 10 && windSpeed > 4.8) {
+            // 低溫有風：使用 Wind Chill (風寒指數)
+            // 轉換風速從 m/s 到 km/h: windSpeed * 3.6
+            const windKmh = windSpeed * 3.6
+            const WC = 13.12 + 0.6215 * temperature - 11.37 * Math.pow(windKmh, 0.16) + 0.3965 * temperature * Math.pow(windKmh, 0.16)
+            feelsLike = Math.round(WC)
+          } else {
+            // 一般情況：考慮濕度和風速的影響
+            let adjustment = 0
+
+            // 濕度影響（高濕度會讓人感覺更熱或更冷）
+            if (temperature > 20) {
+              // 高溫時，高濕度增加體感溫度
+              adjustment += (humidity - 50) * 0.05
+            } else if (temperature < 15) {
+              // 低溫時，高濕度降低體感溫度
+              adjustment -= (humidity - 50) * 0.03
+            }
+
+            // 風速影響（風會帶走熱量）
+            if (windSpeed > 2) {
+              adjustment -= windSpeed * 0.3
+            }
+
+            feelsLike = Math.round(temperature + adjustment)
+          }
+
+          // 確保體感溫度不會太極端
+          if (feelsLike > temperature + 5) feelsLike = temperature + 5
+          if (feelsLike < temperature - 8) feelsLike = temperature - 8
+
+          // 從中央氣象署獲取降雨機率
+          let precipitationProbability = 0
+
+          // 總是嘗試從預報 API 獲取降雨機率（更準確）
+          try {
+            const countyName = geoInfo.CountyName || cityName
+            const forecastResponse = await fetch(
+              `${CWA_API_URL}/F-C0032-001?Authorization=${CWA_API_KEY}&locationName=${encodeURIComponent(countyName)}`
+            )
+            if (forecastResponse.ok) {
+              const forecastData = await forecastResponse.json()
+
+              // 檢查資料結構
+              if (forecastData.success === 'true' && forecastData.records?.location) {
+                const locations = Array.isArray(forecastData.records.location)
+                  ? forecastData.records.location
+                  : [forecastData.records.location]
+
+                if (locations.length > 0) {
+                  const locationData = locations[0]
+                  const weatherElements = locationData.weatherElement || []
+                  const popElement = weatherElements.find(e => e.elementName === 'PoP')
+
+                  if (popElement && popElement.time && popElement.time.length > 0) {
+                    // 找到最接近當前時間的預報
+                    const now = new Date()
+                    const currentForecast = popElement.time.find(t => {
+                      const startTime = new Date(t.startTime)
+                      const endTime = new Date(t.endTime)
+                      return now >= startTime && now <= endTime
+                    }) || popElement.time[0] // 如果找不到，使用第一個
+
+                    if (currentForecast && currentForecast.parameter) {
+                      precipitationProbability = parseInt(currentForecast.parameter.parameterName || currentForecast.parameter.parameterValue || '0')
+                    }
+                  }
+                }
+              }
+            }
+          } catch (forecastError) {
+            console.warn('無法獲取降雨機率:', forecastError)
+          }
+
+          // 組合顯示位置：優先使用用戶實際位置（城市 + 區），而不是觀測站位置
+          let displayLocation = cityName
+          if (locationInfo.district) {
+            displayLocation = `${cityName} ${locationInfo.district}`
+          } else if (geoInfo.CountyName && geoInfo.TownName && geoInfo.CountyName === cityName) {
+            // 如果觀測站位置與用戶位置匹配，顯示觀測站的區
+            displayLocation = `${geoInfo.CountyName} ${geoInfo.TownName}`
+          } else if (geoInfo.CountyName === cityName) {
+            displayLocation = geoInfo.CountyName
+          }
+
+          weatherData.value = {
+            temperature: temperature || 0,
+            condition: getTaiwanWeatherConditionFromStation(station),
+            humidity: humidity || 0,
+            feelsLike: feelsLike || temperature || 0,
+            precipitationProbability: precipitationProbability || 0,
+            location: displayLocation,
+            description: getTaiwanWeatherDescriptionFromStation(station),
+            pressure: Math.round(parseFloat(
+              weatherElement.AirPressure ||
+              weatherElement.Now?.Pressure ||
+              0
+            )),
+            visibility: 10
+          }
+
+          return
+        }
+      }
     }
 
-    const backupData = await backupResponse.json()
-
-    // 轉換備用 API 數據格式
-    const weatherCode = backupData.current.weather_code
-    weatherData.value = {
-      temperature: Math.round(backupData.current.temperature_2m),
-      condition: getWeatherConditionFromCode(weatherCode),
-      humidity: backupData.current.relative_humidity_2m,
-      windSpeed: Math.round(backupData.current.wind_speed_10m * 3.6),
-      location: await getCurrentLocation(),
-      description: getWeatherDescriptionFromCode(weatherCode),
-      pressure: 1013,
-      visibility: 10
-    }
+    throw new Error('無法從中央氣象署獲取天氣資料')
 
   } catch (error) {
-    console.error('所有天氣 API 都失敗:', error)
+    console.error('天氣 API 失敗:', error)
     weatherError.value = '無法獲取天氣數據，使用預設資料'
 
     // 使用備用假資料
@@ -1029,7 +1402,8 @@ const fetchWeatherData = async () => {
       temperature: 28,
       condition: 'sunny',
       humidity: 65,
-      windSpeed: 12,
+      feelsLike: 30,
+      precipitationProbability: 20,
       location: '台北市',
       description: '晴朗',
       pressure: 1013,
@@ -1044,8 +1418,13 @@ const fetchWeatherData = async () => {
 
 // 中央氣象署觀測站數據專用函數
 const getTaiwanWeatherConditionFromStation = (station) => {
-  const weather = station.Weather
-  const precipitation = parseFloat(station.Precipitation || 0)
+  const weatherElement = station.WeatherElement || {}
+  const weather = weatherElement.Weather || weatherElement.Now?.Weather || ''
+  const precipitation = parseFloat(
+    weatherElement.Precipitation ||
+    weatherElement.Now?.Precipitation ||
+    0
+  )
 
   // 如果有降雨量，判斷為雨天
   if (precipitation > 0) {
@@ -1058,7 +1437,7 @@ const getTaiwanWeatherConditionFromStation = (station) => {
     if (weatherLower.includes('雨') || weatherLower.includes('rain')) return 'rainy'
     if (weatherLower.includes('雷') || weatherLower.includes('thunder')) return 'stormy'
     if (weatherLower.includes('霧') || weatherLower.includes('fog')) return 'foggy'
-    if (weatherLower.includes('雲') || weatherLower.includes('cloud')) return 'cloudy'
+    if (weatherLower.includes('雲') || weatherLower.includes('cloud') || weatherLower.includes('陰')) return 'cloudy'
     if (weatherLower.includes('晴') || weatherLower.includes('sunny')) return 'sunny'
   }
 
@@ -1066,103 +1445,28 @@ const getTaiwanWeatherConditionFromStation = (station) => {
 }
 
 const getTaiwanWeatherDescriptionFromStation = (station) => {
-  const weather = station.Weather
-  const precipitation = parseFloat(station.Precipitation || 0)
+  const weatherElement = station.WeatherElement || {}
+  const weather = weatherElement.Weather || weatherElement.Now?.Weather || ''
 
-  // 如果有降雨量，顯示降雨
-  if (precipitation > 0) {
-    return `降雨 ${precipitation}mm`
-  }
-
-  // 使用觀測站的天氣描述
+  // 優先顯示天氣狀態（Weather），這是中央氣象署提供的主要天氣描述
   if (weather) {
     return weather
   }
 
-  return '晴朗'
-}
+  // 如果沒有天氣描述，才顯示降雨量
+  const precipitation = parseFloat(
+    weatherElement.Precipitation ||
+    weatherElement.Now?.Precipitation ||
+    0
+  )
 
-// 已移除 OpenWeatherMap 相關函數，優先使用台灣官方 API
-
-// 根據天氣代碼獲取天氣狀況 (Open-Meteo API)
-const getWeatherConditionFromCode = (code) => {
-  if (code === 0) return 'sunny'
-  if (code >= 1 && code <= 3) return 'cloudy'
-  if (code >= 45 && code <= 48) return 'foggy'
-  if (code >= 51 && code <= 67) return 'rainy'
-  if (code >= 71 && code <= 77) return 'snowy'
-  if (code >= 80 && code <= 86) return 'rainy'
-  if (code >= 95 && code <= 99) return 'stormy'
-  return 'sunny'
-}
-
-// 根據天氣代碼獲取天氣描述
-const getWeatherDescriptionFromCode = (code) => {
-  if (code === 0) return '晴朗'
-  if (code >= 1 && code <= 3) return '多雲'
-  if (code >= 45 && code <= 48) return '霧'
-  if (code >= 51 && code <= 67) return '雨'
-  if (code >= 71 && code <= 77) return '雪'
-  if (code >= 80 && code <= 86) return '陣雨'
-  if (code >= 95 && code <= 99) return '雷暴'
-  return '晴朗'
-}
-
-// 已移除 OpenWeatherMap 相關函數，優先使用台灣官方 API
-
-// 已移除 OpenWeatherMap 相關函數，優先使用台灣官方 API
-
-// 獲取當前位置
-const getCurrentLocation = async () => {
-  try {
-    // 使用瀏覽器地理位置 API
-    const position = await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        timeout: 5000,
-        enableHighAccuracy: false
-      })
-    })
-
-    const { latitude, longitude } = position.coords
-
-    // 使用反向地理編碼獲取地址
-    const response = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=zh`
-    )
-
-    if (response.ok) {
-      const data = await response.json()
-
-      // 檢查並組合地址信息
-      const city = data.city || data.locality
-      const country = data.countryName || data.principalSubdivision
-
-      // 嘗試從行政區信息中獲取區級信息
-      const administrative = data.localityInfo?.administrative
-      if (administrative && administrative.length > 0) {
-        // 尋找區級信息（通常是 administrative[1] 或 administrative[2]）
-        for (let i = 1; i < administrative.length; i++) {
-          const admin = administrative[i]
-          if (admin && admin.name && admin.name.includes('區')) {
-            return `${city}, ${admin.name}`
-          }
-        }
-      }
-
-      // 如果沒有找到區級信息，只顯示城市
-      if (city && city !== country) {
-        return city
-      } else if (city) {
-        return city
-      }
-    }
-  } catch (error) {
-    console.warn('無法獲取地理位置:', error?.message)
+  if (precipitation > 0) {
+    return `降雨 ${precipitation.toFixed(1)}mm`
   }
 
-  // 如果無法獲取位置，返回預設值
-  return '台北市'
+  return '晴朗'
 }
+
 
 // 公告類型顏色
 const getAnnouncementTypeColor = (type) => {
@@ -1442,12 +1746,6 @@ onUnmounted(() => {
   font-family:'Noto Sans TC', sans-serif;
 }
 
-.wind-speed-display {
-  color: #fff;
-  font-size: 11px;
-  font-weight: 300;
-  font-family:'Noto Sans TC', sans-serif;
-}
 
 // 最新消息卡片樣式
 .news-card {
@@ -1690,9 +1988,6 @@ onUnmounted(() => {
     .humidity-display {
       font-size: 13px;
     }
-    .wind-speed-display {
-      font-size: 13px;
-    }
   }
 
   .news-card {
@@ -1742,11 +2037,9 @@ onUnmounted(() => {
 //     .humidity-display {
 //       font-size: 18px;
 //     }
-//     .wind-speed-display {
-//       font-size: 18px;
-//     }
 //   }
 // }
 
 
 </style>
+

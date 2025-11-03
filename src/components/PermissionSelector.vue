@@ -600,6 +600,9 @@ const permissionModules = ref([
     category: 'business',
     pagePermission: 'FORM_GENERATOR_READ',
     features: [
+      { key: 'templateManage', name: '管理表單模板', permission: 'FORM_TEMPLATE_MANAGE' },
+      { key: 'update', name: '編輯表單', permission: 'FORM_UPDATE' },
+      { key: 'delete', name: '刪除表單', permission: 'FORM_DELETE' },
     ]
   },
   {

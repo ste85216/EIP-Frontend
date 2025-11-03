@@ -10,6 +10,7 @@
         <v-btn
           prepend-icon="mdi-arrow-left"
           variant="text"
+          :size="smAndUp ? 'default' : 'small'"
           color="blue-grey-darken-2"
           class="px-0"
           @click="goBack"
@@ -81,7 +82,7 @@
             <v-card-text class="px-4 py-3">
               <v-row dense>
                 <v-col
-                  cols="12"
+                  cols="6"
                   sm="6"
                   md="2"
                 >
@@ -93,7 +94,7 @@
                   </div>
                 </v-col>
                 <v-col
-                  cols="12"
+                  cols="6"
                   sm="6"
                   md="4"
                 >
@@ -105,7 +106,7 @@
                   </div>
                 </v-col>
                 <v-col
-                  cols="12"
+                  cols="6"
                   sm="6"
                   md="4"
                 >
@@ -117,7 +118,7 @@
                   </div>
                 </v-col>
                 <v-col
-                  cols="12"
+                  cols="6"
                   sm="6"
                   md="2"
                 >
@@ -241,6 +242,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useApi } from '@/composables/axios'
+import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
@@ -257,6 +259,7 @@ const { apiAuth } = useApi()
 // 響應式資料
 const announcement = ref(null)
 const loading = ref(true)
+const { smAndUp } = useDisplay()
 
 // 載入公告詳情
 const loadAnnouncement = async () => {
@@ -316,15 +319,16 @@ const getTypeIcon = (type) => {
   return iconMap[type] || 'mdi-file-document-outline'
 }
 
-// 格式化日期
+// 格式化日期（24 小時制）
 const formatDate = (date) => {
   if (!date) return '-'
-  return new Date(date).toLocaleDateString('zh-TW', {
+  return new Date(date).toLocaleString('zh-TW', {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: false
   })
 }
 
@@ -403,7 +407,7 @@ onMounted(() => {
 }
 
 .info-value {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #333;
 }
@@ -495,6 +499,10 @@ onMounted(() => {
 @include sm {
   .announcement-title {
     font-size: 22px;
+  }
+
+  .info-value {
+    font-size: 14px;
   }
 }
 

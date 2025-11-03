@@ -71,6 +71,7 @@
               :items="announcements"
               :loading="tableLoading"
               :items-per-page="itemsPerPage"
+              :items-per-page-options="itemsPerPageOptions"
               :page="currentPage"
               :server-items-length="totalItems"
               class="elevation-0 rounded"
@@ -185,7 +186,7 @@ const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 // 響應式資料
 const announcements = ref([])
 const tableLoading = ref(false)
-const itemsPerPage = ref(25)
+const itemsPerPage = ref(20)
 const currentPage = ref(1)
 const totalItems = ref(0)
 
@@ -204,6 +205,9 @@ const typeOptions = [
   { title: '維護公告', value: 'maintenance' },
   { title: '活動公告', value: 'event' }
 ]
+
+// 每頁選項（含全部）
+const itemsPerPageOptions = [10, 20, 50, 100, { value: -1, title: '全部' }]
 
 // 表格標題（將「類型」與「標題」交換順序）
 const headers = computed(() => {
@@ -228,7 +232,7 @@ const loadAnnouncements = async () => {
     tableLoading.value = true
     const params = {
       page: currentPage.value,
-      itemsPerPage: itemsPerPage.value,
+      itemsPerPage: itemsPerPage.value === -1 ? (totalItems.value > 0 ? totalItems.value : 999999) : itemsPerPage.value,
       sortBy: 'createdAt',
       sortOrder: 'desc'
     }
@@ -283,11 +287,14 @@ const debouncedSearch = debounce(() => {
 
 // 表格選項變更
 const handleTableOptions = (options) => {
-  if (options.page !== undefined) {
-    currentPage.value = options.page
-  }
   if (options.itemsPerPage !== undefined) {
     itemsPerPage.value = options.itemsPerPage
+    if (options.itemsPerPage === -1) {
+      currentPage.value = 1
+    }
+  }
+  if (options.page !== undefined && options.itemsPerPage !== -1) {
+    currentPage.value = options.page
   }
   loadAnnouncements()
 }

@@ -1,4 +1,4 @@
-<!-- eslint-disable vue/no-v-html -->
+  <!-- eslint-disable vue/no-v-html -->
 <template>
   <v-container max-width="2400">
     <!-- 搜尋條件區塊 -->
@@ -813,18 +813,18 @@ const currentUserCompany = ref(null)
 
 // 表格相關
 const tableHeaders = [
-  { title: '日期 / 時間', key: 'inquiryDate', minWidth: '116px', align: 'start', sortable: true },
+  { title: '日期 / 時間', key: 'inquiryDate', minWidth: '118px', align: 'start', sortable: true },
   { title: '來源', key: 'source', width: '90px', align: 'start', sortable: true },
-  { title: '地區', key: 'inquiryPlace', minWidth: '84px', align: 'start', sortable: true },
-  { title: '詢問內容', key: 'inquiryContent', width: '240px', align: 'start', sortable: true },
-  { title: '客戶姓名', key: 'customerName', minWidth: '104px', align: 'start', sortable: true },
+  { title: '地區', key: 'inquiryPlace', minWidth: '90px', align: 'start', sortable: true },
+  { title: '詢問內容', key: 'inquiryContent', minWidth: '185px', maxWidth: '240px', align: 'start', sortable: true },
+  { title: '客戶姓名', key: 'customerName', minWidth: '105px', align: 'start', sortable: true },
   { title: '稱謂', key: 'customerTitle', align: 'start', sortable: true },
   { title: '電話', key: 'customerPhone', align: 'start', sortable: true },
-  { title: 'Line ID', key: 'customerLineId', align: 'start', sortable: true },
-  { title: 'Email', key: 'customerEmail', align: 'start', sortable: true },
-  { title: '業務', key: 'salesPerson.name', align: 'start', sortable: true },
-  { title: '詢問結果', key: 'inquiryResult', width: '110px', align: 'start', sortable: true },
-  { title: '最新進度 / 備註', key: 'latestProgressNote.content', width: '220px', align: 'start', sortable: true }
+  { title: 'Line ID', key: 'customerLineId', align: 'start', minWidth: '100px', sortable: true },
+  { title: 'Email', key: 'customerEmail', align: 'start', minWidth: '90px', sortable: true },
+  { title: '業務', key: 'salesPerson.name', align: 'start', minWidth: '107px', sortable: true },
+  { title: '詢問結果', key: 'inquiryResult', minWidth: '112px', align: 'start', sortable: true },
+  { title: '最新進度 / 備註', key: 'latestProgressNote.content', minWidth:'180px', width: '220px', align: 'start', sortable: true }
 ]
 
 // 表格相關響應式變數

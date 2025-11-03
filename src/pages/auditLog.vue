@@ -715,7 +715,9 @@ const modelOptions = [
   { title: '權限', value: 'permissions' },
   { title: '角色', value: 'roles' },
   { title: '輪播圖', value: 'carousels' },
-  { title: '跑馬燈', value: 'marquees' }
+  { title: '跑馬燈', value: 'marquees' },
+  { title: '公告', value: 'announcements' },
+  { title: '共享資源', value: 'sharedResources' }
 ]
 
 // 表格標頭
@@ -881,6 +883,7 @@ const fieldTranslations = {
   image: '圖片',
   startDate: '開始日期',
   endDate: '結束日期',
+  isPinned: '置頂',
 }
 
 // 行銷分類類型對應
@@ -1001,7 +1004,9 @@ const getModelDisplay = (model) => {
     permissions: '權限',
     roles: '角色',
     carousels: '輪播圖',
-    marquees: '跑馬燈'
+    marquees: '跑馬燈',
+    announcements: '公告',
+    sharedResources: '共享資源'
   }
   return modelMap[model] || model
 }
@@ -1117,6 +1122,25 @@ const formatTarget = (item) => {
     const isActive = info.isActive !== undefined ? info.isActive : (after.isActive !== undefined ? after.isActive : true)
     const status = isActive ? '啟用' : '停用'
     return `${title} (排序: ${order}, ${status})`
+  }
+  if (item.targetModel === 'announcements') {
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    const title = info.name || after.title || '(無標題)'
+    const isPinned = (info.isPinned !== undefined ? info.isPinned : after.isPinned) ? '置頂' : '未置頂'
+    const isActive = info.isActive !== undefined ? info.isActive : (after.isActive !== undefined ? after.isActive : true)
+    const status = isActive ? '啟用' : '停用'
+    return `${title} (${isPinned}, ${status})`
+  }
+  if (item.targetModel === 'sharedResources') {
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    const name = info.name || after.name || '(未命名)'
+    const type = info.type || after.type || '(類型不明)'
+    const order = info.order || after.order || 0
+    const isActive = info.isActive !== undefined ? info.isActive : (after.isActive !== undefined ? after.isActive : true)
+    const status = isActive ? '啟用' : '停用'
+    return `${name} [${type}] (排序: ${order}, ${status})`
   }
   return `${name}${userId ? ` (${userId})` : ''}`
 }
