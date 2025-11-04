@@ -4,6 +4,7 @@
       <v-col
         v-if="isLgmUp"
         md="3"
+        class="pe-0"
       >
         <v-row class="elevation-4 rounded-lg pt-10 pb-9 px-1 px-sm-10 mt-2 mt-sm-6 ms-4 me-2 mx-xl-12 bg-white">
           <v-card
@@ -44,7 +45,7 @@
         </v-row>
       </v-col>
       <v-col xl="9">
-        <v-row class="elevation-4 rounded-lg pt-3 pt-sm-6 pb-6 px-2 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-0 me-xl-12 mb-4 bg-white">
+        <v-row class="elevation-4 rounded-lg pt-3 pt-sm-6 pb-6 px-2 px-sm-4 mt-2 mt-sm-6 mx-0 mx-md-4 me-xl-12 mb-4 bg-white">
           <v-col
             cols="12"
             class="d-flex justify-space-between align-center"

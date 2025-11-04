@@ -1549,21 +1549,45 @@ watch(() => user.avatar, (newAvatar) => {
 
 .custom-tabs {
   display: flex;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   background-color: #fff;
   width: 256px;
 
   .tab-button {
     width: 20%;
     padding: 6px 8px;
-    border: none;
     background: transparent;
     cursor: pointer;
     font-size: 14px;
     color: rgba(0, 0, 0, 0.6);
     transition: all 0.2s ease;
-    border-bottom: 2px solid transparent;
     position: relative;
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: rgba(0, 0, 0, 0.12);
+      transition: all 0.2s ease;
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      margin-bottom: 0.5px;
+      width: 100%;
+      height: 2px;
+      background: transparent;
+      transition: height 0.2s ease;
+    }
 
     &:hover {
       color: rgba(0, 0, 0, 0.87);
@@ -1572,8 +1596,13 @@ watch(() => user.avatar, (newAvatar) => {
 
     &.active {
       color: #0097A7;
-      border-bottom-color: #0097A7;
       font-weight: 500;
+
+      &::after {
+        height: 2px;
+        background: #0097A7;
+        bottom: -0.5px;
+      }
     }
   }
 }

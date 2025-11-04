@@ -261,7 +261,8 @@
                   label="公告標題 *"
                   variant="outlined"
                   density="compact"
-                  counter="200"
+                  counter="30"
+                  maxlength="30"
                   clearable
                 />
               </v-col>
@@ -397,7 +398,7 @@
                           label
                           class="mb-1"
                         >
-                          {{ truncateFileName(fileName, 20) }}
+                          {{ truncateFileName(fileName, 30) }}
                         </v-chip>
                         <span
                           v-if="index === 3"
@@ -571,7 +572,7 @@ const showDeleteDialog = ref(false)
 
 // 表單驗證
 const schema = yup.object({
-  title: yup.string().required('請輸入公告標題').max(200, '標題不能超過200字'),
+  title: yup.string().required('請輸入公告標題').max(30, '標題不能超過30字'),
   type: yup.string().required('請選擇公告類型'),
   startDate: yup.string()
     .transform((value) => value === '' ? null : value)
@@ -1045,7 +1046,7 @@ const formatFileSize = (bytes) => {
 }
 
 // 截斷檔案名稱
-const truncateFileName = (fileName, maxLength = 20) => {
+const truncateFileName = (fileName, maxLength = 30) => {
   if (!fileName || fileName.length <= maxLength) return fileName
   return fileName.substring(0, maxLength) + '...'
 }

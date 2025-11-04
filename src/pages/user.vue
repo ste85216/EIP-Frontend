@@ -244,19 +244,81 @@
     <v-dialog
       v-model="dialog.open"
       persistent
-      :width="dialogWidth"
+      max-width="1100"
     >
       <v-form
         :disabled="isSubmitting"
         @submit.prevent="submit"
       >
-        <v-card class="rounded-lg px-4 py-6">
-          <div class="card-title px-4 py-3">
-            {{ dialog.id ? '用戶資料編輯' : '新增用戶' }}
-          </div>
+        <v-card class="rounded-lg user-dialog">
+          <v-card-title class="d-flex align-center px-6 py-1 bg-teal-darken-2">
+            <v-icon
+              icon="mdi-account"
+              size="18"
+              color="white"
+              class="me-2"
+            />
+            <span class="card-title text-white">{{ dialog.id ? '用戶資料編輯' : '新增用戶' }}</span>
+            <v-spacer />
+            <v-btn
+              icon
+              variant="text"
+              color="white"
+              :size="smAndUp ? '40' : '36'"
+              @click="closeDialog"
+            >
+              <v-icon :size="smAndUp ? '24' : '20'">
+                mdi-close
+              </v-icon>
+            </v-btn>
+          </v-card-title>
 
-          <v-card-text class="mt-3 pa-3">
+          <v-card-text class="px-4 px-sm-6 py-4 py-sm-7">
+            <!-- 基本資訊區塊 -->
             <v-row>
+              <v-col
+                cols="12"
+                class="sub-title text-blue-grey-darken-2 d-flex align-center justify-center"
+              >
+                <v-row>
+                  <v-col
+                    cols="3"
+                    sm="4"
+                    md="5"
+                    class="d-flex align-center justify-center"
+                  >
+                    <v-divider
+                      class="border-opacity-25"
+                      color="teal-darken-2"
+                    />
+                  </v-col>
+                  <v-col
+                    cols="6"
+                    sm="4"
+                    md="2"
+                    class="d-flex align-center justify-center text-teal-darken-2"
+                  >
+                    <v-icon
+                      size="18"
+                      class="me-2 text-teal-darken-2"
+                    >
+                      mdi-account-circle
+                    </v-icon> 基本資訊
+                  </v-col>
+                  <v-col
+                    cols="3"
+                    sm="4"
+                    md="5"
+                    class="d-flex align-center justify-center"
+                  >
+                    <v-divider
+                      class="border-opacity-25"
+                      color="teal-darken-2"
+                    />
+                  </v-col>
+                </v-row>
+              </v-col>
+
               <v-col
                 v-if="isEditing"
                 cols="12"
@@ -342,6 +404,64 @@
                 />
               </v-col>
 
+              <v-col cols="12">
+                <v-text-field
+                  v-model="note.value.value"
+                  :error-messages="note.errorMessage.value"
+                  label="備註"
+                  type="text"
+                  variant="outlined"
+                  density="compact"
+                  clearable
+                />
+              </v-col>
+            </v-row>
+
+            <!-- 權限設定區塊 -->
+            <v-row>
+              <v-col
+                cols="12"
+                class="sub-title text-blue-grey-darken-2 d-flex align-center justify-center mt-4"
+              >
+                <v-row>
+                  <v-col
+                    cols="3"
+                    sm="4"
+                    md="5"
+                    class="d-flex align-center justify-center"
+                  >
+                    <v-divider
+                      class="border-opacity-25"
+                      color="teal-darken-2"
+                    />
+                  </v-col>
+                  <v-col
+                    cols="6"
+                    sm="4"
+                    md="2"
+                    class="d-flex align-center justify-center text-teal-darken-2"
+                  >
+                    <v-icon
+                      size="18"
+                      class="me-2 text-teal-darken-2"
+                    >
+                      mdi-shield-account
+                    </v-icon> 權限設定
+                  </v-col>
+                  <v-col
+                    cols="3"
+                    sm="4"
+                    md="5"
+                    class="d-flex align-center justify-center"
+                  >
+                    <v-divider
+                      class="border-opacity-25"
+                      color="teal-darken-2"
+                    />
+                  </v-col>
+                </v-row>
+              </v-col>
+
               <v-col
                 cols="12"
                 sm="6"
@@ -379,24 +499,10 @@
                   </template>
                 </v-select>
               </v-col>
-
-
-
-              <v-col cols="12">
-                <v-text-field
-                  v-model="note.value.value"
-                  :error-messages="note.errorMessage.value"
-                  label="備註"
-                  type="text"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
             </v-row>
           </v-card-text>
 
-          <v-card-actions class="px-3 mt-4">
+          <v-card-actions class="px-6 py-4 mb-2">
             <v-hover>
               <template #default="{ isHovering, props }">
                 <v-btn
@@ -414,10 +520,9 @@
             </v-hover>
             <v-spacer />
             <v-btn
-              color="grey-darken-1"
               variant="outlined"
-              :size="buttonSize"
-              :loading="isSubmitting"
+              color="grey-darken-1"
+              :size="smAndUp ? 'default' : 'small'"
               @click="closeDialog"
             >
               取消
@@ -426,12 +531,12 @@
               color="teal-darken-1"
               variant="outlined"
               type="submit"
-              class="ms-1"
-              :size="buttonSize"
+              class="ms-2"
+              :size="smAndUp ? 'default' : 'small'"
               :loading="isSubmitting"
               :disabled="isEditing && !hasChanges"
             >
-              送出
+              {{ dialog.id ? '更新' : '送出' }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -621,11 +726,6 @@ const dialog = ref({
   id: ''
 })
 
-const dialogWidth = computed(() => {
-  if (mdAndUp.value) return '900'
-  if (smAndUp.value) return '600'
-  return '100%'
-})
 
 // ===== 角色選項 (保留舊系統兼容性) =====
 // const roles = ref([

@@ -51,18 +51,36 @@
                   elevation="2"
                   :style="weatherLoading ? {} : { backgroundImage: `url(${weatherBackground})` }"
                 >
-                  <v-card-text class="d-flex flex-column align-center justify-center h-100 px-4 pt-2 pb-4">
+                  <v-card-text class="d-flex flex-column align-center justify-center h-100 px-0 pt-2 pb-4">
                     <v-skeleton-loader
                       v-if="weatherLoading"
                       type="image, text, text"
-                      class="w-100 mt-5"
+                      class="w-100 mt-5 px-4"
                     />
                     <template v-else>
                       <div class="temperature-display mb-1">
                         {{ weatherData.temperature }}°C
                       </div>
-                      <div class="location-display  mb-2">
-                        {{ weatherData.location }}
+                      <div class="location-display ps-6 d-flex align-center justify-center">
+                        <span>{{ weatherData.location }}</span>
+                        <v-btn
+                          icon
+                          size="28"
+                          variant="text"
+                          color="white"
+                          style="margin-left: 2px;"
+                          @click.stop="openLocationDialog"
+                        >
+                          <v-icon size="16">
+                            mdi-map-marker
+                          </v-icon>
+                          <v-tooltip
+                            activator="parent"
+                            location="top"
+                          >
+                            選擇位置
+                          </v-tooltip>
+                        </v-btn>
                       </div>
                       <div class="weather-description mb-2">
                         {{ weatherData.description }}
@@ -86,7 +104,7 @@
                           >
                             mdi-thermometer
                           </v-icon>
-                          <span class="humidity-display">體感溫度 {{ weatherData.feelsLike }}°C</span>
+                          <span class="feels-like">體感溫度 {{ weatherData.feelsLike }}°C</span>
                         </div>
                         <div class="d-flex align-center">
                           <v-icon
@@ -96,7 +114,7 @@
                           >
                             mdi-weather-rainy
                           </v-icon>
-                          <span class="humidity-display">降雨機率 {{ weatherData.precipitationProbability }}%</span>
+                          <span class="precipitation-probability">降雨機率 {{ weatherData.precipitationProbability }}%</span>
                         </div>
                       </div>
                       <v-alert
@@ -212,59 +230,42 @@
                   {{ newsItems.length }} 則消息
                 </v-chip>
               </v-card-title>
-              <v-card-text class="px-0 ">
-                <v-skeleton-loader
-                  v-if="newsLoading"
-                  type="list-item@3"
-                />
-                <template v-else>
-                  <!-- 表頭 -->
-                  <div class="news-header d-flex align-center px-5 py-2">
-                    <div class="news-header-type">
-                      類型
-                    </div>
-                    <div class="news-header-title">
-                      標題
-                    </div>
-                    <div class="news-header-creator d-none d-md-block">
-                      發布人
-                    </div>
-                    <div class="news-header-time">
-                      發布時間
-                    </div>
-                    <div class="news-header-views d-none d-sm-block">
-                      瀏覽
-                    </div>
-                  </div>
-
-                  <!-- 列表內容 -->
-                  <v-list class="pa-0">
-                    <v-list-item
-                      v-for="(item, index) in newsItems"
-                      :key="item._id"
-                      class="ps-5 pe-5 news-item"
-                      :class="index % 2 === 0 ? 'odd-row' : 'even-row'"
+              <v-card-text class="px-0">
+                <v-data-table
+                  :headers="newsHeaders"
+                  :items="newsItems"
+                  :loading="newsLoading"
+                  hide-default-footer
+                  class="news-table elevation-0"
+                  density="compact"
+                  :items-per-page="6"
+                >
+                  <template #item="{ item, index }">
+                    <tr
+                      :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }"
                       @click="viewAnnouncement(item)"
                     >
-                      <v-list-item-title class="d-flex align-center">
-                        <div class="news-item-type">
-                          <v-chip
-                            :color="getAnnouncementTypeColor(item.type)"
-                            label
-                            :size="smAndUp ? 'small' : 'x-small'"
-                          >
-                            <v-icon
-                              :icon="getAnnouncementTypeIcon(item.type)"
-                              :size="smAndUp ? '14' : '12'"
-                              class="me-1"
-                            />
-                            {{ getAnnouncementTypeText(item.type) }}
-                          </v-chip>
-                        </div>
+                      <td>
+                        <v-chip
+                          :color="getAnnouncementTypeColor(item.type)"
+                          label
+                          :size="smAndUp ? 'small' : 'x-small'"
+                        >
+                          <v-icon
+                            :icon="getAnnouncementTypeIcon(item.type)"
+                            :size="smAndUp ? '14' : '12'"
+                            class="me-1"
+                          />
+                          {{ getAnnouncementTypeText(item.type) }}
+                        </v-chip>
+                      </td>
+                      <td>
                         <div class="news-item-title">
-                          <span class="sub-title-1">{{ item.title }}</span>
+                          {{ item.title }}
                         </div>
-                        <div class="news-item-creator d-none d-md-flex">
+                      </td>
+                      <td v-if="mdAndUp">
+                        <div class="d-flex align-center justify-center">
                           <v-icon
                             icon="mdi-account"
                             size="12"
@@ -272,7 +273,9 @@
                           />
                           <span class="sub-title-2">{{ item.creator?.name || '未知' }}</span>
                         </div>
-                        <div class="news-item-time">
+                      </td>
+                      <td class="news-item-time">
+                        <div class="d-flex align-center justify-center">
                           <v-icon
                             icon="mdi-clock-outline"
                             size="12"
@@ -280,7 +283,11 @@
                           />
                           <span class="sub-title-2">{{ smAndUp ? formatAnnouncementDate(item.createdAt) : formatAnnouncementDateCompact(item.createdAt) }}</span>
                         </div>
-                        <div class="news-item-views d-none d-sm-flex">
+                      </td>
+                      <td
+                        v-if="smAndUp"
+                      >
+                        <div class="d-flex align-center justify-center">
                           <v-icon
                             icon="mdi-eye"
                             size="12"
@@ -288,26 +295,25 @@
                           />
                           <span class="sub-title-2">{{ item.viewCount || 0 }}</span>
                         </div>
-                      </v-list-item-title>
-                    </v-list-item>
-                    <v-list-item
-                      v-if="newsItems.length === 0"
-                      class="text-center text-grey pt-4"
-                    >
+                      </td>
+                    </tr>
+                  </template>
+                  <template #no-data>
+                    <div class="text-center text-grey pt-4 pb-4">
                       暫無公告
-                    </v-list-item>
-                  </v-list>
-                </template>
+                    </div>
+                  </template>
+                </v-data-table>
                 <div
-                  v-if="newsItems.length >= 6"
-                  class="text-center"
+                  v-if="!newsLoading && newsItems.length >= 6"
+                  class="text-center pt-2 pb-2"
                 >
                   <v-btn
                     variant="plain"
                     color="blue-grey-darken-2"
                     size="small"
                     :ripple="false"
-                    class="mt-3 opacity-75"
+                    class="opacity-75"
                     @click="$router.push('/announcement')"
                   >
                     查看更多
@@ -432,7 +438,7 @@
 
         <!-- 共享資源 -->
         <v-card
-          class="dashboard-card shared-resources-card"
+          class="dashboard-card shared-resources-card pa-0"
           elevation="2"
         >
           <v-card-title class="d-flex align-center bg-blue-grey-darken-2">
@@ -454,81 +460,218 @@
               {{ filteredSharedResources.length }} 個檔案
             </v-chip>
           </v-card-title>
-          <!-- 搜尋欄位 -->
-          <v-text-field
-            v-model="sharedResourceSearch"
-            density="compact"
-            variant="outlined"
-            placeholder="搜尋檔案名稱"
-            prepend-inner-icon="mdi-magnify"
-            hide-details
-            clearable
-            class="px-3 pt-2"
-          />
-          <v-card-text class="px-0 pt-3">
-            <v-skeleton-loader
-              v-if="sharedResourcesLoading"
-              type="list-item@4"
+          <v-card-text class="px-0 pb-6">
+            <!-- 搜尋欄位 -->
+            <v-text-field
+              v-model="sharedResourceSearch"
+              density="compact"
+              variant="outlined"
+              placeholder="搜尋檔案名稱"
+              prepend-inner-icon="mdi-magnify"
+              hide-details
+              clearable
+              class="px-3 pt-2 pb-2"
             />
-            <v-list
-              v-else
-              class="pa-0 list-scroll"
+            <v-data-table
+              :headers="sharedResourceHeaders"
+              :items="filteredSharedResources"
+              :loading="sharedResourcesLoading"
+              hide-default-footer
+              hide-default-header
+              class="shared-resources-table elevation-0"
+              density="compact"
+              :items-per-page="10"
             >
-              <v-list-item
-                v-for="(resource, index) in filteredSharedResources"
-                :key="resource.id"
-                class="px-5 resource-item"
-                :class="index % 2 === 0 ? 'odd-row' : 'even-row'"
-              >
-                <template #prepend>
-                  <v-avatar
-                    :color="getFileTypeColor(resource.type)"
-                    size="24"
-                  >
-                    <v-icon
-                      size="14"
-                      color="white"
-                    >
-                      {{ getFileTypeIcon(resource.type) }}
-                    </v-icon>
-                  </v-avatar>
-                </template>
-                <v-list-item-title class="sub-title-1 font-weight-medium">
-                  {{ resource.name }} <span class="sub-title-2 text-grey-darken-1">( {{ resource.size }} )</span>
-                </v-list-item-title>
-                <template #append>
-                  <v-btn
-                    icon
-                    size="32"
-                    variant="text"
-                    color="blue-grey-darken-1"
-                    @click.stop="handleResourceDownload(resource)"
-                  >
-                    <v-icon size="16">
-                      mdi-download
-                    </v-icon>
-                  </v-btn>
-                </template>
-              </v-list-item>
-              <div
-                v-if="filteredSharedResources.length === 0"
-                class="text-center pt-6 pb-2 text-grey"
-              >
-                {{ sharedResourceSearch ? '查無符合條件的檔案' : '暫無共享資源' }}
-              </div>
-            </v-list>
+              <template #item="{ item, index }">
+                <tr
+                  :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }"
+                >
+                  <td>
+                    <div class="d-flex align-center justify-center">
+                      <v-avatar
+                        :color="getFileTypeColor(item.type)"
+                        size="22"
+                      >
+                        <v-icon
+                          size="12"
+                          color="white"
+                        >
+                          {{ getFileTypeIcon(item.type) }}
+                        </v-icon>
+                      </v-avatar>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="shared-resource-item-title">
+                      {{ item.name }}
+                    </div>
+                  </td>
+                  <td v-if="smAndUp">
+                    <div class="d-flex align-center justify-center">
+                      <span class="sub-title-2">{{ item.size }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex align-center justify-center">
+                      <v-btn
+                        icon
+                        size="32"
+                        variant="text"
+                        color="blue-grey-darken-1"
+                        @click.stop="handleResourceDownload(item)"
+                      >
+                        <v-icon size="16">
+                          mdi-download
+                        </v-icon>
+                      </v-btn>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+              <template #no-data>
+                <div class="text-center text-grey pt-4 pb-4">
+                  {{ sharedResourceSearch ? '查無符合條件的檔案' : '暫無共享資源' }}
+                </div>
+              </template>
+            </v-data-table>
           </v-card-text>
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- 地區選擇對話框 -->
+    <v-dialog
+      v-model="locationDialog"
+      max-width="360px"
+    >
+      <v-card class="rounded-lg">
+        <div class="card-title px-6 py-3 bg-blue-grey-darken-2 d-flex align-center">
+          <v-icon
+            :size="smAndUp ? '20' : '16'"
+            color="white"
+            class="me-2"
+          >
+            mdi-map-marker
+          </v-icon>
+          選擇地區
+          <v-spacer />
+          <v-btn
+            icon
+            color="white"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            :size="smAndUp ? '20' : '16'"
+            @click="closeLocationDialog"
+          >
+            <v-icon :size="smAndUp ? '20' : '16'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </div>
+
+        <v-card-text class="mt-3 mb-2 px-6 pb-2">
+          <div>
+            <v-select
+              v-model="selectedCity"
+              :items="cityOptions"
+              label="選擇城市 *"
+              variant="outlined"
+              density="compact"
+              item-title="label"
+              item-value="value"
+              :rules="cityRules"
+              required
+              clearable
+              hide-details
+              class="mb-4"
+            />
+            <v-select
+              v-if="selectedCity"
+              v-model="selectedDistrict"
+              :items="districtOptions"
+              label="選擇區域 *"
+              variant="outlined"
+              density="compact"
+              item-title="label"
+              item-value="value"
+              :rules="districtRules"
+              required
+              clearable
+              hide-details
+            />
+            <div
+              v-if="savedLocationInfo"
+              class="saved-location-info mt-3"
+            >
+              <div class="saved-location-card d-flex align-center justify-space-between px-3 py-1 rounded">
+                <div class="d-flex align-center flex-grow-1">
+                  <v-icon
+                    size="28"
+                    color="teal-darken-1"
+                    class="me-3"
+                  >
+                    mdi-map-marker-check
+                  </v-icon>
+                  <div class="flex-grow-1">
+                    <div class="text-caption text-grey-darken-1">
+                      已設定地區
+                    </div>
+                    <div class="text-body-2 font-weight-medium text-grey-darken-2">
+                      {{ savedLocationInfo.cityName }}{{ savedLocationInfo.district ? ` ${savedLocationInfo.district}` : '' }}
+                    </div>
+                  </div>
+                </div>
+                <v-btn
+                  icon
+                  size="32"
+                  variant="text"
+                  color="grey-darken-1"
+                  class="ms-2"
+                  @click="clearSavedLocation"
+                >
+                  <v-icon size="18">
+                    mdi-close
+                  </v-icon>
+                </v-btn>
+              </div>
+            </div>
+          </div>
+        </v-card-text>
+
+        <v-card-actions class="px-6 pb-5">
+          <v-spacer />
+          <v-btn
+            color="grey-darken-1"
+            variant="outlined"
+            class="me-1"
+            :size="buttonSize"
+            @click="closeLocationDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            class="ms-1"
+            :size="buttonSize"
+            :disabled="!selectedCity || !selectedDistrict"
+            @click="confirmLocation"
+          >
+            確認
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script setup>
 import { useDisplay } from 'vuetify'
 import { definePage } from 'vue-router/auto'
-import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { ref, onMounted, computed, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { cityOptions, getDistrictsByCity } from '@/enums/CityDistrict'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useApi } from '@/composables/axios'
 
@@ -576,6 +719,61 @@ const weatherData = ref({
 
 const weatherLoading = ref(false)
 const weatherError = ref('')
+
+// 位置選擇相關
+const locationDialog = ref(false)
+const selectedCity = ref(null)
+const selectedDistrict = ref(null)
+
+// 已保存的位置資訊（用於顯示）
+const savedLocationInfo = ref(null)
+
+// 驗證規則
+const cityRules = [
+  v => !!v || '請選擇城市'
+]
+
+const districtRules = [
+  v => !!v || '請選擇區域'
+]
+
+// 區域選項（根據選擇的城市動態更新）
+const districtOptions = computed(() => {
+  if (!selectedCity.value) return []
+  return getDistrictsByCity(selectedCity.value)
+})
+
+// 最新消息表格標題
+const newsHeaders = computed(() => {
+  const base = [
+    { title: '類型', key: 'type', sortable: false, align: 'center', width: '80px' },
+    { title: '標題', key: 'title', sortable: false, align: 'center' },
+    { title: '發布人', key: 'creator', sortable: false, align: 'center', minWidth: '80px',width: '80px' },
+    { title: '發布時間', key: 'createdAt', sortable: false, align: 'center', width: '200px'},
+    { title: '瀏覽', key: 'viewCount', sortable: false, align: 'center', width: '100px' }
+  ]
+
+  return base.filter(h => {
+    if (h.key === 'creator' && !mdAndUp.value) return false
+    if (h.key === 'viewCount' && !smAndUp.value) return false
+    return true
+  })
+})
+
+// 共享資源表格標題
+const sharedResourceHeaders = computed(() => {
+  const base = [
+    { title: '類型', key: 'type', sortable: false, align: 'center' },
+    { title: '檔案名稱', key: 'name', sortable: false, align: 'center' },
+    { title: '大小', key: 'size', sortable: false, align: 'center', width: '100px' },
+    { title: '操作', key: 'action', sortable: false, align: 'center', width: '80px' }
+  ]
+
+  return base.filter(h => {
+    if (h.key === 'size' && !smAndUp.value) return false
+    return true
+  })
+})
 
 // 根據天氣狀況返回背景圖片
 const getWeatherBackgroundUrl = (condition) => {
@@ -954,6 +1152,130 @@ const fetchAnnouncements = async () => {
   }
 }
 
+// 更新已保存的位置資訊顯示
+const updateSavedLocationInfo = () => {
+  savedLocationInfo.value = getSavedLocation()
+}
+
+// 打開位置選擇對話框
+const openLocationDialog = () => {
+  // 更新已保存位置資訊
+  updateSavedLocationInfo()
+  // 載入已保存的手動選擇位置
+  const savedLocation = getSavedLocation()
+  if (savedLocation) {
+    selectedCity.value = savedLocation.cityName
+    selectedDistrict.value = savedLocation.district
+  } else {
+    selectedCity.value = null
+    selectedDistrict.value = null
+  }
+  locationDialog.value = true
+}
+
+// 關閉位置選擇對話框
+const closeLocationDialog = () => {
+  locationDialog.value = false
+  // 重置狀態
+  selectedCity.value = null
+  selectedDistrict.value = null
+}
+
+// 確認位置選擇
+const confirmLocation = async () => {
+  // 驗證：城市和區域都必須選擇
+  if (!selectedCity.value) {
+    createSnackbar({
+      text: '請選擇城市',
+      snackbarProps: { color: 'warning' }
+    })
+    return
+  }
+
+  if (!selectedDistrict.value) {
+    createSnackbar({
+      text: '請選擇區域',
+      snackbarProps: { color: 'warning' }
+    })
+    return
+  }
+
+  // 驗證區域是否屬於選擇的城市
+  const districts = getDistrictsByCity(selectedCity.value)
+  const isValidDistrict = districts.some(d => d.value === selectedDistrict.value)
+  if (!isValidDistrict) {
+    // 如果區域不屬於該城市，清除區域
+    selectedDistrict.value = null
+    createSnackbar({
+      text: '區域與城市不匹配，請重新選擇',
+      snackbarProps: { color: 'warning' }
+    })
+    return
+  }
+
+  const locationInfo = {
+    cityName: selectedCity.value,
+    district: selectedDistrict.value,
+    latitude: null,
+    longitude: null,
+    source: 'manual'
+  }
+
+  // 保存到 localStorage
+  saveLocation(locationInfo)
+  // 更新已保存位置資訊顯示
+  updateSavedLocationInfo()
+  // 關閉對話框
+  closeLocationDialog()
+  // 重新載入天氣資料
+  await fetchWeatherData()
+  createSnackbar({
+    text: '位置已更新',
+    snackbarProps: { color: 'teal-lighten-1' }
+  })
+}
+
+// 保存位置到 localStorage
+const saveLocation = (locationInfo) => {
+  try {
+    localStorage.setItem('weatherLocation', JSON.stringify(locationInfo))
+  } catch (error) {
+    console.error('保存位置失敗:', error)
+  }
+}
+
+// 從 localStorage 讀取位置
+const getSavedLocation = () => {
+  try {
+    const saved = localStorage.getItem('weatherLocation')
+    if (saved) {
+      return JSON.parse(saved)
+    }
+  } catch (error) {
+    console.error('讀取位置失敗:', error)
+  }
+  return null
+}
+
+// 清除保存的位置
+const clearSavedLocation = async () => {
+  try {
+    localStorage.removeItem('weatherLocation')
+    // 立即更新顯示，讓提示消失
+    savedLocationInfo.value = null
+    selectedCity.value = null
+    selectedDistrict.value = null
+    createSnackbar({
+      text: '已清除手動位置，將使用自動定位',
+      snackbarProps: { color: 'info' }
+    })
+    // 重新載入天氣資料
+    await fetchWeatherData()
+  } catch (error) {
+    console.error('清除位置失敗:', error)
+  }
+}
+
 // 獲取 IP 定位（返回城市和座標）
 const getLocationByIP = async () => {
   // 嘗試多個 IP 定位服務
@@ -988,6 +1310,7 @@ const getLocationByIP = async () => {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000)
 
+
       const response = await fetch(service.url, {
         signal: controller.signal
       })
@@ -1000,50 +1323,7 @@ const getLocationByIP = async () => {
 
         // 檢查是否在台灣
         if (locationInfo.countryCode === 'TW' || locationInfo.countryCode === 'Taiwan') {
-          // 使用座標進行反向地理編碼獲取更精確的位置
-          if (locationInfo.latitude && locationInfo.longitude) {
-            try {
-              const reverseGeocodeResponse = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?lat=${locationInfo.latitude}&lon=${locationInfo.longitude}&format=json&addressdetails=1&accept-language=zh-TW`,
-                {
-                  headers: {
-                    'User-Agent': 'WeatherApp/1.0'
-                  }
-                }
-              )
-
-              if (reverseGeocodeResponse.ok) {
-                const geocodeData = await reverseGeocodeResponse.json()
-                const address = geocodeData.address || {}
-                const city = address.city || address.county || address.city_district || locationInfo.city
-                const district = address.suburb || address.district || address.borough || address.neighbourhood
-
-                // 轉換為中央氣象署使用的格式
-                let cityName = city
-                if (city === 'Taipei' || city === '台北' || city === '臺北') {
-                  cityName = '臺北市'
-                } else if (city === 'New Taipei' || city === '新北') {
-                  cityName = '新北市'
-                } else if (city === 'Taoyuan' || city === '桃園') {
-                  cityName = '桃園市'
-                } else if (city === 'Taichung' || city === '台中' || city === '臺中') {
-                  cityName = '臺中市'
-                } else if (city === 'Tainan' || city === '台南' || city === '臺南') {
-                  cityName = '臺南市'
-                } else if (city === 'Kaohsiung' || city === '高雄') {
-                  cityName = '高雄市'
-                } else if (city === 'Keelung' || city === '基隆') {
-                  cityName = '基隆市'
-                }
-
-                return { cityName, district, latitude: locationInfo.latitude, longitude: locationInfo.longitude }
-              }
-            } catch (geocodeError) {
-              console.warn('反向地理編碼失敗:', geocodeError)
-            }
-          }
-
-          // 如果反向地理編碼失敗，使用原始城市名稱
+          // 反向地理編碼改為背景更新，不在此同步阻塞
           const city = locationInfo.city
           if (city === 'Taipei') {
             return { cityName: '臺北市', district: null, latitude: locationInfo.latitude, longitude: locationInfo.longitude }
@@ -1063,19 +1343,85 @@ const getLocationByIP = async () => {
   return { cityName: '臺北市', district: null, latitude: null, longitude: null }
 }
 
+// 反向地理編碼（背景，zoom=14，localStorage 快取）
+const REVERSE_GEOCODE_TTL_MS = 24 * 60 * 60 * 1000
+const reverseGeocodeWithCache = async (lat, lon) => {
+  if (!lat || !lon) return null
+  const key = `rg:${Number(lat).toFixed(4)},${Number(lon).toFixed(4)}`
+  try {
+    const cached = localStorage.getItem(key)
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (parsed && parsed.ts && (Date.now() - parsed.ts) < REVERSE_GEOCODE_TTL_MS) {
+        console.log('[Weather] 反向地理編碼命中快取')
+        return parsed.value
+      }
+    }
+  } catch (e) {
+    console.warn('[Weather] 快取讀取失敗:', e?.message)
+  }
+
+
+  try {
+    const resp = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1&accept-language=zh-TW&zoom=14`,
+      { headers: { 'User-Agent': 'WeatherApp/1.0' } }
+    )
+    if (!resp.ok) return null
+    const data = await resp.json()
+    const address = data.address || {}
+    const city = address.city || address.county || address.city_district
+    // 台灣行政區優先順序：city_district > district > town > borough > suburb > neighbourhood
+    const district = address.city_district || address.district || address.town || address.borough || address.suburb || address.neighbourhood
+
+    let cityName = city
+    if (city === 'Taipei' || city === '台北' || city === '臺北') cityName = '臺北市'
+    else if (city === 'New Taipei' || city === '新北') cityName = '新北市'
+    else if (city === 'Taoyuan' || city === '桃園') cityName = '桃園市'
+    else if (city === 'Taichung' || city === '台中' || city === '臺中') cityName = '臺中市'
+    else if (city === 'Tainan' || city === '台南' || city === '臺南') cityName = '臺南市'
+    else if (city === 'Kaohsiung' || city === '高雄') cityName = '高雄市'
+    else if (city === 'Keelung' || city === '基隆') cityName = '基隆市'
+
+    const value = { cityName, district }
+    try {
+      localStorage.setItem(key, JSON.stringify({ ts: Date.now(), value }))
+    } catch (e) {
+      console.warn('[Weather] 快取寫入失敗:', e?.message)
+    }
+    return value
+  } catch (e) {
+    console.warn('[Weather] 反向地理編碼背景任務失敗:', e?.message)
+    return null
+  }
+}
+
 // 獲取天氣數據
 const fetchWeatherData = async () => {
   try {
+
     weatherLoading.value = true
     weatherError.value = ''
 
-    // 使用 IP 定位獲取位置
-    const locationInfo = await getLocationByIP()
+    // 優先順序：手動選擇 > IP定位
+    let locationInfo = null
+
+    // 1. 優先檢查是否有手動選擇的位置
+    const savedLocation = getSavedLocation()
+    if (savedLocation) {
+      locationInfo = savedLocation
+    } else {
+      // 2. 使用 IP 定位作為備用
+      locationInfo = await getLocationByIP()
+    }
+
     const cityName = locationInfo.cityName || '臺北市'
 
-    // 只使用中央氣象署 API
+    // 只使用中央氣象署 API（不傳 locationName，因為它是指定觀測站名稱，不是城市名稱）
+
+
     const cwaResponse = await fetch(
-      `${CWA_API_URL}/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON&locationName=${encodeURIComponent(cityName)}`
+      `${CWA_API_URL}/O-A0003-001?Authorization=${CWA_API_KEY}&format=JSON`
     )
 
     if (cwaResponse.ok) {
@@ -1083,10 +1429,12 @@ const fetchWeatherData = async () => {
 
       if (cwaData.success && cwaData.records && cwaData.records.Station) {
 
+
         let station = null
 
         // 優先使用座標距離找最近的觀測站（最準確）
         if (locationInfo.latitude && locationInfo.longitude) {
+
           const userLat = parseFloat(locationInfo.latitude)
           const userLon = parseFloat(locationInfo.longitude)
 
@@ -1182,16 +1530,52 @@ const fetchWeatherData = async () => {
 
         // 如果座標匹配失敗，使用城市名稱匹配作為備用
         if (!station) {
+
           // 找到同一城市的所有觀測站
-          const sameCityStations = cwaData.records.Station.filter(s => {
+          let sameCityStations = cwaData.records.Station.filter(s => {
             const geoInfo = s.GeoInfo || {}
             const countyName = geoInfo.CountyName || ''
-            return countyName === cityName ||
-                   countyName === cityName.replace('臺', '台') ||
-                   countyName === cityName.replace('台', '臺')
+            const stationName = s.StationName || ''
+
+            // 進行多種匹配方式，處理「臺」和「台」的差異
+            // 移除「市」、「縣」等後綴，統一處理
+            const cityNameNormalized = cityName.replace('台', '臺').replace('市', '').replace('縣', '').trim()
+            const countyNameNormalized = countyName.replace('台', '臺').replace('市', '').replace('縣', '').trim()
+            const stationNameNormalized = stationName.replace('台', '臺').replace('市', '').replace('縣', '').trim()
+
+            // 多種匹配策略
+            const match1 = countyNameNormalized === cityNameNormalized
+            const match2 = countyName === cityName
+            const match3 = countyNameNormalized.includes(cityNameNormalized)
+            const match4 = cityNameNormalized.includes(countyNameNormalized)
+            const match5 = stationNameNormalized.includes(cityNameNormalized)
+
+            // 特殊處理：新北市可能被記錄為「新北」或「新北市」
+            const match6 = (cityName === '新北市' && (countyName === '新北' || countyName === '新北市' || countyNameNormalized === '新北'))
+            const match7 = (cityName === '臺北市' && (countyName === '臺北' || countyName === '臺北市' || countyNameNormalized === '臺北'))
+            const match8 = (cityName === '臺中市' && (countyName === '臺中' || countyName === '臺中市' || countyNameNormalized === '臺中'))
+            const match9 = (cityName === '臺南市' && (countyName === '臺南' || countyName === '臺南市' || countyNameNormalized === '臺南'))
+            const match10 = (cityName === '高雄市' && (countyName === '高雄' || countyName === '高雄市' || countyNameNormalized === '高雄'))
+            const match11 = (cityName === '桃園市' && (countyName === '桃園' || countyName === '桃園市' || countyNameNormalized === '桃園'))
+
+            return match1 || match2 || match3 || match4 || match5 || match6 || match7 || match8 || match9 || match10 || match11
           })
 
           if (sameCityStations.length > 0) {
+            // 如果有選擇區域，優先選擇該區域的觀測站
+            if (locationInfo.district) {
+              const districtStations = sameCityStations.filter(s => {
+                const geoInfo = s.GeoInfo || {}
+                const townName = geoInfo.TownName || ''
+                return townName === locationInfo.district ||
+                       townName.includes(locationInfo.district.replace('區', '').replace('鄉', '').replace('鎮', '').replace('市', ''))
+              })
+
+              if (districtStations.length > 0) {
+                sameCityStations = districtStations
+              }
+            }
+
             // 優先選擇平地觀測站（海拔低於200m）
             const flatStations = sameCityStations.filter(s => {
               const geoInfo = s.GeoInfo || {}
@@ -1201,11 +1585,12 @@ const fetchWeatherData = async () => {
 
             if (flatStations.length > 0) {
               // 在平地觀測站中，優先選擇名稱為城市名稱的（如「臺北」）
+              const cityNameShort = cityName.replace('市', '').replace('縣', '')
               station = flatStations.find(s => {
                 const name = s.StationName || ''
-                return name === cityName.replace('市', '') ||
-                       name === cityName.replace('臺北市', '臺北') ||
-                       name === cityName.replace('台北市', '台北')
+                return name.includes(cityNameShort) ||
+                       name === cityNameShort ||
+                       name === cityName
               })
 
               // 如果沒找到，選擇第一個平地觀測站
@@ -1221,6 +1606,7 @@ const fetchWeatherData = async () => {
               })
               station = sameCityStations[0]
             }
+
           }
         }
 
@@ -1322,6 +1708,7 @@ const fetchWeatherData = async () => {
           // 總是嘗試從預報 API 獲取降雨機率（更準確）
           try {
             const countyName = geoInfo.CountyName || cityName
+
             const forecastResponse = await fetch(
               `${CWA_API_URL}/F-C0032-001?Authorization=${CWA_API_KEY}&locationName=${encodeURIComponent(countyName)}`
             )
@@ -1370,14 +1757,17 @@ const fetchWeatherData = async () => {
             displayLocation = geoInfo.CountyName
           }
 
+          const weatherCondition = getTaiwanWeatherConditionFromStation(station)
+          const weatherDescription = getTaiwanWeatherDescriptionFromStation(station)
+
           weatherData.value = {
             temperature: temperature || 0,
-            condition: getTaiwanWeatherConditionFromStation(station),
+            condition: weatherCondition,
             humidity: humidity || 0,
             feelsLike: feelsLike || temperature || 0,
             precipitationProbability: precipitationProbability || 0,
             location: displayLocation,
-            description: getTaiwanWeatherDescriptionFromStation(station),
+            description: weatherDescription,
             pressure: Math.round(parseFloat(
               weatherElement.AirPressure ||
               weatherElement.Now?.Pressure ||
@@ -1385,6 +1775,24 @@ const fetchWeatherData = async () => {
             )),
             visibility: 10
           }
+
+          // 背景更新地區名稱（不阻塞 UI）
+          ;(async () => {
+            try {
+              if (locationInfo.latitude && locationInfo.longitude) {
+                const rg = await reverseGeocodeWithCache(locationInfo.latitude, locationInfo.longitude)
+                if (rg && rg.cityName) {
+                  const newLocation = rg.district ? `${rg.cityName} ${rg.district}` : rg.cityName
+                  if (newLocation && newLocation !== weatherData.value.location) {
+                    weatherData.value.location = newLocation
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn('[Weather] 背景更新地區名稱失敗:', e?.message)
+            }
+          })()
+
 
           return
         }
@@ -1540,6 +1948,9 @@ onMounted(async () => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
 
+  // 初始化已保存位置資訊
+  updateSavedLocationInfo()
+
   // 獲取天氣數據、輪播圖數據、公告數據、分機表數據和共享資源數據
   await Promise.all([
     fetchWeatherData(),
@@ -1548,6 +1959,14 @@ onMounted(async () => {
     fetchExtensions(),
     fetchSharedResources()
   ])
+})
+
+// 監聽城市選擇變化，自動清除區域
+watch(selectedCity, (newCity, oldCity) => {
+  // 當城市改變時，清除已選擇的區域
+  if (newCity !== oldCity && oldCity !== null) {
+    selectedDistrict.value = null
+  }
 })
 
 // 組件卸載時清理定時器
@@ -1711,10 +2130,10 @@ onUnmounted(() => {
     font-family: 'Quantico', sans-serif;
   }
 
-  .feels-like {
-    font-size: 13px;
-    font-weight: 300;
+  .weather-description {
+    font-weight: 400;
     color: #fff;
+    text-transform: capitalize;
     font-family:'Noto Sans TC', sans-serif;
   }
 
@@ -1723,28 +2142,35 @@ onUnmounted(() => {
     font-weight: 300;
     color: #fff;
     font-family:'Noto Sans TC', sans-serif;
-
   }
 
-  .weather-description {
-    font-weight: 400;
-    color: #fff;
-    text-transform: capitalize;
-    font-family:'Noto Sans TC', sans-serif;
+  .humidity-display {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 300;
+  font-family:'Noto Sans TC', sans-serif;
+  }
 
+  .feels-like {
+    font-size: 12px;
+    font-weight: 300;
+    color: #fff;
+    font-family:'Noto Sans TC', sans-serif;
+  }
+
+  .precipitation-probability {
+    font-size: 12px;
+    font-weight: 300;
+    color: #fff;
+    font-family:'Noto Sans TC', sans-serif;
   }
 
   .weather-details {
-    line-height: 1.4;
+    line-height: 1.5;
   }
 }
 
-.humidity-display {
-  color: #fff;
-  font-size: 11px;
-  font-weight: 300;
-  font-family:'Noto Sans TC', sans-serif;
-}
+
 
 
 // 最新消息卡片樣式
@@ -1752,99 +2178,62 @@ onUnmounted(() => {
   min-height: 300px;
   max-height: 430px;
 
-  // 表頭樣式
-  .news-header {
-    font-family: 'Noto Sans TC', sans-serif;
-    font-weight: 400;
-    font-size: 13px;
-    color: #37474F;
-    border-bottom: 1px solid #eee;
-    text-align: center;
-
-    .news-header-type {
-      width: 56px;
-      flex-shrink: 0;
+  .news-table {
+    :deep(thead th) {
+      height: 36px;
+      font-family: 'Noto Sans TC', sans-serif;
+      font-weight: 400;
+      font-size: 13px;
+      color: #37474F;
+      border-bottom: 1px solid #eee !important;
+      &:first-child {
+        padding-left: 16px !important;
+      }
+      &:last-child {
+        padding-right: 12px !important;
+      }
     }
 
-    .news-header-title {
-      flex: 1;
-      min-width: 0;
-    }
+    :deep(tbody tr) {
+        cursor: pointer;
+        transition: all 0.1s ease !important;
 
-    .news-header-creator {
-      width: 120px;
-      flex-shrink: 0;
-      text-align: center;
-    }
-
-    .news-header-time {
-      width: 80px;
-      flex-shrink: 0;
-      text-align: center;
-    }
-
-    .news-header-views {
-      width: 100px;
-      flex-shrink: 0;
-      text-align: center;
-    }
-  }
-
-  .news-item {
-    border-bottom: 1px solid #eee;
-    transition: all 0.1s ease;
-    cursor: pointer;
+        td:first-child {
+          padding-left: 16px !important;
+        }
+        td:last-child {
+          padding-right: 12px !important;
+        }
+        td {
+          padding:0 8px;
+          border-bottom: 1px solid #eee !important;
+        }
 
     &:hover {
-      background-color: rgba(96, 125, 139, 0.05) !important;
-    }
+      background-color: #eee !important;
+      }
 
-    .news-item-type {
-      width: 56px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
     }
 
     .news-item-title {
-      flex: 1;
-      min-width: 0;
+      max-width: 124px;
+      padding: 12px;
+      font-size: 12px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
       text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .news-item-creator {
-      width: 120px;
-      flex-shrink: 0;
+      margin: 0 auto;
       text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+
+      @include md {
+        font-size: 14px;
+        max-width: 300px;
+      }
     }
 
     .news-item-time {
-      width: 80px;
-      flex-shrink: 0;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .news-item-views {
-      color: #333;
-      width: 100px;
-      flex-shrink: 0;
-      text-align: center;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      min-width: 120px;
     }
   }
 }
@@ -1871,6 +2260,16 @@ onUnmounted(() => {
     }
   }
 }
+
+.saved-location-card {
+    background-color: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: #eeeeee;
+    }
+  }
 
 // 在 1280px~1700px 之間隱藏 jobTitle
 @media (min-width: 1280px) and (max-width: 1700px) {
@@ -1913,15 +2312,36 @@ onUnmounted(() => {
   min-height: 300px;
   max-height: 430px;
 
-  .list-scroll {
-    max-height: 280px;
-  }
+  .shared-resources-table {
+    max-height: 285px;
+    :deep(tbody tr) {
+      cursor: default;
+      transition: all 0.1s ease !important;
 
-  .resource-item {
-    border-bottom: 1px solid #e0e0e0;
+      td {
+        padding: 0;
+        border-bottom: 1px solid #eee !important;
+      }
 
-    &:hover {
-      background-color: #eee;
+      &:hover {
+        background-color: #eee !important;
+      }
+    }
+
+    .shared-resource-item-title {
+      max-width: 124px;
+      padding: 12px;
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+      margin: 0 auto;
+
+      @include md {
+        font-size: 14px;
+        max-width: 300px;
+      }
     }
   }
 }
@@ -1942,23 +2362,64 @@ onUnmounted(() => {
   .swiper-card {
     height: 240px;
   }
-  .news-card {
 
-    .news-header {
-      font-size: 14px;
-      .news-header-type {
-        width: 80px;
-      }
-      .news-header-time {
-        width: 140px;
-      }
+  .weather-card {
+    height: 230px;
+    .temperature-display {
+      font-size: 36px;
     }
-    .news-item {
-      .news-item-type {
-        width: 80px;
+    .feels-like {
+      font-size: 13px;
+    }
+    .location-display {
+      font-size: 13px;
+    }
+    .weather-description {
+      font-size: 15px;
+    }
+    .humidity-display {
+      font-size: 13px;
+    }
+    .precipitation-probability {
+      font-size: 13px;
+    }
+  }
+
+  .news-card {
+    .news-table {
+      :deep(thead th) {
+        font-size: 14px;
+        &:first-child {
+          padding-left: 24px !important;
+        }
+        &:last-child {
+          padding-right: 40px !important;
+        }
+      }
+      :deep(tbody tr) {
+        td:first-child {
+          padding-left: 24px !important;
+        }
+        td:last-child {
+          padding-right: 40px !important;
+        }
+      }
+      .news-item-title {
+        font-size: 13px;
+        max-width: 400px;
       }
       .news-item-time {
-        width: 140px;
+        min-width: 152px;
+        max-width: 180px;
+      }
+    }
+  }
+
+  .shared-resources-card {
+    .shared-resources-table {
+      .shared-resource-item-title {
+        font-size: 13px;
+        max-width: 400px;
       }
     }
   }
@@ -1971,24 +2432,7 @@ onUnmounted(() => {
   .time-card {
     height: 109px;
   }
-  .weather-card {
-    height: 230px;
-    .temperature-display {
-      font-size: 36px;
-    }
-    .feels-like {
-      font-size: 14px;
-    }
-    .location-display {
-      font-size: 13px;
-    }
-    .weather-description {
-      font-size: 15px;
-    }
-    .humidity-display {
-      font-size: 13px;
-    }
-  }
+
 
   .news-card {
     max-height: 480px;
@@ -2002,6 +2446,20 @@ onUnmounted(() => {
   .v-card-title {
   padding: 10px 16px;
   }
+
+  .shared-resources-card {
+    .shared-resources-table {
+      :deep(tbody tr) {
+        td:first-child {
+          padding-left: 8px !important;
+        }
+        td:last-child {
+          padding-right: 8px !important;
+        }
+      }
+    }
+  }
+
 
 }
 

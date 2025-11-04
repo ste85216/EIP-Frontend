@@ -143,7 +143,7 @@
         <!-- 公告內容 -->
         <v-col cols="12">
           <v-card
-            class="mb-4 elevation-0 info-card"
+            class="elevation-0 info-card"
           >
             <v-card-title class="bg-blue-grey-lighten-5 py-3 ps-5">
               <v-icon
