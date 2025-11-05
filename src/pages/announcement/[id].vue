@@ -28,8 +28,12 @@
         <v-progress-circular
           indeterminate
           color="blue-grey-darken-2"
-          size="64"
+          size="60"
+          width="6"
         />
+        <div class="mt-4 text-grey-darken-1">
+          載入中...
+        </div>
       </v-col>
 
       <!-- 公告內容 -->

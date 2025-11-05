@@ -245,7 +245,7 @@
                       :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }"
                       @click="viewAnnouncement(item)"
                     >
-                      <td>
+                      <td class="text-center">
                         <v-chip
                           :color="getAnnouncementTypeColor(item.type)"
                           label
@@ -495,6 +495,7 @@
                         <v-icon
                           size="12"
                           color="white"
+                          style="margin-right: 1px;"
                         >
                           {{ getFileTypeIcon(item.type) }}
                         </v-icon>
@@ -746,11 +747,11 @@ const districtOptions = computed(() => {
 // 最新消息表格標題
 const newsHeaders = computed(() => {
   const base = [
-    { title: '類型', key: 'type', sortable: false, align: 'center', width: '80px' },
+    { title: '類型', key: 'type', sortable: false, align: 'center', minWidth: '80px'},
     { title: '標題', key: 'title', sortable: false, align: 'center' },
     { title: '發布人', key: 'creator', sortable: false, align: 'center', minWidth: '80px',width: '80px' },
     { title: '發布時間', key: 'createdAt', sortable: false, align: 'center', width: '200px'},
-    { title: '瀏覽', key: 'viewCount', sortable: false, align: 'center', width: '100px' }
+    { title: '瀏覽', key: 'viewCount', sortable: false, align: 'center', minWidth: '85px', width: '100px' }
   ]
 
   return base.filter(h => {
@@ -989,7 +990,7 @@ const getFileTypeColor = (type) => {
   switch (type) {
     case 'pdf': return 'red-lighten-1'
     case 'word': return 'blue'
-    case 'excel': return 'green-darken-1'
+    case 'excel': return 'green'
     case 'powerpoint': return 'orange-darken-1'
     case 'image': return 'purple-lighten-1'
     case 'zip': return 'amber'
@@ -2186,6 +2187,7 @@ onUnmounted(() => {
       font-size: 13px;
       color: #37474F;
       border-bottom: 1px solid #eee !important;
+      padding: 0 8px;
       &:first-child {
         padding-left: 16px !important;
       }
@@ -2216,7 +2218,7 @@ onUnmounted(() => {
     }
 
     .news-item-title {
-      max-width: 124px;
+      max-width: 224px;
       padding: 12px;
       font-size: 12px;
       overflow: hidden;
@@ -2233,7 +2235,7 @@ onUnmounted(() => {
     }
 
     .news-item-time {
-      min-width: 120px;
+      min-width: 82px;
     }
   }
 }
@@ -2389,20 +2391,6 @@ onUnmounted(() => {
     .news-table {
       :deep(thead th) {
         font-size: 14px;
-        &:first-child {
-          padding-left: 24px !important;
-        }
-        &:last-child {
-          padding-right: 40px !important;
-        }
-      }
-      :deep(tbody tr) {
-        td:first-child {
-          padding-left: 24px !important;
-        }
-        td:last-child {
-          padding-right: 40px !important;
-        }
       }
       .news-item-title {
         font-size: 13px;
@@ -2436,6 +2424,25 @@ onUnmounted(() => {
 
   .news-card {
     max-height: 480px;
+    .news-table {
+      :deep(thead th) {
+        font-size: 14px;
+        &:first-child {
+          padding-left: 20px !important;
+        }
+        &:last-child {
+          padding-right: 40px !important;
+        }
+      }
+      :deep(tbody tr) {
+        td:first-child {
+          padding-left: 20px !important;
+        }
+        td:last-child {
+          padding-right: 40px !important;
+        }
+      }
+    }
   }
 
   .home-card-title {

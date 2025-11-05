@@ -78,6 +78,45 @@
               density="compact"
               @update:options="handleTableOptions"
             >
+              <!-- Loading 狀態 -->
+              <template #loading>
+                <div class="text-center py-8">
+                  <v-progress-circular
+                    indeterminate
+                    color="blue-grey-darken-2"
+                    size="48"
+                    width="6"
+                  />
+                  <div class="mt-4 text-grey-darken-1">
+                    載入中...
+                  </div>
+                </div>
+              </template>
+
+              <!-- 無資料時的 loading -->
+              <template #no-data>
+                <div
+                  v-if="tableLoading"
+                  class="text-center py-8"
+                >
+                  <v-progress-circular
+                    indeterminate
+                    color="blue-grey-darken-2"
+                    size="48"
+                    width="6"
+                  />
+                  <div class="mt-4 text-grey-darken-1">
+                    載入中...
+                  </div>
+                </div>
+                <div
+                  v-else
+                  class="text-center py-8 text-grey-darken-1"
+                >
+                  沒有找到符合條件的公告
+                </div>
+              </template>
+
               <template #item="{ item, index }">
                 <tr
                   :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }"
@@ -85,24 +124,28 @@
                   @click="viewAnnouncement(item)"
                 >
                   <td>
-                    <div class="d-flex align-center">
-                      <span>
-                        <v-chip
-                          label
-                          :color="getTypeColor(item.type)"
-                          :size="smAndUp ? 'small' : 'x-small'"
-                        >
-                          <v-icon
-                            :icon="getTypeIcon(item.type)"
-                            :size="smAndUp ? '16' : '12'"
-                            class="me-1"
-                          />
-                          {{ getTypeShortText(item.type) }}
-                        </v-chip>
-                      </span>
+                    <div class="d-flex align-center justify-center">
+                      <v-chip
+                        label
+                        :color="getTypeColor(item.type)"
+                        :size="smAndUp ? 'small' : 'x-small'"
+                      >
+                        <v-icon
+                          :icon="getTypeIcon(item.type)"
+                          :size="smAndUp ? '16' : '12'"
+                          class="me-1"
+                        />
+                        {{ getTypeShortText(item.type) }}
+                      </v-chip>
+                    </div>
+                  </td>
+                  <td>
+                    <div
+                      class="text-truncate text-center d-flex align-center justify-center"
+                    >
                       <span
                         v-if="item.isPinned"
-                        class="ms-3"
+                        class="me-3"
                       >
                         <div
                           v-if="smAndUp"
@@ -123,23 +166,24 @@
                           color="blue-grey-darken-1"
                         />
                       </span>
+                      <span>{{ item.title }}</span>
                     </div>
                   </td>
-                  <td>
-                    <div class="d-flex align-center">
-                      <div
-                        class="text-truncate"
-                        style="max-width: 400px;"
-                      >
-                        {{ item.title }}
-                      </div>
-                    </div>
-                  </td>
-                  <td v-if="mdAndUp">
+                  <td
+                    v-if="mdAndUp"
+                    class="text-center"
+                  >
                     {{ item.creator?.name || '未知' }}
                   </td>
-                  <td>{{ mdAndUp ? formatDate(item.createdAt) : (smAndUp ? formatDateOnly(item.createdAt) : formatDateCompact(item.createdAt)) }}</td>
-                  <td v-if="lgAndUp">
+                  <td
+                    class="text-center"
+                  >
+                    {{ mdAndUp ? formatDate(item.createdAt) : (smAndUp ? formatDateOnly(item.createdAt) : formatDateCompact(item.createdAt)) }}
+                  </td>
+                  <td
+                    v-if="lgAndUp"
+                    class="text-center pe-9"
+                  >
                     <v-chip
                       size="small"
                       color="blue-grey-lighten-1"
@@ -212,11 +256,11 @@ const itemsPerPageOptions = [10, 20, 50, 100, { value: -1, title: '全部' }]
 // 表格標題（將「類型」與「標題」交換順序）
 const headers = computed(() => {
   const base = [
-    { title: '類型', key: 'type', sortable: false },
-    { title: '標題', key: 'title', sortable: false },
-    { title: '建立者', key: 'creator', sortable: false, minWidth: '120px' },
-    { title: '發布時間', key: 'createdAt', sortable: true, minWidth: '120px' },
-    { title: '瀏覽次數', key: 'viewCount', sortable: true, minWidth: '120px' }
+    { title: '類型', key: 'type', sortable: false, align: 'center', minWidth: '145px' },
+    { title: '標題', key: 'title', sortable: false, align: 'center' },
+    { title: '建立者', key: 'creator', sortable: false, align: 'center', minWidth: '120px' },
+    { title: '發布時間', key: 'createdAt', sortable: true, align: 'center', minWidth: '120px' },
+    { title: '瀏覽次數', key: 'viewCount', sortable: true, align: 'center', minWidth: '120px' }
   ]
 
   return base.filter(h => {

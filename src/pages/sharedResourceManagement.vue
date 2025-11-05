@@ -105,13 +105,6 @@
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
                   <td>
                     <div class="d-flex align-center">
-                      <v-icon
-                        :color="getFileTypeColor(item.type)"
-                        size="20"
-                        class="me-2"
-                      >
-                        {{ getFileTypeIcon(item.type) }}
-                      </v-icon>
                       <div
                         class="text-truncate"
                         style="max-width: 200px;"
@@ -441,7 +434,7 @@ const headers = [
   { title: '排序', key: 'order', sortable: true },
   { title: '狀態', key: 'isActive', sortable: true },
   { title: '建立者', key: 'creator', sortable: false },
-  { title: '操作', key: 'actions', sortable: false, width: '120px' }
+  { title: '操作', key: 'actions', sortable: false, width: '120px', align: 'center' }
 ]
 
 // 對話框狀態

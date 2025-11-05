@@ -636,6 +636,9 @@ onMounted(async () => {
   border: 1px solid #90A4AE;
   border-radius: 4px;
   padding: 8px 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .v-col-sm-12 {

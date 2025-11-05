@@ -537,7 +537,7 @@ const headers = [
   { title: '排序', key: 'order', sortable: true },
   { title: '開始時間', key: 'startDate', sortable: true, width: '120px' },
   { title: '結束時間', key: 'endDate', sortable: true, width: '120px' },
-  { title: '操作', key: 'actions', sortable: false, width: '120px' }
+  { title: '操作', key: 'actions', sortable: false, width: '120px', align: 'center' }
 ]
 
 // 對話框狀態
