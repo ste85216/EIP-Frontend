@@ -823,6 +823,7 @@ const fieldTranslations = {
   customerName: '客戶姓名',
   customerPhone: '客戶電話',
   customerEmail: '客戶Email',
+  customerLineId: '客戶Line ID',
   salesPerson: '業務',
   progress: '進度',
   inquiryResultAndNote: '詢問結果 / 備註',
@@ -884,6 +885,11 @@ const fieldTranslations = {
   startDate: '開始日期',
   endDate: '結束日期',
   isPinned: '置頂',
+  lineUserId: 'Line ID',
+  lineBoundAt: 'Line 綁定時間',
+  notificationPreferences: '通知偏好設定',
+  line: 'LINE',
+  inbox: '內部收件匣'
 }
 
 // 行銷分類類型對應
@@ -1919,7 +1925,7 @@ const formatChanges = (item) => {
         const oldName = oldValue?.name || oldValue?.nickname || '(無)'
         const newName = newValue?.name || newValue?.nickname || '(無)'
         changes.push(`${fieldTranslations[key]}: ${oldName} → ${newName}`)
-      } else if (key === 'inquiryDate' || key === 'maintenanceDate' || key === 'hireDate' || key === 'resignationDate' || key === 'unpaidLeaveStartDate' || key === 'reinstatementDate' || key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate') {
+      } else if (key === 'inquiryDate' || key === 'maintenanceDate' || key === 'hireDate' || key === 'resignationDate' || key === 'unpaidLeaveStartDate' || key === 'reinstatementDate' || key === 'purchaseDate' || key === 'office2021InstallDate' || key === 'expenseDate' || key === 'lineBoundAt') {
         changes.push(`${fieldTranslations[key]}: ${formatDate(oldValue)} → ${formatDate(newValue)}`)
       } else if (key === 'company' && (item.targetModel === 'employees' || item.targetModel === 'departments' || item.targetModel === 'customerInquiries')) {
         changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)

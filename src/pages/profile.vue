@@ -268,11 +268,224 @@
               </v-col> -->
             </v-row>
           </v-col>
+
+          <!-- LINE 綁定區塊 -->
+          <v-col cols="12">
+            <v-divider />
+          </v-col>
+          <v-col
+            cols="12"
+            class="pa-0"
+          >
+            <v-card
+              elevation="0"
+            >
+              <v-card-title class="d-flex align-center mb-2">
+                <v-icon
+                  class="me-2"
+                  color="green-darken-1"
+                >
+                  mdi-chat
+                </v-icon>
+                LINE 綁定設定
+              </v-card-title>
+
+              <v-card-text>
+                <!-- 綁定狀態 -->
+                <div
+                  v-if="lineBindingStatus.isBound"
+                >
+                  <v-alert
+                    type="success"
+                    variant="tonal"
+                    class="py-3"
+                    prominent
+                  >
+                    <div class="d-flex align-center justify-space-between">
+                      <div>
+                        <div class="font-weight-bold">
+                          已綁定 LINE 帳號
+                        </div>
+                        <div
+                          v-if="lineBindingStatus.lineBoundAt"
+                          class="text-caption"
+                        >
+                          綁定時間：{{ formatDate(lineBindingStatus.lineBoundAt) }}
+                        </div>
+                      </div>
+                      <v-btn
+                        color="grey"
+                        elevation="1"
+                        :size="buttonSize"
+                        :loading="isUnbinding"
+                        @click="handleUnbind"
+                      >
+                        解除綁定
+                      </v-btn>
+                    </div>
+                  </v-alert>
+                </div>
+
+                <div v-else>
+                  <v-alert
+                    type="info"
+                    variant="tonal"
+                    class="py-3"
+                    prominent
+                  >
+                    <div class="d-flex align-center justify-space-between">
+                      <div class="font-weight-bold">
+                        尚未綁定 LINE 帳號
+                      </div>
+                      <v-btn
+                        color="blue-lighten-1"
+                        elevation="1"
+                        :size="buttonSize"
+                        @click="showBindingDialog = true"
+                      >
+                        綁定 LINE 帳號
+                      </v-btn>
+                    </div>
+                  </v-alert>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
+
+          <!-- 通知偏好設定區塊 -->
+          <v-col
+            cols="12"
+            class="pa-0"
+          >
+            <v-card elevation="0">
+              <v-card-title>
+                通知偏好設定
+              </v-card-title>
+              <v-card-text>
+                <v-checkbox
+                  v-model="notificationPrefs.email"
+                  label="&nbsp;EMAIL 通知"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
+                  color="blue-grey-darken-2"
+                  @update:model-value="updateNotificationPreferences"
+                />
+                <v-checkbox
+                  v-model="notificationPrefs.line"
+                  label="&nbsp;LINE 通知"
+                  :disabled="!lineBindingStatus.isBound"
+                  density="compact"
+                  hide-details
+                  class="mb-2"
+                  color="blue-grey-darken-2"
+                  @update:model-value="updateNotificationPreferences"
+                />
+                <v-checkbox
+                  v-model="notificationPrefs.inbox"
+                  label="&nbsp;內部收件匣通知"
+                  density="compact"
+                  hide-details
+                  color="blue-grey-darken-2"
+                  @update:model-value="updateNotificationPreferences"
+                />
+              </v-card-text>
+            </v-card>
+          </v-col>
         </v-row>
       </v-col>
     </v-row>
   </v-container>
 
+  <!-- LINE 綁定對話框 -->
+  <v-dialog
+    v-model="showBindingDialog"
+    max-width="480"
+  >
+    <v-card class="rounded-lg">
+      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-darken-1 mb-3">
+        <v-icon
+          class="me-2"
+          size="20"
+        >
+          mdi-chat
+        </v-icon>
+        <span class="card-title text-white">綁定 LINE 帳號</span>
+        <v-spacer />
+        <v-btn
+          icon
+          variant="plain"
+          color="white"
+          class="opacity-100"
+          :size="buttonSize"
+          :ripple="false"
+          @click="closeBindingDialog"
+        >
+          <v-icon>
+            mdi-close
+          </v-icon>
+        </v-btn>
+      </v-card-title>
+      <v-card-text class="pb-0">
+        <div v-if="bindingToken">
+          <p class="mb-3">
+            請在 LINE 中輸入以下認證碼：
+          </p>
+          <v-text-field
+            :model-value="bindingToken"
+            readonly
+            variant="outlined"
+            density="compact"
+            :append-inner-icon="'mdi-content-copy'"
+            @click:append-inner="copyToken"
+          />
+          <v-alert
+            type="warning"
+            color="blue-darken-1"
+            variant="tonal"
+          >
+            認證碼將在 {{ formatExpiresAt(bindingExpiresAt) }} 過期
+          </v-alert>
+          <ol class="mt-4 px-4">
+            <li class="sub-title-1 mb-2">
+              在 LINE 中搜尋並加入官方帳號
+            </li>
+            <li class="sub-title-1 mb-2">
+              輸入「{{ bindingToken }}」
+            </li>
+            <li class="sub-title-1 mb-2">
+              等待綁定成功訊息
+            </li>
+          </ol>
+        </div>
+        <div v-else>
+          <p class="mb-4">
+            點擊下方按鈕產生認證碼，然後在 LINE 中輸入「綁定 [認證碼]」來完成綁定。
+          </p>
+          <v-btn
+            color="blue-darken-1"
+            variant="outlined"
+            :size="buttonSize"
+            :loading="isGeneratingToken"
+            @click="generateBindingToken"
+          >
+            產生認證碼
+          </v-btn>
+        </div>
+      </v-card-text>
+      <v-card-actions class="me-4 mb-3">
+        <v-spacer />
+        <v-btn
+          color="grey-darken-1"
+          variant="outlined"
+          :size="buttonSize"
+          @click="closeBindingDialog"
+        >
+          關閉
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   <!-- 修改密碼對話框 -->
   <v-dialog
     v-model="showPasswordDialog"
@@ -400,6 +613,7 @@ import FileUploadButton from '@/components/FileUploadButton.vue'
 import BackgroundImageDialog from '@/components/BackgroundImageDialog.vue'
 import BackgroundImageUsageStatsDialog from '@/components/BackgroundImageUsageStatsDialog.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
+import { useApi } from '@/composables/axios'
 
 const { mdAndUp, width } = useDisplay()
 const isLgmUp = computed(() => width.value >= 1500)
@@ -439,6 +653,7 @@ const confirmPasswordError = ref('')
 const user = useUserStore()
 const permissionStore = usePermissionStore()
 const createSnackbar = useSnackbar()
+const { apiAuth } = useApi()
 
 // RBAC 角色相關
 const userRbacRoles = ref([])
@@ -615,9 +830,158 @@ watch(() => user.avatar, (newAvatar) => {
   }
 }, { immediate: true })
 
-// 組件掛載時載入 RBAC 角色
+// LINE 綁定相關
+const lineBindingStatus = ref({
+  isBound: false,
+  lineUserId: null,
+  lineDisplayName: null,
+  linePictureUrl: null,
+  lineBoundAt: null,
+  notificationPreferences: {
+    email: true,
+    line: false,
+    inbox: true
+  }
+})
+
+const notificationPrefs = ref({
+  email: true,
+  line: false,
+  inbox: true
+})
+
+const showBindingDialog = ref(false)
+const bindingToken = ref('')
+const bindingExpiresAt = ref(null)
+const isGeneratingToken = ref(false)
+const isUnbinding = ref(false)
+
+// 載入綁定狀態
+const loadBindingStatus = async () => {
+  try {
+    const { data } = await apiAuth.get('/line/binding/status')
+    if (data.success) {
+      lineBindingStatus.value = data.data
+      notificationPrefs.value = {
+        email: data.data.notificationPreferences?.email ?? true,
+        line: data.data.notificationPreferences?.line ?? false,
+        inbox: data.data.notificationPreferences?.inbox ?? true
+      }
+    }
+  } catch (error) {
+    console.error('載入綁定狀態失敗:', error)
+  }
+}
+
+// 產生綁定 Token
+const generateBindingToken = async () => {
+  try {
+    isGeneratingToken.value = true
+    const { data } = await apiAuth.post('/line/binding/generate')
+    if (data.success) {
+      bindingToken.value = data.data.bindingToken
+      bindingExpiresAt.value = data.data.expiresAt
+      createSnackbar({
+        text: '認證碼產生成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('產生認證碼失敗:', error)
+    createSnackbar({
+      text: error.response?.data?.message || '產生認證碼失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isGeneratingToken.value = false
+  }
+}
+
+// 解除綁定
+const handleUnbind = async () => {
+  try {
+    isUnbinding.value = true
+    const { data } = await apiAuth.delete('/line/binding')
+    if (data.success) {
+      createSnackbar({
+        text: '解除綁定成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+      await loadBindingStatus()
+    }
+  } catch (error) {
+    console.error('解除綁定失敗:', error)
+    createSnackbar({
+      text: error.response?.data?.message || '解除綁定失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isUnbinding.value = false
+  }
+}
+
+// 更新通知偏好設定
+const updateNotificationPreferences = async () => {
+  try {
+    const { data } = await apiAuth.put('/line/notification-preferences', {
+      email: notificationPrefs.value.email,
+      line: notificationPrefs.value.line,
+      inbox: notificationPrefs.value.inbox
+    })
+    if (data.success) {
+      createSnackbar({
+        text: '通知偏好設定更新成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('更新通知偏好設定失敗:', error)
+    createSnackbar({
+      text: error.response?.data?.message || '更新通知偏好設定失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+// 複製認證碼
+const copyToken = async () => {
+  try {
+    await navigator.clipboard.writeText(bindingToken.value)
+    createSnackbar({
+      text: '認證碼已複製到剪貼簿',
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+  } catch (error) {
+    console.error('複製失敗:', error)
+    createSnackbar({
+      text: '複製失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+// 格式化日期
+const formatDate = (date) => {
+  if (!date) return '未知'
+  return new Date(date).toLocaleString('zh-TW')
+}
+
+const formatExpiresAt = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleString('zh-TW')
+}
+
+// 關閉綁定對話框
+const closeBindingDialog = () => {
+  showBindingDialog.value = false
+  bindingToken.value = ''
+  bindingExpiresAt.value = null
+}
+
+// 組件掛載時載入 RBAC 角色和 LINE 綁定狀態
 onMounted(async () => {
   await loadUserRbacRoles()
+  await loadBindingStatus()
 })
 </script>
 

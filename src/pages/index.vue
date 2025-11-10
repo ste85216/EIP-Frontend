@@ -1371,18 +1371,48 @@ const reverseGeocodeWithCache = async (lat, lon) => {
     if (!resp.ok) return null
     const data = await resp.json()
     const address = data.address || {}
-    const city = address.city || address.county || address.city_district
+
+    // 獲取城市名稱（優先順序：city > county > city_district）
+    const city = address.city || address.county || address.city_district || address.state
+
     // 台灣行政區優先順序：city_district > district > town > borough > suburb > neighbourhood
-    const district = address.city_district || address.district || address.town || address.borough || address.suburb || address.neighbourhood
+    // 對於新北市等，可能需要檢查多個欄位
+    let district = address.city_district || address.district || address.town || address.borough || address.suburb || address.neighbourhood
+
+    // 如果沒有找到區名，嘗試從其他欄位獲取
+    if (!district) {
+      // 檢查 village（村里）或 quarter（四分之一區）
+      district = address.village || address.quarter
+    }
 
     let cityName = city
-    if (city === 'Taipei' || city === '台北' || city === '臺北') cityName = '臺北市'
-    else if (city === 'New Taipei' || city === '新北') cityName = '新北市'
-    else if (city === 'Taoyuan' || city === '桃園') cityName = '桃園市'
-    else if (city === 'Taichung' || city === '台中' || city === '臺中') cityName = '臺中市'
-    else if (city === 'Tainan' || city === '台南' || city === '臺南') cityName = '臺南市'
-    else if (city === 'Kaohsiung' || city === '高雄') cityName = '高雄市'
-    else if (city === 'Keelung' || city === '基隆') cityName = '基隆市'
+    // 處理各種城市名稱變體
+    if (city === 'Taipei' || city === '台北' || city === '臺北' || city === 'Taipei City') {
+      cityName = '臺北市'
+    } else if (city === 'New Taipei' || city === '新北' || city === 'New Taipei City' || city === '新北市') {
+      cityName = '新北市'
+    } else if (city === 'Taoyuan' || city === '桃園' || city === 'Taoyuan City') {
+      cityName = '桃園市'
+    } else if (city === 'Taichung' || city === '台中' || city === '臺中' || city === 'Taichung City') {
+      cityName = '臺中市'
+    } else if (city === 'Tainan' || city === '台南' || city === '臺南' || city === 'Tainan City') {
+      cityName = '臺南市'
+    } else if (city === 'Kaohsiung' || city === '高雄' || city === 'Kaohsiung City') {
+      cityName = '高雄市'
+    } else if (city === 'Keelung' || city === '基隆' || city === 'Keelung City') {
+      cityName = '基隆市'
+    }
+
+    // 如果城市名稱包含「市」但沒有標準化，確保格式正確
+    if (cityName && !cityName.endsWith('市') && !cityName.endsWith('縣')) {
+      // 檢查是否需要添加「市」後綴（僅對主要城市）
+      const majorCities = ['臺北', '新北', '桃園', '臺中', '臺南', '高雄', '基隆']
+      if (majorCities.some(c => cityName.includes(c))) {
+        if (!cityName.endsWith('市')) {
+          cityName = cityName.replace('市', '') + '市'
+        }
+      }
+    }
 
     const value = { cityName, district }
     try {
@@ -1414,6 +1444,23 @@ const fetchWeatherData = async () => {
     } else {
       // 2. 使用 IP 定位作為備用
       locationInfo = await getLocationByIP()
+
+      // 3. 如果 IP 定位有座標但沒有區名，立即調用反向地理編碼獲取區名
+      if (locationInfo.latitude && locationInfo.longitude && !locationInfo.district) {
+        try {
+          const rg = await reverseGeocodeWithCache(locationInfo.latitude, locationInfo.longitude)
+          if (rg && rg.cityName) {
+            // 更新城市名稱（使用反向地理編碼的結果，更準確）
+            locationInfo.cityName = rg.cityName
+            // 如果有區名，也更新
+            if (rg.district) {
+              locationInfo.district = rg.district
+            }
+          }
+        } catch (e) {
+          console.warn('[Weather] 反向地理編碼失敗:', e?.message)
+        }
+      }
     }
 
     const cityName = locationInfo.cityName || '臺北市'

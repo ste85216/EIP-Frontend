@@ -251,7 +251,7 @@
         @submit.prevent="submit"
       >
         <v-card class="rounded-lg user-dialog">
-          <v-card-title class="d-flex align-center px-6 py-1 bg-teal-darken-2">
+          <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
             <v-icon
               icon="mdi-account"
               size="18"
@@ -296,11 +296,11 @@
                     cols="6"
                     sm="4"
                     md="2"
-                    class="d-flex align-center justify-center text-teal-darken-2"
+                    class="d-flex align-center justify-center text-blue-grey-darken-2"
                   >
                     <v-icon
                       size="18"
-                      class="me-2 text-teal-darken-2"
+                      class="me-2 text-blue-grey-darken-2"
                     >
                       mdi-account-circle
                     </v-icon> 基本資訊
@@ -313,7 +313,7 @@
                   >
                     <v-divider
                       class="border-opacity-25"
-                      color="teal-darken-2"
+                      color="blue-grey-darken-2"
                     />
                   </v-col>
                 </v-row>
@@ -432,18 +432,18 @@
                   >
                     <v-divider
                       class="border-opacity-25"
-                      color="teal-darken-2"
+                      color="blue-grey-darken-2"
                     />
                   </v-col>
                   <v-col
                     cols="6"
                     sm="4"
                     md="2"
-                    class="d-flex align-center justify-center text-teal-darken-2"
+                    class="d-flex align-center justify-center text-blue-grey-darken-2"
                   >
                     <v-icon
                       size="18"
-                      class="me-2 text-teal-darken-2"
+                      class="me-2 text-blue-grey-darken-2"
                     >
                       mdi-shield-account
                     </v-icon> 權限設定
@@ -456,7 +456,7 @@
                   >
                     <v-divider
                       class="border-opacity-25"
-                      color="teal-darken-2"
+                      color="blue-grey-darken-2"
                     />
                   </v-col>
                 </v-row>
@@ -465,6 +465,7 @@
               <v-col
                 cols="12"
                 sm="6"
+                md="4"
               >
                 <v-select
                   v-model="selectedRolesField.value.value"
