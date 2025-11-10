@@ -40,7 +40,10 @@
       <v-spacer />
 
       <!-- 收件匣按鈕 -->
-      <NotificationInbox v-if="user.isLogin" />
+      <NotificationInbox
+        v-if="user.isLogin"
+        filter-type="task"
+      />
 
       <v-btn
         v-if="user.isLogin && smAndUp"

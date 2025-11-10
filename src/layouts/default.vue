@@ -25,25 +25,20 @@
         <span class="nav-title">永信生活旅遊事業</span>
       </router-link>
       <v-spacer />
-      <!-- <v-icon
-        icon="mdi-email-outline"
-        size="22"
-        color="purple-darken-4"
-        class="me-6"
+      <!-- 收件匣按鈕 -->
+      <NotificationInbox
+        v-if="user.isLogin"
+        filter-type="non-task"
+        button-color="#333"
+        :outline-icon="true"
       />
-      <v-icon
-        icon="mdi-bell-outline"
-        size="22"
-        color="purple-darken-4"
-        class="me-8"
-      /> -->
       <v-btn
         v-if="user.isLogin && mdAndUp"
         prepend-icon="mdi-account-arrow-right"
         variant="outlined"
         rounded="0"
         color="blue-grey-darken-2"
-        class="me-6"
+        class="me-6 ms-4"
         @click="logout"
       >
         登出
@@ -917,6 +912,7 @@ import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
 import UserAvatar from '@/components/UserAvatar.vue'
 import MarqueeBar from '@/components/MarqueeBar.vue'
+import NotificationInbox from '@/components/NotificationInbox.vue'
 
 const { smAndUp, mdAndUp, lgAndUp, name: breakpoint } = useDisplay()
 

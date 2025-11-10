@@ -35,7 +35,10 @@
         </v-btn>
       </div>
       <v-card-text class="px-6 pt-6 pb-3">
-        <div v-html="message" />
+        <div
+          class="card-content"
+          v-html="message"
+        />
       </v-card-text>
       <v-card-actions class="px-6 pb-5">
         <v-spacer />

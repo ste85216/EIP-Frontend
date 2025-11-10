@@ -6,11 +6,11 @@
     offset="8"
     width="400"
   >
-    <template #activator="{ props }">
+    <template #activator="{ props: activatorProps }">
       <v-btn
-        v-bind="props"
+        v-bind="activatorProps"
         icon
-        color="white"
+        :color="buttonColor"
         :size="buttonSize"
         class="me-2"
         :ripple="false"
@@ -24,7 +24,7 @@
           class="notification-badge"
         >
           <v-icon>
-            mdi-email
+            {{ outlineIcon ? 'mdi-email-outline' : 'mdi-email' }}
           </v-icon>
         </v-badge>
       </v-btn>
@@ -132,6 +132,20 @@
                   >
                     {{ notification.project.name }}
                   </div>
+                  <!-- 直客詢問資訊 -->
+                  <div
+                    v-if="notification.customerInquiry"
+                    class="project-name"
+                  >
+                    直客詢問
+                  </div>
+                  <!-- 行銷美編需求申請資訊 -->
+                  <div
+                    v-if="notification.designRequest"
+                    class="project-name"
+                  >
+                    行銷美編需求申請
+                  </div>
                 </div>
 
                 <!-- 通知內容 -->
@@ -213,15 +227,92 @@ import { useRouter } from 'vue-router'
 import { useNotificationStore } from '@/stores/notification'
 import { useDisplay } from 'vuetify'
 
+const props = defineProps({
+  // 'task' 只顯示任務相關通知, 'non-task' 只顯示非任務相關通知, null 顯示所有通知
+  filterType: {
+    type: String,
+    default: null,
+    validator: (value) => value === null || value === 'task' || value === 'non-task'
+  },
+  // 按鈕顏色
+  buttonColor: {
+    type: String,
+    default: 'white'
+  },
+  // 是否使用 outline 圖示
+  outlineIcon: {
+    type: Boolean,
+    default: false
+  }
+})
+
 const router = useRouter()
 const notificationStore = useNotificationStore()
 const { smAndUp } = useDisplay()
 
 const menu = ref(false)
 
-// 從 store 取得狀態
-const notifications = computed(() => notificationStore.notifications)
-const unreadCount = computed(() => notificationStore.unreadCount)
+// 任務相關的通知類型
+const taskNotificationTypes = [
+  'task_due_reminder',
+  'task_mention',
+  'task_assignment',
+  'task_unassignment',
+  'task_collaborator_added',
+  'task_collaborator_removed',
+  'task_completion',
+  'task_reopen'
+]
+
+// 從 store 取得狀態並過濾
+const allNotifications = computed(() => notificationStore.notifications)
+const notifications = computed(() => {
+  if (!props.filterType) {
+    return allNotifications.value
+  }
+  
+  if (props.filterType === 'task') {
+    // 只顯示任務相關的通知
+    return allNotifications.value.filter(n => {
+      // 確保通知有 type 屬性
+      if (!n || !n.type) {
+        return false
+      }
+      // 確保 type 是字符串並轉換為小寫進行比較
+      const notificationType = String(n.type).trim()
+      return taskNotificationTypes.includes(notificationType)
+    })
+  } else if (props.filterType === 'non-task') {
+    // 只顯示非任務相關的通知
+    return allNotifications.value.filter(n => {
+      // 確保通知有 type 屬性
+      if (!n || !n.type) {
+        return false
+      }
+      // 確保 type 是字符串並轉換為小寫進行比較
+      const notificationType = String(n.type).trim()
+      return !taskNotificationTypes.includes(notificationType)
+    })
+  }
+  
+  return allNotifications.value
+})
+
+// 計算過濾後的未讀數量
+// 如果通知列表已載入，使用過濾後的通知計算未讀數量
+// 如果通知列表未載入，使用 store 的 unreadCount（但這不考慮 filterType）
+// 為了準確性，我們需要載入通知列表後才能正確計算過濾後的未讀數量
+const unreadCount = computed(() => {
+  // 如果通知列表已載入，使用過濾後的通知計算未讀數量
+  if (notifications.value.length > 0 || allNotifications.value.length > 0) {
+    return notifications.value.filter(n => !n.isRead).length
+  }
+  // 如果通知列表未載入，但我們有 filterType，需要載入通知才能準確計算
+  // 暫時返回 store 的未讀數量（這可能不準確，因為沒有考慮 filterType）
+  // 但至少會顯示有未讀通知
+  return notificationStore.unreadCount
+})
+
 const isLoading = computed(() => notificationStore.isLoading)
 
 
@@ -237,7 +328,9 @@ const getNotificationIcon = (type) => {
     'task_collaborator_added': 'mdi-account-multiple-plus',
     'task_collaborator_removed': 'mdi-account-multiple-minus',
     'task_completion': 'mdi-check-circle',
-    'task_reopen': 'mdi-restart'
+    'task_reopen': 'mdi-restart',
+    'sales_person_assignment': 'mdi-account-arrow-right',
+    'marketing_design_request': 'mdi-palette'
   }
   return iconMap[type] || 'mdi-bell'
 }
@@ -252,7 +345,9 @@ const getNotificationIconColor = (type) => {
     'task_collaborator_added': 'teal-darken-1',
     'task_collaborator_removed': 'red-darken-1',
     'task_completion': 'teal-darken-1',
-    'task_reopen': 'blue-darken-1'
+    'task_reopen': 'blue-darken-1',
+    'sales_person_assignment': 'orange-darken-2',
+    'marketing_design_request': 'purple-darken-2'
   }
   return colorMap[type] || 'grey'
 }
@@ -282,12 +377,16 @@ const handleNotificationClick = async (notification) => {
     await handleMarkAsRead(notification._id)
   }
 
-  // 如果有相關任務，導航到任務頁面
-  if (notification.task) {
+  // 根據通知類型導航
+  if (notification.task || notification.project) {
+    // 任務相關通知，導航到專案與任務管理
     router.push(`/projectAndTaskManagement/projects/${notification.project._id}`)
-  } else if (notification.project) {
-    // 否則導航到專案頁面
-    router.push(`/projectAndTaskManagement/projects/${notification.project._id}`)
+  } else if (notification.customerInquiry) {
+    // 直客詢問相關通知，導航到直客詢問管理
+    router.push('/B2CStatisticsManagement')
+  } else if (notification.designRequest) {
+    // 行銷美編需求申請相關通知，導航到行銷美編需求申請管理
+    router.push('/marketingDesignRequestManagement')
   }
 
   // 關閉選單
@@ -309,10 +408,13 @@ const handleMarkAsRead = async (notificationId) => {
   }
 }
 
-// 標記所有為已讀
+// 標記所有為已讀（只標記當前過濾後的通知）
 const handleMarkAllAsRead = async () => {
   try {
-    await notificationStore.markAllAsRead()
+    // 只標記當前顯示的通知為已讀
+    const unreadNotifications = notifications.value.filter(n => !n.isRead)
+    const markPromises = unreadNotifications.map(n => notificationStore.markAsRead(n._id))
+    await Promise.all(markPromises)
   } catch (error) {
     console.error('標記所有通知為已讀失敗:', error)
   }
@@ -328,10 +430,10 @@ const handleDelete = async (notificationId) => {
   }
 }
 
-// 全部刪除
+// 全部刪除（只刪除當前過濾後的通知）
 const handleDeleteAll = async () => {
   try {
-    // 使用 Promise.all 並行刪除所有通知，提高效率
+    // 使用 Promise.all 並行刪除當前顯示的所有通知
     const deletePromises = notifications.value.map(notification =>
       notificationStore.deleteNotification(notification._id)
     )
@@ -364,12 +466,24 @@ watch(menu, async (isOpen) => {
   }
 })
 
-// 組件掛載時載入未讀數量
+// 組件掛載時載入未讀數量和通知列表（用於計算過濾後的未讀數量）
 onMounted(async () => {
   try {
+    // 先載入未讀數量
     await notificationStore.fetchUnreadCount()
+    // 然後載入通知列表（這樣才能正確計算過濾後的未讀數量）
+    // 根據 filterType 載入對應的通知
+    const params = {}
+    if (props.filterType === 'task') {
+      // 在後端過濾，只取得任務相關的通知
+      params.types = taskNotificationTypes.join(',')
+    } else if (props.filterType === 'non-task') {
+      // 非任務相關的通知，需要排除任務類型
+      // 由於後端不支援排除查詢，我們仍在前端過濾
+    }
+    await notificationStore.fetchNotifications(params)
   } catch (error) {
-    console.error('載入未讀數量失敗:', error)
+    console.error('載入通知失敗:', error)
   }
 })
 </script>
@@ -472,8 +586,8 @@ onMounted(async () => {
 
 /* 自定義 badge 大小 */
 .notification-badge :deep(.v-badge__badge) {
-  font-size: 10px !important;
-  height: 18px !important;
-  min-width: 18px !important;
+  font-size: 8px !important;
+  height: 16px !important;
+  min-width: 16px !important;
 }
 </style>

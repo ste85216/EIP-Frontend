@@ -284,10 +284,11 @@
                 <v-icon
                   class="me-2"
                   color="green-darken-1"
+                  :size="smAndUp ? '20' : '16'"
                 >
                   mdi-chat
                 </v-icon>
-                LINE 綁定設定
+                <span class="profile-sub-title">LINE 通知設定</span>
               </v-card-title>
 
               <v-card-text>
@@ -295,58 +296,69 @@
                 <div
                   v-if="lineBindingStatus.isBound"
                 >
-                  <v-alert
-                    type="success"
-                    variant="tonal"
-                    class="py-3"
-                    prominent
+                  <div
+                    class="py-3 notify-box-success"
                   >
                     <div class="d-flex align-center justify-space-between">
-                      <div>
-                        <div class="font-weight-bold">
-                          已綁定 LINE 帳號
-                        </div>
-                        <div
-                          v-if="lineBindingStatus.lineBoundAt"
-                          class="text-caption"
+                      <div class="d-flex align-center">
+                        <v-icon
+                          color="green-darken-1"
+                          :size="smAndUp ? '18' : '16'"
+                          class="me-2 me-sm-3"
                         >
-                          綁定時間：{{ formatDate(lineBindingStatus.lineBoundAt) }}
+                          mdi-check-circle
+                        </v-icon>
+                        <div>
+                          <div class="font-weight-bold notify-title">
+                            已綁定 LINE 帳號
+                          </div>
+                          <div
+                            v-if="lineBindingStatus.lineBoundAt"
+                            class="notify-text"
+                          >
+                            綁定時間：{{ formatDate(lineBindingStatus.lineBoundAt) }}
+                          </div>
                         </div>
                       </div>
                       <v-btn
                         color="grey"
                         elevation="1"
-                        :size="buttonSize"
+                        :size="smAndUp ? 'small' : 'x-small'"
                         :loading="isUnbinding"
-                        @click="handleUnbind"
+                        class="ms-2"
+                        @click="showUnbindConfirmDialog = true"
                       >
                         解除綁定
                       </v-btn>
                     </div>
-                  </v-alert>
+                  </div>
                 </div>
 
                 <div v-else>
-                  <v-alert
-                    type="info"
-                    variant="tonal"
-                    class="py-3"
-                    prominent
+                  <div
+                    class="py-3 notify-box"
                   >
                     <div class="d-flex align-center justify-space-between">
-                      <div class="font-weight-bold">
-                        尚未綁定 LINE 帳號
+                      <div class="d-flex align-center">
+                        <v-icon
+                          color="blue-darken-1"
+                          :size="smAndUp ? '18' : '15'"
+                          class="me-2"
+                        >
+                          mdi-information
+                        </v-icon>
+                        <span class="font-weight-bold notify-title">尚未綁定 LINE 帳號</span>
                       </div>
                       <v-btn
                         color="blue-lighten-1"
                         elevation="1"
-                        :size="buttonSize"
+                        :size="smAndUp ? 'small' : 'x-small'"
                         @click="showBindingDialog = true"
                       >
                         綁定 LINE 帳號
                       </v-btn>
                     </div>
-                  </v-alert>
+                  </div>
                 </div>
               </v-card-text>
             </v-card>
@@ -358,7 +370,7 @@
             class="pa-0"
           >
             <v-card elevation="0">
-              <v-card-title>
+              <v-card-title class="profile-sub-title">
                 通知偏好設定
               </v-card-title>
               <v-card-text>
@@ -428,7 +440,7 @@
       </v-card-title>
       <v-card-text class="pb-0">
         <div v-if="bindingToken">
-          <p class="mb-3">
+          <p class="mb-3 card-content">
             請在 LINE 中輸入以下認證碼：
           </p>
           <v-text-field
@@ -439,16 +451,25 @@
             :append-inner-icon="'mdi-content-copy'"
             @click:append-inner="copyToken"
           />
-          <v-alert
-            type="warning"
-            color="blue-darken-1"
-            variant="tonal"
+          <div
+            class="notify-box"
           >
-            認證碼將在 {{ formatExpiresAt(bindingExpiresAt) }} 過期
-          </v-alert>
+            <div class="d-flex align-center">
+              <v-icon
+                color="blue-darken-1"
+                :size="smAndUp ? '18' : '16'"
+                class="me-2"
+              >
+                mdi-information
+              </v-icon>
+              <span class="font-weight-bold notify-title">
+                認證碼將在 {{ formatExpiresAt(bindingExpiresAt) }} 過期
+              </span>
+            </div>
+          </div>
           <ol class="mt-4 px-4">
             <li class="sub-title-1 mb-2">
-              在 LINE 中搜尋並加入官方帳號
+              在 LINE 中搜尋 @310ikxxu 加入官方帳號
             </li>
             <li class="sub-title-1 mb-2">
               輸入「{{ bindingToken }}」
@@ -459,7 +480,7 @@
           </ol>
         </div>
         <div v-else>
-          <p class="mb-4">
+          <p class="mb-4 card-content">
             點擊下方按鈕產生認證碼，然後在 LINE 中輸入「綁定 [認證碼]」來完成綁定。
           </p>
           <v-btn
@@ -599,6 +620,20 @@
   <BackgroundImageUsageStatsDialog
     v-model="showUsageStatsDialog"
   />
+
+  <!-- 解除綁定確認對話框 -->
+  <ConfirmDialog
+    v-model="showUnbindConfirmDialog"
+    dialog-width="320"
+    title="解除 LINE 綁定"
+    message="您確定要解除 LINE 帳號綁定嗎？解除後將無法接收 LINE 通知。"
+    confirm-button-color="red-darken-1"
+    confirm-button-text="確認解除"
+    cancel-button-text="取消"
+    header-color="bg-red-lighten-1"
+    header-icon="mdi-alert-circle"
+    @confirm="executeUnbind"
+  />
 </template>
 
 <script setup>
@@ -613,9 +648,10 @@ import FileUploadButton from '@/components/FileUploadButton.vue'
 import BackgroundImageDialog from '@/components/BackgroundImageDialog.vue'
 import BackgroundImageUsageStatsDialog from '@/components/BackgroundImageUsageStatsDialog.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import { useApi } from '@/composables/axios'
 
-const { mdAndUp, width } = useDisplay()
+const { mdAndUp, width, smAndUp } = useDisplay()
 const isLgmUp = computed(() => width.value >= 1500)
 
 const buttonSize = computed(() => mdAndUp.value ? 'default' : 'small')
@@ -855,6 +891,7 @@ const bindingToken = ref('')
 const bindingExpiresAt = ref(null)
 const isGeneratingToken = ref(false)
 const isUnbinding = ref(false)
+const showUnbindConfirmDialog = ref(false)
 
 // 載入綁定狀態
 const loadBindingStatus = async () => {
@@ -897,8 +934,8 @@ const generateBindingToken = async () => {
   }
 }
 
-// 解除綁定
-const handleUnbind = async () => {
+// 執行解除綁定
+const executeUnbind = async () => {
   try {
     isUnbinding.value = true
     const { data } = await apiAuth.delete('/line/binding')
@@ -996,6 +1033,29 @@ onMounted(async () => {
   }
 }
 
+.notify-title {
+  font-size: 13px !important;
+  font-weight: 600;
+}
+
+.notify-box {
+  background-color: #E3F2FD;
+  color: #1E88E5;
+  border-radius: 4px;
+  padding: 8px 16px;
+}
+
+.notify-box-success {
+  background-color: #E8F5E9;
+  color: #4CAF50;
+  border-radius: 4px;
+  padding: 8px 16px;
+}
+
+.notify-text {
+  font-size: 10px !important;
+}
+
 .profile-text-field {
   border: 1px solid #90A4AE;
   border-radius: 4px;
@@ -1008,6 +1068,19 @@ onMounted(async () => {
 .v-col-sm-12 {
   font-size: 13px;
 }
+
+.profile-sub-title {
+  font-size: 14px !important;
+  font-weight: 600;
+  color: #424242;
+}
+
+.v-checkbox{
+    font-size: 11px !important;
+  }
+  .v-checkbox:deep(.v-label) {
+    font-size: 13px !important;
+  }
 
 @media (min-width: 600px) {
   .v-col-sm-12 {
@@ -1029,6 +1102,26 @@ onMounted(async () => {
 @include rwd.sm {
   .name {
     font-size: 18px;
+  }
+
+  .notify-title {
+    font-size: 15px !important;
+    font-weight: 600;
+  }
+
+  .notify-text {
+  font-size: 12px !important;
+  }
+
+  .profile-sub-title {
+    font-size: 16px !important;
+  }
+
+  .v-checkbox{
+    font-size: 13px !important;
+  }
+  .v-checkbox:deep(.v-label) {
+    font-size: 15px !important;
   }
 }
 </style>
