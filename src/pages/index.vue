@@ -204,7 +204,7 @@
           </v-col>
         </v-row>
 
-        <!-- 第二排：最新消息 -->
+        <!-- 第二排：最新公告 -->
         <v-row>
           <v-col cols="12">
             <v-card
@@ -219,7 +219,7 @@
                 >
                   mdi-newspaper-variant
                 </v-icon>
-                <span class="home-card-title">最新消息</span>
+                <span class="home-card-title">最新公告</span>
                 <v-spacer />
                 <v-chip
                   label
@@ -227,7 +227,7 @@
                   color="white"
                   variant="outlined"
                 >
-                  {{ newsItems.length }} 則消息
+                  {{ newsItems.length }} 則公告
                 </v-chip>
               </v-card-title>
               <v-card-text class="px-0">
@@ -747,7 +747,7 @@ const districtOptions = computed(() => {
 // 最新消息表格標題
 const newsHeaders = computed(() => {
   const base = [
-    { title: '類型', key: 'type', sortable: false, align: 'center', minWidth: '80px'},
+    { title: '類型', key: 'type', sortable: false, align: 'center', width: '140px'},
     { title: '標題', key: 'title', sortable: false, align: 'center' },
     { title: '發布人', key: 'creator', sortable: false, align: 'center', minWidth: '80px',width: '80px' },
     { title: '發布時間', key: 'createdAt', sortable: false, align: 'center', width: '200px'},

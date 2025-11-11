@@ -404,6 +404,50 @@
               </v-card-text>
             </v-card>
           </v-col>
+
+          <!-- 顯示設定區塊 -->
+          <v-col
+            cols="12"
+            class="pa-0"
+          >
+            <v-card elevation="0">
+              <v-card-title class="profile-sub-title">
+                顯示設定
+              </v-card-title>
+              <v-card-text>
+                <div class="mb-3">
+                  <div class="mb-2 sub-title-1 text-blue-grey-darken-2">
+                    介面縮放：
+                  </div>
+                  <v-radio-group
+                    v-model="selectedScale"
+                    inline
+                    density="compact"
+                    hide-details
+                    @update:model-value="handleScaleChange"
+                  >
+                    <v-radio
+                      label="100%"
+                      :value="100"
+                      color="blue-grey-darken-2"
+                      class="me-2"
+                    />
+                    <v-radio
+                      label="125%"
+                      :value="125"
+                      color="blue-grey-darken-2"
+                      class="me-2"
+                    />
+                    <v-radio
+                      label="150%"
+                      :value="150"
+                      color="blue-grey-darken-2"
+                    />
+                  </v-radio-group>
+                </div>
+              </v-card-text>
+            </v-card>
+          </v-col>
         </v-row>
       </v-col>
     </v-row>
@@ -653,6 +697,7 @@ import { definePage } from 'vue-router/auto'
 import { computed, ref, watch, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import { usePermissionStore } from '@/stores/permission'
+import { useAppStore } from '@/stores/app'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
@@ -700,8 +745,26 @@ const confirmPasswordError = ref('')
 
 const user = useUserStore()
 const permissionStore = usePermissionStore()
+const appStore = useAppStore()
 const createSnackbar = useSnackbar()
 const { apiAuth } = useApi()
+
+// 介面縮放設定
+const selectedScale = ref(appStore.uiScale)
+
+// 處理縮放變更
+const handleScaleChange = (size) => {
+  appStore.setScale(size)
+  createSnackbar({
+    text: `介面縮放已設定為 ${size}%`,
+    snackbarProps: { color: 'teal-lighten-1' }
+  })
+}
+
+// 監聽 store 中的縮放變化
+watch(() => appStore.uiScale, (newSize) => {
+  selectedScale.value = newSize
+})
 
 // RBAC 角色相關
 const userRbacRoles = ref([])

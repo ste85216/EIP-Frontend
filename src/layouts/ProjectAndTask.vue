@@ -83,83 +83,86 @@
       v-model="drawer"
       :width="drawerWidth"
       color="#2f2f2f"
-      class="border-0"
+      class="border-0 drawer-wrapper-project"
       :rail="rail"
       permanent
       :expand-on-hover="rail"
       :transition="isResizing ? false : 'drawer-transition'"
       :class="['position-fixed', { resizing: isResizing }]"
     >
+      <!-- 固定區域：名片 -->
+      <div
+        v-if="!rail"
+        class="drawer-fixed-header-project"
+      >
+        <v-card
+          elevation="0"
+          rounded="0"
+          height="174"
+          width="280"
+          class="pa-0 card-bg position-relative"
+          :class="{ 'loaded': isBackgroundLoaded }"
+          :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
+        >
+          <!-- 添加 skeleton -->
+          <v-skeleton-loader
+            v-if="!isBackgroundLoaded"
+            class="position-absolute w-100 h-100 pa-0 ma-0"
+          />
+
+          <!-- 添加隱藏的圖片用於預加載 -->
+          <img
+            :src="getBackgroundImage()"
+            alt="background"
+            style="display: none;"
+            @load="handleImageLoad"
+          >
+          <div class="card-blur pt-2 pb-4 px-2">
+            <v-card-title
+              class="ps-5 pb-3 d-flex justify-space-between pe-2"
+            >
+              <UserAvatar
+                :user="user"
+                size="48"
+                avatar-class="me-3"
+                style="box-shadow: 0 0 10px rgba(255,255,255,1);"
+              />
+            </v-card-title>
+            <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
+              <v-row>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-4"
+                >
+                  <span style="font-size: 17px; font-weight: 600;">{{ user.name }}</span>
+                </v-col>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-0"
+                >
+                  <span>{{ user.userId }}</span>
+                  <span v-if="user.isAdmin">{{ user.adminId }}</span>
+                </v-col>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-0"
+                >
+                  {{ getDisplayRole() }}
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </div>
+        </v-card>
+      </div>
+      <!-- 可滾動區域：選單項目 -->
       <v-list
         v-model:opened="openedGroups"
         v-model:selected="selectedItem"
-        class="pa-0"
+        class="drawer-scrollable-menu-project pa-0"
         density="compact"
         open-strategy="multiple"
         select-strategy="single-leaf"
       >
-        <!-- 用戶名片卡片 -->
-        <div v-if="!rail">
-          <v-card
-            elevation="0"
-            rounded="0"
-            height="174"
-            width="280"
-            class="pa-0 card-bg position-relative"
-            :class="{ 'loaded': isBackgroundLoaded }"
-            :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
-          >
-            <!-- 添加 skeleton -->
-            <v-skeleton-loader
-              v-if="!isBackgroundLoaded"
-              class="position-absolute w-100 h-100 pa-0 ma-0"
-            />
-
-            <!-- 添加隱藏的圖片用於預加載 -->
-            <img
-              :src="getBackgroundImage()"
-              alt="background"
-              style="display: none;"
-              @load="handleImageLoad"
-            >
-            <div class="card-blur pt-2 pb-4 px-2">
-              <v-card-title
-                class="ps-5 pb-3 d-flex justify-space-between pe-2"
-              >
-                <UserAvatar
-                  :user="user"
-                  size="48"
-                  avatar-class="me-3"
-                  style="box-shadow: 0 0 10px rgba(255,255,255,1);"
-                />
-              </v-card-title>
-              <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
-                <v-row>
-                  <v-col
-                    cols="12"
-                    class="ps-4 pb-0 pt-4"
-                  >
-                    <span style="font-size: 17px; font-weight: 600;">{{ user.name }}</span>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    class="ps-4 pb-0 pt-0"
-                  >
-                    <span>{{ user.userId }}</span>
-                    <span v-if="user.isAdmin">{{ user.adminId }}</span>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    class="ps-4 pb-0 pt-0"
-                  >
-                    {{ getDisplayRole() }}
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </div>
-          </v-card>
-        </div>
-
         <!-- 基本功能按鈕 - 所有人都可以看到 -->
         <v-list-item
           to="/projectAndTaskManagement"
@@ -501,17 +504,10 @@
       v-model="mdDrawer"
       border="0"
       color="#2f2f2f"
-      class="rounded-be-xl position-fixed"
+      class="rounded-be-xl position-fixed drawer-wrapper-project-mobile"
     >
-      <v-list
-        v-model:opened="openedGroups"
-        v-model:selected="selectedItem"
-        class="h-100 pa-0 overflow-auto"
-        density="compact"
-        open-strategy="multiple"
-        select-strategy="single-leaf"
-      >
-        <!-- 用戶名片卡片 -->
+      <!-- 固定區域：名片 -->
+      <div class="drawer-fixed-header-project-mobile">
         <v-card
           elevation="0"
           rounded="0"
@@ -567,7 +563,16 @@
             </v-card-text>
           </div>
         </v-card>
-
+      </div>
+      <!-- 可滾動區域：選單項目 -->
+      <v-list
+        v-model:opened="openedGroups"
+        v-model:selected="selectedItem"
+        class="drawer-scrollable-menu-project-mobile pa-0"
+        density="compact"
+        open-strategy="multiple"
+        select-strategy="single-leaf"
+      >
         <v-divider class="my-2" />
 
         <!-- 基本功能按鈕 - 所有人都可以看到 -->
@@ -1469,6 +1474,69 @@ watch(() => user.avatar, (newAvatar) => {
 <style scoped lang="scss">
 @use '../styles/rwd' as rwd;
 
+// 大螢幕側邊欄容器：使用 flexbox 垂直佈局
+.drawer-wrapper-project {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - 100px) !important;
+  overflow: hidden !important;
+}
+
+// 覆蓋 Vuetify 的預設樣式（大螢幕）
+:deep(.drawer-wrapper-project .v-navigation-drawer__content) {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+// 固定區域：名片（大螢幕）
+.drawer-fixed-header-project {
+  flex-shrink: 0;
+  z-index: 1;
+  background-color: #2f2f2f;
+}
+
+// 可滾動區域：選單項目（大螢幕）
+.drawer-scrollable-menu-project {
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0;
+  max-height: 100%;
+}
+
+// 小螢幕側邊欄容器：使用 flexbox 垂直佈局
+.drawer-wrapper-project-mobile {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100vh !important;
+  overflow: hidden !important;
+}
+
+// 覆蓋 Vuetify 的預設樣式（小螢幕）
+:deep(.drawer-wrapper-project-mobile .v-navigation-drawer__content) {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+// 固定區域：名片（小螢幕）
+.drawer-fixed-header-project-mobile {
+  flex-shrink: 0;
+  z-index: 1;
+  background-color: #2f2f2f;
+}
+
+// 可滾動區域：選單項目（小螢幕）
+.drawer-scrollable-menu-project-mobile {
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0;
+  max-height: 100%;
+}
 
 .v-main {
   background-color: #fff;
