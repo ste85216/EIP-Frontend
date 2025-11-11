@@ -51,132 +51,136 @@
       :rail="rail"
       permanent
       :expand-on-hover="rail"
-      class="position-fixed border-0"
+      class="position-fixed border-0 drawer-wrapper"
       @mouseenter="railHovering = true"
       @mouseleave="railHovering = false"
     >
+      <!-- 固定區域：名片和 Tab -->
+      <div class="drawer-fixed-header">
+        <template v-if="!rail">
+          <v-card
+            v-tooltip="'個人資料管理'"
+            elevation="0"
+            rounded="0"
+            height="172"
+            width="260"
+            class="pa-0 card-bg position-relative"
+            :class="{ 'loaded': isBackgroundLoaded }"
+            :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
+            to="/profile"
+          >
+            <!-- 添加 skeleton -->
+            <v-skeleton-loader
+              v-if="!isBackgroundLoaded"
+              class="position-absolute w-100 h-100 pa-0 ma-0"
+            />
+
+            <!-- 添加隱藏的圖片用於預加載 -->
+            <img
+              :src="getBackgroundImage()"
+              alt="background"
+              style="display: none;"
+              @load="handleImageLoad"
+            >
+            <div class="card-blur pt-2 pb-4 px-2">
+              <v-card-title
+                class="ps-5 pb-3 d-flex justify-space-between pe-2"
+              >
+                <v-avatar
+                  size="48"
+                  style="box-shadow: 0 0 10px rgba(255,255,255,1);"
+                  :color="isAvatarLoaded && (!user.avatar || isDefaultAvatar(user.avatar)) ? getUserAvatarColor() : undefined"
+                >
+                  <v-skeleton-loader
+                    v-if="!isAvatarLoaded"
+                    type="avatar"
+                  />
+                  <v-img
+                    v-show="isAvatarLoaded && user.avatar && !isDefaultAvatar(user.avatar)"
+                    :src="user.avatar"
+                    @load="handleAvatarLoad"
+                  />
+                  <span
+                    v-show="isAvatarLoaded && (!user.avatar || isDefaultAvatar(user.avatar))"
+                    class="text-white font-weight-bold"
+                    style="font-size: 19px;"
+                  >
+                    {{ getUserInitials() }}
+                  </span>
+                </v-avatar>
+              </v-card-title>
+              <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
+                <v-row>
+                  <v-col
+                    cols="12"
+                    class="ps-4 pb-0 pt-4"
+                  >
+                    <span style="font-size: 17px; font-weight: 600;">{{ user.name }}</span>
+                  </v-col>
+                  <v-col
+                    cols="12"
+                    class="ps-4 pb-0 pt-0"
+                  >
+                    <span>{{ user.userId }}</span>
+                    <span v-if="user.isAdmin">{{ user.adminId }}</span>
+                  </v-col>
+                  <v-col
+                    cols="12"
+                    class="ps-4 pb-0 pt-0"
+                  >
+                    {{ getDisplayRole() }}
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </div>
+          </v-card>
+          <!-- Tab 切換按鈕 -->
+          <div
+            v-if="visibleTabs.length > 0"
+            class="custom-tabs"
+          >
+            <button
+              v-for="tab in visibleTabs"
+              :key="tab.id"
+              :class="['tab-button', { active: activeTab === tab.id }]"
+              @click="activeTab = tab.id"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+        </template>
+        <template v-else>
+          <v-list-item
+            to="/profile"
+            color="grey-darken-3"
+          >
+            <template #prepend>
+              <v-icon>mdi-account-circle-outline</v-icon>
+            </template>
+            <v-list-item-title>個人資料管理</v-list-item-title>
+          </v-list-item>
+          <!-- rail 展開時的 Tab 切換按鈕 -->
+          <div
+            v-if="railHovering"
+            class="custom-tabs"
+          >
+            <button
+              v-for="tab in visibleTabs"
+              :key="tab.id"
+              :class="['tab-button', { active: activeTab === tab.id }]"
+              @click="activeTab = tab.id"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+        </template>
+      </div>
+      <!-- 可滾動區域：選單項目 -->
       <v-list
         v-model:opened="openedGroups"
-        class="pt-0"
+        class="drawer-scrollable-menu pt-0"
       >
         <div>
-          <template v-if="!rail">
-            <v-card
-              v-tooltip="'個人資料管理'"
-              elevation="0"
-              rounded="0"
-              height="172"
-              width="260"
-              class="pa-0 card-bg position-relative"
-              :class="{ 'loaded': isBackgroundLoaded }"
-              :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
-              to="/profile"
-            >
-              <!-- 添加 skeleton -->
-              <v-skeleton-loader
-                v-if="!isBackgroundLoaded"
-                class="position-absolute w-100 h-100 pa-0 ma-0"
-              />
-
-              <!-- 添加隱藏的圖片用於預加載 -->
-              <img
-                :src="getBackgroundImage()"
-                alt="background"
-                style="display: none;"
-                @load="handleImageLoad"
-              >
-              <div class="card-blur pt-2 pb-4 px-2">
-                <v-card-title
-                  class="ps-5 pb-3 d-flex justify-space-between pe-2"
-                >
-                  <v-avatar
-                    size="48"
-                    style="box-shadow: 0 0 10px rgba(255,255,255,1);"
-                    :color="isAvatarLoaded && (!user.avatar || isDefaultAvatar(user.avatar)) ? getUserAvatarColor() : undefined"
-                  >
-                    <v-skeleton-loader
-                      v-if="!isAvatarLoaded"
-                      type="avatar"
-                    />
-                    <v-img
-                      v-show="isAvatarLoaded && user.avatar && !isDefaultAvatar(user.avatar)"
-                      :src="user.avatar"
-                      @load="handleAvatarLoad"
-                    />
-                    <span
-                      v-show="isAvatarLoaded && (!user.avatar || isDefaultAvatar(user.avatar))"
-                      class="text-white font-weight-bold"
-                      style="font-size: 19px;"
-                    >
-                      {{ getUserInitials() }}
-                    </span>
-                  </v-avatar>
-                </v-card-title>
-                <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
-                  <v-row>
-                    <v-col
-                      cols="12"
-                      class="ps-4 pb-0 pt-4"
-                    >
-                      <span style="font-size: 17px; font-weight: 600;">{{ user.name }}</span>
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      class="ps-4 pb-0 pt-0"
-                    >
-                      <span>{{ user.userId }}</span>
-                      <span v-if="user.isAdmin">{{ user.adminId }}</span>
-                    </v-col>
-                    <v-col
-                      cols="12"
-                      class="ps-4 pb-0 pt-0"
-                    >
-                      {{ getDisplayRole() }}
-                    </v-col>
-                  </v-row>
-                </v-card-text>
-              </div>
-            </v-card>
-            <!-- Tab 切換按鈕 -->
-            <div
-              v-if="visibleTabs.length > 0"
-              class="custom-tabs"
-            >
-              <button
-                v-for="tab in visibleTabs"
-                :key="tab.id"
-                :class="['tab-button', { active: activeTab === tab.id }]"
-                @click="activeTab = tab.id"
-              >
-                {{ tab.label }}
-              </button>
-            </div>
-          </template>
-          <template v-else>
-            <v-list-item
-              to="/profile"
-              color="grey-darken-3"
-            >
-              <template #prepend>
-                <v-icon>mdi-account-circle-outline</v-icon>
-              </template>
-              <v-list-item-title>個人資料管理</v-list-item-title>
-            </v-list-item>
-            <!-- rail 展開時的 Tab 切換按鈕 -->
-            <div
-              v-if="railHovering"
-              class="custom-tabs"
-            >
-              <button
-                v-for="tab in visibleTabs"
-                :key="tab.id"
-                :class="['tab-button', { active: activeTab === tab.id }]"
-                @click="activeTab = tab.id"
-              >
-                {{ tab.label }}
-              </button>
-            </div>
-          </template>
           <!-- Tab 內容 -->
           <template v-if="visibleTabs.length <= 1 || activeTab === 'common'">
             <!-- 常用 Tab -->
@@ -580,66 +584,70 @@
       v-if="!mdAndUp"
       v-model="mdDrawer"
       border="0"
-      class=" rounded-be-xl position-fixed"
+      class="rounded-be-xl position-fixed drawer-wrapper-mobile"
     >
-      <v-list class="h-100 pa-0 overflow-auto">
-        <div>
-          <v-card
-            elevation="0"
-            rounded="0"
-            height="172"
-            class="pa-0 card-bg"
-            :class="{ 'loaded': isBackgroundLoaded }"
-            :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
-            to="/profile"
-          >
-            <!-- 添加 skeleton -->
-            <v-skeleton-loader
-              v-if="!isBackgroundLoaded"
-              class="position-absolute w-100 h-100 pa-0 ma-0"
-            />
+      <!-- 固定區域：名片 -->
+      <div class="drawer-fixed-header-mobile">
+        <v-card
+          elevation="0"
+          rounded="0"
+          height="172"
+          class="pa-0 card-bg"
+          :class="{ 'loaded': isBackgroundLoaded }"
+          :style="{ backgroundImage: `url(${getBackgroundImage()})` }"
+          to="/profile"
+        >
+          <!-- 添加 skeleton -->
+          <v-skeleton-loader
+            v-if="!isBackgroundLoaded"
+            class="position-absolute w-100 h-100 pa-0 ma-0"
+          />
 
-            <!-- 添加隱藏的圖片用於預加載 -->
-            <img
-              :src="getBackgroundImage()"
-              alt="background"
-              style="display: none;"
-              @load="handleImageLoad"
-            >
-            <div class="card-blur pt-2 pb-4 px-2">
-              <v-card-title class="ps-5 pb-3">
-                <UserAvatar
-                  :user="user"
-                  size="48"
-                  avatar-class="me-3"
-                  style="box-shadow: 0 0 10px rgba(255,255,255,1);"
-                />
-              </v-card-title>
-              <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
-                <v-row>
-                  <v-col
-                    cols="12"
-                    class="ps-4 pb-0 pt-4"
-                  >
-                    <span style="font-size: 17px; font-weight: 600;">{{ user.name }}</span>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    class="ps-4 pb-0 pt-0"
-                  >
-                    <span>{{ user.userId }}</span>
-                    <span v-if="user.isAdmin">{{ user.adminId }}</span>
-                  </v-col>
-                  <v-col
-                    cols="12"
-                    class="ps-4 pb-0 pt-0"
-                  >
-                    {{ getDisplayRole() }}
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </div>
-          </v-card>
+          <!-- 添加隱藏的圖片用於預加載 -->
+          <img
+            :src="getBackgroundImage()"
+            alt="background"
+            style="display: none;"
+            @load="handleImageLoad"
+          >
+          <div class="card-blur pt-2 pb-4 px-2">
+            <v-card-title class="ps-5 pb-3">
+              <UserAvatar
+                :user="user"
+                size="48"
+                avatar-class="me-3"
+                style="box-shadow: 0 0 10px rgba(255,255,255,1);"
+              />
+            </v-card-title>
+            <v-card-text style="letter-spacing: 2px; color: white; line-height: 24px;">
+              <v-row>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-4"
+                >
+                  <span style="font-size: 17px; font-weight: 600;">{{ user.name }}</span>
+                </v-col>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-0"
+                >
+                  <span>{{ user.userId }}</span>
+                  <span v-if="user.isAdmin">{{ user.adminId }}</span>
+                </v-col>
+                <v-col
+                  cols="12"
+                  class="ps-4 pb-0 pt-0"
+                >
+                  {{ getDisplayRole() }}
+                </v-col>
+              </v-row>
+            </v-card-text>
+          </div>
+        </v-card>
+      </div>
+      <!-- 可滾動區域：選單項目 -->
+      <v-list class="drawer-scrollable-menu-mobile pa-0">
+        <div>
           <!-- 常用 -->
           <template v-if="filteredCommonTabItems.length > 0">
             <v-list-subheader>常用</v-list-subheader>
@@ -1514,6 +1522,70 @@ watch(() => user.avatar, (newAvatar) => {
 
 <style lang="scss" scoped>
 @use '@/styles/_rwd' as *;
+
+// 側邊欄容器：使用 flexbox 垂直佈局
+.drawer-wrapper {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - 100px) !important;
+  overflow: hidden !important;
+}
+
+// 覆蓋 Vuetify 的預設樣式
+:deep(.v-navigation-drawer__content) {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+// 固定區域：名片和 Tab
+.drawer-fixed-header {
+  flex-shrink: 0;
+  z-index: 1;
+  background-color: #fff;
+}
+
+// 可滾動區域：選單項目
+.drawer-scrollable-menu {
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0;
+  max-height: 100%;
+}
+
+// 小螢幕側邊欄容器：使用 flexbox 垂直佈局
+.drawer-wrapper-mobile {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - 100px) !important;
+  overflow: hidden !important;
+}
+
+// 覆蓋 Vuetify 的預設樣式（小螢幕）
+:deep(.drawer-wrapper-mobile .v-navigation-drawer__content) {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+// 固定區域：名片（小螢幕）
+.drawer-fixed-header-mobile {
+  flex-shrink: 0;
+  z-index: 1;
+  background-color: #fff;
+}
+
+// 可滾動區域：選單項目（小螢幕）
+.drawer-scrollable-menu-mobile {
+  flex: 1;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0;
+  max-height: 100%;
+}
 
 .nav-title {
   font-size: 22px;

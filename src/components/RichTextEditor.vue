@@ -14,6 +14,11 @@
 import { ref, onMounted, onUnmounted, watch, nextTick, computed } from 'vue'
 import Quill from 'quill'
 import 'quill/dist/quill.snow.css'
+import { useApi } from '@/composables/axios'
+import { useSnackbar } from 'vuetify-use-dialog'
+
+const { apiAuth } = useApi()
+const createSnackbar = useSnackbar()
 
 const props = defineProps({
   modelValue: {
@@ -38,6 +43,8 @@ const emit = defineEmits(['update:modelValue'])
 
 const editorContainer = ref(null)
 let quill = null
+let dropHandler = null
+let dragOverHandler = null
 
 // 計算編輯器高度
 const editorHeight = computed(() => {
@@ -68,8 +75,178 @@ const quillOptions = {
   }
 }
 
+// 佔位符圖片 URL
+const PLACEHOLDER_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'
+
+// 生成唯一 ID
+function generateUniqueId() {
+  return `placeholder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+// 查找並替換佔位符圖片
+function replacePlaceholderImage(uniqueId, imageUrl) {
+  if (!quill) return false
+
+  try {
+    const editor = quill.root
+    const images = editor.querySelectorAll('img')
+
+    // 查找對應的佔位符（使用 data 屬性）
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i]
+      // 優先使用 data-placeholder-id 匹配
+      if (img.dataset.placeholderId === uniqueId) {
+        // 直接修改 DOM
+        img.src = imageUrl
+        delete img.dataset.placeholderId
+        delete img.dataset.uploading
+
+        // 觸發內容更新，確保 Quill 知道內容已改變
+        const html = quill.root.innerHTML
+        emit('update:modelValue', html)
+        return true
+      }
+    }
+
+    // 如果找不到對應的佔位符，嘗試查找所有未替換的佔位符
+    // 這是一個備用方案，用於處理 ID 設置失敗的情況
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i]
+      if (img.src === PLACEHOLDER_IMAGE && (img.dataset.uploading === 'true' || !img.dataset.placeholderId)) {
+        // 直接修改 DOM
+        img.src = imageUrl
+        delete img.dataset.placeholderId
+        delete img.dataset.uploading
+        const html = quill.root.innerHTML
+        emit('update:modelValue', html)
+        return true
+      }
+    }
+
+    return false
+  } catch (error) {
+    console.error('替換佔位符失敗:', error)
+    return false
+  }
+}
+
+// 移除佔位符圖片
+function removePlaceholderImage(uniqueId) {
+  if (!quill) return false
+
+  try {
+    const editor = quill.root
+    const images = editor.querySelectorAll('img')
+
+    for (let i = 0; i < images.length; i++) {
+      const img = images[i]
+      if ((img.dataset.placeholderId === uniqueId || img.dataset.uploading === 'true') && img.src === PLACEHOLDER_IMAGE) {
+        img.parentNode?.removeChild(img)
+        const html = quill.root.innerHTML
+        emit('update:modelValue', html)
+        return true
+      }
+    }
+
+    return false
+  } catch (error) {
+    console.error('移除佔位符失敗:', error)
+    return false
+  }
+}
+
+// 上傳單張圖片
+async function uploadImage(file, uniqueId) {
+  if (!quill) return
+
+  // 檢查檔案大小（5MB 限制）
+  const maxSize = 5 * 1024 * 1024 // 5MB
+  if (file.size > maxSize) {
+    createSnackbar({
+      text: '圖片檔案太大，請選擇小於 5MB 的圖片',
+      snackbarProps: { color: 'error' }
+    })
+    removePlaceholderImage(uniqueId)
+    return
+  }
+
+  // 檢查檔案類型
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+  if (!allowedTypes.includes(file.type)) {
+    createSnackbar({
+      text: '圖片格式錯誤，僅支援 JPG、PNG、GIF、WEBP 格式',
+      snackbarProps: { color: 'error' }
+    })
+    removePlaceholderImage(uniqueId)
+    return
+  }
+
+  try {
+    // 上傳圖片到伺服器
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const { data } = await apiAuth.post('/tasks/description-image', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    if (data.success && data.data?.url) {
+      // 構建完整的圖片 URL
+      let imageUrl = data.data.url
+      // 如果是相對路徑，轉換為完整 URL
+      if (imageUrl.startsWith('/')) {
+        const baseURL = import.meta.env.VITE_API || 'http://localhost:4002'
+        imageUrl = `${baseURL}${imageUrl}`
+      }
+      // 替換佔位符為實際圖片 URL
+      const replaced = replacePlaceholderImage(uniqueId, imageUrl)
+      if (!replaced) {
+        // 如果替換失敗，嘗試直接插入並移除佔位符
+        const editor = quill.root
+        const images = editor.querySelectorAll('img')
+        // 查找並移除對應的佔位符
+        for (let i = images.length - 1; i >= 0; i--) {
+          const img = images[i]
+          if (img.dataset.placeholderId === uniqueId || (img.src === PLACEHOLDER_IMAGE && img.dataset.uploading === 'true')) {
+            const range = quill.getSelection()
+            const index = range ? range.index : quill.getLength()
+            quill.insertEmbed(index, 'image', imageUrl)
+            quill.setSelection(index + 1)
+            img.parentNode?.removeChild(img)
+            const html = quill.root.innerHTML
+            emit('update:modelValue', html)
+            break
+          }
+        }
+      }
+    } else {
+      // 移除佔位符
+      removePlaceholderImage(uniqueId)
+      createSnackbar({
+        text: data.message || '圖片上傳失敗',
+        snackbarProps: { color: 'error' }
+      })
+    }
+  } catch (error) {
+    console.error('圖片上傳失敗:', error)
+    // 移除佔位符
+    removePlaceholderImage(uniqueId)
+    createSnackbar({
+      text: error?.response?.data?.message || '圖片上傳失敗',
+      snackbarProps: { color: 'error' }
+    })
+  }
+}
+
 // 圖片上傳處理器
 function imageHandler() {
+  if (!quill) {
+    console.error('Quill 編輯器尚未初始化')
+    return
+  }
+
   const input = document.createElement('input')
   input.setAttribute('type', 'file')
   input.setAttribute('accept', 'image/*')
@@ -77,29 +254,40 @@ function imageHandler() {
 
   input.onchange = async () => {
     const file = input.files[0]
-    if (file) {
-      try {
-        // 這裡可以上傳到你的後端 API
-        // 暫時使用 base64 編碼
-        const base64 = await fileToBase64(file)
-        const range = quill.getSelection()
-        quill.insertEmbed(range.index, 'image', base64)
-        quill.setSelection(range.index + 1)
-      } catch (error) {
-        console.error('圖片上傳失敗:', error)
-      }
-    }
-  }
-}
+    if (!file) return
 
-// 將檔案轉換為 base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result)
-    reader.onerror = error => reject(error)
-  })
+    const range = quill.getSelection()
+    const index = range ? range.index : quill.getLength()
+
+    // 生成唯一 ID
+    const uniqueId = generateUniqueId()
+
+    // 插入載入中的佔位符
+    quill.insertEmbed(index, 'image', PLACEHOLDER_IMAGE)
+    quill.setSelection(index + 1)
+
+    // 為佔位符設置 data 屬性（等待 DOM 更新）
+    await nextTick()
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        const editor = quill.root
+        const images = editor.querySelectorAll('img')
+        // 從最後一個開始查找，找到第一個沒有 placeholderId 的佔位符
+        for (let i = images.length - 1; i >= 0; i--) {
+          const img = images[i]
+          if (img.src === PLACEHOLDER_IMAGE && !img.dataset.placeholderId) {
+            img.dataset.placeholderId = uniqueId
+            // 添加一個標記，確保這個佔位符是我們剛插入的
+            img.dataset.uploading = 'true'
+            break
+          }
+        }
+        resolve()
+      })
+    })
+
+    await uploadImage(file, uniqueId)
+  }
 }
 
 // 初始化編輯器
@@ -192,6 +380,130 @@ const initEditor = async () => {
         }
       }
     })
+
+    // 處理貼上事件，攔截圖片並上傳到伺服器
+    quill.root.addEventListener('paste', async (e) => {
+      const clipboardData = e.clipboardData || window.clipboardData
+      if (!clipboardData) return
+
+      const items = clipboardData.items
+      if (!items) return
+
+      // 檢查是否有圖片
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.type.indexOf('image') !== -1) {
+          e.preventDefault()
+
+          const file = item.getAsFile()
+          if (!file) continue
+
+          const range = quill.getSelection()
+          const index = range ? range.index : quill.getLength()
+
+          // 生成唯一 ID
+          const uniqueId = generateUniqueId()
+
+          // 插入載入中的佔位符
+          quill.insertEmbed(index, 'image', PLACEHOLDER_IMAGE)
+          quill.setSelection(index + 1)
+
+          // 為佔位符設置 data 屬性（等待 DOM 更新）
+          await nextTick()
+          await new Promise(resolve => {
+            requestAnimationFrame(() => {
+              const editor = quill.root
+              const images = editor.querySelectorAll('img')
+              // 從最後一個開始查找，找到第一個沒有 placeholderId 的佔位符
+              for (let j = images.length - 1; j >= 0; j--) {
+                const img = images[j]
+                if (img.src === PLACEHOLDER_IMAGE && !img.dataset.placeholderId) {
+                  img.dataset.placeholderId = uniqueId
+                  // 添加一個標記，確保這個佔位符是我們剛插入的
+                  img.dataset.uploading = 'true'
+                  break
+                }
+              }
+              resolve()
+            })
+          })
+
+          await uploadImage(file, uniqueId)
+        }
+      }
+    })
+
+    // 處理拖放圖片事件（使用捕獲階段，確保在 Quill 處理之前執行）
+    dropHandler = async (e) => {
+      const files = e.dataTransfer?.files
+      if (!files || files.length === 0) return
+
+      // 檢查是否有圖片文件
+      const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'))
+
+      // 如果有圖片文件，阻止默認行為和事件冒泡，避免 Quill 重複處理
+      if (imageFiles.length > 0) {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation() // 阻止同一元素上的其他監聽器執行
+
+        // 處理所有圖片文件
+        for (let i = 0; i < imageFiles.length; i++) {
+          const file = imageFiles[i]
+          const range = quill.getSelection()
+          const index = range ? range.index : quill.getLength()
+
+          // 生成唯一 ID
+          const uniqueId = generateUniqueId()
+
+          // 插入載入中的佔位符
+          quill.insertEmbed(index, 'image', PLACEHOLDER_IMAGE)
+          quill.setSelection(index + 1)
+
+          // 為佔位符設置 data 屬性（等待 DOM 更新）
+          await nextTick()
+          await new Promise(resolve => {
+            requestAnimationFrame(() => {
+              const editor = quill.root
+              const images = editor.querySelectorAll('img')
+              // 從最後一個開始查找，找到第一個沒有 placeholderId 的佔位符
+              for (let j = images.length - 1; j >= 0; j--) {
+                const img = images[j]
+                if (img.src === PLACEHOLDER_IMAGE && !img.dataset.placeholderId) {
+                  img.dataset.placeholderId = uniqueId
+                  // 添加一個標記，確保這個佔位符是我們剛插入的
+                  img.dataset.uploading = 'true'
+                  break
+                }
+              }
+              resolve()
+            })
+          })
+
+          await uploadImage(file, uniqueId)
+        }
+      }
+    }
+
+    // 使用捕獲階段添加事件監聽器，確保在 Quill 處理之前執行
+    quill.root.addEventListener('drop', dropHandler, true)
+
+    // 阻止默認的拖放行為，避免瀏覽器直接打開圖片
+    dragOverHandler = (e) => {
+      // 檢查是否有圖片文件
+      const items = e.dataTransfer?.items
+      if (items) {
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+            // 如果有圖片文件，阻止默認行為
+            e.preventDefault()
+            e.stopPropagation()
+            return
+          }
+        }
+      }
+    }
+    quill.root.addEventListener('dragover', dragOverHandler, true)
   }
 }
 
@@ -215,6 +527,15 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (quill) {
+    // 清理事件監聽器
+    if (dropHandler) {
+      quill.root.removeEventListener('drop', dropHandler, true)
+      dropHandler = null
+    }
+    if (dragOverHandler) {
+      quill.root.removeEventListener('dragover', dragOverHandler, true)
+      dragOverHandler = null
+    }
     quill = null
   }
 })

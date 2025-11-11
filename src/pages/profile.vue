@@ -350,7 +350,7 @@
                         <span class="font-weight-bold notify-title">尚未綁定 LINE 帳號</span>
                       </div>
                       <v-btn
-                        color="blue-lighten-1"
+                        color="blue"
                         elevation="1"
                         :size="smAndUp ? 'small' : 'x-small'"
                         @click="showBindingDialog = true"
@@ -415,7 +415,7 @@
     max-width="480"
   >
     <v-card class="rounded-lg">
-      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-darken-1 mb-3">
+      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-darken-1 mb-2">
         <v-icon
           class="me-2"
           size="20"
@@ -469,7 +469,19 @@
           </div>
           <ol class="mt-4 px-4">
             <li class="sub-title-1 mb-2">
-              在 LINE 中搜尋 @310ikxxu 加入官方帳號
+              在 LINE 中搜尋 @310ikxxu 或點擊下方連結加入官方帳號
+              <div class="text-center mt-5 mb-4">
+                <v-btn
+                  href="https://line.me/R/ti/p/@310ikxxu"
+                  target="_blank"
+                  color="blue-darken-1"
+                  variant="outlined"
+                  :size="buttonSize"
+                  prepend-icon="mdi-link"
+                >
+                  Ystravel EIP 通知
+                </v-btn>
+              </div>
             </li>
             <li class="sub-title-1 mb-2">
               輸入「{{ bindingToken }}」
@@ -481,7 +493,7 @@
         </div>
         <div v-else>
           <p class="mb-4 card-content">
-            點擊下方按鈕產生認證碼，然後在 LINE 中輸入「綁定 [認證碼]」來完成綁定。
+            點擊下方按鈕產生認證碼，並在 LINE 中輸入所產生之「 8位數認證碼 」來完成綁定。
           </p>
           <v-btn
             color="blue-darken-1"
