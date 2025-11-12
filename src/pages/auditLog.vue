@@ -1213,6 +1213,11 @@ const formatTarget = (item) => {
   }
   if (item.targetModel === 'sparePartInventories') {
     const info = item.targetInfo || {}
+    // 優先使用 targetInfo.name（後端已經組合成完整名稱）
+    if (info.name) {
+      return info.name
+    }
+    // 如果沒有 name，則嘗試從其他欄位組合
     const after = item.changes?.after || {}
     const before = item.changes?.before || {}
     const sparePartName = info.sparePartName || after.sparePart?.name || before.sparePart?.name || '(無)'

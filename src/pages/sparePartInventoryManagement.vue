@@ -53,23 +53,23 @@
               >
                 <td
                   :rowspan="item.warehouseCount"
-                  class="spare-part-col align-top pa-4 text-center"
+                  class="spare-part-col left-group align-top pa-4 text-center"
                 >
                   <span class="sub-title">{{ item.sparePartName }}</span>
                 </td>
                 <td
                   :rowspan="item.warehouseCount"
-                  class="total-quantity-col align-top pa-4 text-center"
+                  class="total-quantity-col left-group align-top pa-4 text-center"
                 >
                   <span class="sub-title">{{ formatNumber(item.totalQuantity) }}</span>
                 </td>
-                <td :class="['warehouse-col pa-2 text-center', item.globalStartIndex % 2 === 0 ? 'warehouse-row-odd' : 'warehouse-row-even']">
+                <td :class="['warehouse-col right-group pa-2 text-center', item.globalStartIndex % 2 === 0 ? 'warehouse-row-odd' : 'warehouse-row-even']">
                   {{ item.warehouses[0]?.warehouseName || '-' }}
                 </td>
-                <td :class="['quantity-col text-center pa-2', item.globalStartIndex % 2 === 0 ? 'warehouse-row-odd' : 'warehouse-row-even']">
+                <td :class="['quantity-col right-group text-center pa-2', item.globalStartIndex % 2 === 0 ? 'warehouse-row-odd' : 'warehouse-row-even']">
                   <span class="font-weight-bold">{{ formatNumber(item.warehouses[0]?.quantity || 0) }}</span>
                 </td>
-                <td :class="['actions-col text-center pa-2', item.globalStartIndex % 2 === 0 ? 'warehouse-row-odd' : 'warehouse-row-even']">
+                <td :class="['actions-col right-group text-center pa-2', item.globalStartIndex % 2 === 0 ? 'warehouse-row-odd' : 'warehouse-row-even']">
                   <v-btn
                     v-if="item.warehouses[0]?.inventoryId"
                     icon
@@ -101,13 +101,13 @@
                 :key="warehouse.inventoryId || index"
                 :class="{ 'warehouse-row-odd': (item.globalStartIndex + index + 1) % 2 === 0, 'warehouse-row-even': (item.globalStartIndex + index + 1) % 2 !== 0 }"
               >
-                <td class="warehouse-col pa-2 text-center">
+                <td class="warehouse-col right-group pa-2 text-center">
                   {{ warehouse.warehouseName || '-' }}
                 </td>
-                <td class="quantity-col text-center pa-2">
+                <td class="quantity-col right-group text-center pa-2">
                   <span class="font-weight-bold">{{ formatNumber(warehouse.quantity || 0) }}</span>
                 </td>
-                <td class="actions-col text-center pa-2">
+                <td class="actions-col right-group text-center pa-2">
                   <v-btn
                     v-if="warehouse.inventoryId"
                     icon
@@ -282,10 +282,10 @@
             :page="historyPage"
             @update:page="historyPage = $event"
           >
-            <template #item.operator="{ item }">
+            <template #[`item.operator`]="{ item }">
               {{ item.operator?.name || item.operatorId?.name || '-' }}
             </template>
-            <template #item.action="{ item }">
+            <template #[`item.action`]="{ item }">
               <template v-if="item.action === '創建'">
                 <template v-if="item.changes?.after?.quantityChange > 0">
                   入庫
@@ -312,18 +312,18 @@
                 {{ item.action }}
               </template>
             </template>
-            <template #item.quantityChange="{ item }">
+            <template #[`item.quantityChange`]="{ item }">
               <span :class="item.changes?.after?.quantityChange >= 0 ? 'text-success' : 'text-error'">
                 {{ item.changes?.after?.quantityChange >= 0 ? '+' : '' }}{{ formatNumber(item.changes?.after?.quantityChange || 0) }}
               </span>
             </template>
-            <template #item.quantity="{ item }">
+            <template #[`item.quantity`]="{ item }">
               {{ formatNumber(item.changes?.after?.quantity || 0) }}
             </template>
-            <template #item.note="{ item }">
+            <template #[`item.note`]="{ item }">
               {{ item.changes?.after?.note || '-' }}
             </template>
-            <template #item.createdAt="{ item }">
+            <template #[`item.createdAt`]="{ item }">
               {{ formatDateTime(item.createdAt) }}
             </template>
           </v-data-table>
@@ -752,10 +752,9 @@ const viewHistory = async (sparePart, warehouse) => {
 const loadHistory = async () => {
   try {
     historyLoading.value = true
-    // 獲取該庫存記錄的所有異動紀錄
-    const { data } = await apiAuth.get('/auditLogs', {
+    // 獲取該庫存記錄的所有異動紀錄（使用新的 API endpoint，只需要 SPARE_PART_READ 權限）
+    const { data } = await apiAuth.get('/auditLogs/spare-part-inventories', {
       params: {
-        targetModel: 'sparePartInventories',
         targetId: historyDialog.value.inventoryId,
         page: 1,
         itemsPerPage: 9999
@@ -890,6 +889,51 @@ onMounted(async () => {
 
 .warehouse-row-even {
   background-color: #f5f5f5;
+}
+
+// Hover 效果 - 左右分組
+.inventory-table :deep(tbody) {
+  // 左邊組 hover：當滑鼠移到左邊任一欄位時，兩個左邊欄位一起變色
+  // 直接 hover 到左邊欄位時變色
+  .left-group:hover {
+    background-color: #eee !important;
+  }
+
+  // 當 hover 到左邊第一個欄位時，讓第二個欄位也變色（使用相鄰選擇器）
+  .spare-part-col.left-group:hover ~ .total-quantity-col.left-group {
+    background-color: #eee !important;
+  }
+
+  // 當 hover 到左邊第二個欄位時，讓第一個欄位也變色
+  // 使用 :has() 選擇器選擇包含 hover 左邊第二個欄位的行，但只影響左邊欄位
+  tr:has(.total-quantity-col.left-group:hover) .spare-part-col.left-group {
+    background-color: #eee !important;
+  }
+
+  // 當 hover 到左邊第一個欄位時，確保第二個欄位也變色（使用 :has() 選擇器）
+  tr:has(.spare-part-col.left-group:hover) .total-quantity-col.left-group {
+    background-color: #eee !important;
+  }
+
+  // 右邊組 hover：當滑鼠移到右邊任一欄位時，同一行的三個右邊欄位一起變色
+  // 直接 hover 到右邊欄位時變色
+  .right-group:hover {
+    background-color: #fff3e0 !important;
+  }
+
+  // 當 hover 到右邊任一欄位時，讓同一行的所有右邊欄位都變色
+  // 只選擇右邊欄位，不影響左邊欄位
+  tr:has(.warehouse-col.right-group:hover) .warehouse-col.right-group,
+  tr:has(.warehouse-col.right-group:hover) .quantity-col.right-group,
+  tr:has(.warehouse-col.right-group:hover) .actions-col.right-group,
+  tr:has(.quantity-col.right-group:hover) .warehouse-col.right-group,
+  tr:has(.quantity-col.right-group:hover) .quantity-col.right-group,
+  tr:has(.quantity-col.right-group:hover) .actions-col.right-group,
+  tr:has(.actions-col.right-group:hover) .warehouse-col.right-group,
+  tr:has(.actions-col.right-group:hover) .quantity-col.right-group,
+  tr:has(.actions-col.right-group:hover) .actions-col.right-group {
+    background-color: #eee !important;
+  }
 }
 
 // 歷史紀錄對話框表格樣式
