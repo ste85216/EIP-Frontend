@@ -849,6 +849,7 @@ onMounted(async () => {
 .inventory-table :deep(tbody) {
   td {
     font-size: 13px !important;
+    transition: none !important;
   }
 }
 
@@ -894,31 +895,36 @@ onMounted(async () => {
 // Hover 效果 - 左右分組
 .inventory-table :deep(tbody) {
   // 左邊組 hover：當滑鼠移到左邊任一欄位時，兩個左邊欄位一起變色
-  // 直接 hover 到左邊欄位時變色
+  // 直接 hover 到左邊欄位時變色（立即變色，無 transition）
   .left-group:hover {
     background-color: #eee !important;
+    transition: none !important;
   }
 
   // 當 hover 到左邊第一個欄位時，讓第二個欄位也變色（使用相鄰選擇器）
   .spare-part-col.left-group:hover ~ .total-quantity-col.left-group {
     background-color: #eee !important;
+    transition: none !important;
   }
 
   // 當 hover 到左邊第二個欄位時，讓第一個欄位也變色
   // 使用 :has() 選擇器選擇包含 hover 左邊第二個欄位的行，但只影響左邊欄位
   tr:has(.total-quantity-col.left-group:hover) .spare-part-col.left-group {
     background-color: #eee !important;
+    transition: none !important;
   }
 
   // 當 hover 到左邊第一個欄位時，確保第二個欄位也變色（使用 :has() 選擇器）
   tr:has(.spare-part-col.left-group:hover) .total-quantity-col.left-group {
     background-color: #eee !important;
+    transition: none !important;
   }
 
   // 右邊組 hover：當滑鼠移到右邊任一欄位時，同一行的三個右邊欄位一起變色
-  // 直接 hover 到右邊欄位時變色
+  // 直接 hover 到右邊欄位時變色（立即變色，無 transition）
   .right-group:hover {
     background-color: #fff3e0 !important;
+    transition: none !important;
   }
 
   // 當 hover 到右邊任一欄位時，讓同一行的所有右邊欄位都變色
@@ -933,6 +939,7 @@ onMounted(async () => {
   tr:has(.actions-col.right-group:hover) .quantity-col.right-group,
   tr:has(.actions-col.right-group:hover) .actions-col.right-group {
     background-color: #eee !important;
+    transition: none !important;
   }
 }
 
