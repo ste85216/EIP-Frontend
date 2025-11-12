@@ -256,7 +256,7 @@ const itemsPerPageOptions = [10, 20, 50, 100, { value: -1, title: '全部' }]
 // 表格標題（將「類型」與「標題」交換順序）
 const headers = computed(() => {
   const base = [
-    { title: '類型', key: 'type', sortable: false, align: 'center', minWidth: '145px' },
+    { title: '類型', key: 'type', sortable: false, align: 'center', width: '145px' },
     { title: '標題', key: 'title', sortable: false, align: 'center' },
     { title: '建立者', key: 'creator', sortable: false, align: 'center', minWidth: '120px' },
     { title: '發布時間', key: 'createdAt', sortable: true, align: 'center', minWidth: '120px' },

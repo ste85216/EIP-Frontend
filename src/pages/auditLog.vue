@@ -717,7 +717,11 @@ const modelOptions = [
   { title: '輪播圖', value: 'carousels' },
   { title: '跑馬燈', value: 'marquees' },
   { title: '公告', value: 'announcements' },
-  { title: '共享資源', value: 'sharedResources' }
+  { title: '共享資源', value: 'sharedResources' },
+  { title: '廠商', value: 'manufacturers' },
+  { title: '倉庫', value: 'warehouses' },
+  { title: '備品', value: 'spareParts' },
+  { title: '備品庫存', value: 'sparePartInventories' }
 ]
 
 // 表格標頭
@@ -889,7 +893,17 @@ const fieldTranslations = {
   lineBoundAt: 'Line 綁定時間',
   notificationPreferences: '通知偏好設定',
   line: 'LINE',
-  inbox: '內部收件匣'
+  inbox: '內部收件匣',
+  warehouse: '倉庫',
+  packaging: '包裝形式',
+  manufacturer: '廠商',
+  cost: '成本',
+  price: '價格',
+  sparePart: '備品',
+  sparePartName: '備品名稱',
+  warehouseName: '倉庫名稱',
+  quantityChange: '數量變更',
+  warehouses: '倉庫列表'
 }
 
 // 行銷分類類型對應
@@ -1012,7 +1026,11 @@ const getModelDisplay = (model) => {
     carousels: '輪播圖',
     marquees: '跑馬燈',
     announcements: '公告',
-    sharedResources: '共享資源'
+    sharedResources: '共享資源',
+    manufacturers: '廠商',
+    warehouses: '倉庫',
+    spareParts: '備品',
+    sparePartInventories: '備品庫存'
   }
   return modelMap[model] || model
 }
@@ -1074,6 +1092,28 @@ const formatTarget = (item) => {
       const isActive = before.isActive !== undefined ? before.isActive : true
       const status = isActive ? '啟用' : '停用'
       return `${title} (排序: ${order}, ${status})`
+    }
+    if (item.targetModel === 'manufacturers') {
+      const before = item.changes.before
+      return before.name || '(無)'
+    }
+    if (item.targetModel === 'warehouses') {
+      const before = item.changes.before
+      const name = before.name || '(無)'
+      const company = before.company?.name || ''
+      return company ? `${name} (${company})` : name
+    }
+    if (item.targetModel === 'spareParts') {
+      const before = item.changes.before
+      const name = before.name || '(無)'
+      const manufacturer = before.manufacturer?.name || ''
+      return manufacturer ? `${name} (${manufacturer})` : name
+    }
+    if (item.targetModel === 'sparePartInventories') {
+      const before = item.changes.before
+      const sparePartName = before.sparePart?.name || '(無)'
+      const warehouseName = before.warehouse?.name || '(無)'
+      return `${sparePartName} - ${warehouseName}`
     }
   }
 
@@ -1147,6 +1187,37 @@ const formatTarget = (item) => {
     const isActive = info.isActive !== undefined ? info.isActive : (after.isActive !== undefined ? after.isActive : true)
     const status = isActive ? '啟用' : '停用'
     return `${name} [${type}] (排序: ${order}, ${status})`
+  }
+  if (item.targetModel === 'manufacturers') {
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    const before = item.changes?.before || {}
+    const name = info.name || after.name || before.name || '(無)'
+    return name
+  }
+  if (item.targetModel === 'warehouses') {
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    const before = item.changes?.before || {}
+    const name = info.name || after.name || before.name || '(無)'
+    const company = info.company || after.company?.name || before.company?.name || ''
+    return company ? `${name} (${company})` : name
+  }
+  if (item.targetModel === 'spareParts') {
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    const before = item.changes?.before || {}
+    const name = info.name || after.name || before.name || '(無)'
+    const manufacturer = info.manufacturer || after.manufacturer?.name || before.manufacturer?.name || ''
+    return manufacturer ? `${name} (${manufacturer})` : name
+  }
+  if (item.targetModel === 'sparePartInventories') {
+    const info = item.targetInfo || {}
+    const after = item.changes?.after || {}
+    const before = item.changes?.before || {}
+    const sparePartName = info.sparePartName || after.sparePart?.name || before.sparePart?.name || '(無)'
+    const warehouseName = info.warehouseName || after.warehouse?.name || before.warehouse?.name || '(無)'
+    return `${sparePartName} - ${warehouseName}`
   }
   return `${name}${userId ? ` (${userId})` : ''}`
 }
@@ -1557,6 +1628,83 @@ const formatChanges = (item) => {
       return changes
     }
 
+    // 針對廠商的特殊處理
+    if (item.targetModel === 'manufacturers') {
+      Object.entries(after).forEach(([key, value]) => {
+        if (!excludeFields.includes(key) && fieldTranslations[key]) {
+          if (typeof value === 'boolean') {
+            changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
+          } else {
+            changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
+          }
+        }
+      })
+      return changes
+    }
+
+    // 針對倉庫的特殊處理
+    if (item.targetModel === 'warehouses') {
+      Object.entries(after).forEach(([key, value]) => {
+        if (!excludeFields.includes(key) && fieldTranslations[key]) {
+          if (key === 'company') {
+            changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+          } else if (typeof value === 'boolean') {
+            changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
+          } else {
+            changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
+          }
+        }
+      })
+      return changes
+    }
+
+    // 針對備品的特殊處理
+    if (item.targetModel === 'spareParts') {
+      Object.entries(after).forEach(([key, value]) => {
+        if (!excludeFields.includes(key) && fieldTranslations[key]) {
+          if (key === 'manufacturer') {
+            changes.push(`${fieldTranslations[key]}: ${value?.name || '(無)'}`)
+          } else if (key === 'warehouses') {
+            if (Array.isArray(value) && value.length > 0) {
+              const warehouseNames = value.map(w => w?.name || w || '(無)').filter(Boolean)
+              changes.push(`${fieldTranslations[key]}: ${warehouseNames.join('、') || '(無)'}`)
+            } else {
+              changes.push(`${fieldTranslations[key]}: (無)`)
+            }
+          } else if (key === 'cost' || key === 'price') {
+            changes.push(`${fieldTranslations[key]}: ${value?.toLocaleString() || 0}`)
+          } else if (typeof value === 'boolean') {
+            changes.push(`${fieldTranslations[key]}: ${formatBoolean(value)}`)
+          } else {
+            changes.push(`${fieldTranslations[key]}: ${value || '(無)'}`)
+          }
+        }
+      })
+      return changes
+    }
+
+    // 針對備品庫存的特殊處理
+    if (item.targetModel === 'sparePartInventories') {
+      const data = after
+      if (data.sparePart?.name) {
+        changes.push(`備品: ${data.sparePart.name}`)
+      }
+      if (data.warehouse?.name) {
+        changes.push(`倉庫: ${data.warehouse.name}`)
+      }
+      if (data.quantity !== undefined) {
+        changes.push(`數量: ${data.quantity.toLocaleString() || 0}`)
+      }
+      if (data.quantityChange !== undefined) {
+        const changeText = data.quantityChange > 0 ? `+${data.quantityChange.toLocaleString()}` : data.quantityChange.toLocaleString()
+        changes.push(`數量變更: ${changeText}`)
+      }
+      if (data.note) {
+        changes.push(`備註: ${data.note}`)
+      }
+      return changes
+    }
+
     Object.entries(after).forEach(([key, value]) => {
       if (!excludeFields.includes(key) && fieldTranslations[key]) {
         if (key === 'role') {
@@ -1854,6 +2002,91 @@ const formatChanges = (item) => {
         } else {
           changes.push(`${fieldTranslations[key]}: ${oldDisplayValue} → ${newDisplayValue}`)
         }
+      }
+    })
+    return changes
+  }
+
+  // 針對廠商的修改操作處理
+  if (item.targetModel === 'manufacturers') {
+    changedFields.forEach(key => {
+      if (fieldTranslations[key]) {
+        const oldValue = before[key]
+        const newValue = after[key]
+        if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+          changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
+        } else {
+          changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        }
+      }
+    })
+    return changes
+  }
+
+  // 針對倉庫的修改操作處理
+  if (item.targetModel === 'warehouses') {
+    changedFields.forEach(key => {
+      if (fieldTranslations[key]) {
+        const oldValue = before[key]
+        const newValue = after[key]
+        if (key === 'company') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+        } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+          changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
+        } else {
+          changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        }
+      }
+    })
+    return changes
+  }
+
+  // 針對備品的修改操作處理
+  if (item.targetModel === 'spareParts') {
+    changedFields.forEach(key => {
+      if (fieldTranslations[key]) {
+        const oldValue = before[key]
+        const newValue = after[key]
+        if (key === 'manufacturer') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.name || '(無)'} → ${newValue?.name || '(無)'}`)
+        } else if (key === 'warehouses') {
+          const oldNames = Array.isArray(oldValue) ? oldValue.map(w => w?.name || w || '(無)').filter(Boolean).join('、') : '(無)'
+          const newNames = Array.isArray(newValue) ? newValue.map(w => w?.name || w || '(無)').filter(Boolean).join('、') : '(無)'
+          changes.push(`${fieldTranslations[key]}: ${oldNames} → ${newNames}`)
+        } else if (key === 'cost' || key === 'price') {
+          changes.push(`${fieldTranslations[key]}: ${oldValue?.toLocaleString() || 0} → ${newValue?.toLocaleString() || 0}`)
+        } else if (typeof oldValue === 'boolean' || typeof newValue === 'boolean') {
+          changes.push(`${fieldTranslations[key]}: ${formatBoolean(oldValue)} → ${formatBoolean(newValue)}`)
+        } else {
+          changes.push(`${fieldTranslations[key]}: ${oldValue || '(無)'} → ${newValue || '(無)'}`)
+        }
+      }
+    })
+    return changes
+  }
+
+  // 針對備品庫存的修改操作處理
+  if (item.targetModel === 'sparePartInventories') {
+    changedFields.forEach(key => {
+      if (key === 'quantity') {
+        const oldQty = before[key] || 0
+        const newQty = after[key] || 0
+        const quantityChange = newQty - oldQty
+        changes.push(`數量: ${oldQty.toLocaleString()} → ${newQty.toLocaleString()}`)
+        if (quantityChange !== 0) {
+          const changeText = quantityChange > 0 ? `+${quantityChange.toLocaleString()}` : quantityChange.toLocaleString()
+          changes.push(`數量變更: ${changeText}`)
+        }
+      } else if (key === 'sparePart') {
+        const oldName = before[key]?.name || '(無)'
+        const newName = after[key]?.name || '(無)'
+        changes.push(`備品: ${oldName} → ${newName}`)
+      } else if (key === 'warehouse') {
+        const oldName = before[key]?.name || '(無)'
+        const newName = after[key]?.name || '(無)'
+        changes.push(`倉庫: ${oldName} → ${newName}`)
+      } else if (key === 'note') {
+        changes.push(`備註: ${before[key] || '(無)'} → ${after[key] || '(無)'}`)
       }
     })
     return changes

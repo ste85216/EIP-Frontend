@@ -49,13 +49,13 @@
       v-else
       icon
       color="blue-grey-darken-2"
-      size="32"
+      size="28"
       class="me-4"
       elevation="2"
       :loading="isUploading"
       @click="$refs.fileInput.click()"
     >
-      <v-icon size="18">
+      <v-icon size="14">
         mdi-camera-outline
       </v-icon>
     </v-btn>

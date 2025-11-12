@@ -1172,6 +1172,25 @@ const businessTabItems = [
     text: '線別分類管理',
     icon: 'mdi-shape-plus-outline',
     permission: 'LINE_CATEGORY_MANAGEMENT_READ'
+  },
+  {
+    text: '備品相關',
+    icon: 'mdi-package-variant',
+    permission: ['SPARE_PART_MANAGEMENT_READ', 'SPARE_PART_INVENTORY_MANAGEMENT_READ'],
+    children: [
+      {
+        to: '/sparePartInventoryManagement',
+        text: '備品庫存管理',
+        icon: 'mdi-package-variant-closed-check',
+        permission: 'SPARE_PART_INVENTORY_MANAGEMENT_READ'
+      },
+      {
+        to: '/sparePartManagement',
+        text: '備品管理',
+        icon: 'mdi-package-variant-closed-plus',
+        permission: 'SPARE_PART_MANAGEMENT_READ'
+      }
+    ]
   }
 ]
 
@@ -1319,7 +1338,7 @@ const businessMarketingItems = computed(() => {
 })
 
 const businessCommonItems = computed(() => {
-  const commonSet = new Set(['表單產生器', '線別分類管理'])
+  const commonSet = new Set(['表單產生器', '線別分類管理', '備品相關'])
   return filteredBusinessTabItems.value.filter(item => commonSet.has(item.text))
 })
 
@@ -1392,7 +1411,8 @@ watch(() => route.path, (newPath) => {
     newPath.includes('/marketingCategory') ||
     newPath.includes('/marketingDesignRequestManagement') ||
     newPath.includes('/formGenerator') ||
-    newPath.includes('/lineCategory')
+    newPath.includes('/lineCategory') ||
+    newPath.includes('/sparePart')
   ) {
     activeTab.value = 'business'
     // 展開行銷費用管理

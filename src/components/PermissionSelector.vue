@@ -618,6 +618,40 @@ const permissionModules = ref([
       { key: 'delete', name: '刪除線別分類', permission: 'LINE_CATEGORY_DELETE' },
     ]
   },
+  {
+    key: 'sparePartManagement',
+    name: '備品管理',
+    icon: 'mdi-package-variant',
+    category: 'business',
+    pagePermission: 'SPARE_PART_MANAGEMENT_READ',
+    features: [
+      { key: 'sparePartRead', name: '查看備品', permission: 'SPARE_PART_READ' },
+      { key: 'sparePartCreate', name: '新增備品', permission: 'SPARE_PART_CREATE' },
+      { key: 'sparePartUpdate', name: '編輯備品', permission: 'SPARE_PART_UPDATE' },
+      { key: 'sparePartDelete', name: '刪除備品', permission: 'SPARE_PART_DELETE' },
+      { key: 'warehouseRead', name: '查看倉庫', permission: 'SPARE_PART_WAREHOUSE_READ' },
+      { key: 'warehouseCreate', name: '新增倉庫', permission: 'SPARE_PART_WAREHOUSE_CREATE' },
+      { key: 'warehouseUpdate', name: '編輯倉庫', permission: 'SPARE_PART_WAREHOUSE_UPDATE' },
+      { key: 'warehouseDelete', name: '刪除倉庫', permission: 'SPARE_PART_WAREHOUSE_DELETE' },
+      { key: 'manufacturerRead', name: '查看廠商', permission: 'SPARE_PART_MANUFACTURER_READ' },
+      { key: 'manufacturerCreate', name: '新增廠商', permission: 'SPARE_PART_MANUFACTURER_CREATE' },
+      { key: 'manufacturerUpdate', name: '編輯廠商', permission: 'SPARE_PART_MANUFACTURER_UPDATE' },
+      { key: 'manufacturerDelete', name: '刪除廠商', permission: 'SPARE_PART_MANUFACTURER_DELETE' },
+    ]
+  },
+  {
+    key: 'sparePartInventoryManagement',
+    name: '備品庫存管理',
+    icon: 'mdi-package-variant',
+    category: 'business',
+    pagePermission: 'SPARE_PART_INVENTORY_MANAGEMENT_READ',
+    features: [
+      { key: 'sparePartInventoryRead', name: '查看備品庫存', permission: 'SPARE_PART_INVENTORY_READ' },
+      { key: 'sparePartInventoryCreate', name: '新增備品庫存', permission: 'SPARE_PART_INVENTORY_CREATE' },
+      { key: 'sparePartInventoryUpdate', name: '編輯備品庫存', permission: 'SPARE_PART_INVENTORY_UPDATE' },
+      { key: 'sparePartInventoryDelete', name: '刪除備品庫存', permission: 'SPARE_PART_INVENTORY_DELETE' },
+    ]
+  },
   { key: 'employeeList',
     name: '公司員工列表',
     icon: 'mdi-account-group',

@@ -45,6 +45,7 @@ const editorContainer = ref(null)
 let quill = null
 let dropHandler = null
 let dragOverHandler = null
+let pasteHandler = null
 
 // 計算編輯器高度
 const editorHeight = computed(() => {
@@ -381,8 +382,8 @@ const initEditor = async () => {
       }
     })
 
-    // 處理貼上事件，攔截圖片並上傳到伺服器
-    quill.root.addEventListener('paste', async (e) => {
+    // 處理貼上事件，攔截圖片並上傳到伺服器（使用捕獲階段，確保在 Quill 處理之前執行）
+    pasteHandler = async (e) => {
       const clipboardData = e.clipboardData || window.clipboardData
       if (!clipboardData) return
 
@@ -390,11 +391,28 @@ const initEditor = async () => {
       if (!items) return
 
       // 檢查是否有圖片
+      let hasImage = false
+      const imageItems = []
       for (let i = 0; i < items.length; i++) {
         const item = items[i]
         if (item.type.indexOf('image') !== -1) {
-          e.preventDefault()
+          hasImage = true
+          imageItems.push(item)
+        }
+      }
 
+      // 如果有圖片文件，阻止默認行為和事件冒泡，避免 Quill 重複處理
+      if (hasImage) {
+        e.preventDefault()
+        e.stopPropagation()
+        e.stopImmediatePropagation() // 阻止同一元素上的其他監聽器執行
+
+        // 記錄處理前的圖片數量，用於後續檢查重複
+        const beforeImageCount = quill.root.querySelectorAll('img').length
+
+        // 處理所有圖片文件
+        for (let i = 0; i < imageItems.length; i++) {
+          const item = imageItems[i]
           const file = item.getAsFile()
           if (!file) continue
 
@@ -430,8 +448,44 @@ const initEditor = async () => {
 
           await uploadImage(file, uniqueId)
         }
+
+        // 處理完成後，檢查是否有 Quill 插入的重複圖片並移除
+        await nextTick()
+        await new Promise(resolve => {
+          setTimeout(() => {
+            const editor = quill.root
+            const images = editor.querySelectorAll('img')
+            const afterImageCount = images.length
+            const expectedCount = beforeImageCount + imageItems.length
+
+            // 如果圖片數量超過預期，說明有重複插入
+            if (afterImageCount > expectedCount) {
+              // 找出重複的圖片（沒有 placeholderId 且不是佔位符的圖片）
+              for (let i = images.length - 1; i >= 0; i--) {
+                const img = images[i]
+                // 如果是佔位符或已處理的圖片，跳過
+                if (img.src === PLACEHOLDER_IMAGE || img.dataset.placeholderId || img.dataset.uploading) {
+                  continue
+                }
+                // 如果是 data URL 或 blob URL（可能是 Quill 插入的），移除
+                if (img.src.startsWith('data:') || img.src.startsWith('blob:')) {
+                  img.parentNode?.removeChild(img)
+                }
+              }
+              // 更新內容
+              const html = quill.root.innerHTML
+              emit('update:modelValue', html)
+            }
+            resolve()
+          }, 100) // 給 Quill 一點時間處理，然後檢查
+        })
       }
-    })
+    }
+
+    // 使用捕獲階段添加事件監聽器到 editorContainer，確保在 Quill 處理之前執行
+    if (editorContainer.value) {
+      editorContainer.value.addEventListener('paste', pasteHandler, true)
+    }
 
     // 處理拖放圖片事件（使用捕獲階段，確保在 Quill 處理之前執行）
     dropHandler = async (e) => {
@@ -537,6 +591,11 @@ onUnmounted(() => {
       dragOverHandler = null
     }
     quill = null
+  }
+  // 清理貼上事件監聽器
+  if (pasteHandler && editorContainer.value) {
+    editorContainer.value.removeEventListener('paste', pasteHandler, true)
+    pasteHandler = null
   }
 })
 

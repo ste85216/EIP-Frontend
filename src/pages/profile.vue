@@ -66,6 +66,35 @@
                   <!-- 更換大頭貼按鈕 - 只在 1500px 以下顯示 -->
                   <FileUploadButton v-if="!isLgmUp" />
 
+                  <!-- 設定按鈕 -->
+                  <v-btn
+                    v-if="mdAndUp"
+                    v-tooltip:top="'設定'"
+                    icon
+                    color="blue-grey-darken-2"
+                    size="32"
+                    class="me-4"
+                    elevation="2"
+                    @click="showSettingsDialog = true"
+                  >
+                    <v-icon size="18">
+                      mdi-cog
+                    </v-icon>
+                  </v-btn>
+                  <v-btn
+                    v-else
+                    icon
+                    color="blue-grey-darken-2"
+                    size="28"
+                    class="me-4"
+                    elevation="2"
+                    @click="showSettingsDialog = true"
+                  >
+                    <v-icon size="14">
+                      mdi-cog
+                    </v-icon>
+                  </v-btn>
+
                   <!-- 更換背景圖片按鈕 -->
                   <v-btn
                     v-if="mdAndUp"
@@ -85,12 +114,12 @@
                     v-else
                     icon
                     color="blue-grey-darken-2"
-                    size="32"
+                    size="28"
                     class="me-4"
                     elevation="2"
                     @click="showBackgroundDialog = true"
                   >
-                    <v-icon size="18">
+                    <v-icon size="14">
                       mdi-image
                     </v-icon>
                   </v-btn>
@@ -113,11 +142,11 @@
                     v-else
                     icon
                     color="light-blue-darken-3"
-                    size="32"
+                    size="28"
                     elevation="2"
                     @click="showPasswordDialog = true"
                   >
-                    <v-icon size="18">
+                    <v-icon size="14">
                       mdi-pencil
                     </v-icon>
                   </v-btn>
@@ -359,91 +388,6 @@
                       </v-btn>
                     </div>
                   </div>
-                </div>
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <!-- 通知偏好設定區塊 -->
-          <v-col
-            cols="12"
-            class="pa-0"
-          >
-            <v-card elevation="0">
-              <v-card-title class="profile-sub-title">
-                通知偏好設定
-              </v-card-title>
-              <v-card-text>
-                <v-checkbox
-                  v-model="notificationPrefs.email"
-                  label="&nbsp;EMAIL 通知"
-                  density="compact"
-                  hide-details
-                  class="mb-2"
-                  color="blue-grey-darken-2"
-                  @update:model-value="updateNotificationPreferences"
-                />
-                <v-checkbox
-                  v-model="notificationPrefs.line"
-                  label="&nbsp;LINE 通知"
-                  :disabled="!lineBindingStatus.isBound"
-                  density="compact"
-                  hide-details
-                  class="mb-2"
-                  color="blue-grey-darken-2"
-                  @update:model-value="updateNotificationPreferences"
-                />
-                <v-checkbox
-                  v-model="notificationPrefs.inbox"
-                  label="&nbsp;內部收件匣通知"
-                  density="compact"
-                  hide-details
-                  color="blue-grey-darken-2"
-                  @update:model-value="updateNotificationPreferences"
-                />
-              </v-card-text>
-            </v-card>
-          </v-col>
-
-          <!-- 顯示設定區塊 -->
-          <v-col
-            cols="12"
-            class="pa-0"
-          >
-            <v-card elevation="0">
-              <v-card-title class="profile-sub-title">
-                顯示設定
-              </v-card-title>
-              <v-card-text>
-                <div class="mb-3">
-                  <div class="mb-2 sub-title-1 text-blue-grey-darken-2">
-                    介面縮放：
-                  </div>
-                  <v-radio-group
-                    v-model="selectedScale"
-                    inline
-                    density="compact"
-                    hide-details
-                    @update:model-value="handleScaleChange"
-                  >
-                    <v-radio
-                      label="100%"
-                      :value="100"
-                      color="blue-grey-darken-2"
-                      class="me-2"
-                    />
-                    <v-radio
-                      label="125%"
-                      :value="125"
-                      color="blue-grey-darken-2"
-                      class="me-2"
-                    />
-                    <v-radio
-                      label="150%"
-                      :value="150"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-radio-group>
                 </div>
               </v-card-text>
             </v-card>
@@ -690,6 +634,16 @@
     header-icon="mdi-alert-circle"
     @confirm="executeUnbind"
   />
+
+  <!-- 設定對話框 -->
+  <SettingsDialog
+    v-model="showSettingsDialog"
+    :notification-prefs="notificationPrefs"
+    :selected-scale="selectedScale"
+    :is-line-bound="lineBindingStatus.isBound"
+    @update:notification-prefs="notificationPrefs = $event"
+    @update:scale="selectedScale = $event"
+  />
 </template>
 
 <script setup>
@@ -706,6 +660,7 @@ import BackgroundImageDialog from '@/components/BackgroundImageDialog.vue'
 import BackgroundImageUsageStatsDialog from '@/components/BackgroundImageUsageStatsDialog.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import SettingsDialog from '@/components/SettingsDialog.vue'
 import { useApi } from '@/composables/axios'
 
 const { mdAndUp, width, smAndUp } = useDisplay()
@@ -732,6 +687,7 @@ const showConfirmPassword = ref(false)
 const showBackgroundDialog = ref(false)
 const isUpdatingBackground = ref(false)
 const showUsageStatsDialog = ref(false)
+const showSettingsDialog = ref(false)
 
 const passwordForm = ref({
   currentPassword: '',
@@ -751,15 +707,6 @@ const { apiAuth } = useApi()
 
 // 介面縮放設定
 const selectedScale = ref(appStore.uiScale)
-
-// 處理縮放變更
-const handleScaleChange = (size) => {
-  appStore.setScale(size)
-  createSnackbar({
-    text: `介面縮放已設定為 ${size}%`,
-    snackbarProps: { color: 'teal-lighten-1' }
-  })
-}
 
 // 監聽 store 中的縮放變化
 watch(() => appStore.uiScale, (newSize) => {
@@ -1032,28 +979,6 @@ const executeUnbind = async () => {
   }
 }
 
-// 更新通知偏好設定
-const updateNotificationPreferences = async () => {
-  try {
-    const { data } = await apiAuth.put('/line/notification-preferences', {
-      email: notificationPrefs.value.email,
-      line: notificationPrefs.value.line,
-      inbox: notificationPrefs.value.inbox
-    })
-    if (data.success) {
-      createSnackbar({
-        text: '通知偏好設定更新成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
-    }
-  } catch (error) {
-    console.error('更新通知偏好設定失敗:', error)
-    createSnackbar({
-      text: error.response?.data?.message || '更新通知偏好設定失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  }
-}
 
 // 複製認證碼
 const copyToken = async () => {

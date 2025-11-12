@@ -12,7 +12,7 @@
         icon
         :color="buttonColor"
         :size="buttonSize"
-        class="me-2"
+        class="me-4 me-sm-2"
         :ripple="false"
         flat
       >
@@ -270,7 +270,7 @@ const notifications = computed(() => {
   if (!props.filterType) {
     return allNotifications.value
   }
-  
+
   if (props.filterType === 'task') {
     // 只顯示任務相關的通知
     return allNotifications.value.filter(n => {
@@ -294,7 +294,7 @@ const notifications = computed(() => {
       return !taskNotificationTypes.includes(notificationType)
     })
   }
-  
+
   return allNotifications.value
 })
 
