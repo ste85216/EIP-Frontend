@@ -4,7 +4,7 @@
     <v-row class="pt-md-5 px-lg-10 px-xxl-6">
       <v-col cols="12">
         <v-card class="elevation-4 rounded-lg py-3 py-sm-7 px-0">
-          <v-row class="d-flex align-center justify-space-between px-9 px-sm-10 py-5">
+          <v-row class="d-flex align-center justify-space-between ps-8 pe-7 px-sm-10 py-5">
             <h3
               class="d-inline-block"
               style="min-width: 160px;"
@@ -33,16 +33,7 @@
               >
                 通知設定管理
               </v-btn>
-              <v-btn
-                to="/marketingDesignRequest"
-                variant="plain"
-                :ripple="false"
-                color="blue-grey-darken-2"
-                class="px-0"
-                :size="smAndUp ? 'default' : 'small'"
-              >
-                申請頁面 >
-              </v-btn>
+
             </span>
           </v-row>
           <v-divider class="mt-2 mt-sm-5 mb-2 mb-sm-6" />
@@ -253,7 +244,7 @@
           </v-card-text>
           <v-divider class="my-2" />
           <!-- 表格區塊 -->
-          <v-card-text class="px-8">
+          <v-card-text class="px-sm-5 px-md-6 px-lg-7">
             <v-data-table-server
               v-model:items-per-page="tableOptions.itemsPerPage"
               v-model:page="tableOptions.page"
@@ -2110,6 +2101,7 @@
                 <v-btn
                   color="teal-darken-2"
                   variant="outlined"
+                  :size="smAndUp ? 'default' : 'small'"
                   :loading="addingEmail"
                   @click="addNotificationEmail"
                 >

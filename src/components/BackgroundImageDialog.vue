@@ -87,11 +87,12 @@
           color="blue-grey-darken-2"
         />
       </v-card-text>
-      <v-card-actions class="px-5 mb-3">
+      <v-card-actions class="px-5 mb-3 mt-1">
         <v-spacer />
         <v-btn
           color="grey-darken-1"
           variant="outlined"
+          :size="smAndUp ? 'default' : 'small'"
           @click="closeDialog"
         >
           取消
@@ -99,6 +100,7 @@
         <v-btn
           color="blue-grey-darken-2"
           variant="outlined"
+          :size="smAndUp ? 'default' : 'small'"
           class="ms-1"
           :loading="isUpdating"
           @click="handleConfirm"
@@ -114,7 +116,7 @@
 import { computed, ref, watch } from 'vue'
 import { useDisplay } from 'vuetify'
 
-const { mdAndUp } = useDisplay()
+const { mdAndUp, smAndUp } = useDisplay()
 
 const buttonSize = computed(() => mdAndUp.value ? 'default' : 'small')
 

@@ -16,19 +16,28 @@
           color="teal-darken-1"
           align-tabs="start"
         >
-          <v-tab value="spareParts">
+          <v-tab
+            v-if="showSparePartTab"
+            value="spareParts"
+          >
             <v-icon start>
               mdi-package-variant
             </v-icon>
             備品管理
           </v-tab>
-          <v-tab value="warehouses">
+          <v-tab
+            v-if="showWarehouseTab"
+            value="warehouses"
+          >
             <v-icon start>
               mdi-warehouse
             </v-icon>
             倉庫管理
           </v-tab>
-          <v-tab value="manufacturers">
+          <v-tab
+            v-if="showManufacturerTab"
+            value="manufacturers"
+          >
             <v-icon start>
               mdi-factory
             </v-icon>
@@ -85,13 +94,17 @@
                 </v-row>
 
                 <!-- 備品表格 -->
-                <v-data-table
-                  :items="filteredSpareParts"
+                <v-data-table-server
+                  v-model:items-per-page="itemsPerPage"
+                  :items="spareParts"
                   :headers="sparePartHeaders"
                   :loading="sparePartLoading"
+                  :page="sparePartCurrentPage"
+                  :items-length="sparePartTotalItems"
                   hover
                   density="compact"
                   class="mt-4 rounded-ts-lg rounded-te-lg"
+                  @update:options="handleSparePartTableOptionsChange"
                 >
                   <template #item="{ item, index }">
                     <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
@@ -117,10 +130,12 @@
                       <td>{{ formatDate(item.createdAt) }}</td>
                       <td>{{ item.creator?.name || '-' }}</td>
                       <td>{{ item.manufacturer?.name || '-' }}</td>
-                      <td>
+                      <td
+                        style="max-width: 280px;"
+                      >
                         <div
                           v-if="item.warehouses && item.warehouses.length > 0"
-                          class="d-flex flex-wrap ga-1"
+                          class="d-flex flex-wrap ga-1 py-2"
                         >
                           <v-chip
                             v-for="warehouse in item.warehouses"
@@ -189,7 +204,7 @@
                       </td>
                     </tr>
                   </template>
-                </v-data-table>
+                </v-data-table-server>
               </v-card-text>
             </v-card>
           </v-window-item>
@@ -242,13 +257,17 @@
                 </v-row>
 
                 <!-- 倉庫表格 -->
-                <v-data-table
-                  :items="filteredWarehouses"
+                <v-data-table-server
+                  v-model:items-per-page="itemsPerPage"
+                  :items="warehouses"
                   :headers="warehouseHeaders"
                   :loading="warehouseLoading"
+                  :page="warehouseCurrentPage"
+                  :items-length="warehouseTotalItems"
                   hover
                   density="compact"
                   class="mt-4 rounded-ts-lg rounded-te-lg"
+                  @update:options="handleWarehouseTableOptionsChange"
                 >
                   <template #item="{ item, index }">
                     <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
@@ -322,7 +341,7 @@
                       </td>
                     </tr>
                   </template>
-                </v-data-table>
+                </v-data-table-server>
               </v-card-text>
             </v-card>
           </v-window-item>
@@ -365,13 +384,17 @@
                 </v-row>
 
                 <!-- 廠商表格 -->
-                <v-data-table
-                  :items="filteredManufacturers"
+                <v-data-table-server
+                  v-model:items-per-page="itemsPerPage"
+                  :items="manufacturers"
                   :headers="manufacturerHeaders"
                   :loading="isLoading"
+                  :page="manufacturerCurrentPage"
+                  :items-length="manufacturerTotalItems"
                   hover
                   density="compact"
                   class="mt-4 rounded-ts-lg rounded-te-lg"
+                  @update:options="handleManufacturerTableOptionsChange"
                 >
                   <template #item="{ item, index }">
                     <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
@@ -424,7 +447,7 @@
                       </td>
                     </tr>
                   </template>
-                </v-data-table>
+                </v-data-table-server>
               </v-card-text>
             </v-card>
           </v-window-item>
@@ -441,29 +464,31 @@
       :no-click-animation="isSubmitting"
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-8 py-4 bg-teal-darken-1 d-flex align-center">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
           <v-icon
-            size="20"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           >
             mdi-factory
           </v-icon>
-          {{ dialog.id ? '編輯廠商' : '新增廠商' }}
+          <span class="card-title text-white">{{ dialog.id ? '編輯廠商' : '新增廠商' }}</span>
           <v-spacer />
           <v-btn
             icon
-            color="white"
             variant="plain"
             class="opacity-100"
             :ripple="false"
-            size="20"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="closeDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
           </v-btn>
-        </div>
-        <v-card-text class="mt-4 mb-0 px-6">
+        </v-card-title>
+        <v-card-text class="px-6 py-4 mt-4">
           <v-form
             ref="form"
             v-model="formValid"
@@ -488,6 +513,7 @@
                   density="compact"
                   rows="3"
                   clearable
+                  hide-details
                 />
               </v-col>
               <v-col
@@ -502,30 +528,29 @@
                 />
               </v-col>
             </v-row>
-
-            <v-card-actions class="px-0 mt-4">
-              <v-spacer />
-              <v-btn
-                color="grey-darken-1"
-                variant="outlined"
-                :size="buttonSize"
-                @click="closeDialog"
-              >
-                取消
-              </v-btn>
-              <v-btn
-                color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                class="ms-2"
-                :size="buttonSize"
-                :loading="isSubmitting"
-              >
-                {{ dialog.id ? '修改' : '新增' }}
-              </v-btn>
-            </v-card-actions>
           </v-form>
         </v-card-text>
+        <v-card-actions class="px-6 pb-5 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="closeDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
+            :loading="isSubmitting"
+            @click="submit"
+          >
+            {{ dialog.id ? '修改' : '新增' }}
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -538,29 +563,31 @@
       :no-click-animation="sparePartSubmitting"
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-8 py-4 bg-teal-darken-1 d-flex align-center">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
           <v-icon
-            size="20"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           >
             mdi-package-variant
           </v-icon>
-          {{ sparePartDialog.id ? '編輯備品' : '新增備品' }}
+          <span class="card-title text-white">{{ sparePartDialog.id ? '編輯備品' : '新增備品' }}</span>
           <v-spacer />
           <v-btn
             icon
-            color="white"
             variant="plain"
             class="opacity-100"
             :ripple="false"
-            size="20"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="closeSparePartDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
           </v-btn>
-        </div>
-        <v-card-text class="mt-4 mb-0 px-6">
+        </v-card-title>
+        <v-card-text class="px-6 py-4 mt-4">
           <v-form
             ref="sparePartForm"
             v-model="sparePartFormValid"
@@ -596,13 +623,13 @@
                   :items="warehouseOptions"
                   item-title="name"
                   item-value="_id"
-                  label="倉庫"
+                  label="*倉庫"
                   variant="outlined"
                   density="compact"
                   multiple
                   chips
-                  clearable
                   :loading="warehousesLoading"
+                  :rules="[v => (v && v.length > 0) || '請至少選擇一個倉庫']"
                 />
               </v-col>
               <v-col cols="12">
@@ -649,6 +676,7 @@
                   density="compact"
                   rows="3"
                   clearable
+                  hide-details
                 />
               </v-col>
               <v-col
@@ -663,30 +691,29 @@
                 />
               </v-col>
             </v-row>
-
-            <v-card-actions class="px-0 mt-4">
-              <v-spacer />
-              <v-btn
-                color="grey-darken-1"
-                variant="outlined"
-                :size="buttonSize"
-                @click="closeSparePartDialog"
-              >
-                取消
-              </v-btn>
-              <v-btn
-                color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                class="ms-2"
-                :size="buttonSize"
-                :loading="sparePartSubmitting"
-              >
-                {{ sparePartDialog.id ? '修改' : '新增' }}
-              </v-btn>
-            </v-card-actions>
           </v-form>
         </v-card-text>
+        <v-card-actions class="px-6 pb-5 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="closeSparePartDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
+            :loading="sparePartSubmitting"
+            @click="submitSparePart"
+          >
+            {{ sparePartDialog.id ? '修改' : '新增' }}
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -699,29 +726,31 @@
       :no-click-animation="warehouseSubmitting"
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-8 py-4 bg-teal-darken-1 d-flex align-center">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
           <v-icon
-            size="20"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           >
             mdi-warehouse
           </v-icon>
-          {{ warehouseDialog.id ? '編輯倉庫' : '新增倉庫' }}
+          <span class="card-title text-white">{{ warehouseDialog.id ? '編輯倉庫' : '新增倉庫' }}</span>
           <v-spacer />
           <v-btn
             icon
-            color="white"
             variant="plain"
             class="opacity-100"
             :ripple="false"
-            size="20"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="closeWarehouseDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
           </v-btn>
-        </div>
-        <v-card-text class="mt-4 mb-0 px-6">
+        </v-card-title>
+        <v-card-text class="px-6 py-4 mt-4">
           <v-form
             ref="warehouseForm"
             v-model="warehouseFormValid"
@@ -768,6 +797,7 @@
                   density="compact"
                   rows="3"
                   clearable
+                  hide-details
                 />
               </v-col>
               <v-col
@@ -782,30 +812,29 @@
                 />
               </v-col>
             </v-row>
-
-            <v-card-actions class="px-0 mt-4">
-              <v-spacer />
-              <v-btn
-                color="grey-darken-1"
-                variant="outlined"
-                :size="buttonSize"
-                @click="closeWarehouseDialog"
-              >
-                取消
-              </v-btn>
-              <v-btn
-                color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                class="ms-2"
-                :size="buttonSize"
-                :loading="warehouseSubmitting"
-              >
-                {{ warehouseDialog.id ? '修改' : '新增' }}
-              </v-btn>
-            </v-card-actions>
           </v-form>
         </v-card-text>
+        <v-card-actions class="px-6 pb-5 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="closeWarehouseDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
+            :loading="warehouseSubmitting"
+            @click="submitWarehouse"
+          >
+            {{ warehouseDialog.id ? '修改' : '新增' }}
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -854,23 +883,26 @@
       max-width="400"
     >
       <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
           <v-icon
-            icon="mdi-sort"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
-          />
+          >
+            mdi-sort
+          </v-icon>
           <span class="card-title text-white">倉庫排序</span>
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="smAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="showWarehouseSortDialog = false"
           >
-            <v-icon :size="smAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -915,7 +947,7 @@
           </draggable>
         </v-card-text>
 
-        <v-card-actions class="px-6 pt-2 pb-5">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"
@@ -945,23 +977,26 @@
       max-width="400"
     >
       <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
           <v-icon
-            icon="mdi-sort"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
-          />
+          >
+            mdi-sort
+          </v-icon>
           <span class="card-title text-white">備品排序</span>
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="smAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="showSortDialog = false"
           >
-            <v-icon :size="smAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -1006,7 +1041,7 @@
           </draggable>
         </v-card-text>
 
-        <v-card-actions class="px-6 pt-2 pb-5">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"
@@ -1037,6 +1072,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { definePage } from 'vue-router/auto'
 import { useDisplay } from 'vuetify'
 import { useUserStore } from '@/stores/user'
+import { usePermissionStore } from '@/stores/permission'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useRouter } from 'vue-router'
@@ -1049,13 +1085,14 @@ definePage({
   meta: {
     title: '備品管理 | Ystravel',
     login: true,
-    permission: 'SPARE_PART_INVENTORY_MANAGEMENT_READ'
+    permission: 'SPARE_PART_MANAGEMENT_READ'
   }
 })
 
 // ===== API 與 Store 初始化 =====
 const { apiAuth } = useApi()
 const user = useUserStore()
+const permissionStore = usePermissionStore()
 const createSnackbar = useSnackbar()
 const router = useRouter()
 
@@ -1067,6 +1104,65 @@ const dialogWidth = computed(() => smAndUp.value ? '500' : '100%')
 // ===== Tab 管理 =====
 const activeTab = ref('spareParts')
 
+// ===== 權限檢查 =====
+// 檢查是否顯示備品管理 TAB（需要備品 READ 權限，SPARE_PART_MANAGEMENT_READ 只是用來控制能否進入頁面）
+const showSparePartTab = computed(() => {
+  return permissionStore.hasPermission('SPARE_PART_READ')
+})
+
+// 檢查是否顯示廠商管理 TAB（需要廠商 READ 權限）
+const showManufacturerTab = computed(() => {
+  return permissionStore.hasPermission('SPARE_PART_MANUFACTURER_READ')
+})
+
+// 檢查是否顯示倉庫管理 TAB（需要倉庫 READ 權限）
+const showWarehouseTab = computed(() => {
+  return permissionStore.hasPermission('SPARE_PART_WAREHOUSE_READ')
+})
+
+// 檢查是否有備品管理權限（用於確保能讀取倉庫和廠商資料）
+// 只有 SPARE_PART_READ 權限時，才需要載入倉庫和廠商資料用於備品表單
+const hasSparePartPermission = computed(() => {
+  return permissionStore.hasPermission('SPARE_PART_READ')
+})
+
+// 初始化 activeTab，設定為第一個有權限的 TAB
+const initializeActiveTab = () => {
+  if (showSparePartTab.value) {
+    activeTab.value = 'spareParts'
+  } else if (showWarehouseTab.value) {
+    activeTab.value = 'warehouses'
+  } else if (showManufacturerTab.value) {
+    activeTab.value = 'manufacturers'
+  }
+}
+
+// 監聽 activeTab 變化，確保切換到有權限的 TAB
+watch(activeTab, (newTab) => {
+  // 如果切換到備品 TAB 但沒有權限，切換到第一個有權限的 TAB
+  if (newTab === 'spareParts' && !showSparePartTab.value) {
+    initializeActiveTab()
+  }
+  // 如果切換到倉庫 TAB 但沒有權限，切換到第一個有權限的 TAB
+  if (newTab === 'warehouses' && !showWarehouseTab.value) {
+    initializeActiveTab()
+  }
+  // 如果切換到廠商 TAB 但沒有權限，切換到第一個有權限的 TAB
+  if (newTab === 'manufacturers' && !showManufacturerTab.value) {
+    initializeActiveTab()
+  }
+})
+
+// 監聽權限變化，自動切換到第一個有權限的 TAB
+watch([showSparePartTab, showWarehouseTab, showManufacturerTab], () => {
+  // 如果當前 TAB 沒有權限，切換到第一個有權限的 TAB
+  if ((activeTab.value === 'spareParts' && !showSparePartTab.value) ||
+      (activeTab.value === 'warehouses' && !showWarehouseTab.value) ||
+      (activeTab.value === 'manufacturers' && !showManufacturerTab.value)) {
+    initializeActiveTab()
+  }
+}, { immediate: true })
+
 // ===== 廠商管理相關狀態 =====
 const isLoading = ref(false)
 const isSubmitting = ref(false)
@@ -1076,7 +1172,8 @@ const formValid = ref(false)
 const manufacturers = ref([])
 const manufacturerCurrentPage = ref(1)
 const manufacturerTotalPages = ref(1)
-const itemsPerPage = 10
+const manufacturerTotalItems = ref(0)
+const itemsPerPage = ref(10)
 
 // ===== 廠商搜尋相關 =====
 const quickSearchText = ref('')
@@ -1119,6 +1216,7 @@ const warehouseFormValid = ref(false)
 const warehouses = ref([])
 const warehouseCurrentPage = ref(1)
 const warehouseTotalPages = ref(1)
+const warehouseTotalItems = ref(0)
 const showWarehouseSortDialog = ref(false)
 const sortableWarehouses = ref([])
 const isUpdatingWarehouseOrder = ref(false)
@@ -1173,6 +1271,7 @@ const sortableSpareParts = ref([])
 const isUpdatingOrder = ref(false)
 const sparePartCurrentPage = ref(1)
 const sparePartTotalPages = ref(1)
+const sparePartTotalItems = ref(0)
 
 // ===== 備品搜尋相關 =====
 const sparePartSearchText = ref('')
@@ -1272,37 +1371,6 @@ const sparePartHeaders = [
   { title: '操作', key: 'action', sortable: false, align: 'center' }
 ]
 
-// ===== 計算屬性 =====
-const filteredManufacturers = computed(() => {
-  if (!quickSearchText.value) return manufacturers.value
-  const search = quickSearchText.value.toLowerCase()
-  return manufacturers.value.filter(item =>
-    item.name.toLowerCase().includes(search) ||
-    (item.note && item.note.toLowerCase().includes(search))
-  )
-})
-
-const filteredWarehouses = computed(() => {
-  if (!warehouseSearchText.value) return warehouses.value
-  const search = warehouseSearchText.value.toLowerCase()
-  return warehouses.value.filter(item =>
-    item.name.toLowerCase().includes(search) ||
-    (item.address && item.address.toLowerCase().includes(search)) ||
-    (item.note && item.note.toLowerCase().includes(search)) ||
-    (item.company?.name && item.company.name.toLowerCase().includes(search))
-  )
-})
-
-const filteredSpareParts = computed(() => {
-  if (!sparePartSearchText.value) return spareParts.value
-  const search = sparePartSearchText.value.toLowerCase()
-  return spareParts.value.filter(item =>
-    item.name.toLowerCase().includes(search) ||
-    (item.packaging && item.packaging.toLowerCase().includes(search)) ||
-    (item.note && item.note.toLowerCase().includes(search)) ||
-    (item.manufacturer?.name && item.manufacturer.name.toLowerCase().includes(search))
-  )
-})
 
 // ===== 方法 =====
 const loadCompanies = async () => {
@@ -1325,7 +1393,7 @@ const loadManufacturers = async () => {
 
     const params = {
       page: manufacturerCurrentPage.value,
-      itemsPerPage
+      itemsPerPage: itemsPerPage.value
     }
 
     if (quickSearchText.value) {
@@ -1337,6 +1405,7 @@ const loadManufacturers = async () => {
     if (data.success) {
       manufacturers.value = data.result.data
       manufacturerTotalPages.value = data.result.totalPages
+      manufacturerTotalItems.value = data.result.totalItems || 0
     }
   } catch (error) {
     handleError(error)
@@ -1351,7 +1420,7 @@ const loadWarehouses = async () => {
 
     const params = {
       page: warehouseCurrentPage.value,
-      itemsPerPage
+      itemsPerPage: itemsPerPage.value
     }
 
     if (warehouseSearchText.value) {
@@ -1363,6 +1432,7 @@ const loadWarehouses = async () => {
     if (data.success) {
       warehouses.value = data.result.data
       warehouseTotalPages.value = data.result.totalPages
+      warehouseTotalItems.value = data.result.totalItems || 0
     }
   } catch (error) {
     handleError(error)
@@ -1377,7 +1447,7 @@ const loadSpareParts = async () => {
 
     const params = {
       page: sparePartCurrentPage.value,
-      itemsPerPage
+      itemsPerPage: itemsPerPage.value
     }
 
     if (sparePartSearchText.value) {
@@ -1389,6 +1459,7 @@ const loadSpareParts = async () => {
     if (data.success) {
       spareParts.value = data.result.data
       sparePartTotalPages.value = data.result.totalPages
+      sparePartTotalItems.value = data.result.totalItems || 0
     }
   } catch (error) {
     handleError(error)
@@ -1821,9 +1892,30 @@ const formatCurrency = (value) => {
   }).format(value)
 }
 
+// 載入所有備品用於排序
+const loadAllSparePartsForSort = async () => {
+  try {
+    const params = {
+      page: 1,
+      itemsPerPage: 9999 // 載入所有資料
+    }
+
+    const { data } = await apiAuth.get('/spareParts', { params })
+
+    if (data.success) {
+      return data.result.data
+    }
+    return []
+  } catch (error) {
+    handleError(error)
+    return []
+  }
+}
+
 // 排序管理
-const openSortDialog = () => {
-  sortableSpareParts.value = [...spareParts.value].sort((a, b) => (a.order || 0) - (b.order || 0))
+const openSortDialog = async () => {
+  const allSpareParts = await loadAllSparePartsForSort()
+  sortableSpareParts.value = [...allSpareParts].sort((a, b) => (a.order || 0) - (b.order || 0))
   showSortDialog.value = true
 }
 
@@ -1855,9 +1947,30 @@ const updateOrder = async () => {
   }
 }
 
+// 載入所有倉庫用於排序
+const loadAllWarehousesForSort = async () => {
+  try {
+    const params = {
+      page: 1,
+      itemsPerPage: 9999 // 載入所有資料
+    }
+
+    const { data } = await apiAuth.get('/warehouses', { params })
+
+    if (data.success) {
+      return data.result.data
+    }
+    return []
+  } catch (error) {
+    handleError(error)
+    return []
+  }
+}
+
 // 倉庫排序管理
-const openWarehouseSortDialog = () => {
-  sortableWarehouses.value = [...warehouses.value].sort((a, b) => (a.order || 0) - (b.order || 0))
+const openWarehouseSortDialog = async () => {
+  const allWarehouses = await loadAllWarehousesForSort()
+  sortableWarehouses.value = [...allWarehouses].sort((a, b) => (a.order || 0) - (b.order || 0))
   showWarehouseSortDialog.value = true
 }
 
@@ -1889,14 +2002,52 @@ const updateWarehouseOrder = async () => {
   }
 }
 
+// ===== 表格選項變更處理 =====
+const handleSparePartTableOptionsChange = async (options) => {
+  sparePartCurrentPage.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  await loadSpareParts()
+}
+
+const handleWarehouseTableOptionsChange = async (options) => {
+  warehouseCurrentPage.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  await loadWarehouses()
+}
+
+const handleManufacturerTableOptionsChange = async (options) => {
+  manufacturerCurrentPage.value = options.page
+  itemsPerPage.value = options.itemsPerPage
+  await loadManufacturers()
+}
+
 // ===== 生命週期鉤子 =====
 onMounted(async () => {
-  await Promise.all([
-    loadCompanies(),
-    loadManufacturers(),
-    loadWarehouses(),
-    loadSpareParts()
-  ])
+  const loadPromises = []
+
+  // 根據權限載入對應的資料
+  if (showSparePartTab.value) {
+    // 如果有備品管理權限，需要載入倉庫和廠商資料（用於備品表單的下拉選單）
+    // 即使沒有倉庫/廠商的完整權限，也要能讀取它們的資料
+    loadPromises.push(loadCompanies(), loadSpareParts())
+    if (hasSparePartPermission.value) {
+      loadPromises.push(loadManufacturers(), loadWarehouses())
+    }
+  }
+
+  if (showWarehouseTab.value) {
+    loadPromises.push(loadWarehouses())
+    // 如果還沒有載入公司資料，載入它（倉庫需要公司資料）
+    if (!showSparePartTab.value) {
+      loadPromises.push(loadCompanies())
+    }
+  }
+
+  if (showManufacturerTab.value) {
+    loadPromises.push(loadManufacturers())
+  }
+
+  await Promise.all(loadPromises)
 })
 </script>
 

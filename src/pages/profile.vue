@@ -299,10 +299,14 @@
           </v-col>
 
           <!-- LINE 綁定區塊 -->
-          <v-col cols="12">
+          <v-col
+            v-if="false"
+            cols="12"
+          >
             <v-divider />
           </v-col>
           <v-col
+            v-if="false"
             cols="12"
             class="pa-0"
           >

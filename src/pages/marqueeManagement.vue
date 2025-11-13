@@ -95,19 +95,28 @@
             </v-row>
           </v-col>
           <v-col cols="12">
-            <v-data-table
+            <v-data-table-server
+              v-model:items-per-page="itemsPerPage"
               :headers="headers"
               :items="items"
               :loading="tableLoading"
-              :items-per-page="itemsPerPage"
               :page="currentPage"
-              :server-items-length="totalItems"
+              :items-length="totalItems"
               density="compact"
               class="elevation-0 rounded"
               @update:options="handleTableOptions"
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                  <td class="text-center">
+                    <v-chip
+                      size="small"
+                      color="blue-grey"
+                      variant="tonal"
+                    >
+                      {{ item.order || 0 }}
+                    </v-chip>
+                  </td>
                   <td>
                     <v-chip
                       :color="getTypeColor(item.type)"
@@ -133,14 +142,6 @@
                     </v-chip>
                   </td>
                   <td>
-                    <v-chip
-                      color="blue-grey-darken-1"
-                      size="small"
-                    >
-                      {{ item.order }}
-                    </v-chip>
-                  </td>
-                  <td>
                     <div class="d-flex flex-column">
                       <span>{{ formatDateOnly(item.startDate) }}</span>
                       <span class="text-caption text-medium-emphasis">{{ formatTimeOnly(item.startDate) }}</span>
@@ -154,7 +155,7 @@
                   </td>
                   <td>{{ item.publisher?.name || '未知' }}</td>
                   <td>
-                    <div class="d-flex align-center gap-1">
+                    <div class="d-flex align-center gap-1 justify-center">
                       <v-btn
                         icon
                         size="small"
@@ -192,7 +193,7 @@
                   </td>
                 </tr>
               </template>
-            </v-data-table>
+            </v-data-table-server>
           </v-col>
         </v-row>
       </v-col>
@@ -204,11 +205,11 @@
       max-width="680"
       persistent
     >
-      <v-card class="rounded-lg pb-2">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-teal-darken-1">
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
           <v-icon
             icon="mdi-bullhorn"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
@@ -216,11 +217,14 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="closeEditDialog"
           >
-            <v-icon size="20">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -319,11 +323,12 @@
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="px-6 pt-0">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"
             color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
             @click="closeEditDialog"
           >
             取消
@@ -332,6 +337,7 @@
             color="teal-darken-1"
             variant="outlined"
             class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
             :loading="submitting"
             @click="submit"
           >
@@ -347,10 +353,10 @@
       max-width="400"
     >
       <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
           <v-icon
             icon="mdi-sort"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
@@ -358,11 +364,14 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="showSortDialog = false"
           >
-            <v-icon size="20">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -417,11 +426,12 @@
             </template>
           </draggable>
         </v-card-text>
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"
             color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
             @click="showSortDialog = false"
           >
             取消
@@ -430,6 +440,7 @@
             color="blue-grey-darken-2"
             variant="outlined"
             class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
             :loading="isUpdatingOrder"
             @click="updateOrder"
           >
@@ -473,6 +484,7 @@
 import { definePage } from 'vue-router/auto'
 import { ref, onMounted, watch } from 'vue'
 import { useSnackbar } from 'vuetify-use-dialog'
+import { useDisplay } from 'vuetify'
 import { debounce } from 'lodash'
 import { useApi } from '@/composables/axios'
 import draggable from 'vuedraggable'
@@ -489,6 +501,7 @@ definePage({
 
 const createSnackbar = useSnackbar()
 const { apiAuth } = useApi()
+const { smAndUp } = useDisplay()
 
 // 資料
 const items = ref([])
@@ -518,14 +531,14 @@ const statusOptions = [
 
 // 表頭
 const headers = [
-  { title: '類型', key: 'type', sortable: true, width: '100px' },
+  { title: '排序', key: 'order', sortable: false, align: 'center'},
+  { title: '類型', key: 'type', sortable: true },
   { title: '內容', key: 'content', sortable: false },
-  { title: '狀態', key: 'isActive', sortable: true, width: '100px' },
-  { title: '排序', key: 'order', sortable: true, width: '120px' },
-  { title: '開始時間', key: 'startDate', sortable: true, width: '120px' },
-  { title: '結束時間', key: 'endDate', sortable: true, width: '120px' },
-  { title: '發布者', key: 'publisher', sortable: false, width: '100px' },
-  { title: '操作', key: 'actions', sortable: false, align: 'center', width: '120px' }
+  { title: '狀態', key: 'isActive', sortable: true },
+  { title: '開始時間', key: 'startDate', sortable: true },
+  { title: '結束時間', key: 'endDate', sortable: true },
+  { title: '發布者', key: 'publisher', sortable: false },
+  { title: '操作', key: 'actions', sortable: false, align: 'center' }
 ]
 
 // 表單
@@ -668,8 +681,27 @@ const doDelete = async () => {
   }
 }
 
+// 載入所有跑馬燈用於排序
+const loadAllMarqueesForSort = async () => {
+  try {
+    const params = {
+      page: 1,
+      itemsPerPage: 9999 // 載入所有資料
+    }
+    const { data } = await apiAuth.get('/marquees', { params })
+    return data.result.data || []
+  } catch (err) {
+    createSnackbar({ text: err.response?.data?.message || err.message || '載入失敗', snackbarProps: { color: 'red-lighten-1' } })
+    return []
+  }
+}
+
 // 排序
-const openSortDialog = () => { sortableItems.value = [...items.value].sort((a, b) => (a.order || 0) - (b.order || 0)); showSortDialog.value = true }
+const openSortDialog = async () => {
+  const allItems = await loadAllMarqueesForSort()
+  sortableItems.value = [...allItems].sort((a, b) => (a.order || 0) - (b.order || 0))
+  showSortDialog.value = true
+}
 const updateOrder = async () => {
   try {
     isUpdatingOrder.value = true

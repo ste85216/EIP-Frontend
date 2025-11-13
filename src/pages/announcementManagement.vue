@@ -91,14 +91,14 @@
           </v-col>
           <v-col cols="12">
             <!-- 表格 -->
-            <v-data-table
+            <v-data-table-server
+              v-model:items-per-page="itemsPerPage"
               :headers="headers"
               :items="announcements"
               :loading="tableLoading"
-              :items-per-page="itemsPerPage"
               :items-per-page-options="itemsPerPageOptions"
               :page="currentPage"
-              :server-items-length="totalItems"
+              :items-length="totalItems"
               class="elevation-0 rounded"
               @update:options="handleTableOptions"
             >
@@ -203,7 +203,7 @@
                   </td>
                 </tr>
               </template>
-            </v-data-table>
+            </v-data-table-server>
           </v-col>
         </v-row>
       </v-col>
@@ -216,11 +216,11 @@
       persistent
       scrollable
     >
-      <v-card class="rounded-lg pb-2">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-teal-darken-1">
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
           <v-icon
             icon="mdi-bullhorn-outline"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
@@ -228,12 +228,14 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="mdAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="closeCreateDialog"
           >
-            <v-icon :size="mdAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -457,12 +459,12 @@
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"
             color="grey-darken-1"
-            :size="mdAndUp ? 'default' : 'small'"
+            :size="smAndUp ? 'default' : 'small'"
             @click="closeCreateDialog"
           >
             取消
@@ -471,7 +473,7 @@
             color="teal-darken-1"
             variant="outlined"
             class="ms-2"
-            :size="mdAndUp ? 'default' : 'small'"
+            :size="smAndUp ? 'default' : 'small'"
             :loading="isSubmitting"
             @click="handleSubmit"
           >
@@ -518,7 +520,7 @@ definePage({
 
 const createSnackbar = useSnackbar()
 const { apiAuth } = useApi()
-const { mdAndUp } = useDisplay()
+const { mdAndUp, smAndUp } = useDisplay()
 
 // 響應式資料
 const announcements = ref([])

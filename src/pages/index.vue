@@ -299,7 +299,10 @@
                     </tr>
                   </template>
                   <template #no-data>
-                    <div class="text-center text-grey pt-4 pb-4">
+                    <div
+                      class="text-center text-grey pt-4 pb-4"
+                      style="cursor: default;"
+                    >
                       暫無公告
                     </div>
                   </template>

@@ -647,9 +647,7 @@ const permissionModules = ref([
     pagePermission: 'SPARE_PART_INVENTORY_MANAGEMENT_READ',
     features: [
       { key: 'sparePartInventoryRead', name: '查看備品庫存', permission: 'SPARE_PART_INVENTORY_READ' },
-      { key: 'sparePartInventoryCreate', name: '新增備品庫存', permission: 'SPARE_PART_INVENTORY_CREATE' },
-      { key: 'sparePartInventoryUpdate', name: '編輯備品庫存', permission: 'SPARE_PART_INVENTORY_UPDATE' },
-      { key: 'sparePartInventoryDelete', name: '刪除備品庫存', permission: 'SPARE_PART_INVENTORY_DELETE' },
+      { key: 'sparePartInventoryUpdate', name: '編輯備品庫存', permission: 'SPARE_PART_INVENTORY_UPDATE' }
     ]
   },
   { key: 'employeeList',

@@ -23,6 +23,14 @@
                 >
                   新增共享資源
                 </v-btn>
+                <v-btn
+                  prepend-icon="mdi-sort"
+                  color="blue-grey-darken-2"
+                  variant="outlined"
+                  @click="openSortDialog"
+                >
+                  排序
+                </v-btn>
               </v-col>
               <v-col
                 sm="3"
@@ -91,18 +99,27 @@
           </v-col>
           <v-col cols="12">
             <!-- 表格 -->
-            <v-data-table
+            <v-data-table-server
+              v-model:items-per-page="itemsPerPage"
               :headers="headers"
               :items="resources"
               :loading="tableLoading"
-              :items-per-page="itemsPerPage"
               :page="currentPage"
-              :server-items-length="totalItems"
+              :items-length="totalItems"
               class="elevation-0 rounded"
               @update:options="handleTableOptions"
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                  <td class="text-center">
+                    <v-chip
+                      size="small"
+                      color="blue-grey"
+                      variant="tonal"
+                    >
+                      {{ item.order || 0 }}
+                    </v-chip>
+                  </td>
                   <td>
                     <div class="d-flex align-center">
                       <div
@@ -131,7 +148,6 @@
                   </td>
                   <td>{{ formatFileSize(item.file?.size) }}</td>
                   <td>{{ item.downloadCount || 0 }}</td>
-                  <td>{{ item.order }}</td>
                   <td>
                     <v-chip
                       :color="item.isActive ? 'green-darken-1' : 'grey-darken-1'"
@@ -180,11 +196,104 @@
                   </td>
                 </tr>
               </template>
-            </v-data-table>
+            </v-data-table-server>
           </v-col>
         </v-row>
       </v-col>
     </v-row>
+
+    <!-- 排序管理對話框 -->
+    <v-dialog
+      v-model="showSortDialog"
+      max-width="400"
+    >
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
+          <v-icon
+            icon="mdi-sort"
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
+          />
+          <span class="card-title text-white">共享資源排序</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="showSortDialog = false"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="px-6 py-4">
+          <div class="text-subtitle-1 mb-4">
+            拖拽調整共享資源顯示順序
+          </div>
+          <draggable
+            v-model="sortableResources"
+            item-key="_id"
+            class="sortable-list"
+            handle=".drag-handle"
+            animation="200"
+            ghost-class="ghost-item"
+            chosen-class="chosen-item"
+          >
+            <template #item="{ element, index }">
+              <v-list-item
+                :key="element._id"
+                class="border rounded mb-2"
+              >
+                <template #prepend>
+                  <div class="drag-handle cursor-move me-2">
+                    <v-icon color="grey-darken-1">
+                      mdi-drag-vertical
+                    </v-icon>
+                  </div>
+                </template>
+                <v-list-item-title>{{ element.name }}</v-list-item-title>
+                <template #append>
+                  <v-chip
+                    size="small"
+                    color="blue-grey"
+                  >
+                    {{ index + 1 }}
+                  </v-chip>
+                </template>
+              </v-list-item>
+            </template>
+          </draggable>
+        </v-card-text>
+
+        <v-card-actions class="px-6 pb-5 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="showSortDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="blue-grey-darken-2"
+            variant="outlined"
+            class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
+            :loading="isUpdatingOrder"
+            @click="updateOrder"
+          >
+            更新
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
 
     <!-- 新增/編輯共享資源對話框 -->
     <v-dialog
@@ -193,11 +302,11 @@
       persistent
       scrollable
     >
-      <v-card class="rounded-lg pb-2">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-teal-darken-1">
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
           <v-icon
             icon="mdi-folder-plus-outline"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
@@ -205,12 +314,14 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="mdAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="closeCreateDialog"
           >
-            <v-icon :size="mdAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -329,12 +440,12 @@
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"
             color="grey-darken-1"
-            :size="mdAndUp ? 'default' : 'small'"
+            :size="smAndUp ? 'default' : 'small'"
             @click="closeCreateDialog"
           >
             取消
@@ -343,7 +454,7 @@
             color="teal-darken-1"
             variant="outlined"
             class="ms-2"
-            :size="mdAndUp ? 'default' : 'small'"
+            :size="smAndUp ? 'default' : 'small'"
             :loading="isSubmitting"
             @click="handleSubmit"
           >
@@ -378,6 +489,7 @@ import { useApi } from '@/composables/axios'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 import { useForm, useField } from 'vee-validate'
 import * as yup from 'yup'
+import draggable from 'vuedraggable'
 
 definePage({
   meta: {
@@ -389,7 +501,7 @@ definePage({
 
 const createSnackbar = useSnackbar()
 const { apiAuth } = useApi()
-const { mdAndUp } = useDisplay()
+const { smAndUp } = useDisplay()
 
 // 響應式資料
 const resources = ref([])
@@ -426,12 +538,12 @@ const statusOptions = [
 
 // 表格標題
 const headers = [
+  { title: '排序', key: 'order', sortable: false, align: 'center', width: '80px' },
   { title: '檔案名稱', key: 'name', sortable: true },
   { title: '類型', key: 'type', sortable: true },
   { title: '描述', key: 'description', sortable: false },
   { title: '大小', key: 'file.size', sortable: true },
   { title: '下載次數', key: 'downloadCount', sortable: true },
-  { title: '排序', key: 'order', sortable: true },
   { title: '狀態', key: 'isActive', sortable: true },
   { title: '建立者', key: 'creator', sortable: false },
   { title: '操作', key: 'actions', sortable: false, width: '120px', align: 'center' }
@@ -440,6 +552,9 @@ const headers = [
 // 對話框狀態
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showSortDialog = ref(false)
+const sortableResources = ref([])
+const isUpdatingOrder = ref(false)
 
 // 表單驗證
 const schema = yup.object({
@@ -670,6 +785,60 @@ const handleSubmit = validateForm(async (values) => {
   }
 })
 
+// 載入所有共享資源用於排序
+const loadAllResourcesForSort = async () => {
+  try {
+    const params = {
+      page: 1,
+      itemsPerPage: 9999 // 載入所有資料
+    }
+    const response = await apiAuth.get('/sharedResources', { params })
+    return response.data.result.data || []
+  } catch (error) {
+    console.error('載入共享資源錯誤:', error)
+    createSnackbar({
+      text: error.response?.data?.message || error.message || '載入共享資源失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    return []
+  }
+}
+
+// 排序管理
+const openSortDialog = async () => {
+  const allResources = await loadAllResourcesForSort()
+  sortableResources.value = [...allResources].sort((a, b) => (a.order || 0) - (b.order || 0))
+  showSortDialog.value = true
+}
+
+const updateOrder = async () => {
+  try {
+    isUpdatingOrder.value = true
+
+    const sharedResourcesData = sortableResources.value.map((item, index) => ({
+      id: item._id,
+      order: index + 1
+    }))
+
+    const response = await apiAuth.patch('/sharedResources/order/update', { sharedResources: sharedResourcesData })
+    createSnackbar({
+      text: response.data.message,
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+
+    showSortDialog.value = false
+    await loadResources()
+  } catch (error) {
+    console.error('更新順序錯誤:', error)
+    createSnackbar({
+      text: error.response?.data?.message || error.message || '更新順序失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isUpdatingOrder.value = false
+  }
+}
+
 // 切換啟用狀態
 const toggleActive = async (resource) => {
   try {
@@ -856,6 +1025,42 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+// 排序對話框樣式
+.sortable-list {
+  min-height: 100px;
+}
+
+.drag-handle {
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  transition: background-color 0.1s ease;
+}
+
+.drag-handle:hover {
+  background-color: #e0e0e0;
+}
+
+.ghost-item {
+  opacity: 0.5;
+  background-color: #e3f2fd;
+  border: 2px dashed #2196f3;
+}
+
+.chosen-item {
+  background-color: #c9c9c9;
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cursor-move {
+  cursor: move;
 }
 </style>
 

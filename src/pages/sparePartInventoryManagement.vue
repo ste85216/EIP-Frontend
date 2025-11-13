@@ -71,12 +71,11 @@
                 </td>
                 <td :class="['actions-col right-group text-center pa-2', item.globalStartIndex % 2 === 0 ? 'warehouse-row-odd' : 'warehouse-row-even']">
                   <v-btn
-                    v-if="item.warehouses[0]?.inventoryId"
                     icon
                     color="blue-grey-darken-2"
                     variant="plain"
                     size="22"
-                    class="mx-1"
+                    class="me-2"
                     :ripple="false"
                     @click="viewHistory(item, item.warehouses[0])"
                   >
@@ -84,10 +83,21 @@
                   </v-btn>
                   <v-btn
                     icon
-                    color="teal-darken-1"
+                    color="orange-darken-3"
                     variant="plain"
                     size="22"
                     class="mx-1"
+                    :ripple="false"
+                    @click="openTransferDialog(item, item.warehouses[0])"
+                  >
+                    <v-icon>mdi-swap-horizontal</v-icon>
+                  </v-btn>
+                  <v-btn
+                    icon
+                    color="teal-darken-1"
+                    variant="plain"
+                    size="22"
+                    class="ms-2"
                     :ripple="false"
                     @click="openAdjustDialog(item, item.warehouses[0])"
                   >
@@ -109,12 +119,11 @@
                 </td>
                 <td class="actions-col right-group text-center pa-2">
                   <v-btn
-                    v-if="warehouse.inventoryId"
                     icon
                     color="blue-grey-darken-2"
                     variant="plain"
                     size="22"
-                    class="mx-1"
+                    class="me-2"
                     :ripple="false"
                     @click="viewHistory(item, warehouse)"
                   >
@@ -122,10 +131,21 @@
                   </v-btn>
                   <v-btn
                     icon
-                    color="teal-darken-1"
+                    color="orange-darken-3"
                     variant="plain"
                     size="22"
                     class="mx-1"
+                    :ripple="false"
+                    @click="openTransferDialog(item, warehouse)"
+                  >
+                    <v-icon>mdi-swap-horizontal</v-icon>
+                  </v-btn>
+                  <v-btn
+                    icon
+                    color="teal-darken-1"
+                    variant="plain"
+                    size="22"
+                    class="ms-2"
                     :ripple="false"
                     @click="openAdjustDialog(item, warehouse)"
                   >
@@ -148,29 +168,31 @@
       :no-click-animation="adjustSubmitting"
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-8 py-4 bg-teal-darken-1 d-flex align-center">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
           <v-icon
-            size="20"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           >
             mdi-pencil
           </v-icon>
-          {{ adjustDialog.inventoryId ? '調整庫存' : '新增庫存' }}
+          <span class="card-title text-white">{{ adjustDialog.inventoryId ? '調整庫存' : '新增庫存' }}</span>
           <v-spacer />
           <v-btn
             icon
-            color="white"
             variant="plain"
             class="opacity-100"
             :ripple="false"
-            size="20"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="closeAdjustDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
           </v-btn>
-        </div>
-        <v-card-text class="mt-0 mb-0 px-6">
+        </v-card-title>
+        <v-card-text class="px-6 pt-3 pb-5">
           <!-- 資訊提示 -->
           <div class="mb-6 mt-3 rounded">
             <div class="card-title">
@@ -214,30 +236,147 @@
                 />
               </v-col>
             </v-row>
-
-            <v-card-actions class="px-0 mt-4">
-              <v-spacer />
-              <v-btn
-                color="grey-darken-1"
-                variant="outlined"
-                :size="buttonSize"
-                @click="closeAdjustDialog"
-              >
-                取消
-              </v-btn>
-              <v-btn
-                color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                class="ms-2"
-                :size="buttonSize"
-                :loading="adjustSubmitting"
-              >
-                確認
-              </v-btn>
-            </v-card-actions>
           </v-form>
         </v-card-text>
+        <v-card-actions class="px-6 pb-5 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="closeAdjustDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
+            :loading="adjustSubmitting"
+            @click="submitAdjust"
+          >
+            確認
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 轉倉對話框 -->
+    <v-dialog
+      v-model="transferDialog.open"
+      persistent
+      width="600"
+      :fullscreen="!smAndUp"
+      :no-click-animation="transferSubmitting"
+    >
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-orange-darken-2">
+          <v-icon
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
+          >
+            mdi-swap-horizontal
+          </v-icon>
+          <span class="card-title text-white">轉倉</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="closeTransferDialog"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="px-6 pt-3 pb-5">
+          <!-- 資訊提示 -->
+          <div class="mb-6 mt-3 rounded">
+            <div class="card-title">
+              <span class="font-weight-bold me-3 text-grey-darken-3 ">備品 : <span class="text-orange-darken-1">{{ transferDialog.sparePartName || '-' }} </span></span>
+              <span class="font-weight-bold me-3 text-grey-darken-3 ">來源倉庫 : <span class="text-orange-darken-1">{{ transferDialog.fromWarehouseName || '-' }}</span></span>
+              <span class="font-weight-bold me-3 text-grey-darken-3 ">目前數量 : <span class="text-orange-darken-1">{{ formatNumber(transferDialog.currentQuantity || 0) }}</span></span>
+            </div>
+          </div>
+
+          <v-form
+            ref="transferForm"
+            v-model="transferFormValid"
+            :disabled="transferSubmitting"
+            @submit.prevent="submitTransfer"
+          >
+            <v-row>
+              <v-col cols="12">
+                <v-select
+                  v-model="transferFormData.toWarehouseId"
+                  :items="availableWarehouses"
+                  item-title="name"
+                  item-value="_id"
+                  label="*目標倉庫"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[
+                    v => !!v || '請選擇目標倉庫',
+                    v => v !== transferDialog.fromWarehouseId || '目標倉庫不能與來源倉庫相同'
+                  ]"
+                />
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model.number="transferFormData.quantity"
+                  label="*轉倉數量"
+                  variant="outlined"
+                  density="compact"
+                  type="number"
+                  :rules="[
+                    v => (v !== null && v !== undefined && v !== '') || '請輸入轉倉數量',
+                    v => (v > 0) || '轉倉數量必須大於0',
+                    v => (v <= transferDialog.currentQuantity) || `轉倉數量不能超過目前庫存（${formatNumber(transferDialog.currentQuantity || 0)}）`
+                  ]"
+                  :max="transferDialog.currentQuantity"
+                />
+              </v-col>
+              <v-col cols="12">
+                <v-textarea
+                  v-model="transferFormData.note"
+                  label="備註"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  rows="3"
+                  clearable
+                />
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+        <v-card-actions class="px-6 pb-5 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="closeTransferDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="orange-darken-2"
+            variant="outlined"
+            class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
+            :loading="transferSubmitting"
+            @click="submitTransfer"
+          >
+            確認
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -245,33 +384,42 @@
     <v-dialog
       v-model="historyDialog.open"
       persistent
-      width="820"
+      width="900"
       :fullscreen="!smAndUp"
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-8 py-4 bg-blue-grey-darken-2 d-flex align-center">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
           <v-icon
-            size="20"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           >
             mdi-history
           </v-icon>
-          歷史紀錄 - {{ historyDialog.sparePartName }} - {{ historyDialog.warehouseName }}
+          <span class="card-title text-white">歷史紀錄</span>
           <v-spacer />
           <v-btn
             icon
-            color="white"
             variant="plain"
             class="opacity-100"
             :ripple="false"
-            size="20"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="closeHistoryDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
           </v-btn>
-        </div>
-        <v-card-text class="mt-4 mb-0 px-6">
+        </v-card-title>
+        <v-card-text class="px-6 pt-3 pb-5">
+          <!-- 資訊提示 -->
+          <div class="mb-6 mt-3 rounded">
+            <div class="card-title">
+              <span class="font-weight-bold me-3 text-grey-darken-3 ">備品 : <span class="text-blue-grey-darken-2">{{ historyDialog.sparePartName || '-' }} </span></span>
+              <span class="font-weight-bold me-3 text-grey-darken-3 ">倉庫 : <span class="text-blue-grey-darken-2">{{ historyDialog.warehouseName || '-' }}</span></span>
+            </div>
+          </div>
           <v-data-table
             :items="historyList"
             :headers="historyHeaders"
@@ -328,12 +476,12 @@
             </template>
           </v-data-table>
         </v-card-text>
-        <v-card-actions class="px-6 pb-4">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
-            color="grey-darken-1"
             variant="outlined"
-            :size="buttonSize"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
             @click="closeHistoryDialog"
           >
             關閉
@@ -364,8 +512,6 @@ definePage({
 const { smAndUp } = useDisplay()
 const createSnackbar = useSnackbar()
 
-const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
-
 // ===== 狀態 =====
 const loading = ref(false)
 const inventoryData = ref([]) // 存儲所有庫存資料
@@ -387,44 +533,65 @@ const groupedInventoryList = computed(() => {
   const groups = {}
   let index = 0
 
-  // 建立 active 備品的 ID 集合
-  const activeSparePartIds = new Set(
-    spareParts.value
-      .filter(sp => sp.isActive !== false)
-      .map(sp => sp._id.toString())
-  )
-
+  // 建立庫存資料的映射表，方便快速查找
+  const inventoryMap = new Map()
   inventoryData.value.forEach(inv => {
-    const sparePartId = inv.sparePart?._id
-    if (!sparePartId) return
-
-    // 只處理 active 的備品
-    if (!activeSparePartIds.has(sparePartId.toString())) return
-
-    if (!groups[sparePartId]) {
-      groups[sparePartId] = {
-        sparePartId,
-        sparePartName: inv.sparePart?.name || '',
-        warehouses: [],
-        totalQuantity: 0,
-        isGroup: true,
-        index: index++,
-        order: inv.sparePart?.order || 0,
-        createdAt: inv.sparePart?.createdAt || null
-      }
+    const sparePartId = inv.sparePart?._id?.toString()
+    const warehouseId = inv.warehouse?._id?.toString()
+    if (sparePartId && warehouseId) {
+      const key = `${sparePartId}_${warehouseId}`
+      inventoryMap.set(key, inv)
     }
-
-    const warehouse = {
-      warehouseId: inv.warehouse?._id || '',
-      warehouseName: inv.warehouse?.name || '',
-      inventoryId: inv._id,
-      quantity: inv.quantity || 0,
-      warehouse: inv.warehouse // 保留完整的 warehouse 物件以便排序
-    }
-
-    groups[sparePartId].warehouses.push(warehouse)
-    groups[sparePartId].totalQuantity += warehouse.quantity
   })
+
+  // 遍歷所有 active 備品，為每個備品建立分組
+  spareParts.value
+    .filter(sp => sp.isActive !== false)
+    .forEach(sparePart => {
+      const sparePartId = sparePart._id?.toString()
+      if (!sparePartId) return
+
+      // 初始化分組
+      if (!groups[sparePartId]) {
+        groups[sparePartId] = {
+          sparePartId,
+          sparePartName: sparePart.name || '',
+          warehouses: [],
+          totalQuantity: 0,
+          isGroup: true,
+          index: index++,
+          order: sparePart.order || 0,
+          createdAt: sparePart.createdAt || null
+        }
+      }
+
+      // 處理該備品的所有倉庫
+      const warehouses = sparePart.warehouses || []
+      warehouses.forEach(warehouse => {
+        // warehouse 可能是 populate 後的物件（有 _id 和 name）或只是 ObjectId
+        const warehouseId = (warehouse._id || warehouse)?.toString()
+        if (!warehouseId) return
+
+        // 查找是否有對應的庫存記錄
+        const key = `${sparePartId}_${warehouseId}`
+        const inventory = inventoryMap.get(key)
+
+        const warehouseData = {
+          warehouseId,
+          warehouseName: warehouse.name || '',
+          inventoryId: inventory?._id || null,
+          quantity: inventory?.quantity || 0,
+          warehouse: {
+            _id: warehouseId,
+            name: warehouse.name || '',
+            order: warehouse.order || 0
+          }
+        }
+
+        groups[sparePartId].warehouses.push(warehouseData)
+        groups[sparePartId].totalQuantity += warehouseData.quantity
+      })
+    })
 
   // 對每個備品的倉庫按照 order 排序
   Object.values(groups).forEach(group => {
@@ -509,6 +676,45 @@ const adjustFormData = ref({
   note: ''
 })
 
+// ===== 轉倉對話框 =====
+const transferDialog = ref({
+  open: false,
+  sparePartId: '',
+  sparePartName: '',
+  fromWarehouseId: '',
+  fromWarehouseName: '',
+  currentQuantity: 0,
+  sparePartWarehouses: [] // 該備品配置的倉庫列表
+})
+
+const transferForm = ref(null)
+const transferFormValid = ref(false)
+const transferSubmitting = ref(false)
+const transferFormData = ref({
+  toWarehouseId: null,
+  quantity: null,
+  note: ''
+})
+
+const availableWarehouses = computed(() => {
+  // 只顯示該備品配置的倉庫，並排除來源倉庫
+  return transferDialog.value.sparePartWarehouses.filter(wh => {
+    const warehouseId = wh.warehouseId || wh.warehouse?._id || wh._id
+    return warehouseId && warehouseId.toString() !== transferDialog.value.fromWarehouseId.toString()
+  }).map(wh => ({
+    _id: wh.warehouseId || wh.warehouse?._id || wh._id,
+    name: wh.warehouseName || wh.warehouse?.name || wh.name,
+    order: wh.warehouse?.order || wh.order || 0
+  })).sort((a, b) => {
+    // 按照 order 排序
+    if (a.order !== b.order) {
+      return a.order - b.order
+    }
+    // 如果 order 相同，按照名稱排序
+    return (a.name || '').localeCompare(b.name || '')
+  })
+})
+
 // ===== 歷史紀錄對話框 =====
 const historyDialog = ref({
   open: false,
@@ -575,41 +781,8 @@ const loadInventory = async () => {
           quantity: inv.quantity || 0,
           lastModifier: inv.lastModifier
         })))
-      } else {
-        // 如果沒有庫存記錄，但備品有倉庫設定，則為每個倉庫建立初始庫存記錄
-        if (sparePart.warehouses && sparePart.warehouses.length > 0) {
-          for (const warehouse of sparePart.warehouses) {
-            const warehouseId = warehouse._id || warehouse
-            try {
-              const { data: adjustData } = await apiAuth.post('/sparePartInventories/adjust', {
-                sparePart: sparePart._id,
-                warehouse: warehouseId,
-                quantityChange: 0,
-                note: '初始化庫存記錄'
-              })
-              if (adjustData.success) {
-                allInventoryData.push({
-                  _id: adjustData.result._id,
-                  sparePart: {
-                    _id: sparePart._id,
-                    name: sparePart.name,
-                    order: sparePart.order || 0,
-                    createdAt: sparePart.createdAt
-                  },
-                  warehouse: adjustData.result.warehouse ? {
-                    ...adjustData.result.warehouse,
-                    order: adjustData.result.warehouse.order || 0
-                  } : null,
-                  quantity: adjustData.result.quantity || 0,
-                  lastModifier: adjustData.result.lastModifier
-                })
-              }
-            } catch (error) {
-              console.error(`為備品 ${sparePart.name} 在倉庫 ${warehouse.name || warehouseId} 建立庫存記錄失敗:`, error)
-            }
-          }
-        }
       }
+      // 不再自動建立初始化庫存記錄，改由 groupedInventoryList 處理顯示
     }
 
     inventoryData.value = allInventoryData
@@ -731,17 +904,9 @@ const submitAdjust = async () => {
 }
 
 const viewHistory = async (sparePart, warehouse) => {
-  if (!warehouse.inventoryId) {
-    createSnackbar({
-      text: '該倉庫尚未有庫存記錄',
-      snackbarProps: { color: 'orange-darken-1' }
-    })
-    return
-  }
-
   historyDialog.value = {
     open: true,
-    inventoryId: warehouse.inventoryId,
+    inventoryId: warehouse.inventoryId || null,
     sparePartName: sparePart.sparePartName || sparePart.name || '',
     warehouseName: warehouse.warehouseName || warehouse.name || ''
   }
@@ -752,7 +917,14 @@ const viewHistory = async (sparePart, warehouse) => {
 const loadHistory = async () => {
   try {
     historyLoading.value = true
-    // 獲取該庫存記錄的所有異動紀錄（使用新的 API endpoint，只需要 SPARE_PART_READ 權限）
+
+    // 如果沒有庫存記錄 ID，直接顯示空列表
+    if (!historyDialog.value.inventoryId) {
+      historyList.value = []
+      return
+    }
+
+    // 獲取該庫存記錄的所有異動紀錄（使用新的 API endpoint，需要 SPARE_PART_READ 或 SPARE_PART_INVENTORY_READ 權限）
     const { data } = await apiAuth.get('/auditLogs/spare-part-inventories', {
       params: {
         targetId: historyDialog.value.inventoryId,
@@ -783,6 +955,86 @@ const loadHistory = async () => {
     })
   } finally {
     historyLoading.value = false
+  }
+}
+
+const openTransferDialog = async (sparePart, warehouse) => {
+  // 從 groupedInventoryList 中找到該備品的分組，取得該備品配置的所有倉庫
+  const sparePartGroup = groupedInventoryList.value.find(
+    group => (group.sparePartId || group._id)?.toString() === (sparePart.sparePartId || sparePart._id)?.toString()
+  )
+
+  transferDialog.value = {
+    open: true,
+    sparePartId: sparePart.sparePartId || sparePart._id || '',
+    sparePartName: sparePart.sparePartName || sparePart.name || '',
+    fromWarehouseId: warehouse.warehouseId || warehouse._id || '',
+    fromWarehouseName: warehouse.warehouseName || warehouse.name || '',
+    currentQuantity: warehouse.quantity || 0,
+    sparePartWarehouses: sparePartGroup?.warehouses || []
+  }
+  transferFormData.value = {
+    toWarehouseId: null,
+    quantity: null,
+    note: ''
+  }
+  if (transferForm.value) {
+    transferForm.value.reset()
+  }
+}
+
+const closeTransferDialog = () => {
+  transferDialog.value = {
+    open: false,
+    sparePartId: '',
+    sparePartName: '',
+    fromWarehouseId: '',
+    fromWarehouseName: '',
+    currentQuantity: 0,
+    sparePartWarehouses: []
+  }
+  transferFormData.value = {
+    toWarehouseId: null,
+    quantity: null,
+    note: ''
+  }
+  if (transferForm.value) {
+    transferForm.value.reset()
+  }
+}
+
+const submitTransfer = async () => {
+  const { valid } = await transferForm.value.validate()
+  if (!valid) return
+
+  try {
+    transferSubmitting.value = true
+
+    const { data } = await apiAuth.post('/sparePartInventories/transfer', {
+      sparePart: transferDialog.value.sparePartId,
+      fromWarehouse: transferDialog.value.fromWarehouseId,
+      toWarehouse: transferFormData.value.toWarehouseId,
+      quantity: transferFormData.value.quantity,
+      note: transferFormData.value.note || ''
+    })
+
+    if (data.success) {
+      createSnackbar({
+        text: '轉倉成功',
+        snackbarProps: { color: 'orange-darken-1' }
+      })
+      closeTransferDialog()
+      // 重新載入庫存資料以確保資料同步
+      await loadInventory()
+    }
+  } catch (error) {
+    console.error('轉倉失敗:', error)
+    createSnackbar({
+      text: error.response?.data?.message || '轉倉失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    transferSubmitting.value = false
   }
 }
 

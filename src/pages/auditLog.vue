@@ -1164,10 +1164,7 @@ const formatTarget = (item) => {
     const info = item.targetInfo || {}
     const after = item.changes?.after || {}
     const title = info.name || after.title || '(無標題)'
-    const order = info.order || after.order || 0
-    const isActive = info.isActive !== undefined ? info.isActive : (after.isActive !== undefined ? after.isActive : true)
-    const status = isActive ? '啟用' : '停用'
-    return `${title} (排序: ${order}, ${status})`
+    return title
   }
   if (item.targetModel === 'announcements') {
     const info = item.targetInfo || {}

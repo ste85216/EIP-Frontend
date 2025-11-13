@@ -83,18 +83,27 @@
           </v-col>
           <v-col cols="12">
             <!-- 表格 -->
-            <v-data-table
+            <v-data-table-server
+              v-model:items-per-page="itemsPerPage"
               :headers="headers"
               :items="carousels"
               :loading="tableLoading"
-              :items-per-page="itemsPerPage"
               :page="currentPage"
-              :server-items-length="totalItems"
+              :items-length="totalItems"
               class="elevation-0 rounded"
               @update:options="handleTableOptions"
             >
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                  <td class="text-center">
+                    <v-chip
+                      size="small"
+                      color="blue-grey"
+                      variant="tonal"
+                    >
+                      {{ item.order || 0 }}
+                    </v-chip>
+                  </td>
                   <td>
                     <v-avatar
 
@@ -131,14 +140,6 @@
                       size="small"
                     >
                       {{ getStatusText(item) }}
-                    </v-chip>
-                  </td>
-                  <td>
-                    <v-chip
-                      color="blue-grey-darken-1"
-                      size="small"
-                    >
-                      {{ item.order }}
                     </v-chip>
                   </td>
                   <td>
@@ -205,7 +206,7 @@
                   </td>
                 </tr>
               </template>
-            </v-data-table>
+            </v-data-table-server>
           </v-col>
         </v-row>
       </v-col>
@@ -217,11 +218,11 @@
       max-width="600"
       persistent
     >
-      <v-card class="rounded-lg pb-2">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-teal-darken-1">
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
           <v-icon
             icon="mdi-image-plus"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
@@ -229,12 +230,14 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="mdAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="closeCreateDialog"
           >
-            <v-icon :size="mdAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -353,12 +356,12 @@
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-5 pt-1">
           <v-spacer />
           <v-btn
             variant="outlined"
             color="grey-darken-1"
-            :size="mdAndUp ? 'default' : 'small'"
+            :size="smAndUp ? 'default' : 'small'"
             @click="closeCreateDialog"
           >
             取消
@@ -367,7 +370,7 @@
             color="teal-darken-1"
             variant="outlined"
             class="ms-2"
-            :size="mdAndUp ? 'default' : 'small'"
+            :size="smAndUp ? 'default' : 'small'"
             :loading="isSubmitting"
             @click="handleSubmit"
           >
@@ -383,10 +386,10 @@
       max-width="400"
     >
       <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
           <v-icon
             icon="mdi-sort"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
@@ -394,12 +397,14 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="mdAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="showSortDialog = false"
           >
-            <v-icon :size="mdAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -444,12 +449,12 @@
           </draggable>
         </v-card-text>
 
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"
             color="grey-darken-1"
-            :size="mdAndUp ? 'default' : 'small'"
+            :size="smAndUp ? 'default' : 'small'"
             @click="showSortDialog = false"
           >
             取消
@@ -458,7 +463,7 @@
             color="blue-grey-darken-2"
             variant="outlined"
             class="ms-2"
-            :size="mdAndUp ? 'default' : 'small'"
+            :size="smAndUp ? 'default' : 'small'"
             :loading="isUpdatingOrder"
             @click="updateOrder"
           >
@@ -505,7 +510,7 @@ definePage({
 
 const createSnackbar = useSnackbar()
 const { apiAuth } = useApi()
-const { mdAndUp } = useDisplay()
+const { smAndUp } = useDisplay()
 
 // 響應式資料
 const carousels = ref([])
@@ -530,11 +535,11 @@ const statusOptions = [
 
 // 表格標題
 const headers = [
+  { title: '排序', key: 'order', sortable: false, align: 'center', width: '80px' },
   { title: '圖片', key: 'image', sortable: false, width: '80px' },
   { title: '標題', key: 'title', sortable: true },
   { title: '描述', key: 'description', sortable: false },
   { title: '狀態', key: 'isActive', sortable: true },
-  { title: '排序', key: 'order', sortable: true },
   { title: '開始時間', key: 'startDate', sortable: true, width: '120px' },
   { title: '結束時間', key: 'endDate', sortable: true, width: '120px' },
   { title: '操作', key: 'actions', sortable: false, width: '120px', align: 'center' }
@@ -885,9 +890,29 @@ const closeCreateDialog = () => {
   }
 }
 
+// 載入所有輪播圖用於排序
+const loadAllCarouselsForSort = async () => {
+  try {
+    const params = {
+      page: 1,
+      itemsPerPage: 9999 // 載入所有資料
+    }
+    const response = await apiAuth.get('/carousels', { params })
+    return response.data.result.data || []
+  } catch (error) {
+    console.error('載入輪播圖錯誤:', error)
+    createSnackbar({
+      text: error.response?.data?.message || error.message || '載入輪播圖失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+    return []
+  }
+}
+
 // 排序管理
-const openSortDialog = () => {
-  sortableCarousels.value = [...carousels.value].sort((a, b) => a.order - b.order)
+const openSortDialog = async () => {
+  const allCarousels = await loadAllCarouselsForSort()
+  sortableCarousels.value = [...allCarousels].sort((a, b) => a.order - b.order)
   showSortDialog.value = true
 }
 

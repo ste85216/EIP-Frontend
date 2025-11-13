@@ -53,6 +53,7 @@
             @update:model-value="updateNotificationPreferences"
           />
           <v-checkbox
+            v-if="false"
             v-model="localNotificationPrefs.line"
             label="&nbsp;LINE 通知"
             :disabled="!isLineBound"
