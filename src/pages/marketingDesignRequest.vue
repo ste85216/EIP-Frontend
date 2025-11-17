@@ -399,24 +399,26 @@
       v-model="dialog.show"
       max-width="1200"
     >
-      <v-card class="rounded-lg pb-2 dialog">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-light-blue-darken-2">
+      <v-card class="rounded-lg dialog">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-light-blue-darken-2">
           <v-icon
             icon="mdi-text-box-outline"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
-          <span class="card-title">申請單詳細資訊</span>
+          <span class="card-title text-white">申請單詳細資訊</span>
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="smAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="closeDialog"
           >
-            <v-icon :size="smAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -971,7 +973,7 @@
           </v-row>
         </v-card-text>
 
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-5 pt-2">
           <v-spacer />
           <v-btn
             variant="outlined"
@@ -992,22 +994,25 @@
       persistent
     >
       <v-card class="rounded-lg add-dialog">
-        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-teal-darken-2 ">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-2 ">
           <v-icon
             icon="mdi-text-box-outline"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
-          <span class="card-title">新增申請單</span>
+          <span class="card-title text-white">新增申請單</span>
           <v-spacer />
           <v-btn
             icon
-            :size="smAndUp ? '40' : '36'"
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="closeDialog"
           >
-            <v-icon :size="smAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -1858,7 +1863,7 @@
           </v-form>
         </v-card-text>
 
-        <v-card-actions class="px-6 py-4 mb-2">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"

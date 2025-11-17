@@ -90,7 +90,7 @@
               :page="tablePage"
               density="compact"
               class="rounded-ts-lg rounded-te-lg py-3"
-              :items-per-page-options="[10, 20 ,50]"
+              :items-per-page-options="[10, 20, 50, { value: -1, title: '全部' }]"
               :items="tableItems"
               :headers="filteredHeaders"
               :header-props="headerProps"
@@ -816,6 +816,10 @@ const tableLoadItems = async (reset) => {
   if (reset) {
     tablePage.value = 1
   }
+  // 當選擇「全部」時，重置頁碼為 1
+  if (tableItemsPerPage.value === -1) {
+    tablePage.value = 1
+  }
   await performSearch()
 }
 
@@ -824,7 +828,7 @@ const performSearch = async () => {
   try {
     const params = {
       page: tablePage.value,
-      itemsPerPage: tableItemsPerPage.value,
+      itemsPerPage: tableItemsPerPage.value === -1 ? (tableItemsLength.value > 0 ? tableItemsLength.value : 999999) : tableItemsPerPage.value,
       sortBy: tableSortBy.value[0]?.key || 'userId',
       sortOrder: tableSortBy.value[0]?.order || 'asc',
       quickSearch: quickSearchText.value,
@@ -1069,6 +1073,11 @@ onMounted(async () => {
 
 // ===== 添加 onUpdatePage 函數 =====
 const onUpdatePage = (page) => {
+  // 當選擇「全部」時，不需要分頁
+  if (tableItemsPerPage.value === -1) {
+    return
+  }
+
   if (page < 1) page = 1
   const maxPage = Math.ceil(tableItemsLength.value / tableItemsPerPage.value)
   if (page > maxPage) page = maxPage

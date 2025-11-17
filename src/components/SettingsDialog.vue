@@ -6,7 +6,7 @@
     @keydown.esc="close"
   >
     <v-card class="rounded-lg">
-      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-grey-darken-2 mb-2">
+      <v-card-title class="d-flex align-center ps-6 pe-4 py-1 bg-blue-grey-darken-2">
         <v-icon
           class="me-2"
           size="20"
@@ -105,6 +105,12 @@
                 class="me-2"
               />
               <v-radio
+                label="115%"
+                :value="115"
+                color="blue-grey-darken-2"
+                class="me-2"
+              />
+              <v-radio
                 label="125%"
                 :value="125"
                 color="blue-grey-darken-2"
@@ -116,6 +122,9 @@
                 color="blue-grey-darken-2"
               />
             </v-radio-group>
+            <p class="sub-title-2 text-blue-grey-darken-1 mt-2">
+              *注意 : 調整縮放比例會影響網頁內容排版。
+            </p>
           </div>
         </div>
       </v-card-text>

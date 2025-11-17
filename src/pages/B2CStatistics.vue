@@ -432,7 +432,7 @@
                                 </template>
                                 <template v-else>
                                   <div class="text-grey">
-                                    【 請點擊右方按鈕新增 】
+                                    【 請點擊右側按鈕新增 】
                                   </div>
                                 </template>
                               </div>
@@ -469,10 +469,10 @@
       max-width="720"
     >
       <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
           <v-icon
             icon="mdi-history"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
@@ -480,12 +480,14 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="smAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="closeSimpleDialog"
           >
-            <v-icon :size="smAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -523,6 +525,7 @@
               />
               <v-btn
                 color="teal-darken-1"
+                elevation="1"
                 :loading="isAddingNote"
                 :disabled="!progressNoteInput?.trim()"
                 @click="confirmNoteDialog = true"
@@ -549,7 +552,7 @@
           </div>
         </v-card-text>
 
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-5 pt-2">
           <v-spacer />
           <v-btn
             variant="outlined"
@@ -569,9 +572,10 @@
       max-width="340"
     >
       <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-teal-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-2">
           <v-icon
-            size="20"
+            :size="smAndUp ? '20' : '18'"
+            color="white"
             class="me-2"
           >
             mdi-check-circle
@@ -580,27 +584,32 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            :size="smAndUp ? '36' : '32'"
             color="white"
             @click="confirmNoteDialog = false"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
           </v-btn>
         </v-card-title>
 
-        <v-card-text class="px-6 pt-3 pb-0">
-          <div class="mb-4">
+        <v-card-text class="px-6 pt-4">
+          <div class="card-content mb-4">
             請確認是否要新增以下進度/備註？新增後將無法修改或刪除。
           </div>
           <v-card
             variant="outlined"
             color="grey-darken-1"
-            class="pa-3"
+            class="pa-3 card-content"
           >
             {{ progressNoteInput }}
           </v-card>
         </v-card-text>
-        <v-card-actions class="px-6 py-6">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             color="grey-darken-1"
@@ -628,10 +637,10 @@
       max-width="890"
     >
       <v-card class="rounded-lg pb-2">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
           <v-icon
             icon="mdi-account-switch"
-            size="18"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           />
@@ -639,12 +648,14 @@
           <v-spacer />
           <v-btn
             icon
-            variant="text"
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
             color="white"
-            :size="smAndUp ? '40' : '36'"
+            :size="smAndUp ? '36' : '32'"
             @click="closeSalesRotationDialog"
           >
-            <v-icon :size="smAndUp ? '24' : '20'">
+            <v-icon :size="smAndUp ? '22' : '18'">
               mdi-close
             </v-icon>
           </v-btn>
@@ -705,7 +716,7 @@
             </v-row>
           </div>
         </v-card-text>
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
           <v-btn
             variant="outlined"

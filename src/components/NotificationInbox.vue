@@ -330,7 +330,8 @@ const getNotificationIcon = (type) => {
     'task_completion': 'mdi-check-circle',
     'task_reopen': 'mdi-restart',
     'sales_person_assignment': 'mdi-account-arrow-right',
-    'marketing_design_request': 'mdi-palette'
+    'marketing_design_request': 'mdi-palette',
+    'marketing_design_request_assignment': 'mdi-palette-outline'
   }
   return iconMap[type] || 'mdi-bell'
 }
@@ -347,7 +348,8 @@ const getNotificationIconColor = (type) => {
     'task_completion': 'teal-darken-1',
     'task_reopen': 'blue-darken-1',
     'sales_person_assignment': 'orange-darken-2',
-    'marketing_design_request': 'purple-darken-2'
+    'marketing_design_request': 'purple-darken-2',
+    'marketing_design_request_assignment': 'blue-darken-2'
   }
   return colorMap[type] || 'grey'
 }

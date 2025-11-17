@@ -430,46 +430,22 @@
             :page="historyPage"
             @update:page="historyPage = $event"
           >
-            <template #[`item.operator`]="{ item }">
-              {{ item.operator?.name || item.operatorId?.name || '-' }}
+            <template #[`item.createdBy`]="{ item }">
+              {{ item.createdBy?.name || '-' }}
             </template>
             <template #[`item.action`]="{ item }">
-              <template v-if="item.action === '創建'">
-                <template v-if="item.changes?.after?.quantityChange > 0">
-                  入庫
-                </template>
-                <template v-else-if="item.changes?.after?.quantityChange < 0">
-                  出庫
-                </template>
-                <template v-else>
-                  新增
-                </template>
-              </template>
-              <template v-else-if="item.action === '修改'">
-                <template v-if="item.changes?.after?.quantityChange > 0">
-                  入庫
-                </template>
-                <template v-else-if="item.changes?.after?.quantityChange < 0">
-                  出庫
-                </template>
-                <template v-else>
-                  調整
-                </template>
-              </template>
-              <template v-else>
-                {{ item.action }}
-              </template>
+              {{ item.action }}
             </template>
             <template #[`item.quantityChange`]="{ item }">
-              <span :class="item.changes?.after?.quantityChange >= 0 ? 'text-success' : 'text-error'">
-                {{ item.changes?.after?.quantityChange >= 0 ? '+' : '' }}{{ formatNumber(item.changes?.after?.quantityChange || 0) }}
+              <span :class="item.quantityChange >= 0 ? 'text-success' : 'text-error'">
+                {{ item.quantityChange >= 0 ? '+' : '' }}{{ formatNumber(item.quantityChange || 0) }}
               </span>
             </template>
             <template #[`item.quantity`]="{ item }">
-              {{ formatNumber(item.changes?.after?.quantity || 0) }}
+              {{ formatNumber(item.quantity || 0) }}
             </template>
             <template #[`item.note`]="{ item }">
-              {{ item.changes?.after?.note || '-' }}
+              {{ item.note || '-' }}
             </template>
             <template #[`item.createdAt`]="{ item }">
               {{ formatDateTime(item.createdAt) }}
@@ -729,7 +705,7 @@ const historyPage = ref(1)
 const historyItemsPerPage = ref(25)
 
 const historyHeaders = [
-  { title: '操作者', key: 'operator', sortable: false },
+  { title: '操作者', key: 'createdBy', sortable: false },
   { title: '操作', key: 'action', sortable: false },
   { title: '數量變更', key: 'quantityChange', sortable: false, align: 'center' },
   { title: '調整後數量', key: 'quantity', sortable: false, align: 'center' },
@@ -924,28 +900,11 @@ const loadHistory = async () => {
       return
     }
 
-    // 獲取該庫存記錄的所有異動紀錄（使用新的 API endpoint，需要 SPARE_PART_READ 或 SPARE_PART_INVENTORY_READ 權限）
-    const { data } = await apiAuth.get('/auditLogs/spare-part-inventories', {
-      params: {
-        targetId: historyDialog.value.inventoryId,
-        page: 1,
-        itemsPerPage: 9999
-      }
-    })
+    // 獲取該庫存記錄的所有歷史紀錄
+    const { data } = await apiAuth.get(`/sparePartInventories/${historyDialog.value.inventoryId}/history`)
 
     if (data.success) {
       historyList.value = data.result.data || []
-      // 調試：檢查第一筆資料的結構
-      if (historyList.value.length > 0) {
-        console.log('歷史紀錄資料範例:', historyList.value[0])
-        console.log('操作者資訊:', {
-          operator: historyList.value[0].operator,
-          operatorId: historyList.value[0].operatorId
-        })
-        console.log('操作類型:', historyList.value[0].action)
-        console.log('數量變更:', historyList.value[0].changes?.after?.quantityChange)
-        console.log('完整 changes:', historyList.value[0].changes)
-      }
     }
   } catch (error) {
     console.error('載入歷史紀錄失敗:', error)

@@ -66,17 +66,18 @@
 
           <v-col cols="12">
             <!-- 表格 -->
-            <v-data-table
+            <v-data-table-server
+              v-model:items-per-page="itemsPerPage"
               :headers="headers"
               :items="announcements"
               :loading="tableLoading"
-              :items-per-page="itemsPerPage"
               :items-per-page-options="itemsPerPageOptions"
               :page="currentPage"
-              :server-items-length="totalItems"
+              :items-length="totalItems"
               class="elevation-0 rounded"
               density="compact"
-              @update:options="handleTableOptions"
+              @update:items-per-page="handleItemsPerPageChange"
+              @update:page="onUpdatePage"
             >
               <!-- Loading 狀態 -->
               <template #loading>
@@ -198,7 +199,7 @@
                   </td>
                 </tr>
               </template>
-            </v-data-table>
+            </v-data-table-server>
           </v-col>
         </v-row>
       </v-col>
@@ -329,18 +330,30 @@ const debouncedSearch = debounce(() => {
     })
 }, 300)
 
-// 表格選項變更
-const handleTableOptions = (options) => {
-  if (options.itemsPerPage !== undefined) {
-    itemsPerPage.value = options.itemsPerPage
-    if (options.itemsPerPage === -1) {
-      currentPage.value = 1
-    }
-  }
-  if (options.page !== undefined && options.itemsPerPage !== -1) {
-    currentPage.value = options.page
+// 處理每頁筆數變更
+const handleItemsPerPageChange = () => {
+  // 當選擇「全部」時，重置頁碼為 1
+  if (itemsPerPage.value === -1) {
+    currentPage.value = 1
   }
   loadAnnouncements()
+}
+
+// 處理頁碼變更
+const onUpdatePage = (page) => {
+  // 當選擇「全部」時，不需要分頁
+  if (itemsPerPage.value === -1) {
+    return
+  }
+
+  if (page < 1) page = 1
+  const maxPage = Math.ceil(totalItems.value / itemsPerPage.value)
+  if (page > maxPage) page = maxPage
+
+  if (currentPage.value !== page) {
+    currentPage.value = page
+    loadAnnouncements()
+  }
 }
 
 // 查看公告詳情
@@ -393,7 +406,8 @@ const formatDate = (date) => {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: false
   })
 }
 

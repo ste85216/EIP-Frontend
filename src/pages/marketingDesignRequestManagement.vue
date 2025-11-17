@@ -262,7 +262,7 @@
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
                   <td>{{ item.designRequestNumber }}</td>
-                  <td>
+                  <td class="py-1">
                     <div v-if="item.applicationDate">
                       <div>{{ formatDate(item.applicationDate) }}</div>
                       <div class="text-caption text-grey-darken-1">
@@ -442,17 +442,17 @@
                       icon
                       color="blue-grey-darken-2"
                       variant="plain"
-                      :size="buttonSize"
+                      size="small"
                       :ripple="false"
                       @click="openViewDialog(item)"
                     >
-                      <v-icon>mdi-eye</v-icon>
+                      <v-icon>mdi-book-open-variant-outline</v-icon>
                     </v-btn>
                     <v-btn
                       icon
                       color="light-blue-darken-4"
                       variant="plain"
-                      :size="buttonSize"
+                      size="small"
                       :ripple="false"
                       :disabled="isCompletedOrCancelled(item.status)"
                       :class="{ 'disabled-btn': isCompletedOrCancelled(item.status) }"
@@ -2353,6 +2353,20 @@
       @confirm="confirmDeleteNotificationEmail"
     />
 
+    <!-- 指派處理人員確認對話框 -->
+    <ConfirmDialog
+      v-model="assignDesignerConfirmDialog.show"
+      :max-width="320"
+      title="確認指派處理人員"
+      :message="assignDesignerConfirmDialog.message"
+      confirm-button-text="確認"
+      cancel-button-text="取消"
+      confirm-button-color="blue-darken-1"
+      header-color="bg-blue-darken-1"
+      header-icon="mdi-account-check"
+      @confirm="confirmAssignDesigner"
+    />
+
     <!-- 部門備註編輯對話框 -->
     <v-dialog
       v-model="departmentNoteDialog.show"
@@ -2462,6 +2476,7 @@ import { useDisplay } from 'vuetify'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 // 移除未使用的 userStore 匯入
 
 // 頁面定義
@@ -2610,6 +2625,15 @@ const updatingDepartmentNote = ref(false)
 
 // URL插入相關變數
 const departmentNoteUrlInput = ref('')
+
+// 指派處理人員確認對話框相關變數
+const assignDesignerConfirmDialog = reactive({
+  show: false,
+  designRequestId: null,
+  designerId: null,
+  designerName: '',
+  designRequestNumber: ''
+})
 
 // 計算屬性：過濾顯示的欄位
 const visibleViewFormFields = computed(() => {
@@ -3194,10 +3218,43 @@ const updateAssignedDesigner = async (designRequestId, newDesignerId) => {
         createSnackbar({ text: '資料未做任何變更', snackbarProps: { color: 'red-lighten-1' } })
         return
       }
+      // 清除指派不需要確認對話框，直接執行
+      await performAssignDesigner(designRequestId, newDesignerId)
+      return
     } else if (currentItem.assignedDesigner?._id === newDesignerId) {
       createSnackbar({ text: '資料未做任何變更', snackbarProps: { color: 'red-lighten-1' } })
       return
     }
+
+    // 如果是指派給某人，顯示確認對話框
+    const designer = marketingDesigners.value.find(d => d._id === newDesignerId)
+    if (designer) {
+      assignDesignerConfirmDialog.designRequestId = designRequestId
+      assignDesignerConfirmDialog.designerId = newDesignerId
+      assignDesignerConfirmDialog.designerName = designer.name
+      assignDesignerConfirmDialog.designRequestNumber = currentItem.designRequestNumber
+      assignDesignerConfirmDialog.message = `確認要將申請單 <strong>${currentItem.designRequestNumber}</strong> 指派給 <strong>${designer.name}</strong> 嗎？`
+      assignDesignerConfirmDialog.show = true
+    }
+  } catch (error) {
+    console.error('更新處理人員失敗:', error)
+    createSnackbar({ text: error?.response?.data?.message || '更新處理人員失敗', snackbarProps: { color: 'red-lighten-1' } })
+  }
+}
+
+// 確認指派處理人員
+const confirmAssignDesigner = async () => {
+  const { designRequestId, designerId } = assignDesignerConfirmDialog
+  await performAssignDesigner(designRequestId, designerId)
+  assignDesignerConfirmDialog.show = false
+}
+
+// 執行指派處理人員的實際函數
+const performAssignDesigner = async (designRequestId, newDesignerId) => {
+  if (updatingDesigners.value.has(designRequestId)) return
+
+  try {
+    const currentItem = tableItems.value.find(item => item._id === designRequestId)
 
     updatingDesigners.value.add(designRequestId)
 
@@ -3206,7 +3263,7 @@ const updateAssignedDesigner = async (designRequestId, newDesignerId) => {
     })
 
     if (data.success) {
-      try { console.log('[MD-Manage] updateAssignedDesigner resp:', { designRequestId, newDesignerId, result: data.result }) } catch { /* noop */ }
+      try { console.log('[MD-Manage] performAssignDesigner resp:', { designRequestId, newDesignerId, result: data.result }) } catch { /* noop */ }
       // 以後端回傳為優先；若未附上 assignedDesigner，採本地 fallback
       let nextAssigned = null
       if (newDesignerId === null) {
@@ -3221,7 +3278,7 @@ const updateAssignedDesigner = async (designRequestId, newDesignerId) => {
       }
 
       currentItem.assignedDesigner = nextAssigned
-      try { console.log('[MD-Manage] updateAssignedDesigner applied:', { id: currentItem._id, assignedDesigner: currentItem.assignedDesigner }) } catch { /* noop */ }
+      try { console.log('[MD-Manage] performAssignDesigner applied:', { id: currentItem._id, assignedDesigner: currentItem.assignedDesigner }) } catch { /* noop */ }
 
       // 同步可能的狀態更新
       if (data.result && data.result.status && data.result.status !== currentItem.status) {

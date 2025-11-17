@@ -1639,6 +1639,8 @@ watch(() => user.avatar, (newAvatar) => {
   display: flex;
   background-color: #fff;
   width: 256px;
+  position: relative;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 
   .tab-button {
     width: 20%;
@@ -1656,25 +1658,15 @@ watch(() => user.avatar, (newAvatar) => {
     align-items: center;
     justify-content: center;
 
-    &::before {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 1px;
-      background: rgba(0, 0, 0, 0.12);
-      transition: all 0.2s ease;
-    }
-
     &::after {
       content: '';
       position: absolute;
-      margin-bottom: 0.5px;
+      bottom: -1px;
+      left: 0;
       width: 100%;
       height: 2px;
       background: transparent;
-      transition: height 0.2s ease;
+      transition: all 0.2s ease;
     }
 
     &:hover {
@@ -1687,9 +1679,7 @@ watch(() => user.avatar, (newAvatar) => {
       font-weight: 500;
 
       &::after {
-        height: 2px;
         background: #0097A7;
-        bottom: -0.5px;
       }
     }
   }
