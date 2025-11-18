@@ -1,0 +1,1 @@
+const e={date:new Date,customerName:"",customerAddress:"",customerTaxId:"",contactPerson:"",position:"",officePhone:"",fax:"",mobile:"",projectName:"",destination:"",departureDate:new Date,returnDate:new Date,items:[{category:"",description:"",unitPrice:0,quantity:1,unit:"人",remark:""}],cancellationPolicy:"",validityPeriod:7};export{e as quotationSchema};
