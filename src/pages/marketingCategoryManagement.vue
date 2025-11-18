@@ -770,9 +770,9 @@ import { debounce } from 'lodash'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '行銷分類管理 | Ystravel',
+    title: '行銷分類管理 | TEST',
     login: true,
-    permission: 'MARKETING_CATEGORY_MANAGEMENT_READ'  
+    permission: 'MARKETING_CATEGORY_MANAGEMENT_READ'
   }
 })
 

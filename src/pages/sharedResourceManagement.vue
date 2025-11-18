@@ -493,7 +493,7 @@ import draggable from 'vuedraggable'
 
 definePage({
   meta: {
-    title: '共享資源管理 | Ystravel',
+    title: '共享資源管理 | TEST',
     login: true,
     permission: 'SHARED_RESOURCE_READ'
   }

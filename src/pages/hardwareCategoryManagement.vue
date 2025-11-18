@@ -426,7 +426,7 @@ import { debounce } from 'lodash'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '硬體類別管理 | Ystravel',
+    title: '硬體類別管理 | TEST',
     login: true,
     permission: 'HARDWARE_CATEGORY_MANAGEMENT_READ'
   }

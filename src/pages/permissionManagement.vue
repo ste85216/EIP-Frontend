@@ -701,7 +701,7 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 // 頁面設定
 definePage({
   meta: {
-    title: '權限管理 | Ystravel',
+    title: '權限管理 | TEST',
     login: true,
     permissions: ['PERMISSION_MANAGEMENT_READ']
     // 暫時移除權限檢查，讓你能先進入頁面設置權限

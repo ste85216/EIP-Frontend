@@ -838,7 +838,7 @@ import UserRole from '@/enums/UserRole'
 // 頁面定義
 definePage({
   meta: {
-    title: '訂餐趣 | Ystravel',
+    title: '訂餐趣 | TEST',
     login: true
   }
 })

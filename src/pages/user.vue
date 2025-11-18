@@ -600,7 +600,7 @@ import UserAvatar from '@/components/UserAvatar.vue'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '用戶管理 | Ystravel',
+    title: '用戶管理 | TEST',
     login: true,
     permission: 'USER_MANAGEMENT_READ'
   }

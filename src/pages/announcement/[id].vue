@@ -250,7 +250,7 @@ import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
-    title: '公告詳情 | Ystravel',
+    title: '公告詳情 | TEST',
     login: true
   }
 })

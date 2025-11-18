@@ -1429,7 +1429,7 @@ import { useForm, useField } from 'vee-validate'
 // 頁面定義
 definePage({
   meta: {
-    title: '硬體設備管理 | Ystravel',
+    title: '硬體設備管理 | TEST',
     login: true,
     permission: 'HARDWARE_DEVICE_MANAGEMENT_READ'
   }

@@ -1076,7 +1076,7 @@ const initDependencies = async () => {
 
 definePage({
   meta: {
-    title: '表單產生器 | Ystravel',
+    title: '表單產生器 | TEST',
     login: true,
     permission: 'FORM_GENERATOR_READ'
   }

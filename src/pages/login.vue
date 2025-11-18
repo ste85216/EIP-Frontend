@@ -16,17 +16,12 @@
         <v-row class="px-4">
           <v-col
             cols="12"
-            class="pt-10 pb-6 pe-8 ps-6 d-flex justify-center align-center"
+            class="pt-10 pb-6  d-flex justify-center align-center"
           >
-            <v-img
-              src="/src/assets/image/Ys_favicon_nobg.png"
-              height="32"
-              max-width="64"
-            />
             <span
               style="font-size: 24px; font-weight: 600; letter-spacing: 1.5px;"
               class="text-decoration-none text-grey-darken-3"
-            >永信生活旅遊事業</span>
+            >測試 EIP</span>
           </v-col>
 
           <v-col cols="12">
@@ -165,7 +160,7 @@ import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
-    title: '登入 | Ystravel'
+    title: '登入 | TEST'
   }
 })
 

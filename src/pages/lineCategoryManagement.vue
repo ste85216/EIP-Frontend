@@ -693,7 +693,7 @@ import { debounce } from 'lodash'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '線別分類管理 | Ystravel',
+    title: '線別分類管理 | TEST',
     login: true,
     permission: 'LINE_CATEGORY_MANAGEMENT_READ'
   }

@@ -647,7 +647,7 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 
 definePage({
   meta: {
-    title: '異動紀錄 | Ystravel',
+    title: '異動紀錄 | TEST',
     login: true,
     permission: 'AUDIT_LOG_PAGE_READ'
   }

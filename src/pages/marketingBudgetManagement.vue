@@ -720,7 +720,7 @@ import AmountInput from '../components/AmountInput.vue'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '行銷預算管理 | Ystravel',
+    title: '行銷預算管理 | TEST',
     login: true,
     permission: 'MARKETING_BUDGET_MANAGEMENT_READ'
   }

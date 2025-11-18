@@ -638,7 +638,7 @@ import html2pdf from 'html2pdf.js'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '硬體維修記錄 | Ystravel',
+    title: '硬體維修記錄 | TEST',
     login: true,
     permissions: ['HARDWARE_MAINTENANCE_RECORD_PAGE_READ']
   }

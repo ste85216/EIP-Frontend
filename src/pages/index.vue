@@ -682,7 +682,7 @@ import { useApi } from '@/composables/axios'
 // 頁面定義
 definePage({
   meta: {
-    title: '首頁 | Ystravel',
+    title: '首頁 | TEST',
     login: true,
     permission: 'HOME_READ'
   }
@@ -1071,6 +1071,7 @@ const fetchExtensions = async () => {
         '永信高雄': 'orange-darken-2',
         '永信台中': 'pink-darken-1',
         '永信桃園': 'indigo-darken-2',
+        '測試公司': 'cyan-darken-2',
         default: 'grey-darken-1'
       }
 

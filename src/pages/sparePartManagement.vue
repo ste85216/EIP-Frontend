@@ -1083,7 +1083,7 @@ import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '備品管理 | Ystravel',
+    title: '備品管理 | TEST',
     login: true,
     permission: 'SPARE_PART_MANAGEMENT_READ'
   }

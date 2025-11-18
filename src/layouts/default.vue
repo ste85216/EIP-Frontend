@@ -17,12 +17,7 @@
         to="/"
         class="d-flex align-center text-decoration-none text-grey-darken-4"
       >
-        <v-img
-          src="/src/assets/image/Ys_favicon.png"
-          :width="smAndUp ? 44 : 36"
-          style="margin-left: 2px;"
-        />
-        <span class="nav-title">永信生活旅遊事業</span>
+        <span class="nav-title">LOGO</span>
       </router-link>
       <v-spacer />
       <!-- 收件匣按鈕 -->
@@ -1608,10 +1603,12 @@ watch(() => user.avatar, (newAvatar) => {
 }
 
 .nav-title {
+  padding: 8px 16px;
   font-size: 22px;
   font-weight: 600;
   margin-left: 4px;
   letter-spacing: 1px;
+  border: 1px solid black;
   color: #333;
   @include sm {
     margin-left: 6px;

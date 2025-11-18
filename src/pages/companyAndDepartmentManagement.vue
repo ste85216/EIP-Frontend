@@ -769,7 +769,7 @@ import { useUserStore } from '@/stores/user'
 
 definePage({
   meta: {
-    title: '公司部門管理 | Ystravel',
+    title: '公司部門管理 | TEST',
     login: true,
     permission: 'COMPANY_AND_DEPARTMENT_MANAGEMENT_READ'
   }
@@ -1383,19 +1383,19 @@ const submitEditLocations = async () => {
     const currentLocations = editingLocations.value
 
     // 找出需要刪除的地點（在原始中存在，但在編輯後不存在）
-    const locationsToDelete = originalLocationsData.filter(original => 
+    const locationsToDelete = originalLocationsData.filter(original =>
       !currentLocations.some(current => current._id === original._id)
     )
 
     // 找出需要新增的地點（在編輯後存在，但在原始中不存在）
-    const locationsToAdd = currentLocations.filter(current => 
+    const locationsToAdd = currentLocations.filter(current =>
       !current._id || !originalLocationsData.some(original => original._id === current._id)
     )
 
     // 找出需要修改的地點（在兩邊都存在但內容不同）
-    const locationsToUpdate = currentLocations.filter(current => 
-      current._id && originalLocationsData.some(original => 
-        original._id === current._id && 
+    const locationsToUpdate = currentLocations.filter(current =>
+      current._id && originalLocationsData.some(original =>
+        original._id === current._id &&
         (original.locationName !== current.locationName.trim() || original.order !== current.order)
       )
     )

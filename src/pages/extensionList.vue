@@ -241,7 +241,7 @@ import { debounce } from 'lodash'
 // 頁面定義
 definePage({
   meta: {
-    title: '分機表 | Ystravel',
+    title: '分機表 | TEST',
     login: true,
     permission: 'EXTENSION_LIST_READ'
   }

@@ -75,7 +75,7 @@ import { useRouter } from 'vue-router'
 
 definePage({
   meta: {
-    title: '忘記密碼 | Ystravel',
+    title: '忘記密碼 | TEST',
     layout: 'login'
   }
 })

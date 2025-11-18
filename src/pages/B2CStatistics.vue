@@ -806,7 +806,7 @@ import { definePage } from 'vue-router/auto'
 // 頁面定義
 definePage({
   meta: {
-    title: '直客詢問統計表 | Ystravel',
+    title: '直客詢問統計表 | TEST',
     login: true,
     permission: 'B2C_STATISTICS_READ'
   }

@@ -22,7 +22,7 @@
             class="opacity-100 custom-btn"
             :ripple="false"
           >
-            永信官網
+            TEST
           </v-btn>
           <v-btn
             href="https://b2b.ystravel.com.tw/member/signin/?returnUrl=%2f"
@@ -31,16 +31,7 @@
             class="opacity-100 custom-btn"
             :ripple="false"
           >
-            同業網
-          </v-btn>
-          <v-btn
-            href="https://ystravel.voyage.com.tw:8443/default_standard.asp"
-            target="_blank"
-            variant="plain"
-            class="opacity-100 custom-btn"
-            :ripple="false"
-          >
-            科威系統
+            TEST
           </v-btn>
           <v-btn
             href="https://finalcall.ystravel.com.tw/"
@@ -62,7 +53,7 @@
           flat
           to="/"
         >
-          回永信系統
+          回測試系統
         </v-btn>
       </v-app-bar>
       <router-view />

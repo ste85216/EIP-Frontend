@@ -512,7 +512,7 @@ import * as yup from 'yup'
 
 definePage({
   meta: {
-    title: '公告管理 | Ystravel',
+    title: '公告管理 | TEST',
     login: true,
     permission: 'ANNOUNCEMENT_READ'
   }

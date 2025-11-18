@@ -493,7 +493,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 definePage({
   meta: {
-    title: '跑馬燈管理 | Ystravel',
+    title: '跑馬燈管理 | TEST',
     login: true,
     permission: 'MARQUEE_MANAGEMENT_READ'
   }

@@ -218,7 +218,7 @@ import { useApi } from '@/composables/axios'
 
 definePage({
   meta: {
-    title: '所有公告 | Ystravel',
+    title: '所有公告 | TEST',
     login: true
   }
 })

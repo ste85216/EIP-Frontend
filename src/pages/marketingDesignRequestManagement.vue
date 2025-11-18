@@ -2482,7 +2482,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 // 頁面定義
 definePage({
   meta: {
-    title: '行銷美編需求申請管理 | Ystravel',
+    title: '行銷美編需求申請管理 | TEST',
     login: true,
     permission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ'
   }

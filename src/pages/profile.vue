@@ -674,7 +674,7 @@ const buttonSize = computed(() => mdAndUp.value ? 'default' : 'small')
 
 definePage({
   meta: {
-    title: '個人資料管理 | Ystravel',
+    title: '個人資料管理 | TEST',
     login: true,
     permission: 'PROFILE_READ'
   }

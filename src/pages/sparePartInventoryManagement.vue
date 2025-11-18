@@ -479,7 +479,7 @@ const { apiAuth } = useApi()
 
 definePage({
   meta: {
-    title: '備品庫存管理 | Ystravel',
+    title: '備品庫存管理 | TEST',
     login: true,
     permission: 'SPARE_PART_INVENTORY_MANAGEMENT_READ'
   }

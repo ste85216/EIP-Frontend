@@ -497,7 +497,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 // 頁面定義
 definePage({
   meta: {
-    title: '首頁 | Ystravel',
+    title: '首頁 | TEST',
     login: true,
     permission: 'HOME_READ'
   }

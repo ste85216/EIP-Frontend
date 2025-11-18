@@ -502,7 +502,7 @@ import * as yup from 'yup'
 
 definePage({
   meta: {
-    title: '輪播圖管理 | Ystravel',
+    title: '輪播圖管理 | TEST',
     login: true,
     permission: 'CAROUSEL_READ'
   }

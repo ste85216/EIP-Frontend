@@ -1966,7 +1966,7 @@ import { useDisplay } from 'vuetify'
 // 頁面定義
 definePage({
   meta: {
-    title: '行銷美編需求申請 | Ystravel',
+    title: '行銷美編需求申請 | TEST',
     login: true,  // 需要登入
     permission: 'MARKETING_DESIGN_REQUEST_PAGE_READ'
   }

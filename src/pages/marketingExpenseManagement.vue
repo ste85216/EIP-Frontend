@@ -1140,7 +1140,7 @@ const formatToDate = (dateString) => {
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '實際支出管理 | Ystravel',
+    title: '實際支出管理 | TEST',
     login: true,
     permission: 'MARKETING_EXPENSE_MANAGEMENT_READ'
   }
