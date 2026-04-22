@@ -56,6 +56,11 @@
                   class="spare-part-col left-group align-top pa-4 text-center"
                 >
                   <span class="sub-title">{{ item.sparePartName }}</span>
+                  <br>
+                  <span
+                    v-if="item.packaging"
+                    class="sub-title-2"
+                  >( {{ item.packaging ? ` ${item.packaging}` : '' }} )</span>
                 </td>
                 <td
                   :rowspan="item.warehouseCount"
@@ -420,37 +425,39 @@
               <span class="font-weight-bold me-3 text-grey-darken-3 ">倉庫 : <span class="text-blue-grey-darken-2">{{ historyDialog.warehouseName || '-' }}</span></span>
             </div>
           </div>
-          <v-data-table
-            :items="historyList"
-            :headers="historyHeaders"
-            :loading="historyLoading"
-            density="compact"
-            class="history-table border rounded-lg"
-            :items-per-page="historyItemsPerPage"
-            :page="historyPage"
-            @update:page="historyPage = $event"
-          >
-            <template #[`item.createdBy`]="{ item }">
-              {{ item.createdBy?.name || '-' }}
-            </template>
-            <template #[`item.action`]="{ item }">
-              {{ item.action }}
-            </template>
-            <template #[`item.quantityChange`]="{ item }">
-              <span :class="item.quantityChange >= 0 ? 'text-success' : 'text-error'">
-                {{ item.quantityChange >= 0 ? '+' : '' }}{{ formatNumber(item.quantityChange || 0) }}
-              </span>
-            </template>
-            <template #[`item.quantity`]="{ item }">
-              {{ formatNumber(item.quantity || 0) }}
-            </template>
-            <template #[`item.note`]="{ item }">
-              {{ item.note || '-' }}
-            </template>
-            <template #[`item.createdAt`]="{ item }">
-              {{ formatDateTime(item.createdAt) }}
-            </template>
-          </v-data-table>
+          <div class="border rounded-lg overflow-hidden">
+            <v-data-table
+              :items="historyList"
+              :headers="historyHeaders"
+              :loading="historyLoading"
+              density="compact"
+              class="history-table"
+              :items-per-page="historyItemsPerPage"
+              :page="historyPage"
+              @update:page="historyPage = $event"
+            >
+              <template #[`item.createdBy`]="{ item }">
+                {{ item.createdBy?.name || '-' }}
+              </template>
+              <template #[`item.action`]="{ item }">
+                {{ item.action }}
+              </template>
+              <template #[`item.quantityChange`]="{ item }">
+                <span :class="item.quantityChange >= 0 ? 'text-success' : 'text-error'">
+                  {{ item.quantityChange >= 0 ? '+' : '' }}{{ formatNumber(item.quantityChange || 0) }}
+                </span>
+              </template>
+              <template #[`item.quantity`]="{ item }">
+                {{ formatNumber(item.quantity || 0) }}
+              </template>
+              <template #[`item.note`]="{ item }">
+                {{ item.note || '-' }}
+              </template>
+              <template #[`item.createdAt`]="{ item }">
+                {{ formatDateTime(item.createdAt) }}
+              </template>
+            </v-data-table>
+          </div>
         </v-card-text>
         <v-card-actions class="px-6 pb-5 pt-0">
           <v-spacer />
@@ -479,7 +486,7 @@ const { apiAuth } = useApi()
 
 definePage({
   meta: {
-    title: '備品庫存管理 | TEST',
+    title: '備品庫存管理 | Ystravel',
     login: true,
     permission: 'SPARE_PART_INVENTORY_MANAGEMENT_READ'
   }
@@ -532,6 +539,7 @@ const groupedInventoryList = computed(() => {
         groups[sparePartId] = {
           sparePartId,
           sparePartName: sparePart.name || '',
+          packaging: sparePart.packaging || '',
           warehouses: [],
           totalQuantity: 0,
           isGroup: true,
@@ -1155,9 +1163,8 @@ onMounted(async () => {
 }
 
 // 歷史紀錄對話框表格樣式
-.history-table :deep(.v-data-table__wrapper) {
-  border-radius: 8px;
-  border: 1px solid rgb(var(--v-theme-outline-variant));
+.history-table {
+  border-radius: 0 !important;
 }
 
 .history-table :deep(.v-data-table__td) {

@@ -682,7 +682,7 @@ import { useApi } from '@/composables/axios'
 // 頁面定義
 definePage({
   meta: {
-    title: '首頁 | TEST',
+    title: '首頁 | Ystravel',
     login: true,
     permission: 'HOME_READ'
   }
@@ -1071,7 +1071,6 @@ const fetchExtensions = async () => {
         '永信高雄': 'orange-darken-2',
         '永信台中': 'pink-darken-1',
         '永信桃園': 'indigo-darken-2',
-        '測試公司': 'cyan-darken-2',
         default: 'grey-darken-1'
       }
 
@@ -1886,14 +1885,18 @@ const getTaiwanWeatherConditionFromStation = (station) => {
     0
   )
 
-  // 如果有降雨量，判斷為雨天
-  if (precipitation > 0) {
+  // 過濾掉無效值（-99 表示無資料）
+  const isValidPrecipitation = !isNaN(precipitation) && precipitation > 0 && precipitation !== -99
+  const isValidWeather = weather && weather !== '-99' && weather !== -99 && String(weather).trim() !== ''
+
+  // 如果有有效的降雨量，判斷為雨天
+  if (isValidPrecipitation) {
     return 'rainy'
   }
 
   // 根據天氣描述判斷
-  if (weather) {
-    const weatherLower = weather.toLowerCase()
+  if (isValidWeather) {
+    const weatherLower = String(weather).toLowerCase()
     if (weatherLower.includes('雨') || weatherLower.includes('rain')) return 'rainy'
     if (weatherLower.includes('雷') || weatherLower.includes('thunder')) return 'stormy'
     if (weatherLower.includes('霧') || weatherLower.includes('fog')) return 'foggy'
@@ -1907,23 +1910,38 @@ const getTaiwanWeatherConditionFromStation = (station) => {
 const getTaiwanWeatherDescriptionFromStation = (station) => {
   const weatherElement = station.WeatherElement || {}
   const weather = weatherElement.Weather || weatherElement.Now?.Weather || ''
-
-  // 優先顯示天氣狀態（Weather），這是中央氣象署提供的主要天氣描述
-  if (weather) {
-    return weather
-  }
-
-  // 如果沒有天氣描述，才顯示降雨量
   const precipitation = parseFloat(
     weatherElement.Precipitation ||
     weatherElement.Now?.Precipitation ||
     0
   )
 
-  if (precipitation > 0) {
+  // 過濾掉無效值（-99 表示無資料）
+  const isValidWeather = weather && weather !== '-99' && weather !== -99 && String(weather).trim() !== ''
+  const isValidPrecipitation = !isNaN(precipitation) && precipitation > 0 && precipitation !== -99
+
+  // 優先顯示天氣狀態（Weather），這是中央氣象署提供的主要天氣描述
+  if (isValidWeather) {
+    return String(weather)
+  }
+
+  // 如果沒有天氣描述，才顯示降雨量
+  if (isValidPrecipitation) {
     return `降雨 ${precipitation.toFixed(1)}mm`
   }
 
+  // 如果都沒有有效資料，根據其他資訊推斷或返回預設值
+  // 嘗試從天氣描述中推斷
+  if (weather && String(weather).trim() !== '') {
+    const weatherLower = String(weather).toLowerCase()
+    if (weatherLower.includes('雨') || weatherLower.includes('rain')) return '有雨'
+    if (weatherLower.includes('雷') || weatherLower.includes('thunder')) return '雷雨'
+    if (weatherLower.includes('霧') || weatherLower.includes('fog')) return '有霧'
+    if (weatherLower.includes('雲') || weatherLower.includes('cloud') || weatherLower.includes('陰')) return '多雲'
+    if (weatherLower.includes('晴') || weatherLower.includes('sunny')) return '晴朗'
+  }
+
+  // 預設返回晴朗
   return '晴朗'
 }
 

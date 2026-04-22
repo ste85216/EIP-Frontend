@@ -39,6 +39,14 @@
   color: #333;
 }
 
+.search-label {
+  color: #455a64;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  margin-bottom: 8px;
+}
+
 .block-card {
   &:hover {
     border: 1px solid #aaa !important;
@@ -88,6 +96,13 @@ h6 {
   font-size: 18px;
 }
 
+.date-input {
+  .v-field,
+  input {
+    cursor: pointer;
+    caret-color: transparent;
+  }
+}
 
 // 一般輸入框樣式
 .v-field:not(.v-textarea .v-field):not(.v-autocomplete .v-field):not(.v-combobox .v-field):not(.v-select .v-field) {
@@ -192,6 +207,10 @@ h3 {
 
   .block-title {
     font-size: 17px;
+  }
+
+  .search-label {
+    font-size: 14px;
   }
 
   .sub-description {
@@ -310,3 +329,4 @@ h3 {
   }
 }
 
+  

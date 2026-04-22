@@ -17,15 +17,27 @@
         to="/"
         class="d-flex align-center text-decoration-none text-grey-darken-4"
       >
-        <span class="nav-title">LOGO</span>
+        <v-img
+          src="/src/assets/image/Ys_favicon.png"
+          :width="smAndUp ? 44 : 36"
+          style="margin-left: 2px;"
+        />
+        <span class="nav-title">永信生活旅遊事業</span>
       </router-link>
       <v-spacer />
-      <!-- 收件匣按鈕 -->
+      <!-- 員工評論提示按鈕 -->
+      <EmployeeCommentNotificationButton
+        v-if="user.isLogin"
+        ref="employeeCommentButtonRef"
+        button-color="red"
+      />
+      <!-- 收件匣按鈕（點擊員工評論通知會開啟員工評論對話框） -->
       <NotificationInbox
         v-if="user.isLogin"
         filter-type="non-task"
         button-color="#333"
         :outline-icon="true"
+        @open-employee-comment="handleOpenEmployeeComment"
       />
       <v-btn
         v-if="user.isLogin && mdAndUp"
@@ -131,7 +143,7 @@
           </v-card>
           <!-- Tab 切換按鈕 -->
           <div
-            v-if="visibleTabs.length > 0"
+            v-if="visibleTabs.length > 0 && !isSearchMode"
             class="custom-tabs"
           >
             <button
@@ -176,9 +188,82 @@
         class="drawer-scrollable-menu pt-0"
       >
         <div>
+          <!-- 搜尋模式 -->
+          <template v-if="isSearchMode">
+            <!-- 搜尋欄位 -->
+            <div class="search-container-in-menu">
+              <v-text-field
+                ref="searchInputRef"
+                v-model="searchQuery"
+                density="compact"
+                variant="outlined"
+                placeholder="搜尋選單項目..."
+                prepend-inner-icon="mdi-magnify"
+                clearable
+                hide-details
+                class="search-input"
+                autofocus
+                @focus="isSearchMode = true"
+                @click:clear="clearSearch"
+                @blur="handleSearchBlur"
+              />
+            </div>
+            <!-- 搜尋結果 -->
+            <v-list-subheader v-if="searchResults.length > 0">
+              搜尋結果
+            </v-list-subheader>
+            <template v-if="searchResults.length > 0">
+              <v-list-item
+                v-for="(result, index) in searchResults"
+                :key="`search-${index}-${result.to}`"
+                :to="result.to"
+                color="grey-darken-3"
+                @click="handleSearchResultClick"
+              >
+                <template #prepend>
+                  <v-icon>{{ result.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ result.text }}</v-list-item-title>
+                <template #append>
+                  <v-chip
+                    size="x-small"
+                    variant="text"
+                    color="grey-darken-1"
+                  >
+                    {{ result.tabLabel }}
+                  </v-chip>
+                </template>
+              </v-list-item>
+            </template>
+            <template v-else-if="searchQuery.trim() !== ''">
+              <v-list-item>
+                <v-list-item-title class="text-center text-grey">
+                  找不到符合的項目
+                </v-list-item-title>
+              </v-list-item>
+            </template>
+            <template v-else>
+              <v-list-item>
+                <v-list-item-title class="sub-title-2 text-center text-grey">
+                  輸入關鍵字開始搜尋...
+                </v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
           <!-- Tab 內容 -->
-          <template v-if="visibleTabs.length <= 1 || activeTab === 'common'">
+          <template v-else-if="!isSearchMode && (visibleTabs.length <= 1 || activeTab === 'common')">
             <!-- 常用 Tab -->
+            <!-- 搜尋按鈕 -->
+            <v-list-item
+              v-if="visibleTabs.length > 0"
+              color="grey-darken-3"
+              @click="isSearchMode = true"
+            >
+              <template #prepend>
+                <v-icon>mdi-magnify</v-icon>
+              </template>
+              <v-list-item-title>搜尋</v-list-item-title>
+            </v-list-item>
             <template
               v-for="item in filteredCommonTabItems"
               :key="item.text"
@@ -227,9 +312,28 @@
                 <v-list-item-title>{{ item.text }}</v-list-item-title>
               </v-list-item>
             </template>
+            <!-- rail 收合時不顯示，hover 展開時才顯示 -->
+            <div
+              v-if="!rail || railHovering"
+              class="w-100 d-flex justify-center mt-6"
+            >
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLScdtVvDicUfA5kfZIPtWQ3V-etI-fTErauy_DfLPmikOcuckw/viewform?usp=publish-editor"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="quick-link"
+              >
+                <img
+                  src="/src/assets/image/care-img.png"
+                  alt=""
+                  style="width: 18px; height: 18px;"
+                >
+                <span>同仁關懷與申訴</span>
+              </a>
+            </div>
           </template>
 
-          <template v-if="activeTab === 'application'">
+          <template v-else-if="!isSearchMode && activeTab === 'application'">
             <!-- 應用 Tab -->
             <template
               v-for="item in filteredApplicationTabItems"
@@ -247,7 +351,7 @@
             </template>
           </template>
 
-          <template v-if="activeTab === 'business'">
+          <template v-else-if="!isSearchMode && activeTab === 'business'">
             <!-- 非 rail：顯示小標分組 -->
             <template v-if="!rail">
               <template v-if="businessSalesItems.length > 0">
@@ -335,7 +439,17 @@
                         <template #prepend>
                           <v-icon>{{ item.icon }}</v-icon>
                         </template>
-                        <v-list-item-title>{{ item.text }}</v-list-item-title>
+                        <v-list-item-title>
+                          <span>{{ item.text }}</span>
+                          <v-badge
+                            v-if="item.text === '員工評論相關'"
+                            :content="employeeCommentPendingReviewCount"
+                            :model-value="employeeCommentPendingReviewCount > 0"
+                            color="red-lighten-1"
+                            dot
+                            class="ms-6 pb-2"
+                          />
+                        </v-list-item-title>
                       </v-list-item>
                     </template>
                     <v-list-item
@@ -428,7 +542,17 @@
                       <template #prepend>
                         <v-icon>{{ item.icon }}</v-icon>
                       </template>
-                      <v-list-item-title>{{ item.text }}</v-list-item-title>
+                      <v-list-item-title>
+                        <span>{{ item.text }}</span>
+                        <v-badge
+                          v-if="item.text === '員工評論相關'"
+                          :content="employeeCommentPendingReviewCount"
+                          :model-value="employeeCommentPendingReviewCount > 0"
+                          color="red-lighten-1"
+                          dot
+                          class="ms-6 pb-2"
+                        />
+                      </v-list-item-title>
                     </v-list-item>
                   </template>
                   <v-list-item
@@ -458,7 +582,7 @@
             </template>
           </template>
 
-          <template v-if="activeTab === 'organization'">
+          <template v-else-if="!isSearchMode && activeTab === 'organization'">
             <!-- 組織 Tab -->
             <template
               v-for="item in filteredOrganizationTabItems"
@@ -510,7 +634,7 @@
             </template>
           </template>
 
-          <template v-if="activeTab === 'system'">
+          <template v-else-if="!isSearchMode && activeTab === 'system'">
             <!-- 系統 Tab -->
             <template
               v-for="item in filteredSystemTabItems"
@@ -643,9 +767,81 @@
       <!-- 可滾動區域：選單項目 -->
       <v-list class="drawer-scrollable-menu-mobile pa-0">
         <div>
+          <!-- 搜尋模式（Mobile） -->
+          <template v-if="isSearchMode">
+            <!-- 搜尋欄位 -->
+            <div class="search-container-in-menu">
+              <v-text-field
+                ref="searchInputRefMobile"
+                v-model="searchQuery"
+                density="compact"
+                variant="outlined"
+                placeholder="搜尋選單項目..."
+                prepend-inner-icon="mdi-magnify"
+                clearable
+                hide-details
+                class="search-input"
+                autofocus
+                @focus="isSearchMode = true"
+                @click:clear="clearSearch"
+                @blur="handleSearchBlur"
+              />
+            </div>
+            <!-- 搜尋結果 -->
+            <v-list-subheader v-if="searchResults.length > 0">
+              搜尋結果
+            </v-list-subheader>
+            <template v-if="searchResults.length > 0">
+              <v-list-item
+                v-for="(result, index) in searchResults"
+                :key="`search-mobile-${index}-${result.to}`"
+                :to="result.to"
+                color="grey-darken-3"
+                @click="handleSearchResultClick"
+              >
+                <template #prepend>
+                  <v-icon>{{ result.icon }}</v-icon>
+                </template>
+                <v-list-item-title>{{ result.text }}</v-list-item-title>
+                <template #append>
+                  <v-chip
+                    size="x-small"
+                    variant="text"
+                    color="grey-darken-1"
+                  >
+                    {{ result.tabLabel }}
+                  </v-chip>
+                </template>
+              </v-list-item>
+            </template>
+            <template v-else-if="searchQuery.trim() !== ''">
+              <v-list-item>
+                <v-list-item-title class="text-center text-grey">
+                  找不到符合的項目
+                </v-list-item-title>
+              </v-list-item>
+            </template>
+            <template v-else>
+              <v-list-item>
+                <v-list-item-title class="sub-title-2 text-center text-grey">
+                  輸入關鍵字開始搜尋...
+                </v-list-item-title>
+              </v-list-item>
+            </template>
+          </template>
           <!-- 常用 -->
           <template v-if="filteredCommonTabItems.length > 0">
             <v-list-subheader>常用</v-list-subheader>
+            <!-- 搜尋按鈕 -->
+            <v-list-item
+              color="grey-darken-3"
+              @click="isSearchMode = true"
+            >
+              <template #prepend>
+                <v-icon>mdi-magnify</v-icon>
+              </template>
+              <v-list-item-title>搜尋</v-list-item-title>
+            </v-list-item>
             <template
               v-for="item in filteredCommonTabItems"
               :key="item.text"
@@ -692,10 +888,25 @@
                 <v-list-item-title>{{ item.text }}</v-list-item-title>
               </v-list-item>
             </template>
+            <div class="w-100 d-flex justify-center mt-4 px-2 mb-3">
+              <a
+                href="https://docs.google.com/forms/d/e/1FAIpQLScdtVvDicUfA5kfZIPtWQ3V-etI-fTErauy_DfLPmikOcuckw/viewform?usp=publish-editor"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="quick-link"
+              >
+                <img
+                  src="/src/assets/image/care-img.png"
+                  alt=""
+                  style="width: 18px; height: 18px;"
+                >
+                <span>同仁關懷與申訴</span>
+              </a>
+            </div>
           </template>
 
           <!-- 應用 -->
-          <template v-if="filteredApplicationTabItems.length > 0">
+          <template v-if="!isSearchMode && filteredApplicationTabItems.length > 0">
             <v-list-subheader>應用</v-list-subheader>
             <template
               v-for="item in filteredApplicationTabItems"
@@ -714,7 +925,7 @@
           </template>
 
           <!-- 業務 -->
-          <template v-if="filteredBusinessTabItems.length > 0">
+          <template v-if="!isSearchMode && filteredBusinessTabItems.length > 0">
             <v-list-subheader>業務</v-list-subheader>
             <template
               v-for="item in filteredBusinessTabItems"
@@ -735,7 +946,17 @@
                     <template #prepend>
                       <v-icon>{{ item.icon }}</v-icon>
                     </template>
-                    <v-list-item-title>{{ item.text }}</v-list-item-title>
+                    <v-list-item-title>
+                      <span>{{ item.text }}</span>
+                      <v-badge
+                        v-if="item.text === '員工評論相關'"
+                        :content="employeeCommentPendingReviewCount"
+                        :model-value="employeeCommentPendingReviewCount > 0"
+                        color="red-lighten-1"
+                        dot
+                        class="ms-6 pb-2"
+                      />
+                    </v-list-item-title>
                   </v-list-item>
                 </template>
                 <v-list-item
@@ -765,7 +986,7 @@
           </template>
 
           <!-- 組織 -->
-          <template v-if="filteredOrganizationTabItems.length > 0">
+          <template v-if="!isSearchMode && filteredOrganizationTabItems.length > 0">
             <v-list-subheader>組織</v-list-subheader>
             <template
               v-for="item in filteredOrganizationTabItems"
@@ -816,7 +1037,7 @@
           </template>
 
           <!-- 系統 -->
-          <template v-if="filteredSystemTabItems.length > 0 && user.isLogin">
+          <template v-if="!isSearchMode && filteredSystemTabItems.length > 0 && user.isLogin">
             <v-list-subheader>系統</v-list-subheader>
             <template
               v-for="item in filteredSystemTabItems"
@@ -898,15 +1119,31 @@
         </div>
       </v-list>
     </v-navigation-drawer>
-    <v-main>
-      <MarqueeBar />
+    <v-main
+      ref="mainRef"
+      :style="{ '--marquee-height': `${marqueeHeight}px` }"
+    >
+      <div
+        v-if="marqueeHeight > 0"
+        class="marquee-spacer"
+        :style="{ height: `${marqueeHeight}px` }"
+        aria-hidden="true"
+      />
+      <MarqueeBar
+        ref="marqueeRef"
+        layout="default"
+      />
+      <EvaluationEditBar />
+      <AttendanceFormEditBar />
+      <EvaluationBatchDetailBar />
       <router-view />
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed, nextTick } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
+import { useApi } from '@/composables/axios'
 import { useUserStore } from '@/stores/user'
 import { usePermissionStore } from '@/stores/permission'
 import { useRouter, useRoute } from 'vue-router'
@@ -915,7 +1152,11 @@ import { useDisplay } from 'vuetify'
 import { roleNames } from '@/enums/UserRole'
 import UserAvatar from '@/components/UserAvatar.vue'
 import MarqueeBar from '@/components/MarqueeBar.vue'
+import EvaluationEditBar from '@/components/EvaluationEditBar.vue'
+import AttendanceFormEditBar from '@/components/AttendanceFormEditBar.vue'
+import EvaluationBatchDetailBar from '@/components/EvaluationBatchDetailBar.vue'
 import NotificationInbox from '@/components/NotificationInbox.vue'
+import EmployeeCommentNotificationButton from '@/components/EmployeeCommentNotificationButton.vue'
 
 const { smAndUp, mdAndUp, lgAndUp, name: breakpoint } = useDisplay()
 
@@ -927,6 +1168,7 @@ const permissionStore = usePermissionStore()
 const createSnackbar = useSnackbar()
 const router = useRouter()
 const route = useRoute()
+const { apiAuth } = useApi()
 
 const openedGroups = ref([]) // 初始值改為空數組
 const isBackgroundLoaded = ref(false)
@@ -934,6 +1176,15 @@ const isAvatarLoaded = ref(false)
 const userRbacRoles = ref([]) // 用戶的 RBAC 角色
 const activeTab = ref('common') // 當前活躍的Tab
 const railHovering = ref(false) // rail 模式下的展開狀態
+const searchQuery = ref('') // 搜尋關鍵字
+const isSearchMode = ref(false) // 是否處於搜尋模式
+const searchInputRef = ref(null) // 搜尋輸入框的引用（桌面版）
+const searchInputRefMobile = ref(null) // 搜尋輸入框的引用（手機版）
+const employeeCommentButtonRef = ref(null)
+const employeeCommentPendingReviewCount = ref(0)
+const mainRef = ref(null)
+const marqueeRef = ref(null)
+const marqueeHeight = ref(0)
 const handleImageLoad = () => {
   isBackgroundLoaded.value = true
 }
@@ -958,6 +1209,18 @@ const loadUserRbacRoles = async () => {
   } catch (error) {
     console.error('載入用戶角色失敗:', error)
     userRbacRoles.value = []
+  }
+}
+
+const fetchEmployeeCommentPendingReviewCount = async () => {
+  if (!user.isLogin || !permissionStore.hasPermission('EMPLOYEE_COMMENT_SCHEDULE_MANAGEMENT_READ')) return
+  try {
+    const { data } = await apiAuth.get('/employee-comments/schedules', {
+      params: { status: 'submitted', page: 1, itemsPerPage: 1 }
+    })
+    employeeCommentPendingReviewCount.value = data?.result?.totalItems ?? 0
+  } catch {
+    employeeCommentPendingReviewCount.value = 0
   }
 }
 
@@ -1081,6 +1344,24 @@ const commonTabItems = [
     permission: 'ANNOUNCEMENT_PAGE_READ'
   },
   {
+    to: '/video',
+    text: '影片專區',
+    icon: 'mdi-video-outline',
+    permission: 'EDUCATION_TRAINING_VIDEO_PAGE_READ'
+  },
+  {
+    to: '/employeeCommentSchedule',
+    text: '評論排程表',
+    icon: 'mdi-calendar-clock',
+    permission: 'EMPLOYEE_COMMENT_SCHEDULE_READ'
+  },
+  {
+    to: '/evaluationMyPending',
+    text: '我的考核',
+    icon: 'mdi-clipboard-edit-outline',
+    permission: 'EVALUATION_MY_PENDING_READ'
+  },
+  {
     text: '申請相關',
     icon: 'mdi-file-document-outline',
     permission: ['MARKETING_DESIGN_REQUEST_PAGE_READ'],
@@ -1112,6 +1393,12 @@ const businessTabItems = [
     text: '直客詢問統計表',
     icon: 'mdi-account-question',
     permission: 'B2C_STATISTICS_READ'
+  },
+  {
+    to: '/lectureEventStatistics',
+    text: '講座活動統計表',
+    icon: 'mdi-calendar-clock',
+    permission: 'LECTURE_EVENT_STATISTICS_READ'
   },
   {
     to: '/marketingAnalysis',
@@ -1151,10 +1438,54 @@ const businessTabItems = [
     permission: 'B2C_STATISTICS_MANAGEMENT_READ'
   },
   {
-    to: '/marketingDesignRequestManagement',
-    text: '行銷美編需求申請管理',
+    text: '員工評論相關',
+    icon: 'mdi-comment-account-outline',
+    permission: ['EMPLOYEE_COMMENT_SCHEDULE_MANAGEMENT_READ', 'EMPLOYEE_COMMENT_CANDIDATE_MANAGEMENT_READ'],
+    children: [
+      {
+        to: '/employeeCommentScheduleManagement',
+        text: '評論排程管理',
+        icon: 'mdi-calendar-clock',
+        permission: 'EMPLOYEE_COMMENT_SCHEDULE_MANAGEMENT_READ'
+      },
+      {
+        to: '/employeeCommentCandidateManagement',
+        text: '評論名單管理',
+        icon: 'mdi-account-group',
+        permission: 'EMPLOYEE_COMMENT_CANDIDATE_MANAGEMENT_READ'
+      }
+    ]
+  },
+  {
+    text: '需求申請相關',
     icon: 'mdi-form-select',
-    permission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ'
+    permission: ['MARKETING_DESIGN_REQUEST_MANAGEMENT_READ', 'MARKETING_DESIGN_REQUEST_SETTING_MANAGE', 'CUSTOMER_COMMENT_MANAGEMENT_READ', 'LECTURE_EVENT_MANAGEMENT_READ'],
+    children: [
+      {
+        to: '/marketingDesignRequestManagement',
+        text: '行銷美編申請管理',
+        icon: 'mdi-file-cog-outline',
+        permission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ'
+      },
+      {
+        to: '/customerCommentManagement',
+        text: '客戶評論管理',
+        icon: 'mdi-comment-text-multiple-outline',
+        permission: 'CUSTOMER_COMMENT_MANAGEMENT_READ'
+      },
+      {
+        to: '/lectureEventManagement',
+        text: '講座活動管理',
+        icon: 'mdi-presentation',
+        permission: 'LECTURE_EVENT_MANAGEMENT_READ'
+      },
+      {
+        to: '/marketingDesignRequestSettings',
+        text: '行銷美編申請設定',
+        icon: 'mdi-cog',
+        permission: 'MARKETING_DESIGN_REQUEST_SETTINGS_READ'
+      }
+    ]
   },
   {
     to: '/formGenerator',
@@ -1186,6 +1517,12 @@ const businessTabItems = [
         permission: 'SPARE_PART_MANAGEMENT_READ'
       }
     ]
+  },
+  {
+    to: '/selfAssessmentStatistics',
+    text: '部門自評統計表',
+    icon: 'mdi-chart-box-multiple-outline',
+    permission: 'SELF_ASSESSMENT_STATISTICS_READ'
   }
 ]
 
@@ -1213,6 +1550,43 @@ const organizationTabItems = [
         text: '公司部門管理',
         icon: 'mdi-office-building-cog',
         permission: 'COMPANY_AND_DEPARTMENT_MANAGEMENT_READ'
+      }
+    ]
+  },
+  {
+    text: '考核相關',
+    icon: 'mdi-clipboard-list-outline',
+    permission: ['EVALUATION_TEMPLATE_MANAGEMENT_READ', 'EVALUATION_MANAGEMENT_READ', 'EVALUATION_TEMPLATE_MANAGE', 'ATTENDANCE_FORM_TEMPLATE_MANAGEMENT_READ', 'ATTENDANCE_MANAGEMENT_READ', 'SELF_ASSESSMENT_MANAGEMENT_READ'],
+    children: [
+      {
+        to: '/evaluationManagement',
+        text: '考核管理',
+        icon: 'mdi-clipboard-check-outline',
+        permission: 'EVALUATION_MANAGEMENT_READ'
+      },
+      {
+        to: '/attendanceManagement',
+        text: '出勤管理',
+        icon: 'mdi-calendar-check-outline',
+        permission: 'ATTENDANCE_MANAGEMENT_READ'
+      },
+      {
+        to: '/evaluationTemplateManagement',
+        text: '考核表單管理',
+        icon: 'mdi-clipboard-text-outline',
+        permission: 'EVALUATION_TEMPLATE_MANAGEMENT_READ'
+      },
+      {
+        to: '/attendanceFormTemplateManagement',
+        text: '出勤表單管理',
+        icon: 'mdi-calendar-clock',
+        permission: 'ATTENDANCE_FORM_TEMPLATE_MANAGEMENT_READ'
+      },
+      {
+        to: '/selfAssessmentManagement',
+        text: '自評管理',
+        icon: 'mdi-account-details-outline',
+        permission: 'SELF_ASSESSMENT_MANAGEMENT_READ'
       }
     ]
   },
@@ -1258,6 +1632,12 @@ const systemTabItems = [
     permission: 'PERMISSION_MANAGEMENT_READ'
   },
   {
+    to: '/taiwanHolidayManagement',
+    text: '假日管理',
+    icon: 'mdi-calendar-clock',
+    permission: 'TAIWAN_HOLIDAY_MANAGEMENT_READ'
+  },
+  {
     text: '網站設定',
     icon: 'mdi-cog-outline',
     permission: ['CAROUSEL_READ', 'ANNOUNCEMENT_READ', 'MARQUEE_MANAGEMENT_READ', 'SHARED_RESOURCE_MANAGEMENT_READ'],
@@ -1285,6 +1665,12 @@ const systemTabItems = [
         text: '共享資源管理',
         icon: 'mdi-share-all',
         permission: 'SHARED_RESOURCE_MANAGEMENT_READ'
+      },
+      {
+        to: '/videoManagement',
+        text: '影片管理',
+        icon: 'mdi-video-outline',
+        permission: 'EDUCATION_TRAINING_VIDEO_MANAGEMENT_READ'
       }
     ]
   },
@@ -1324,16 +1710,16 @@ const filteredSystemTabItems = computed(() => filterMenuItems(systemTabItems))
 
 // 業務 Tab 小標分組（大螢幕使用）
 const businessSalesItems = computed(() => {
-  return filteredBusinessTabItems.value.filter(item => item.text === '直客詢問統計表')
+  return filteredBusinessTabItems.value.filter(item => item.text === '直客詢問統計表' || item.text === '講座活動統計表')
 })
 
 const businessMarketingItems = computed(() => {
-  const marketingSet = new Set(['行銷費用分析', '行銷費用管理', '直客詢問管理', '行銷美編需求申請管理'])
+  const marketingSet = new Set(['行銷費用分析', '行銷費用管理', '直客詢問管理', '員工評論相關', '需求申請相關', '客戶評論管理'])
   return filteredBusinessTabItems.value.filter(item => marketingSet.has(item.text))
 })
 
 const businessCommonItems = computed(() => {
-  const commonSet = new Set(['表單產生器', '線別分類管理', '備品相關'])
+  const commonSet = new Set(['表單產生器', '線別分類管理', '備品相關', '部門自評統計表'])
   return filteredBusinessTabItems.value.filter(item => commonSet.has(item.text))
 })
 
@@ -1373,6 +1759,113 @@ const visibleTabs = computed(() => {
   })
 })
 
+// 扁平化所有選單項目（用於搜尋）
+const flattenMenuItems = (items, tabLabel) => {
+  const results = []
+  items.forEach(item => {
+    if (item.children) {
+      item.children.forEach(child => {
+        if (child.to) {
+          results.push({
+            ...child,
+            tabLabel,
+            parentText: item.text
+          })
+        }
+      })
+    } else if (item.to) {
+      results.push({
+        ...item,
+        tabLabel
+      })
+    }
+  })
+  return results
+}
+
+// 獲取所有可搜尋的選單項目
+const allSearchableItems = computed(() => {
+  const items = []
+  if (hasVisibleItems(commonTabItems)) {
+    items.push(...flattenMenuItems(filteredCommonTabItems.value, '常用'))
+  }
+  if (hasVisibleItems(applicationTabItems)) {
+    items.push(...flattenMenuItems(filteredApplicationTabItems.value, '應用'))
+  }
+  if (hasVisibleItems(businessTabItems)) {
+    items.push(...flattenMenuItems(filteredBusinessTabItems.value, '營運'))
+  }
+  if (hasVisibleItems(organizationTabItems)) {
+    items.push(...flattenMenuItems(filteredOrganizationTabItems.value, '組織'))
+  }
+  if (hasVisibleItems(systemTabItems)) {
+    items.push(...flattenMenuItems(filteredSystemTabItems.value, '系統'))
+  }
+  return items
+})
+
+// 搜尋結果
+const searchResults = computed(() => {
+  if (!searchQuery.value || searchQuery.value.trim() === '') {
+    return []
+  }
+  const query = searchQuery.value.toLowerCase().trim()
+  const filtered = allSearchableItems.value.filter(item => {
+    return item.text.toLowerCase().includes(query) ||
+           (item.parentText && item.parentText.toLowerCase().includes(query))
+  })
+  // 去重：基於 to 路徑，保留第一個出現的項目
+  const seen = new Set()
+  return filtered.filter(item => {
+    if (seen.has(item.to)) {
+      return false
+    }
+    seen.add(item.to)
+    return true
+  })
+})
+
+// 清空搜尋
+const clearSearch = () => {
+  searchQuery.value = ''
+  isSearchMode.value = false
+}
+
+// 處理搜尋框失焦
+const handleSearchBlur = () => {
+  // 延遲檢查，以便點擊搜尋結果時能正常導航
+  setTimeout(() => {
+    if (searchQuery.value.trim() === '') {
+      isSearchMode.value = false
+    }
+  }, 200)
+}
+
+// 處理搜尋結果點擊
+const handleSearchResultClick = () => {
+  clearSearch()
+}
+
+// 監聽 isSearchMode，當為 true 時自動聚焦搜尋框
+watch(isSearchMode, (newValue) => {
+  if (newValue) {
+    nextTick(() => {
+      if (searchInputRef.value) {
+        searchInputRef.value.focus()
+      } else if (searchInputRefMobile.value) {
+        searchInputRefMobile.value.focus()
+      }
+    })
+  }
+})
+
+// 處理 ESC 鍵退出搜尋模式
+const handleKeydown = (event) => {
+  if (event.key === 'Escape' && isSearchMode.value) {
+    clearSearch()
+  }
+}
+
 // 設置預設 Tab（當只有一個 Tab 可見時，自動選擇它）
 watch(visibleTabs, (newTabs) => {
   if (newTabs.length === 1) {
@@ -1392,6 +1885,16 @@ watch(() => route.path, (newPath) => {
     }
   }
 
+  // 影片專區頁面（常用Tab）
+  if (newPath.includes('/video') && !newPath.includes('Management')) {
+    activeTab.value = 'common'
+  }
+
+  // 我的考核（常用Tab）
+  if (newPath.includes('/evaluationMyPending')) {
+    activeTab.value = 'common'
+  }
+
   // 專案與任務管理（應用Tab）
   if (newPath.includes('/projectAndTaskManagement')) {
     activeTab.value = 'application'
@@ -1400,14 +1903,21 @@ watch(() => route.path, (newPath) => {
   // 業務相關頁面（業務Tab）
   if (
     newPath.includes('/B2CStatistics') ||
+    newPath.includes('/lectureEventStatistics') ||
     newPath.includes('/marketingAnalysis') ||
     newPath.includes('/marketingExpense') ||
     newPath.includes('/marketingBudget') ||
     newPath.includes('/marketingCategory') ||
     newPath.includes('/marketingDesignRequestManagement') ||
+    newPath.includes('/marketingDesignRequestSettings') ||
+    newPath.includes('/customerCommentManagement') ||
+    newPath.includes('/lectureEventManagement') ||
+    newPath.includes('/employeeCommentScheduleManagement') ||
+    newPath.includes('/employeeCommentCandidateManagement') ||
     newPath.includes('/formGenerator') ||
     newPath.includes('/lineCategory') ||
-    newPath.includes('/sparePart')
+    newPath.includes('/sparePart') ||
+    newPath.includes('/selfAssessmentStatistics')
   ) {
     activeTab.value = 'business'
     // 展開行銷費用管理
@@ -1416,12 +1926,31 @@ watch(() => route.path, (newPath) => {
         openedGroups.value.push('行銷費用管理')
       }
     }
+    // 展開需求申請相關
+    if (newPath.includes('/marketingDesignRequestManagement') || newPath.includes('/marketingDesignRequestSettings') || newPath.includes('/customerCommentManagement') || newPath.includes('/lectureEventManagement')) {
+      if (!openedGroups.value.includes('需求申請相關')) {
+        openedGroups.value.push('需求申請相關')
+      }
+    }
+    // 展開員工評論相關
+    if (newPath.includes('/employeeCommentScheduleManagement') || newPath.includes('/employeeCommentCandidateManagement')) {
+      if (!openedGroups.value.includes('員工評論相關')) {
+        openedGroups.value.push('員工評論相關')
+      }
+    }
   }
+  // 路由變更時刷新員工評論待審核數量（含進入/離開評論排程管理頁）
+  fetchEmployeeCommentPendingReviewCount()
 
   // 組織相關頁面（組織Tab）
   if (
     newPath.includes('/employeeManagement') ||
     newPath.includes('/companyAndDepartment') ||
+    newPath.includes('/evaluationTemplateManagement') ||
+    newPath.includes('/attendanceFormTemplateManagement') ||
+    newPath.includes('/attendanceManagement') ||
+    newPath.includes('/evaluationManagement') ||
+    newPath.includes('/selfAssessmentManagement') ||
     newPath.includes('/employeeList') ||
     newPath.includes('/hardware')
   ) {
@@ -1430,6 +1959,12 @@ watch(() => route.path, (newPath) => {
     if (newPath.includes('/employeeManagement') || newPath.includes('/companyAndDepartment')) {
       if (!openedGroups.value.includes('人事管理')) {
         openedGroups.value.push('人事管理')
+      }
+    }
+    // 展開考核相關
+    if (newPath.includes('/evaluationTemplateManagement') || newPath.includes('/attendanceFormTemplateManagement') || newPath.includes('/evaluationManagement') || newPath.includes('/selfAssessmentManagement')) {
+      if (!openedGroups.value.includes('考核相關')) {
+        openedGroups.value.push('考核相關')
       }
     }
     // 展開硬體管理
@@ -1444,10 +1979,12 @@ watch(() => route.path, (newPath) => {
   if (
     newPath.includes('/user') ||
     newPath.includes('/permissionManagement') ||
+    newPath.includes('/taiwanHolidayManagement') ||
     newPath.includes('/announcementManagement') ||
     newPath.includes('/carouselManagement') ||
     newPath.includes('/marqueeManagement') ||
     newPath.includes('/sharedResourceManagement') ||
+    newPath.includes('/videoManagement') ||
     newPath.includes('/auditLog')
   ) {
     activeTab.value = 'system'
@@ -1456,7 +1993,8 @@ watch(() => route.path, (newPath) => {
       newPath.includes('/announcementManagement') ||
       newPath.includes('/carouselManagement') ||
       newPath.includes('/marqueeManagement') ||
-      newPath.includes('/sharedResourceManagement')
+      newPath.includes('/sharedResourceManagement') ||
+      newPath.includes('/educationTrainingVideoManagement')
     ) {
       if (!openedGroups.value.includes('網站設定')) {
         openedGroups.value.push('網站設定')
@@ -1465,16 +2003,95 @@ watch(() => route.path, (newPath) => {
   }
 }, { immediate: true })
 
+// localStorage 的 key
+const RAIL_STATE_KEY = 'navigation-drawer-rail-state'
+
+// 從 localStorage 讀取 rail 狀態
+const loadRailState = () => {
+  if (typeof window === 'undefined') return null
+  const saved = localStorage.getItem(RAIL_STATE_KEY)
+  return saved !== null ? saved === 'true' : null
+}
+
+// 保存 rail 狀態到 localStorage
+const saveRailState = (state) => {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(RAIL_STATE_KEY, String(state))
+}
+
+// 追蹤上一次的 breakpoint，用於判斷是否為尺寸變化
+const previousBreakpoint = ref(null)
+// 追蹤是否為用戶手動切換（避免 watch 觸發時誤保存）
+const isManualToggle = ref(false)
+
 // 監聽螢幕尺寸變化
-watch(() => breakpoint.value, () => {
-  if (lgAndUp.value) {
-    // LG 以上，預設展開
-    rail.value = false
-  } else if (mdAndUp.value) {
-    // MD 到 LG 之間，預設收合（只顯示圖示）
-    rail.value = true
+watch(() => breakpoint.value, (newBreakpoint) => {
+  if (!mdAndUp.value) {
+    previousBreakpoint.value = newBreakpoint
+    return // 小螢幕不處理 rail 狀態
   }
+
+  const isLgAndUp = lgAndUp.value
+
+  // 如果是初始狀態（previousBreakpoint 為 null），根據當前尺寸設定
+  if (previousBreakpoint.value === null) {
+    if (isLgAndUp) {
+      // LG 以上，使用保存的狀態或展開
+      const savedState = loadRailState()
+      rail.value = savedState !== null ? savedState : false
+    } else {
+      // MD 到 LG 之間，強制收合
+      rail.value = true
+    }
+    previousBreakpoint.value = newBreakpoint
+    return
+  }
+
+  // 判斷是否為尺寸變化（從不同尺寸範圍切換）
+  const wasLgAndUp = ['lg', 'xl', 'xxl'].includes(previousBreakpoint.value)
+
+  // 如果從 LG 以上變到 LG 以下，強制收合
+  if (wasLgAndUp && !isLgAndUp) {
+    rail.value = true
+    previousBreakpoint.value = newBreakpoint
+    return
+  }
+
+  // 如果從 LG 以下變到 LG 以上，使用保存的狀態或展開
+  if (!wasLgAndUp && isLgAndUp) {
+    const savedState = loadRailState()
+    rail.value = savedState !== null ? savedState : false
+    previousBreakpoint.value = newBreakpoint
+    return
+  }
+
+  // 如果是在相同尺寸範圍內（都是 LG 以上或都是 LG 以下），且不是手動切換
+  // 則根據尺寸設定預設值
+  if (!isManualToggle.value) {
+    if (isLgAndUp) {
+      // LG 以上，使用保存的狀態或展開
+      const savedState = loadRailState()
+      rail.value = savedState !== null ? savedState : false
+    } else {
+      // MD 到 LG 之間，強制收合
+      rail.value = true
+    }
+  }
+
+  // 重置手動切換標記
+  isManualToggle.value = false
+  previousBreakpoint.value = newBreakpoint
 }, { immediate: true })
+
+// 監聽 rail 狀態變化，保存到 localStorage（僅在 LG 以上且為手動切換時）
+watch(rail, (newValue) => {
+  // 只有在 LG 以上且為手動切換時才保存
+  if (mdAndUp.value && lgAndUp.value && isManualToggle.value) {
+    saveRailState(newValue)
+    // 保存後立即重置標記
+    isManualToggle.value = false
+  }
+})
 
 // 控制抽屜展開的函數
 // 改進的 toggleDrawer 函數
@@ -1483,22 +2100,51 @@ const toggleDrawer = () => {
     // SM 以下，切換 mdDrawer
     mdDrawer.value = !mdDrawer.value
   } else {
-    // SM 以上，切換 rail 狀態
+    // SM 以上，標記為手動切換，然後切換 rail 狀態
+    isManualToggle.value = true
     rail.value = !rail.value
   }
 }
 
+let marqueeResizeObserver = null
 // 組件掛載時設置初始狀態
 onMounted(async () => {
-  if (lgAndUp.value) {
-    rail.value = false // LG 以上，預設展開
-  } else if (mdAndUp.value) {
-    rail.value = true // MD 到 LG 之間，預設收合
-  }
+  // 初始化 previousBreakpoint
+  previousBreakpoint.value = breakpoint.value
 
   // 載入用戶 RBAC 角色
   await loadUserRbacRoles()
+
+  // 載入員工評論待審核數量
+  await fetchEmployeeCommentPendingReviewCount()
+
+  // 添加鍵盤事件監聽器
+  window.addEventListener('keydown', handleKeydown)
+
+  // 監聽員工評論審核完成事件，同步更新側邊欄 badge
+  window.addEventListener('employee-comment-reviewed', fetchEmployeeCommentPendingReviewCount)
+
+  // 監測 MarqueeBar 高度，供 EvaluationEditBar 定位
+  marqueeResizeObserver = new ResizeObserver((entries) => {
+    const entry = entries[0]
+    if (entry) marqueeHeight.value = entry.contentRect.height
+  })
+  nextTick(() => {
+    const el = marqueeRef.value?.$el
+    if (el) marqueeResizeObserver.observe(el)
+  })
 })
+
+// 組件卸載前移除事件監聽器
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('employee-comment-reviewed', fetchEmployeeCommentPendingReviewCount)
+  marqueeResizeObserver?.disconnect()
+})
+
+const handleOpenEmployeeComment = (scheduleId) => {
+  employeeCommentButtonRef.value?.openWithScheduleId(scheduleId)
+}
 
 const logout = async () => {
   await user.logout()
@@ -1603,12 +2249,10 @@ watch(() => user.avatar, (newAvatar) => {
 }
 
 .nav-title {
-  padding: 8px 16px;
   font-size: 22px;
   font-weight: 600;
   margin-left: 4px;
   letter-spacing: 1px;
-  border: 1px solid black;
   color: #333;
   @include sm {
     margin-left: 6px;
@@ -1654,6 +2298,7 @@ watch(() => user.avatar, (newAvatar) => {
     display: flex;
     align-items: center;
     justify-content: center;
+    // font-size: 13.5px !important;
 
     &::after {
       content: '';
@@ -1690,4 +2335,52 @@ watch(() => user.avatar, (newAvatar) => {
   line-height: 32px;
   padding-left: 16px;
 }
+
+.search-container {
+  padding: 8px 12px;
+  background-color: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.search-container-in-menu {
+  padding: 8px 12px;
+  background-color: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.quick-link {
+  width: 200px;
+  min-width: 200px;
+  height: 40px;
+  border: 3px solid #EF9A9A;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.6);
+  line-height: 1.5;
+  gap: 8px;
+  letter-spacing: 2px;
+  font-family: 'Noto Sans TC', serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+  flex-shrink: 0;
+
+  &:hover {
+    background-color: #E57373;
+    color: #fff;
+    cursor: pointer;
+  }
+}
+
+// .v-list-item i {
+//   font-size: 20px !important;
+// }
+
+// .v-list-item-title  {
+//   font-size: 14px !important;
+// }
+
 </style>

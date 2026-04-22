@@ -25,7 +25,7 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">公司 :</span>
+                  <span class="search-label">公司 :</span>
                   <v-select
                     v-model="searchCriteria.company"
                     :items="companies"
@@ -51,7 +51,7 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">部門 :</span>
+                  <span class="search-label">部門 :</span>
                   <v-select
                     v-model="searchCriteria.department"
                     :items="departments"
@@ -67,8 +67,6 @@
                 </div>
               </v-col>
 
-              <!-- 重置按鈕 -->
-
               <!-- 快速搜尋 -->
               <v-col
                 cols="12"
@@ -78,13 +76,13 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">快速搜尋 :</span>
+                  <span class="search-label">快速搜尋 :</span>
                   <v-text-field
                     v-model="quickSearch"
                     :loading="isSearching"
                     density="compact"
                     variant="outlined"
-                    label="搜尋姓名、分機號碼"
+                    placeholder="搜尋姓名、分機號碼"
                     append-inner-icon="mdi-magnify"
                     hide-details
                     clearable
@@ -97,6 +95,7 @@
                 <v-btn
                   color="grey"
                   elevation="1"
+                  :size="smAndUp ? 'default' : 'small'"
                   :disabled="false"
                   @click="resetSearch"
                 >
@@ -233,15 +232,16 @@
 <script setup>
 import { ref, reactive, onMounted, computed, watch } from 'vue'
 import { useApi } from '@/composables/axios'
+import { useDisplay } from 'vuetify'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 // 移除未使用的 useDisplay
 
 // 頁面定義
 definePage({
   meta: {
-    title: '分機表 | TEST',
+    title: '分機表 | Ystravel',
     login: true,
     permission: 'EXTENSION_LIST_READ'
   }
@@ -251,7 +251,7 @@ const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
 
 // 移除未使用的 smAndUp
-
+const { smAndUp } = useDisplay()
 // 載入狀態
 const loading = ref(false)
 const isSearching = ref(false)
@@ -486,18 +486,6 @@ onMounted(async () => {
 
 <style lang="scss" scoped>
 @use '@/styles/_rwd' as *;
-
-/* 搜尋區域樣式 */
-.text-label {
-  color: #455a64;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  margin-bottom: 8px;
-  @include sm {
-    font-size: 14px;
-  }
-}
 
 :deep(.v-field :not(.v-textarea .v-field) :not(.v-select .v-field)) {
   .v-field__input {

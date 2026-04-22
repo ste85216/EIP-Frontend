@@ -313,12 +313,12 @@ const totalBackgrounds = computed(() => {
 
 const mostUsedBackground = computed(() => {
   if (usageStats.value.length === 0) return null
-  
+
   // 只考慮有使用者的背景圖片
   const usedBackgrounds = usageStats.value.filter(stat => stat.userCount > 0)
   if (usedBackgrounds.length === 0) return null
-  
-  return usedBackgrounds.reduce((max, current) => 
+
+  return usedBackgrounds.reduce((max, current) =>
     current.userCount > max.userCount ? current : max
   )
 })
@@ -345,7 +345,7 @@ const loadUsageStats = async () => {
   try {
     isLoading.value = true
     const { data } = await apiAuth.get('/users/background-image-usage-stats')
-    
+
     if (data.success) {
       usageStats.value = data.result
     } else {

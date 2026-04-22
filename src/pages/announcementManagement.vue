@@ -63,29 +63,18 @@
                 sm="4"
                 lg="3"
               >
-                <v-row class="d-flex align-center">
-                  <v-col class="d-flex align-center">
-                    <v-icon
-                      v-if="mdAndUp"
-                      v-tooltip:top="'可搜尋標題或內容'"
-                      icon="mdi-information"
-                      size="small"
-                      color="blue-grey-darken-2"
-                      class="me-4"
-                    />
-                    <v-text-field
-                      v-model="searchCriteria.quickSearch"
-                      label="快速搜尋"
-                      append-inner-icon="mdi-magnify"
-                      base-color="#666"
-                      color="blue-grey-darken-3"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                    />
-                  </v-col>
-                </v-row>
+                <v-text-field
+                  v-model="searchCriteria.quickSearch"
+                  :loading="isSearching"
+                  placeholder="搜尋標題或內容"
+                  append-inner-icon="mdi-magnify"
+                  base-color="#666"
+                  color="blue-grey-darken-3"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                />
               </v-col>
             </v-row>
           </v-col>
@@ -93,6 +82,7 @@
             <!-- 表格 -->
             <v-data-table-server
               v-model:items-per-page="itemsPerPage"
+              v-model:sort-by="sortBy"
               :headers="headers"
               :items="announcements"
               :loading="tableLoading"
@@ -162,6 +152,20 @@
                       >
                         <v-icon size="18">
                           mdi-pencil
+                        </v-icon>
+                      </v-btn>
+                      <v-btn
+                        v-if="canSendAnnouncementNotification && canSendNotification(item)"
+                        icon
+                        size="small"
+                        color="teal-darken-1"
+                        variant="text"
+                        :loading="sendNotifyLoadingId === item._id"
+                        :disabled="sendNotifyLoadingId === item._id"
+                        @click="openSendNotificationDialog(item)"
+                      >
+                        <v-icon size="18">
+                          mdi-bell-ring-outline
                         </v-icon>
                       </v-btn>
                       <v-btn
@@ -342,7 +346,7 @@
               <!-- 是否啟用 -->
               <v-col
                 cols="12"
-                md="4"
+                md="3"
               >
                 <v-switch
                   v-model="isActive.value.value"
@@ -353,7 +357,25 @@
                 />
               </v-col>
 
-
+              <v-col
+                cols="12"
+                md="4"
+              >
+                <v-switch
+                  v-model="notifyAtStart.value.value"
+                  label="自動發送通知"
+                  color="teal-darken-1"
+                  density="compact"
+                  hide-details
+                  :disabled="!isStartDateInFuture"
+                />
+                <div
+                  v-if="!isStartDateInFuture"
+                  class="text-caption text-medium-emphasis ms-1"
+                >
+                  請設定「晚於現在」的開始時間以啟用排程通知
+                </div>
+              </v-col>
 
               <!-- 公告內容（富文本編輯器） -->
               <v-col cols="12">
@@ -362,6 +384,7 @@
                   v-model="announcementContent"
                   placeholder="輸入公告內容..."
                   :height="400"
+                  upload-endpoint="/announcements/content-image"
                 />
               </v-col>
 
@@ -495,24 +518,52 @@
       cancel-button-text="取消"
       @confirm="confirmDelete"
     />
+
+    <ConfirmDialog
+      v-model="showPostCreateNotifyDialog"
+      dialog-width="360"
+      title="發送通知"
+      :message="postCreateNotifyMessageHtml"
+      header-icon="mdi-bell-ring-outline"
+      confirm-button-text="立即發送"
+      cancel-button-text="稍後再說"
+      :close-on-confirm="false"
+      :confirm-loading="postCreateSendLoading"
+      @confirm="confirmPostCreateSendNotification"
+    />
+
+    <ConfirmDialog
+      v-model="showSendNotificationDialog"
+      dialog-width="360"
+      title="發送通知"
+      :message="resendNotifyMessageHtml"
+      header-icon="mdi-bell-ring-outline"
+      confirm-button-text="發送"
+      cancel-button-text="取消"
+      :close-on-confirm="false"
+      :confirm-loading="sendNotifyDialogLoading"
+      @confirm="confirmSendNotification"
+    />
   </v-container>
 </template>
 
 <script setup>
 import { definePage } from 'vue-router/auto'
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
+import { usePermissionStore } from '@/stores/permission'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 import RichTextEditor from '@/components/RichTextEditor.vue'
 import { useForm, useField } from 'vee-validate'
 import * as yup from 'yup'
 
 definePage({
-  meta: {
-    title: '公告管理 | TEST',
+    meta: {
+    title: '公告管理 | Ystravel',
     login: true,
     permission: 'ANNOUNCEMENT_READ'
   }
@@ -520,14 +571,22 @@ definePage({
 
 const createSnackbar = useSnackbar()
 const { apiAuth } = useApi()
-const { mdAndUp, smAndUp } = useDisplay()
+const { smAndUp } = useDisplay()
+const permissionStore = usePermissionStore()
+
+const canSendAnnouncementNotification = computed(() =>
+  permissionStore.hasPermission('ANNOUNCEMENT_UPDATE') ||
+  permissionStore.hasPermission('ANNOUNCEMENT_CREATE')
+)
 
 // 響應式資料
 const announcements = ref([])
 const tableLoading = ref(false)
+const isSearching = ref(false)
 const itemsPerPage = ref(20)
 const currentPage = ref(1)
 const totalItems = ref(0)
+const sortBy = ref([{ key: 'createdAt', order: 'desc' }])
 
 // 搜尋條件
 const searchCriteria = ref({
@@ -538,7 +597,6 @@ const searchCriteria = ref({
 
 // 公告類型選項
 const typeOptions = [
-  { title: '全部', value: null },
   { title: '系統公告', value: 'system' },
   { title: '更新公告', value: 'update' },
   { title: '一般公告', value: 'announcement' },
@@ -548,7 +606,6 @@ const typeOptions = [
 
 // 狀態選項
 const statusOptions = [
-  { title: '全部', value: null },
   { title: '啟用', value: true },
   { title: '停用', value: false }
 ]
@@ -565,12 +622,52 @@ const headers = [
   { title: '開始時間', key: 'startDate', sortable: true },
   { title: '結束時間', key: 'endDate', sortable: true },
   { title: '建立者', key: 'creator', sortable: false },
-  { title: '操作', key: 'actions', sortable: false, width: '120px', align: 'center' }
+  { title: '操作', key: 'actions', sortable: false, width: '156px', align: 'center' }
 ]
 
 // 對話框狀態
 const showCreateDialog = ref(false)
 const showDeleteDialog = ref(false)
+const showPostCreateNotifyDialog = ref(false)
+const pendingPostCreateAnnouncementId = ref(null)
+const postCreateSendLoading = ref(false)
+const showSendNotificationDialog = ref(false)
+const sendNotificationTarget = ref(null)
+const sendNotifyLoadingId = ref(null)
+const sendNotifyDialogLoading = ref(false)
+
+const escapeHtml = (text) => {
+  if (text == null || text === '') return ''
+  return String(text)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+const postCreateNotifyMessageHtml =
+  '公告已建立。是否<span class="font-weight-medium">現在</span>發送 Email、LINE 與站內通知給所有使用者？'
+
+const resendNotifyMessageHtml = computed(() => {
+  const safe = escapeHtml(sendNotificationTarget.value?.title || '')
+  return `確定要對「<span class="text-teal-darken-1 font-weight-bold">${safe}</span>」發送 Email、LINE 與站內通知嗎？`
+})
+
+watch(showPostCreateNotifyDialog, (open) => {
+  if (!open) {
+    pendingPostCreateAnnouncementId.value = null
+    postCreateSendLoading.value = false
+  }
+})
+
+watch(showSendNotificationDialog, (open) => {
+  if (!open) {
+    sendNotificationTarget.value = null
+    sendNotifyDialogLoading.value = false
+    sendNotifyLoadingId.value = null
+  }
+})
 
 // 表單驗證
 const schema = yup.object({
@@ -587,6 +684,7 @@ const schema = yup.object({
       if (!startDate || !value) return true
       return new Date(value) > new Date(startDate)
     }),
+  notifyAtStart: yup.boolean(),
   attachments: yup.mixed().nullable()
 })
 
@@ -600,6 +698,7 @@ const { handleSubmit: validateForm, resetForm } = useForm({
     endDate: '',
     isPinned: false,
     isActive: true,
+    notifyAtStart: false,
     attachments: null
   }
 })
@@ -611,7 +710,14 @@ const startDate = useField('startDate')
 const endDate = useField('endDate')
 const isPinned = useField('isPinned')
 const isActive = useField('isActive')
+const notifyAtStart = useField('notifyAtStart')
 const attachments = useField('attachments')
+
+const isStartDateInFuture = computed(() => {
+  const val = startDate.value.value
+  if (!val) return false
+  return new Date(val) > new Date()
+})
 
 // 富文本內容
 const announcementContent = ref('')
@@ -654,6 +760,18 @@ const loadAnnouncements = async () => {
       params.search = searchCriteria.value.quickSearch
     }
 
+    // 處理排序參數
+    if (sortBy.value && sortBy.value.length > 0 && sortBy.value[0].key) {
+      params.sortBy = sortBy.value[0].key
+      params.sortOrder = sortBy.value[0].order || 'desc'
+    } else {
+      // 預設按照 createdAt 降序排序（最新的在前）
+      params.sortBy = 'createdAt'
+      params.sortOrder = 'desc'
+    }
+
+    // 後台管理需要看到所有公告（包括未發布和已過期的），所以加上 skipTimeCheck 參數
+    params.skipTimeCheck = 'true'
     const response = await apiAuth.get('/announcements', { params })
     // 將置頂公告排在前面
     const data = response.data.result.data || []
@@ -681,13 +799,12 @@ const performSearch = async () => {
 }
 
 // debounce 搜尋
-const debouncedQuickSearch = debounce(() => {
+const debouncedQuickSearch = debounce(async () => {
   currentPage.value = 1
   tableLoading.value = true
-  performSearch()
-    .finally(() => {
-      tableLoading.value = false
-    })
+  await performSearch()
+  tableLoading.value = false
+  isSearching.value = false
 }, 300)
 
 // 表格選項變更
@@ -700,6 +817,9 @@ const handleTableOptions = (options) => {
   }
   if (options.page !== undefined && options.itemsPerPage !== -1) {
     currentPage.value = options.page
+  }
+  if (options.sortBy !== undefined) {
+    sortBy.value = options.sortBy
   }
   loadAnnouncements()
 }
@@ -722,6 +842,7 @@ const showCreateForm = () => {
   type.value.value = 'announcement'
   isPinned.value.value = false
   isActive.value.value = true
+  notifyAtStart.value.value = false
   attachments.value.value = null
   announcementContent.value = ''
   existingAttachments.value = []
@@ -750,7 +871,8 @@ const editAnnouncement = async (announcement) => {
     dialogLoading.value = true
 
     // 以 ID 取得完整資料（含 content 與 attachments）
-    const response = await apiAuth.get(`/announcements/${announcement._id}`)
+    // 後台管理需要看到所有公告（包括未發布和已過期的），所以加上 skipTimeCheck 參數
+    const response = await apiAuth.get(`/announcements/${announcement._id}?skipTimeCheck=true`)
     const full = response.data.result
 
     // 處理開始時間（轉換為本地時間）
@@ -778,6 +900,7 @@ const editAnnouncement = async (announcement) => {
     endDate.value.value = endDateValue
     isPinned.value.value = full.isPinned
     isActive.value.value = full.isActive
+    notifyAtStart.value.value = full.notifyAtStart === true
     attachments.value.value = null
     announcementContent.value = full.content || ''
 
@@ -814,6 +937,7 @@ const handleSubmit = validateForm(async (values) => {
     formDataToSend.append('type', values.type)
     formDataToSend.append('isPinned', isPinned.value.value)
     formDataToSend.append('isActive', isActive.value.value)
+    formDataToSend.append('notifyAtStart', notifyAtStart.value.value && isStartDateInFuture.value)
 
     // 處理開始時間
     if (values.startDate) {
@@ -841,6 +965,8 @@ const handleSubmit = validateForm(async (values) => {
       formDataToSend.append('removeAttachments', JSON.stringify(attachmentsToRemove.value))
     }
 
+    const wasCreate = !isEditing.value
+    let createdId = null
     let response
     if (isEditing.value) {
       const announcementId = formData.value._id
@@ -855,6 +981,7 @@ const handleSubmit = validateForm(async (values) => {
           'Content-Type': 'multipart/form-data'
         }
       })
+      createdId = response.data.result?._id || null
     }
 
     createSnackbar({
@@ -863,7 +990,12 @@ const handleSubmit = validateForm(async (values) => {
     })
 
     closeCreateDialog()
-    loadAnnouncements()
+    await loadAnnouncements()
+
+    if (wasCreate && createdId && canSendAnnouncementNotification.value) {
+      pendingPostCreateAnnouncementId.value = createdId
+      showPostCreateNotifyDialog.value = true
+    }
   } catch (error) {
     console.error('提交錯誤:', error)
     createSnackbar({
@@ -874,6 +1006,78 @@ const handleSubmit = validateForm(async (values) => {
     isSubmitting.value = false
   }
 })
+
+watch(
+  () => startDate.value.value,
+  (val) => {
+    if (!val || new Date(val) <= new Date()) {
+      notifyAtStart.value.value = false
+    }
+  }
+)
+
+const confirmPostCreateSendNotification = async () => {
+  const id = pendingPostCreateAnnouncementId.value
+  if (!id) return
+  try {
+    postCreateSendLoading.value = true
+    const res = await apiAuth.post(`/announcements/${id}/send-notification`)
+    createSnackbar({
+      text: res.data.message,
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+    showPostCreateNotifyDialog.value = false
+    pendingPostCreateAnnouncementId.value = null
+    loadAnnouncements()
+  } catch (error) {
+    console.error('發送通知錯誤:', error)
+    createSnackbar({
+      text: error.response?.data?.message || error.message || '發送失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    postCreateSendLoading.value = false
+  }
+}
+
+const openSendNotificationDialog = (item) => {
+  sendNotificationTarget.value = item
+  showSendNotificationDialog.value = true
+}
+
+const confirmSendNotification = async () => {
+  const item = sendNotificationTarget.value
+  if (!item?._id) return
+  try {
+    sendNotifyDialogLoading.value = true
+    sendNotifyLoadingId.value = item._id
+    const res = await apiAuth.post(`/announcements/${item._id}/send-notification`)
+    createSnackbar({
+      text: res.data.message,
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+    showSendNotificationDialog.value = false
+    loadAnnouncements()
+  } catch (error) {
+    console.error('發送通知錯誤:', error)
+    createSnackbar({
+      text: error.response?.data?.message || error.message || '發送失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    sendNotifyDialogLoading.value = false
+    sendNotifyLoadingId.value = null
+  }
+}
+
+const canSendNotification = (item) => {
+  if (!item) return false
+  if (!item.isActive) return false
+  const now = new Date()
+  if (item.startDate && new Date(item.startDate) > now) return false
+  if (item.endDate && new Date(item.endDate) < now) return false
+  return true
+}
 
 // 切換啟用狀態
 const toggleActive = async (announcement) => {
@@ -938,6 +1142,7 @@ const closeCreateDialog = () => {
   attachmentsToRemove.value = []
   isPinned.value.value = false
   isActive.value.value = true
+  notifyAtStart.value.value = false
   startDate.value.value = ''
   endDate.value.value = ''
   formData.value = {
@@ -1055,7 +1260,10 @@ const truncateFileName = (fileName, maxLength = 30) => {
 
 // 監聽搜尋條件變化
 watch(() => searchCriteria.value.quickSearch, (newVal) => {
-  debouncedQuickSearch(newVal)
+  if (newVal !== undefined) {
+    isSearching.value = true
+    debouncedQuickSearch(newVal)
+  }
 })
 
 watch(() => searchCriteria.value.type, () => {
@@ -1087,23 +1295,9 @@ onMounted(() => {
 @use '@/styles/settings' as *;
 
 :deep(.v-data-table) {
-  thead {
-    height: 48px;
-    background-color: #455a64 !important;
-    color: #fff !important;
-    th {
-      font-size: 13px !important;
-    }
-  }
-  tbody tr {
-    min-height: 48px;
-  }
-  td {
-    height: 48px !important;
-    div {
-      line-height: 1.6;
-    }
-  }
+  thead { height: 48px !important; background-color: #455a64 !important; color: #fff !important; tr { height: 48px !important; } th { height: 48px !important; font-size: 13px !important; } }
+  tbody tr { min-height: 48px; }
+  td { height: 48px !important; div { line-height: 1.6; } }
 }
 
 :deep(.v-data-table__tbody) {

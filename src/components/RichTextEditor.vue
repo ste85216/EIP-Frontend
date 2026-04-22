@@ -36,6 +36,10 @@ const props = defineProps({
   height: {
     type: [Number, String],
     default: 150
+  },
+  uploadEndpoint: {
+    type: String,
+    default: '/tasks/description-image'
   }
 })
 
@@ -165,7 +169,7 @@ async function uploadImage(file, uniqueId) {
   if (file.size > maxSize) {
     createSnackbar({
       text: '圖片檔案太大，請選擇小於 5MB 的圖片',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
     removePlaceholderImage(uniqueId)
     return
@@ -176,7 +180,7 @@ async function uploadImage(file, uniqueId) {
   if (!allowedTypes.includes(file.type)) {
     createSnackbar({
       text: '圖片格式錯誤，僅支援 JPG、PNG、GIF、WEBP 格式',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
     removePlaceholderImage(uniqueId)
     return
@@ -187,7 +191,7 @@ async function uploadImage(file, uniqueId) {
     const formData = new FormData()
     formData.append('image', file)
 
-    const { data } = await apiAuth.post('/tasks/description-image', formData, {
+    const { data } = await apiAuth.post(props.uploadEndpoint, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -227,7 +231,7 @@ async function uploadImage(file, uniqueId) {
       removePlaceholderImage(uniqueId)
       createSnackbar({
         text: data.message || '圖片上傳失敗',
-        snackbarProps: { color: 'error' }
+        snackbarProps: { color: 'red-lighten-1' }
       })
     }
   } catch (error) {
@@ -236,7 +240,7 @@ async function uploadImage(file, uniqueId) {
     removePlaceholderImage(uniqueId)
     createSnackbar({
       text: error?.response?.data?.message || '圖片上傳失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   }
 }

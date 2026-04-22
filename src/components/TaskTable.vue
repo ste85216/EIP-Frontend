@@ -242,6 +242,20 @@
                       </div>
                     </template>
                   </v-tooltip>
+                  <!-- 任務排序按鈕 -->
+                  <v-btn
+                    v-if="canManageProject && category.tasks.length > 0"
+                    icon
+                    size="x-small"
+                    variant="plain"
+                    color="teal-darken-1"
+                    class="opacity-0 category-sort-btn"
+                    @click.stop="openTaskSortDialog(category)"
+                  >
+                    <v-icon size="16">
+                      mdi-sort
+                    </v-icon>
+                  </v-btn>
                 </div>
 
                 <!-- 排序按鈕放在右側 -->
@@ -273,12 +287,19 @@
                   >
                     <template #[`item.name`]="{ item }">
                       <div class="d-flex align-center">
+                        <div
+                          v-if="item.status !== 'completed'"
+                          class="task-order-number me-2"
+                        >
+                          {{ getTaskOrderInCategory(item) }}
+                        </div>
                         <v-icon
-                          :color="item.status === 'completed' ? 'teal-lighten-1' : 'grey-lighten-1'"
+                          v-else
+                          color="teal-lighten-1"
                           class="me-2 pt-1"
                           size="20"
                         >
-                          {{ item.status === 'completed' ? 'mdi-check-circle' : 'mdi-check-circle-outline' }}
+                          mdi-check-circle
                         </v-icon>
                         <v-text-field
                           v-if="isEditing(item, 'name')"
@@ -287,6 +308,7 @@
                           density="compact"
                           hide-details
                           class="task-name-input"
+                          :style="{ width: getTaskNameInputWidth(item) }"
                           @blur="saveTaskName(item)"
                           @keyup.enter="saveTaskName(item)"
                           @click.stop
@@ -772,8 +794,8 @@
               <div class="d-flex align-center">
                 <v-icon
                   color="teal"
-                  class="me-2 pt-1"
-                  size="20"
+                  class="me-2"
+                  size="16"
                 >
                   mdi-check-circle
                 </v-icon>
@@ -1368,6 +1390,102 @@
       v-model="statisticsDialog"
       :project="project"
     />
+
+    <!-- 任務排序對話框 -->
+    <v-dialog
+      v-model="showTaskSortDialog"
+      max-width="500"
+    >
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-1">
+          <v-icon
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
+          >
+            mdi-sort
+          </v-icon>
+          <span class="card-title text-white">任務排序 - {{ currentSortingCategory?.name }}</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="showTaskSortDialog = false"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
+
+        <v-card-text class="px-6 py-4">
+          <div class="font-weight-bold mb-4">
+            拖拽調整任務顯示順序（僅進行中的任務）
+          </div>
+          <draggable
+            v-model="sortableTasks"
+            item-key="_id"
+            class="sortable-list"
+            handle=".drag-handle"
+            animation="200"
+            ghost-class="ghost-item"
+            chosen-class="chosen-item"
+          >
+            <template #item="{ element, index }">
+              <v-list-item
+                :key="element._id"
+                class="border rounded mb-2"
+              >
+                <template #prepend>
+                  <div class="drag-handle cursor-move me-2">
+                    <v-icon
+                      color="grey-darken-1"
+                      size="18"
+                    >
+                      mdi-drag-vertical
+                    </v-icon>
+                  </div>
+                </template>
+                <v-list-item-title class="card-content">
+                  {{ element.name }}
+                </v-list-item-title>
+                <template #append>
+                  <div class="task-order-number-sortable">
+                    {{ index + 1 }}
+                  </div>
+                </template>
+              </v-list-item>
+            </template>
+          </draggable>
+        </v-card-text>
+
+        <v-card-actions class="px-6 pb-5 pt-0">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="showTaskSortDialog = false"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
+            :loading="isUpdatingTaskOrder"
+            @click="updateTaskOrder"
+          >
+            更新
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
 </template>
 
@@ -1375,12 +1493,14 @@
 import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
+import { useDisplay } from 'vuetify'
 import { useUserStore } from '@/stores/user'
 import { useTeamStore } from '@/stores/team'
 import { usePermissionStore } from '@/stores/permission'
 import UserAvatar from '@/components/UserAvatar.vue'
 import TaskStatisticsDialog from '@/components/TaskStatisticsDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
+import draggable from 'vuedraggable'
 
 const props = defineProps({
   project: {
@@ -1401,6 +1521,7 @@ const emit = defineEmits(['task-selected', 'task-updated', 'task-deleted', 'cate
 
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
+const { smAndUp } = useDisplay()
 const userStore = useUserStore()
 const teamStore = useTeamStore()
 const permissionStore = usePermissionStore()
@@ -1469,6 +1590,12 @@ const reopeningTask = ref(null)
 
 // 統計對話框
 const statisticsDialog = ref(false)
+
+// 任務排序相關
+const showTaskSortDialog = ref(false)
+const sortableTasks = ref([])
+const currentSortingCategory = ref(null)
+const isUpdatingTaskOrder = ref(false)
 
 // 切換面板展開狀態
 const togglePanel = (index) => {
@@ -1591,7 +1718,7 @@ const tableHeaders = [
   { title: '截止日期', key: 'dueDate', sortable: true },
   { title: '協作者', key: 'collaborators', sortable: false },
   { title: '上次修改時間', key: 'updatedAt', sortable: true },
-  { title: '建立者', key: 'createdBy', sortable: true },
+  { title: '建立者', key: 'createdBy', sortable: false },
   { title: '操作', key: 'actions', align: 'center', sortable: false, width: '80px' }
 ]
 
@@ -1602,9 +1729,9 @@ const completedTableHeaders = [
   { title: '指派對象', key: 'assignee', sortable: true },
   { title: '截止日期', key: 'dueDate', sortable: true },
   { title: '協作者', key: 'collaborators', sortable: false },
-  { title: '完成者', key: 'completedBy', sortable: true },
+  { title: '完成者', key: 'completedBy', sortable: false },
   { title: '完成於', key: 'completedAt', sortable: true },
-  { title: '建立者', key: 'createdBy', sortable: true },
+  { title: '建立者', key: 'createdBy', sortable: false },
   { title: '操作', key: 'actions', align: 'center', sortable: false, width: '80px' }
 ]
 
@@ -2020,23 +2147,68 @@ const reopenTask = async (task) => {
     // 如果有指派對象，狀態應該是 'in_progress'，否則為 'pending'
     const newStatus = task.assignee ? 'in_progress' : 'pending'
 
+    // 計算該分類下進行中任務的最大 order，用於設定重新開啟任務的排序
+    // 重新開啟的任務應該插入到最後（最大 order + 1）
+    const category = props.taskCategories.find(cat => cat.name === task.category)
+    let newOrder = 0
+    if (category) {
+      // 只計算進行中的任務（排除當前要重新開啟的任務）
+      const inProgressTasks = category.tasks.filter(t => t.status !== 'completed' && t._id !== task._id)
+
+      console.log('重新開啟任務 - 計算新 order:', {
+        taskId: task._id,
+        taskName: task.name,
+        categoryName: task.category,
+        inProgressTasksCount: inProgressTasks.length,
+        inProgressTasksOrders: inProgressTasks.map(t => ({ name: t.name, order: t.order }))
+      })
+
+      if (inProgressTasks.length > 0) {
+        // 找出所有進行中任務的最大 order
+        const orders = inProgressTasks.map(t => t.order || 0).filter(order => order > 0)
+        if (orders.length > 0) {
+          const maxOrder = Math.max(...orders)
+          newOrder = maxOrder + 1
+          console.log('重新開啟任務 - 計算結果:', { maxOrder, newOrder })
+        } else {
+          // 如果所有進行中任務的 order 都是 0 或未定義，設置為進行中任務的數量
+          newOrder = inProgressTasks.length
+          console.log('重新開啟任務 - 所有 order 都是 0，設置為:', newOrder)
+        }
+      } else {
+        // 如果沒有其他進行中的任務，設置為 0
+        newOrder = 0
+        console.log('重新開啟任務 - 沒有其他進行中任務，設置為:', newOrder)
+      }
+    }
+
     const { data } = await apiAuth.put(`/tasks/${task._id}`, {
       status: newStatus,
-      completedAt: null
+      completedAt: null,
+      order: newOrder
     })
 
     if (data.success) {
-      // 更新任務狀態
-      const updatedTask = data.data
+      // 更新任務狀態，確保 order 也被正確更新
+      // 強制使用計算出的 newOrder，因為後端返回的資料可能不包含最新的 order
+      const updatedTask = {
+        ...data.data,
+        order: newOrder, // 強制使用計算出的新 order
+        status: newStatus,
+        completedAt: null,
+        completedBy: null
+      }
 
-      // 更新任務分類中的任務
-      props.taskCategories.forEach(category => {
-        const taskIndex = category.tasks.findIndex(t => t._id === task._id)
-        if (taskIndex !== -1) {
-          category.tasks[taskIndex] = updatedTask
-        }
+      console.log('重新開啟任務 - 準備 emit 更新:', {
+        taskId: task._id,
+        taskName: task.name,
+        oldOrder: task.order,
+        newOrder: newOrder,
+        updatedTaskOrder: updatedTask.order,
+        updatedTaskStatus: updatedTask.status
       })
 
+      // 直接 emit 給父組件處理，不要直接修改 props
       emit('task-updated', updatedTask)
 
       createSnackbar({
@@ -2128,6 +2300,29 @@ const startEditingTaskName = (task) => {
     ...task,
     editingField: 'name'
   }
+}
+
+// 計算任務名稱輸入框的寬度
+const getTaskNameInputWidth = (task) => {
+  // 如果正在編輯，使用編輯中的名稱；否則使用原始名稱
+  const nameToUse = editingTask.value && editingTask.value._id === task._id && editingTask.value.name
+    ? editingTask.value.name
+    : task.name
+
+  if (!nameToUse) return '200px'
+
+  // 根據任務名稱長度計算寬度
+  // 每個中文字約 14px，英文字約 8px，加上 padding 和邊框約 60px
+  const chineseChars = (nameToUse.match(/[\u4e00-\u9fa5]/g) || []).length
+  const englishChars = nameToUse.length - chineseChars
+  const estimatedWidth = chineseChars * 14 + englishChars * 8 + 60
+
+  // 設置最小寬度 200px，最大寬度 800px
+  const minWidth = 200
+  const maxWidth = 800
+  const width = Math.max(minWidth, Math.min(maxWidth, estimatedWidth))
+
+  return `${width}px`
 }
 
 // 開始編輯指派對象
@@ -2334,6 +2529,20 @@ const getAllCollaboratorsText = (task) => {
     return '無協作者'
   }
   return `${collaborators.map(c => c.name).join('、')}`
+}
+
+// 獲取任務在分類中的順序（僅計算進行中的任務）
+const getTaskOrderInCategory = (task) => {
+  // 只計算進行中的任務順序
+  if (task.status === 'completed') return '-'
+
+  // 從已經排序好的 inProgressTaskCategories 中找對應的分類
+  const category = inProgressTaskCategories.value.find(cat => cat.name === task.category)
+  if (!category) return '-'
+
+  // 在已排序的進行中任務列表中找索引
+  const taskIndex = category.tasks.findIndex(t => t._id === task._id)
+  return taskIndex !== -1 ? taskIndex + 1 : '-'
 }
 
 // 監聽任務分類變化，自動展開所有面板
@@ -2616,6 +2825,77 @@ const duplicateTask = async (task) => {
   }
 }
 
+// 開啟任務排序對話框
+const openTaskSortDialog = async (category) => {
+  // 只載入該分類下進行中的任務
+  const inProgressTasks = category.tasks.filter(task => task.status !== 'completed')
+
+  if (inProgressTasks.length === 0) {
+    createSnackbar({
+      text: '此分類下沒有進行中的任務',
+      snackbarProps: { color: 'grey-darken-1' }
+    })
+    return
+  }
+
+  // 按照 order 排序
+  sortableTasks.value = [...inProgressTasks].sort((a, b) => (a.order || 0) - (b.order || 0))
+  currentSortingCategory.value = category
+  showTaskSortDialog.value = true
+}
+
+// 更新任務順序
+const updateTaskOrder = async () => {
+  if (!currentSortingCategory.value) return
+
+  try {
+    isUpdatingTaskOrder.value = true
+
+    const tasksData = sortableTasks.value.map((item, index) => ({
+      id: item._id,
+      order: index + 1
+    }))
+
+    const response = await apiAuth.patch('/tasks/order/update', { tasks: tasksData })
+
+    // 更新本地狀態：直接更新分類中的任務順序
+    if (currentSortingCategory.value) {
+      const category = props.taskCategories.find(cat => cat.name === currentSortingCategory.value.name)
+      if (category) {
+        // 更新每個任務的 order
+        sortableTasks.value.forEach((task, index) => {
+          const taskIndex = category.tasks.findIndex(t => t._id === task._id)
+          if (taskIndex !== -1) {
+            category.tasks[taskIndex].order = index + 1
+          }
+        })
+        // 重新排序分類中的任務
+        category.tasks.sort((a, b) => {
+          if (a.status === 'completed' && b.status !== 'completed') return 1
+          if (a.status !== 'completed' && b.status === 'completed') return -1
+          return (a.order || 0) - (b.order || 0)
+        })
+      }
+    }
+
+    createSnackbar({
+      text: response.data.message || '任務順序更新成功',
+      snackbarProps: { color: 'teal-lighten-1' }
+    })
+
+    showTaskSortDialog.value = false
+    currentSortingCategory.value = null
+  } catch (error) {
+    console.error('更新任務順序錯誤:', error)
+    createSnackbar({
+      text: error.response?.data?.message || error.message || '更新任務順序失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    isUpdatingTaskOrder.value = false
+  }
+}
+
 // 組件掛載時添加事件監聽器
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
@@ -2732,7 +3012,8 @@ onUnmounted(() => {
 
 .category-header:hover .category-edit-btn,
 .category-header:hover .category-delete-btn,
-.category-header:hover .category-sort-buttons {
+.category-header:hover .category-sort-buttons,
+.category-header:hover .category-sort-btn {
   opacity: 1 !important;
 }
 
@@ -2765,10 +3046,14 @@ onUnmounted(() => {
 
 .assignee-select,
 .due-date-input,
-.collaborators-select,
-.task-name-input {
+.collaborators-select {
   min-width: 120px;
   max-width: 200px;
+}
+
+.task-name-input {
+  min-width: 200px;
+  /* max-width 由動態計算決定，不在此處限制 */
 }
 
 .task-name-container {
@@ -2779,6 +3064,18 @@ onUnmounted(() => {
 .task-name {
   word-break: break-word;
   overflow-wrap: break-word;
+}
+
+.task-order-number {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #009688;
+  color: #fff;
+  line-height: 16px;
+  text-align: center;
+  font-size: 8px;
+  font-weight: 900;
 }
 
 .add-task-row {
@@ -2817,6 +3114,53 @@ onUnmounted(() => {
 /* 不緊急任務（超過10天）使用正常字重 */
 .due-date-text.text-medium-emphasis {
   font-weight: 400;
+}
+
+/* 排序對話框樣式 */
+.sortable-list {
+  min-height: 100px;
+}
+
+.drag-handle {
+  cursor: move;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  transition: background-color 0.1s ease;
+}
+
+.drag-handle:hover {
+  background-color: #e0e0e0;
+}
+
+.ghost-item {
+  opacity: 0.5;
+  background-color: #e3f2fd;
+  border: 2px dashed #2196f3;
+}
+
+.chosen-item {
+  background-color: #c9c9c9;
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.cursor-move {
+  cursor: move;
+}
+
+.task-order-number-sortable {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: #009688;
+  color: #fff;
+  font-size: 10px;
+  line-height: 18px;
+  text-align: center;
 }
 
 /* 響應式設計 */

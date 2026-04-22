@@ -995,7 +995,7 @@ const uploadAttachments = async () => {
     console.error('上傳附件失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '上傳附件失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
     uploadingAttachments.value = false
@@ -1022,7 +1022,7 @@ const downloadAttachment = (attachment) => {
     console.error('下載附件失敗:', error)
     createSnackbar({
       text: '下載附件失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   }
 }
@@ -1063,7 +1063,7 @@ const confirmDeleteAttachment = async () => {
     console.error('刪除附件失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '刪除附件失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
     // 重置對話框狀態

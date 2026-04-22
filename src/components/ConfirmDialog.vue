@@ -3,8 +3,8 @@
   <v-dialog
     v-model="isOpen"
     :max-width="dialogWidth"
-    @click:outside="() => emit('update:modelValue', false)"
-    @keydown.esc="() => emit('update:modelValue', false)"
+    @click:outside="onClickOutside"
+    @keydown.esc="onEsc"
   >
     <v-card class="rounded-lg">
       <div
@@ -27,6 +27,7 @@
           class="opacity-100"
           :ripple="false"
           size="20"
+          :disabled="confirmLoading"
           @click="cancel"
         >
           <v-icon size="20">
@@ -36,17 +37,17 @@
       </div>
       <v-card-text class="px-6 pt-6 pb-3">
         <div
-          class="card-content"
           v-html="message"
         />
       </v-card-text>
-      <v-card-actions class="px-6 pb-5">
+      <v-card-actions class="px-6 pb-5 pt-3">
         <v-spacer />
         <v-btn
           :size="buttonSize"
           :color="cancelButtonColor"
           variant="outlined"
           class="me-1"
+          :disabled="confirmLoading"
           @click="cancel"
         >
           {{ cancelButtonText }}
@@ -55,6 +56,8 @@
           :size="buttonSize"
           :color="confirmButtonColor"
           variant="outlined"
+          :loading="confirmLoading"
+          :disabled="confirmLoading"
           @click="confirm"
         >
           {{ confirmButtonText }}
@@ -86,7 +89,7 @@ const props = defineProps({
   modelValue: Boolean,
   confirmButtonColor: {
     type: String,
-    default: 'teal-lighten-1' // 確認按鈕預設顏色
+    default: 'teal-darken-1' // 確認按鈕預設顏色
   },
   cancelButtonColor: {
     type: String,
@@ -102,11 +105,20 @@ const props = defineProps({
   },
   headerColor: {
     type: String,
-    default: 'bg-teal-lighten-1' // 標題欄預設顏色
+    default: 'bg-teal-darken-1' // 標題欄預設顏色
   },
   headerIcon: {
     type: String,
     default: 'mdi-check-circle' // 標題欄預設圖示
+  },
+  /** 為 false 時僅 emit confirm，由呼叫端在非同步完成後關閉對話框 */
+  closeOnConfirm: {
+    type: Boolean,
+    default: true
+  },
+  confirmLoading: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -122,11 +134,25 @@ watch(() => props.modelValue, (newValue) => {
 })
 
 const cancel = () => {
+  if (props.confirmLoading) return
   emit('update:modelValue', false)
 }
 
 const confirm = () => {
+  if (props.confirmLoading) return
   emit('confirm')
+  if (props.closeOnConfirm) {
+    emit('update:modelValue', false)
+  }
+}
+
+const onClickOutside = () => {
+  if (props.confirmLoading) return
+  emit('update:modelValue', false)
+}
+
+const onEsc = () => {
+  if (props.confirmLoading) return
   emit('update:modelValue', false)
 }
 </script>

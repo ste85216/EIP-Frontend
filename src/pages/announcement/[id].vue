@@ -12,7 +12,7 @@
           variant="text"
           :size="smAndUp ? 'default' : 'small'"
           color="blue-grey-darken-2"
-          class="px-0"
+          class="px-2"
           @click="goBack"
         >
           返回列表
@@ -90,7 +90,13 @@
                   sm="6"
                   md="2"
                 >
-                  <div class="info-label">
+                  <div class="info-label d-flex align-center">
+                    <v-icon
+                      icon="mdi-account-outline"
+                      color="blue-grey-darken-2"
+                      size="14"
+                      class="me-1"
+                    />
                     建立者
                   </div>
                   <div class="info-value">
@@ -102,7 +108,13 @@
                   sm="6"
                   md="4"
                 >
-                  <div class="info-label">
+                  <div class="info-label d-flex align-center">
+                    <v-icon
+                      icon="mdi-clock-outline"
+                      color="teal-darken-2"
+                      size="14"
+                      class="me-1"
+                    />
                     發布時間
                   </div>
                   <div class="info-value">
@@ -114,7 +126,13 @@
                   sm="6"
                   md="4"
                 >
-                  <div class="info-label">
+                  <div class="info-label d-flex align-center">
+                    <v-icon
+                      icon="mdi-clock-outline"
+                      color="orange-darken-2"
+                      size="14"
+                      class="me-1"
+                    />
                     更新時間
                   </div>
                   <div class="info-value">
@@ -126,16 +144,16 @@
                   sm="6"
                   md="2"
                 >
-                  <div class="info-label">
-                    瀏覽次數
-                  </div>
-                  <div class="info-value">
+                  <div class="info-label d-flex align-center">
                     <v-icon
                       icon="mdi-eye"
                       color="grey-darken-1"
-                      size="16"
+                      size="14"
                       class="me-1"
                     />
+                    瀏覽次數
+                  </div>
+                  <div class="info-value">
                     {{ announcement.viewCount || 0 }}
                   </div>
                 </v-col>
@@ -250,7 +268,7 @@ import { useDisplay } from 'vuetify'
 
 definePage({
   meta: {
-    title: '公告詳情 | TEST',
+    title: '公告詳情 | Ystravel',
     login: true
   }
 })
@@ -399,7 +417,7 @@ onMounted(() => {
 
 .announcement-title {
   font-family: 'Noto Sans TC', sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
   color: #333;
 }
@@ -502,7 +520,7 @@ onMounted(() => {
 
 @include sm {
   .announcement-title {
-    font-size: 22px;
+    font-size: 20px;
   }
 
   .info-value {
@@ -512,7 +530,7 @@ onMounted(() => {
 
 @include md {
   .announcement-title {
-    font-size: 24px;
+    font-size: 22px;
   }
 }
 </style>

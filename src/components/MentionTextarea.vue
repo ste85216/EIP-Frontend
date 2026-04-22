@@ -33,10 +33,15 @@
           min-width="250"
           class="mention-card"
         >
-          <v-list density="compact">
+          <v-list
+            ref="mentionListRef"
+            density="compact"
+            class="mention-list"
+          >
             <v-list-item
               v-for="(user, index) in filteredSuggestions"
               :key="user._id"
+              :ref="el => { if (el) mentionItemRefs[index] = el }"
               :class="{ 'v-list-item--active': index === selectedIndex }"
               @click="selectMention(user)"
               @mouseenter="selectedIndex = index"
@@ -115,6 +120,8 @@ const emit = defineEmits(['update:modelValue', 'mention-added'])
 
 // 響應式變數
 const textareaRef = ref(null)
+const mentionListRef = ref(null)
+const mentionItemRefs = ref({})
 const localValue = ref(props.modelValue)
 const showSuggestions = ref(false)
 const selectedIndex = ref(0)
@@ -210,6 +217,12 @@ const checkForMention = (value, cursorPosition) => {
     nextTick(() => {
       calculateMentionPosition()
       showSuggestions.value = true
+      // 重置滾動位置到頂部
+      nextTick(() => {
+        if (mentionListRef.value && mentionListRef.value.$el) {
+          mentionListRef.value.$el.scrollTop = 0
+        }
+      })
     })
   } else {
     hideSuggestions()
@@ -277,6 +290,7 @@ const hideSuggestions = () => {
   mentionStart.value = -1
   mentionQuery.value = ''
   selectedIndex.value = 0
+  mentionItemRefs.value = {}
 }
 
 // 選擇標記用戶
@@ -330,6 +344,34 @@ const selectMention = (user) => {
   })
 }
 
+// 滾動到選中的項目
+const scrollToSelectedItem = () => {
+  nextTick(() => {
+    if (!mentionListRef.value) return
+    
+    const listElement = mentionListRef.value.$el
+    if (!listElement) return
+    
+    const selectedItem = mentionItemRefs.value[selectedIndex.value]
+    if (!selectedItem) return
+    
+    const itemElement = selectedItem.$el || selectedItem
+    if (!itemElement) return
+    
+    const listRect = listElement.getBoundingClientRect()
+    const itemRect = itemElement.getBoundingClientRect()
+    
+    // 如果選中的項目在可見區域之外，則滾動
+    if (itemRect.top < listRect.top) {
+      // 項目在上方，向上滾動
+      listElement.scrollTop -= (listRect.top - itemRect.top + 10)
+    } else if (itemRect.bottom > listRect.bottom) {
+      // 項目在下方，向下滾動
+      listElement.scrollTop += (itemRect.bottom - listRect.bottom + 10)
+    }
+  })
+}
+
 // 處理鍵盤事件
 const handleKeydown = (event) => {
   if (!showSuggestions.value) return
@@ -338,10 +380,12 @@ const handleKeydown = (event) => {
     case 'ArrowDown':
       event.preventDefault()
       selectedIndex.value = Math.min(selectedIndex.value + 1, filteredSuggestions.value.length - 1)
+      scrollToSelectedItem()
       break
     case 'ArrowUp':
       event.preventDefault()
       selectedIndex.value = Math.max(selectedIndex.value - 1, 0)
+      scrollToSelectedItem()
       break
     case 'Enter':
       if (filteredSuggestions.value.length > 0) {
@@ -425,6 +469,33 @@ defineExpose({
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.mention-list {
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* 自定義滾動條樣式 */
+.mention-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mention-list::-webkit-scrollbar-track {
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.mention-list::-webkit-scrollbar-thumb {
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.mention-list::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 </style>

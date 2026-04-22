@@ -2102,7 +2102,7 @@ const ECharts = VChart
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '行銷費用分析 | TEST',
+    title: '行銷費用分析 | Ystravel',
     login: true,
     permission: 'MARKETING_ANALYSIS_READ'
   }
@@ -2149,6 +2149,8 @@ const monthOptions = ref(Array.from({ length: 12 }, (_, i) => ({
   name: `${i + 1}月`,
   value: i + 1
 })))
+const platformOptions = ref([])
+const platformDetailOptions = ref([])
 
 // ===== 報表資料 =====
 const reportData = ref([])
@@ -2255,10 +2257,12 @@ onMounted(async () => {
 // 載入選項資料
 const loadOptions = async () => {
   try {
-    const [yearResponse, themeResponse, lineResponse] = await Promise.all([
+    const [yearResponse, themeResponse, lineResponse, platformResponse, platformDetailResponse] = await Promise.all([
       apiAuth.get('/marketing/budgets/years'),
       apiAuth.get('/marketing/categories/options', { params: { type: 0 } }),
-      apiAuth.get('/marketing/categories/options', { params: { type: 3 } }) // 抓取線別
+      apiAuth.get('/marketing/categories/options', { params: { type: 3 } }), // 抓取線別
+      apiAuth.get('/marketing/categories/options', { params: { type: 2 } }), // 抓取平台
+      apiAuth.get('/marketing/categories/options', { params: { type: 4 } }) // 抓取平台細項
     ])
 
     if (yearResponse.data.success) {
@@ -2269,6 +2273,12 @@ const loadOptions = async () => {
     }
     if (lineResponse.data.success) {
       lineOptions.value = lineResponse.data.result
+    }
+    if (platformResponse.data.success) {
+      platformOptions.value = platformResponse.data.result
+    }
+    if (platformDetailResponse.data.success) {
+      platformDetailOptions.value = platformDetailResponse.data.result
     }
 
     // 設定月份選項
@@ -2612,8 +2622,12 @@ const processExpenseData = (expenses) => {
   expenses.forEach(expense => {
     const channelId = expense.channel._id
     const platformId = expense.platform._id
+    const platformDetailId = expense.platformDetail?._id || expense.platformDetail?._id?.$oid
     const month = new Date(expense.invoiceDate).getMonth()
     const monthKey = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'][month]
+
+    // 使用 platformDetailId 或 platformId 作為唯一鍵
+    const uniquePlatformKey = platformDetailId || platformId
 
     // 初始化渠道
     if (!channelMap.has(channelId)) {
@@ -2626,9 +2640,15 @@ const processExpenseData = (expenses) => {
     const channel = channelMap.get(channelId)
 
     // 初始化平台
-    if (!channel.platforms.has(platformId)) {
-      channel.platforms.set(platformId, {
-        platformName: expense.platform.name,
+    if (!channel.platforms.has(uniquePlatformKey)) {
+      // 獲取平台顯示名稱
+      const platformDisplayName = getPlatformDisplayName({
+        platform: expense.platform,
+        platformDetail: expense.platformDetail
+      })
+
+      channel.platforms.set(uniquePlatformKey, {
+        platformName: platformDisplayName,
         expense: {
           JAN: 0, FEB: 0, MAR: 0, APR: 0, MAY: 0, JUN: 0,
           JUL: 0, AUG: 0, SEP: 0, OCT: 0, NOV: 0, DEC: 0
@@ -2638,7 +2658,7 @@ const processExpenseData = (expenses) => {
 
     // 將該筆費用加到對應月份
     const totalAmount = expense.details.reduce((sum, detail) => sum + detail.amount, 0)
-    channel.platforms.get(platformId).expense[monthKey] += totalAmount
+    channel.platforms.get(uniquePlatformKey).expense[monthKey] += totalAmount
   })
 
   // 轉換成陣列格
@@ -3597,6 +3617,56 @@ const getThemeName = (themeId) => {
   return theme ? theme.name : ''
 }
 
+// 獲取平台顯示名稱（支援平台細項）
+const getPlatformDisplayName = (item) => {
+  if (!item) return '未知平台'
+
+  // 如果有 platformDetail，則顯示「平台 - 平台細項」
+  if (item.platformDetail) {
+    const platformDetailId = item.platformDetail._id?.$oid || item.platformDetail._id
+    const platformDetail = platformDetailOptions.value.find(d => {
+      const detailId = d._id?.$oid || d._id
+      return detailId === platformDetailId
+    })
+
+    if (platformDetail) {
+      const parentPlatformId = platformDetail.parentId?._id || platformDetail.parentId
+      const parentPlatform = platformOptions.value.find(p => {
+        const platformId = p._id?.$oid || p._id
+        return platformId === parentPlatformId
+      })
+
+      if (parentPlatform) {
+        return `${parentPlatform.name} - ${platformDetail.name}`
+      }
+      return platformDetail.name
+    }
+  }
+
+  // 如果沒有 platformDetail，檢查 platform 是否為平台細項
+  const platformId = item.platform._id?.$oid || item.platform._id
+  const platformDetail = platformDetailOptions.value.find(d => {
+    const detailId = d._id?.$oid || d._id
+    return detailId === platformId
+  })
+
+  if (platformDetail) {
+    const parentPlatformId = platformDetail.parentId?._id || platformDetail.parentId
+    const parentPlatform = platformOptions.value.find(p => {
+      const platformId = p._id?.$oid || p._id
+      return platformId === parentPlatformId
+    })
+
+    if (parentPlatform) {
+      return `${parentPlatform.name} - ${platformDetail.name}`
+    }
+    return platformDetail.name
+  }
+
+  // 如果不是平台細項，直接返回平台名稱
+  return item.platform.name || '未知平台'
+}
+
 const processBudgetData = (data) => {
   const channelGroups = {}
 
@@ -3609,7 +3679,7 @@ const processBudgetData = (data) => {
     }
 
     channelGroups[item.channel._id].platforms.push({
-      platformName: item.platform.name,
+      platformName: getPlatformDisplayName(item),
       budget: item.monthlyBudget
     })
   })

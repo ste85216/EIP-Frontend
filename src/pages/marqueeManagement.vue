@@ -1,5 +1,5 @@
 <template>
-  <v-container max-width="1600">
+  <v-container max-width="2100">
     <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white">
       <!-- 標題與操作 -->
       <v-col
@@ -82,7 +82,8 @@
               >
                 <v-text-field
                   v-model="searchCriteria.quickSearch"
-                  label="快速搜尋（內容）"
+                  :loading="isSearching"
+                  placeholder="搜尋內容"
                   append-inner-icon="mdi-magnify"
                   base-color="#666"
                   color="blue-grey-darken-3"
@@ -97,6 +98,7 @@
           <v-col cols="12">
             <v-data-table-server
               v-model:items-per-page="itemsPerPage"
+              v-model:sort-by="sortBy"
               :headers="headers"
               :items="items"
               :loading="tableLoading"
@@ -128,9 +130,22 @@
                   <td>
                     <div
                       class="text-truncate"
-                      style="max-width: 200px;"
+                      style="max-width: 300px;"
                     >
                       {{ item.content }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="d-flex flex-wrap gap-1">
+                      <v-chip
+                        v-for="location in (item.displayLocations || ['default', 'projectAndTask'])"
+                        :key="location"
+                        size="small"
+                        color="blue-grey-darken-1"
+                        variant="tonal"
+                      >
+                        {{ getDisplayLocationText(location) }}
+                      </v-chip>
                     </div>
                   </td>
                   <td>
@@ -278,6 +293,22 @@
               </v-col>
               <v-col
                 cols="12"
+              >
+                <v-select
+                  v-model="form.displayLocations"
+                  :items="displayLocationOptions"
+                  item-title="label"
+                  item-value="value"
+                  label="顯示位置 *"
+                  variant="outlined"
+                  density="compact"
+                  multiple
+                  chips
+                  :error="errors.displayLocations"
+                />
+              </v-col>
+              <v-col
+                cols="12"
                 md="6"
               >
                 <v-text-field
@@ -402,17 +433,16 @@
                   </div>
                 </template>
                 <v-list-item-title>
-                  <v-chip
-                    size="x-small"
-                    :color="getTypeColor(element.type)"
-                    class="me-2"
-                  >
-                    {{ getTypeText(element.type) }}
-                  </v-chip>
-                  <span
-                    class="text-truncate"
-                    style="max-width: 420px; display: inline-block; vertical-align: middle;"
-                  >{{ element.content }}</span>
+                  <div class="d-flex align-center flex-wrap">
+                    <v-chip
+                      size="x-small"
+                      :color="getTypeColor(element.type)"
+                      class="me-2 mb-1"
+                    >
+                      {{ getTypeText(element.type) }}
+                    </v-chip>
+                    <span class="marquee-content-text">{{ element.content }}</span>
+                  </div>
                 </v-list-item-title>
                 <template #append>
                   <v-chip
@@ -485,7 +515,7 @@ import { definePage } from 'vue-router/auto'
 import { ref, onMounted, watch } from 'vue'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 import draggable from 'vuedraggable'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
@@ -493,7 +523,7 @@ import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 definePage({
   meta: {
-    title: '跑馬燈管理 | TEST',
+    title: '跑馬燈管理 | Ystravel',
     login: true,
     permission: 'MARQUEE_MANAGEMENT_READ'
   }
@@ -506,9 +536,11 @@ const { smAndUp } = useDisplay()
 // 資料
 const items = ref([])
 const tableLoading = ref(false)
+const isSearching = ref(false)
 const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalItems = ref(0)
+const sortBy = ref([{ key: 'order', order: 'asc' }])
 
 // 搜尋條件
 const searchCriteria = ref({ type: null, isActive: null, quickSearch: '' })
@@ -528,12 +560,17 @@ const statusOptions = [
   { title: '停用', value: false },
   { title: '已過期', value: 'expired' }
 ]
+const displayLocationOptions = [
+  { label: '一般系統', value: 'default' },
+  { label: '專案與任務管理', value: 'projectAndTask' }
+]
 
 // 表頭
 const headers = [
   { title: '排序', key: 'order', sortable: false, align: 'center'},
   { title: '類型', key: 'type', sortable: true },
   { title: '內容', key: 'content', sortable: false },
+  { title: '顯示位置', key: 'displayLocations', sortable: false },
   { title: '狀態', key: 'isActive', sortable: true },
   { title: '開始時間', key: 'startDate', sortable: true },
   { title: '結束時間', key: 'endDate', sortable: true },
@@ -546,8 +583,8 @@ const showEditDialog = ref(false)
 const isEditing = ref(false)
 const formRef = ref(null)
 const submitting = ref(false)
-const form = ref({ type: 'announcement', content: '', startDate: '', endDate: '', order: 0, isActive: true, _id: null })
-const errors = ref({ type: false, content: false })
+const form = ref({ type: 'announcement', content: '', startDate: '', endDate: '', order: 0, isActive: true, displayLocations: ['default', 'projectAndTask'], _id: null })
+const errors = ref({ type: false, content: false, displayLocations: false })
 
 // 排序
 const showSortDialog = ref(false)
@@ -571,6 +608,17 @@ const loadList = async () => {
       else params.isActive = searchCriteria.value.isActive
     }
     if (searchCriteria.value.quickSearch) params.quickSearch = searchCriteria.value.quickSearch
+
+    // 處理排序參數
+    if (sortBy.value && sortBy.value.length > 0 && sortBy.value[0].key) {
+      params.sortBy = sortBy.value[0].key
+      params.sortOrder = sortBy.value[0].order || 'asc'
+    } else {
+      // 預設按照 order 排序
+      params.sortBy = 'order'
+      params.sortOrder = 'asc'
+    }
+
     const { data } = await apiAuth.get('/marquees', { params })
     items.value = data.result.data
     totalItems.value = data.result.totalItems
@@ -582,11 +630,12 @@ const loadList = async () => {
 }
 
 const performSearch = async () => { currentPage.value = 1; await loadList() }
-const debouncedQuickSearch = debounce(() => { currentPage.value = 1; tableLoading.value = true; performSearch().finally(() => { tableLoading.value = false }) }, 300)
+const debouncedQuickSearch = debounce(async () => { currentPage.value = 1; tableLoading.value = true; await performSearch(); tableLoading.value = false; isSearching.value = false }, 300)
 
 const handleTableOptions = (options) => {
   if (options.page !== undefined) currentPage.value = options.page
   if (options.itemsPerPage !== undefined) itemsPerPage.value = options.itemsPerPage
+  if (options.sortBy !== undefined) sortBy.value = options.sortBy
   loadList()
 }
 
@@ -612,6 +661,7 @@ const showCreateForm = async () => {
   const localNow = new Date(now.getTime() - offset)
   form.value.startDate = localNow.toISOString().slice(0, 16)
   form.value.isActive = true
+  form.value.displayLocations = ['default', 'projectAndTask']
 }
 const editItem = (item) => {
   isEditing.value = true
@@ -622,15 +672,23 @@ const editItem = (item) => {
     order: item.order || 0,
     isActive: item.isActive,
     startDate: item.startDate ? toLocalDatetime(item.startDate) : '',
-    endDate: item.endDate ? toLocalDatetime(item.endDate) : ''
+    endDate: item.endDate ? toLocalDatetime(item.endDate) : '',
+    displayLocations: Array.isArray(item.displayLocations) && item.displayLocations.length > 0
+      ? item.displayLocations
+      : ['default', 'projectAndTask']
   }
-  errors.value = { type: false, content: false }
+  errors.value = { type: false, content: false, displayLocations: false }
   showEditDialog.value = true
 }
 
 const closeEditDialog = () => { showEditDialog.value = false }
-const resetForm = () => { form.value = { type: 'announcement', content: '', startDate: '', endDate: '', order: 0, isActive: true, _id: null }; errors.value = { type: false, content: false } }
-const validate = () => { errors.value.type = !form.value.type; errors.value.content = !form.value.content || form.value.content.trim() === ''; return !(errors.value.type || errors.value.content) }
+const resetForm = () => { form.value = { type: 'announcement', content: '', startDate: '', endDate: '', order: 0, isActive: true, displayLocations: ['default', 'projectAndTask'], _id: null }; errors.value = { type: false, content: false, displayLocations: false } }
+const validate = () => {
+  errors.value.type = !form.value.type
+  errors.value.content = !form.value.content || form.value.content.trim() === ''
+  errors.value.displayLocations = !form.value.displayLocations || !Array.isArray(form.value.displayLocations) || form.value.displayLocations.length === 0
+  return !(errors.value.type || errors.value.content || errors.value.displayLocations)
+}
 
 const submit = async () => {
   if (!validate()) return
@@ -642,7 +700,10 @@ const submit = async () => {
       order: form.value.order || 0,
       isActive: form.value.isActive,
       startDate: form.value.startDate ? new Date(form.value.startDate).toISOString() : '',
-      endDate: form.value.endDate ? new Date(form.value.endDate).toISOString() : ''
+      endDate: form.value.endDate ? new Date(form.value.endDate).toISOString() : '',
+      displayLocations: Array.isArray(form.value.displayLocations) && form.value.displayLocations.length > 0
+        ? form.value.displayLocations
+        : ['default', 'projectAndTask']
     }
     let resp
     if (isEditing.value && form.value._id) resp = await apiAuth.patch(`/marquees/${form.value._id}`, payload)
@@ -736,12 +797,18 @@ const getStatusText = (item) => (isExpired(item) ? '已過期' : (item.isActive 
 const getStatusColor = (item) => (isExpired(item) ? 'orange-darken-1' : (item.isActive ? 'green-darken-1' : 'grey-darken-1'))
 const getTypeText = (type) => ({ system: '系統', update: '更新', announcement: '一般', maintenance: '維護', event: '活動' }[type] || type)
 const getTypeColor = (type) => ({ system: 'blue-darken-2', update: 'cyan-darken-3', announcement: 'grey-darken-2', maintenance: 'red-darken-1', event: 'indigo-darken-1' }[type] || 'grey')
+const getDisplayLocationText = (location) => ({ default: '一般系統', projectAndTask: '專案與任務' }[location] || location)
 const formatDateOnly = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }) }
 const formatTimeOnly = (dateString) => { if (!dateString) return ''; const d = new Date(dateString); return d.toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false }) }
 const toLocalDatetime = (iso) => { const d = new Date(iso); const off = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - off).toISOString().slice(0,16) }
 
 // 監聽搜尋
-watch(() => searchCriteria.value.quickSearch, () => debouncedQuickSearch())
+watch(() => searchCriteria.value.quickSearch, (newValue) => {
+  if (newValue !== undefined) {
+    isSearching.value = true
+    debouncedQuickSearch()
+  }
+})
 watch(() => searchCriteria.value.type, () => { currentPage.value = 1; tableLoading.value = true; performSearch().finally(() => { tableLoading.value = false }) })
 watch(() => searchCriteria.value.isActive, () => { currentPage.value = 1; tableLoading.value = true; performSearch().finally(() => { tableLoading.value = false }) })
 
@@ -753,7 +820,7 @@ onMounted(() => { loadList() })
 @use '@/styles/settings' as *;
 
 :deep(.v-data-table) {
-  thead { height: 48px; background-color: #455a64 !important; color: #fff !important; th { font-size: 13px !important; } }
+  thead { height: 48px !important; background-color: #455a64 !important; color: #fff !important; tr { height: 48px !important; } th { height: 48px !important; font-size: 13px !important; } }
   tbody tr { min-height: 48px; }
   td { height: 48px !important; div { line-height: 1.6; } }
 }
@@ -771,6 +838,18 @@ onMounted(() => { loadList() })
 .ghost-item { opacity: 0.5; background-color: #e3f2fd; border: 2px dashed #2196f3; }
 .chosen-item { background-color: #c9c9c9; transform: scale(1.02); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); }
 .cursor-move { cursor: move; }
+.marquee-content-text {
+  flex: 1;
+  max-width: calc(100% - 80px);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+  word-break: break-word;
+}
 </style>
 
 

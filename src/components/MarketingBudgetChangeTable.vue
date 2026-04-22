@@ -37,6 +37,8 @@
             </div>
             <budget-table
               :data="changes.before"
+              :changed-fields="changedFields"
+              :change-map="changeMap"
               :is-mini="true"
             />
           </div>
@@ -56,6 +58,8 @@
             </div>
             <budget-table
               :data="changes.after"
+              :changed-fields="changedFields"
+              :change-map="changeMap"
               :is-mini="true"
             />
           </div>
@@ -99,6 +103,139 @@ const hasThemeChanged = computed(() => {
 
 const hasNoteChanged = computed(() => {
   return props.changes?.before?.note !== props.changes?.after?.note
+})
+
+// 取得 changedFields
+const changedFields = computed(() => {
+  return props.changes?.changedFields || []
+})
+
+// 輔助函數：取得項目的唯一鍵值
+const getItemKey = (item) => {
+  if (!item) return ''
+  const channelId = item?.channel?._id?.$oid || item?.channel?._id || item?.channel?.name || ''
+  const platformId = item?.platform?._id?.$oid || item?.platform?._id || item?.platform?.name || ''
+  return `${channelId}-${platformId}`
+}
+
+// 建立變更對應表，記錄每個項目哪些月份有變更
+const changeMap = computed(() => {
+  if (!props.changes?.before?.items || !props.changes?.after?.items) {
+    return {}
+  }
+
+  const map = {}
+  const beforeItems = props.changes.before.items || []
+  const afterItems = props.changes.after.items || []
+
+  // 建立 before 項目的索引
+  const beforeIndex = {}
+  beforeItems.forEach((item, index) => {
+    const channelId = item?.channel?._id?.$oid || item?.channel?._id || item?.channel?.name
+    const platformId = item?.platform?._id?.$oid || item?.platform?._id || item?.platform?.name
+    const key = `${channelId}-${platformId}`
+    if (!beforeIndex[key]) {
+      beforeIndex[key] = []
+    }
+    beforeIndex[key].push({ item, index })
+  })
+
+  // 建立 after 項目的索引
+  const afterIndex = {}
+  afterItems.forEach((item, index) => {
+    const channelId = item?.channel?._id?.$oid || item?.channel?._id || item?.channel?.name
+    const platformId = item?.platform?._id?.$oid || item?.platform?._id || item?.platform?.name
+    const key = `${channelId}-${platformId}`
+    if (!afterIndex[key]) {
+      afterIndex[key] = []
+    }
+    afterIndex[key].push({ item, index })
+  })
+
+  // 檢查每個項目的變更
+  const allKeys = new Set([...Object.keys(beforeIndex), ...Object.keys(afterIndex)])
+  const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
+  
+  allKeys.forEach(key => {
+    const beforeList = beforeIndex[key] || []
+    const afterList = afterIndex[key] || []
+    
+    // 處理新增的項目（在 after 中存在但在 before 中不存在）
+    if (beforeList.length === 0 && afterList.length > 0) {
+      afterList.forEach(({ item }) => {
+        const itemKey = getItemKey(item)
+        if (!map[itemKey]) {
+          map[itemKey] = new Set()
+        }
+        // 新增的項目，標記所有月份
+        months.forEach(month => map[itemKey].add(month))
+      })
+      return
+    }
+    
+    // 處理刪除的項目（在 before 中存在但在 after 中不存在）
+    if (beforeList.length > 0 && afterList.length === 0) {
+      // 刪除的項目不需要在修改後的表格中標記
+      return
+    }
+    
+    // 如果項目數量不同，標記所有月份為變更
+    if (beforeList.length !== afterList.length) {
+      afterList.forEach(({ item }) => {
+        const itemKey = getItemKey(item)
+        if (!map[itemKey]) {
+          map[itemKey] = new Set()
+        }
+        // 標記所有月份
+        months.forEach(month => map[itemKey].add(month))
+      })
+      return
+    }
+
+    // 配對比較相同位置的項目
+    const maxLength = Math.max(beforeList.length, afterList.length)
+    for (let i = 0; i < maxLength; i++) {
+      const beforeItem = beforeList[i]?.item
+      const afterItem = afterList[i]?.item
+      
+      if (!beforeItem || !afterItem) {
+        // 如果其中一個不存在，標記所有月份
+        const itemKey = getItemKey(afterItem || beforeItem)
+        if (!map[itemKey]) {
+          map[itemKey] = new Set()
+        }
+        months.forEach(month => map[itemKey].add(month))
+        continue
+      }
+
+      const itemKey = getItemKey(afterItem)
+      if (!map[itemKey]) {
+        map[itemKey] = new Set()
+      }
+
+      // 比較每個月份的預算
+      months.forEach(month => {
+        const beforeValue = beforeItem?.monthlyBudget?.[month]
+        const afterValue = afterItem?.monthlyBudget?.[month]
+        
+        // 處理 null、undefined、空字串的情況
+        const beforeVal = beforeValue === null || beforeValue === undefined || beforeValue === '' ? null : beforeValue
+        const afterVal = afterValue === null || afterValue === undefined || afterValue === '' ? null : afterValue
+        
+        if (beforeVal !== afterVal) {
+          map[itemKey].add(month)
+        }
+      })
+    }
+  })
+
+  // 將 Set 轉換為陣列，方便傳遞
+  const result = {}
+  Object.keys(map).forEach(key => {
+    result[key] = Array.from(map[key])
+  })
+  
+  return result
 })
 </script>
 

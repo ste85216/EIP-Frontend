@@ -527,8 +527,7 @@
                   <td>
                     <v-chip
                       size="small"
-                      variant="outlined"
-                      :color="item.stockStatus ? 'info' : 'grey'"
+                      :color="item.stockStatus ? 'blue-darken-2' : 'grey-darken-1'"
                     >
                       {{ item.stockStatus ? '未出貨' : '已出貨' }}
                     </v-chip>
@@ -550,7 +549,6 @@
                         >
                           <v-chip
                             size="small"
-                            variant="outlined"
                             :color="item.expenseStatus ? 'teal-lighten-1' : 'red-lighten-1'"
                           >
                             {{ item.expenseStatus ? '已報帳' : '未報帳' }}
@@ -589,7 +587,6 @@
                     <v-chip
                       v-else
                       size="small"
-                      variant="outlined"
                       color="red-lighten-1"
                     >
                       未報帳
@@ -1416,7 +1413,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
@@ -1429,7 +1426,7 @@ import { useForm, useField } from 'vee-validate'
 // 頁面定義
 definePage({
   meta: {
-    title: '硬體設備管理 | TEST',
+    title: '硬體設備管理 | Ystravel',
     login: true,
     permission: 'HARDWARE_DEVICE_MANAGEMENT_READ'
   }
@@ -2668,18 +2665,19 @@ const downloadExampleFile = () => {
     height: 48px;
     background-color: #455a64 !important;
     color: #fff !important;
-    // th{
-    //   font-size: 13px !important;
-    // }
+    th {
+      font-size: 13px !important;
+    }
   }
   tbody tr {
-    height: 48px;
+    min-height: 48px;
   }
-  // .v-data-table__tbody {
-  //   td {
-  //     font-size: 14px !important;
-  //   }
-  // }
+  td {
+    height: 48px !important;
+    div {
+      line-height: 1.6;
+    }
+  }
 }
 
 .odd-row {
@@ -2688,6 +2686,12 @@ const downloadExampleFile = () => {
 
 .even-row {
   background-color: #fffaf0;
+}
+
+:deep(.v-data-table__tbody) {
+  td {
+    font-size: 13px !important;
+  }
 }
 
 .note-cell {

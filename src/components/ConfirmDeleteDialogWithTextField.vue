@@ -6,7 +6,10 @@
     persistent
   >
     <v-card class="rounded-lg">
-      <div class="card-title px-6 py-3 bg-red-lighten-1 d-flex align-center">
+      <div
+        class="card-title px-6 py-3 d-flex align-center"
+        :class="headerColor"
+      >
         <v-icon
           size="20"
           color="white"
@@ -109,6 +112,15 @@ const props = defineProps({
   inputLabel: {
     type: String,
     default: '名稱'
+  },
+  /** 自訂輸入框 label（覆蓋預設「欲刪除{inputLabel}」） */
+  inputLabelForConfirm: {
+    type: String,
+    default: ''
+  },
+  headerColor: {
+    type: String,
+    default: 'bg-red-lighten-1'
   }
 })
 
@@ -118,7 +130,9 @@ const isOpen = ref(props.modelValue)
 const inputName = ref('')
 const errorMessage = ref('')
 
-const labelText = computed(() => `欲刪除${props.inputLabel}`)
+const labelText = computed(() =>
+  props.inputLabelForConfirm ? props.inputLabelForConfirm : `欲刪除${props.inputLabel}`
+)
 
 watch(() => props.modelValue, (newValue) => {
   isOpen.value = newValue
