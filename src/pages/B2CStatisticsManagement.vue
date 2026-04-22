@@ -2,629 +2,474 @@
 <template>
   <v-container max-width="2400">
     <!-- 搜尋條件區塊 -->
-    <v-row class="pt-md-5 px-0 px-md-2 px-xxl-4">
+    <v-row class="pt-md-6 px-0 px-md-4">
       <v-col cols="12">
-        <v-row>
-          <v-col cols="12">
-            <v-row>
+        <v-card class="elevation-4 rounded-lg pt-6 py-md-7 px-0">
+          <div class="d-flex align-center px-4 px-sm-6 py-1">
+            <h3>
+              直客詢問管理
+            </h3>
+          </div>
+          <v-divider class="mt-5 mb-1 mb-sm-3" />
+          <v-card-text class="pt-4 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
+            <v-row class="mb-2">
+              <!-- 公司選擇 -->
               <v-col
                 cols="12"
-                class="px-lg-6 px-xl-4"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
               >
-                <v-card class="elevation-4 rounded-lg py-2 py-sm-7 px-0">
-                  <div class="d-flex align-center px-6 px-sm-10 py-3">
-                    <h3 class="me-4">
-                      直客詢問管理
-                    </h3>
-                    <v-spacer />
-                    <v-btn
-                      to="/B2CStatisticsSales"
-                      variant="plain"
-                      :ripple="false"
-                      class="px-0"
-                      color="blue-grey-darken-2"
-                    >
-                      業務頁面 >
-                    </v-btn>
-                  </div>
-                  <v-divider class="mt-2 mt-sm-5 mb-2 mb-sm-6" />
-                  <v-card-text class="pt-4 px-6 px-sm-10 pb-1 pb-sm-4">
-                    <v-row class="mb-2">
-                      <!-- 公司選擇 -->
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        md="4"
-                        lg="2"
-                      >
-                        <div class="d-flex align-center">
-                          公司 :
-                          <v-select
-                            v-model="searchCriteria.company"
-                            :items="availableCompanies"
-                            :item-title="item => item ? `${item.name} (${item.companyId})` : ''"
-                            item-value="_id"
-                            variant="outlined"
-                            density="compact"
-                            placeholder="請選擇公司"
-                            hide-details
-                            clearable
-                            class="ms-4"
-                            @update:model-value="handleCompanyChange"
-                          />
-                        </div>
-                      </v-col>
+                <div class="d-flex flex-column">
+                  <span class="search-label">公司 :</span>
+                  <v-select
+                    v-model="searchCriteria.company"
+                    :items="availableCompanies"
+                    :item-title="item => item ? `${item.name} (${item.companyId})` : ''"
+                    item-value="_id"
+                    variant="outlined"
+                    density="compact"
+                    placeholder="請選擇公司"
+                    hide-details
+                    clearable
+                    @update:model-value="handleCompanyChange"
+                  />
+                </div>
+              </v-col>
 
-                      <!-- 來源選擇 -->
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        md="4"
-                        lg="2"
-                      >
-                        <div class="d-flex align-center">
-                          <span class="text-label">來源 :</span>
-                          <v-select
-                            v-model="searchCriteria.source"
-                            :items="sourceOptions"
-                            item-title="text"
-                            item-value="value"
-                            variant="outlined"
-                            density="compact"
-                            placeholder="請選擇來源"
-                            hide-details
-                            clearable
-                            class="ms-4"
-                          />
-                        </div>
-                      </v-col>
+              <!-- 來源選擇 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">來源 :</span>
+                  <v-select
+                    v-model="searchCriteria.source"
+                    :items="sourceOptions"
+                    item-title="text"
+                    item-value="value"
+                    variant="outlined"
+                    density="compact"
+                    placeholder="請選擇來源"
+                    hide-details
+                    clearable
+                  />
+                </div>
+              </v-col>
 
-                      <!-- 業務選擇 -->
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        md="4"
-                        lg="2"
-                      >
-                        <div class="d-flex align-center">
-                          <span class="text-label">業務 :</span>
-                          <v-autocomplete
-                            v-model="searchCriteria.salesPerson"
-                            class="ms-4"
-                            :items="searchSalesPersons"
-                            :item-title="item => item ? `${item.name} (${item.nickname ? item.nickname + ' ' : ''}${item.employeeCode})` : ''"
-                            item-value="_id"
-                            variant="outlined"
-                            density="compact"
-                            :placeholder="!searchCriteria.company ? '請先選擇公司' : '請選擇業務'"
-                            hide-details
-                            clearable
-                            :disabled="!searchCriteria.company"
-                          />
-                        </div>
-                      </v-col>
+              <!-- 業務選擇 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">業務 :</span>
+                  <v-autocomplete
+                    v-model="searchCriteria.salesPerson"
+                    :items="searchSalesPersons"
+                    :item-title="item => item ? `${item.name} (${item.nickname ? item.nickname + ' ' : ''}${item.employeeCode})` : ''"
+                    item-value="_id"
+                    variant="outlined"
+                    density="compact"
+                    :placeholder="!searchCriteria.company ? '請先選擇公司' : '請選擇業務'"
+                    hide-details
+                    clearable
+                    :disabled="!searchCriteria.company"
+                  />
+                </div>
+              </v-col>
 
-                      <!-- 日期區間 -->
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        md="4"
-                        lg="2"
-                      >
-                        <div class="d-flex align-center">
-                          <span class="text-label">日期 :</span>
-                          <v-date-input
-                            v-model="searchCriteria.dateRange"
-                            class="ms-4"
-                            variant="outlined"
-                            density="compact"
-                            prepend-icon
-                            hide-details
-                            clearable
-                            placeholder="請選擇日期"
-                            multiple="range"
-                            :cancel-text="'取消'"
-                            :ok-text="'確認'"
-                            @update:model-value="handleDateRangeChange"
-                            @click:clear="handleDateRangeClear"
-                          />
-                        </div>
-                      </v-col>
+              <!-- 日期區間 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">日期 :</span>
+                  <v-date-input
+                    v-model="searchCriteria.dateRange"
+                    variant="outlined"
+                    density="compact"
+                    prepend-icon
+                    hide-details
+                    clearable
+                    placeholder="請選擇日期"
+                    multiple="range"
+                    :cancel-text="'取消'"
+                    :ok-text="'確認'"
+                    @update:model-value="handleDateRangeChange"
+                    @click:clear="handleDateRangeClear"
+                  />
+                </div>
+              </v-col>
 
-                      <!-- 地區 -->
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        md="4"
-                        lg="2"
-                      >
-                        <div class="d-flex align-center">
-                          <span class="text-label">地區 :</span>
-                          <v-autocomplete
-                            v-model="searchCriteria.inquiryPlace"
-                            class="ms-4"
-                            :items="placeOptions"
-                            variant="outlined"
-                            density="compact"
-                            clearable
-                            placeholder="請選擇地區"
-                            hide-details
-                          />
-                        </div>
-                      </v-col>
+              <!-- 地區 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">地區 :</span>
+                  <v-autocomplete
+                    v-model="searchCriteria.inquiryPlace"
+                    :items="placeOptions"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                    placeholder="請選擇地區"
+                    hide-details
+                  />
+                </div>
+              </v-col>
 
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        md="4"
-                        lg="2"
-                      >
-                        <div class="d-flex align-center">
-                          <span class="text-label">結果 :</span>
-                          <v-select
-                            v-model="searchCriteria.inquiryResult"
-                            class="ms-4"
-                            :items="inquiryResultOptions"
-                            item-title="text"
-                            item-value="value"
-                            variant="outlined"
-                            density="compact"
-                            clearable
-                            placeholder="請選擇結果"
-                            hide-details
-                          />
-                        </div>
-                      </v-col>
-                      <v-col
-                        v-if="smAndUp"
-                      />
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        md="4"
-                        lg="2"
-                      >
-                        <v-row class="d-flex justify-end">
-                          <v-col
-                            cols="9"
-                          >
-                            <v-btn
-                              color="cyan-darken-2"
-                              prepend-icon="mdi-magnify"
-                              :loading="tableLoading"
-                              block
-                              @click="performSearch"
-                            >
-                              搜尋
-                            </v-btn>
-                          </v-col>
-                          <v-col
-                            cols="3"
-                            class="ps-0"
-                          >
-                            <v-btn
-                              color="grey"
-                              block
-                              @click="resetSearch"
-                            >
-                              <v-icon>mdi-refresh</v-icon>
-                            </v-btn>
-                          </v-col>
-                        </v-row>
-                      </v-col>
-                    </v-row>
-                  </v-card-text>
-                  <v-divider class="my-2" />
-                  <v-row
-                    class="mt-1 bg-white px-4 px-sm-9"
+              <!-- 結果 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">結果 :</span>
+                  <v-select
+                    v-model="searchCriteria.inquiryResult"
+                    :items="inquiryResultOptions"
+                    item-title="text"
+                    item-value="value"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                    placeholder="請選擇結果"
+                    hide-details
+                  />
+                </div>
+              </v-col>
+              <v-col
+                lg="10"
+                class="d-none d-md-block"
+              />
+              <!-- 搜尋按鈕 -->
+              <v-col
+                cols="12"
+                md="8"
+                lg="2"
+              >
+                <v-row class="d-sm-flex justify-sm-end">
+                  <v-col
+                    cols="8"
+                    sm="4"
+                    lg="8"
+                    class="ps-1 pe-0"
                   >
-                    <!-- 標題和功能按鈕區 -->
-                    <v-col
-                      cols="12"
-                      class="px-4 pb-sm-4"
+                    <v-btn
+                      color="cyan-darken-2"
+                      prepend-icon="mdi-magnify"
+                      :loading="tableLoading"
+                      block
+                      @click="performSearch"
                     >
-                      <v-row>
-                        <!-- 小螢幕按鈕列 (lg以下顯示) -->
-                        <v-col
-                          v-if="!lgAndUp"
-                          class="d-flex justify-space-between align-center"
-                        >
-                          <v-row>
-                            <v-col
-                              cols="6"
-                              sm="4"
-                              md="3"
-                            >
-                              <v-btn
-                                prepend-icon="mdi-microsoft-excel"
-                                color="teal-darken-2"
-                                :size="buttonSize"
-                                block
-                                @click="openExportDialog"
-                              >
-                                匯出 EXCEL
-                              </v-btn>
-                            </v-col>
-                            <v-col
-                              cols="6"
-                              sm="4"
-                              md="3"
-                            >
-                              <v-btn
-                                prepend-icon="mdi-account-cog"
-                                variant="outlined"
-                                color="blue-grey-darken-2"
-                                :size="buttonSize"
-                                block
-                                @click="openEmployeeManageDialog"
-                              >
-                                業務管理
-                              </v-btn>
-                            </v-col>
-                            <v-col
-                              cols="6"
-                              sm="4"
-                              md="3"
-                            >
-                              <v-btn
-                                prepend-icon="mdi-account-tie"
-                                variant="outlined"
-                                color="blue-grey-darken-2"
-                                :size="buttonSize"
-                                block
-                                @click="openSupervisorManageDialog"
-                              >
-                                業務主管
-                              </v-btn>
-                            </v-col>
-                            <v-col
-                              cols="6"
-                              sm="4"
-                              md="3"
-                            >
-                              <v-btn
-                                prepend-icon="mdi-plus"
-                                variant="outlined"
-                                color="blue-grey-darken-2"
-                                :size="buttonSize"
-                                block
-                                @click="openDialog(null)"
-                              >
-                                新增詢問
-                              </v-btn>
-                            </v-col>
-                            <v-col
-                              cols="1"
-                              class="d-flex align-center justify-center pe-0"
-                            >
-                              <v-btn
-                                v-tooltip="isCurrentMonthActive ? '取消本月篩選' : '查看本月'"
-                                icon
-                                :color="isCurrentMonthActive ? 'orange-darken-2' : 'cyan-darken-2'"
-                                variant="text"
-                                size="34"
-                                @click="toggleCurrentMonth"
-                              >
-                                <v-icon
-                                  size="20"
-                                  style="padding-top: 2px;"
-                                >
-                                  {{ isCurrentMonthActive ? 'mdi-calendar-remove' : 'mdi-calendar-month' }}
-                                </v-icon>
-                              </v-btn>
-                            </v-col>
-                            <v-col
-                              cols="11"
-                              sm="7"
-                              md="11"
-                              class="d-flex align-center"
-                            >
-                              <v-icon
-                                v-tooltip:start="'可搜尋客戶姓名、電話、Email、Line ID、詢問內容、進度 / 備註'"
-                                icon="mdi-information"
-                                size="small"
-                                color="blue-grey-darken-2"
-                                class="me-2"
-                              />
-                              <v-text-field
-                                v-model="quickSearch"
-                                :loading="isSearching"
-                                density="compact"
-                                variant="outlined"
-                                label="快速搜尋"
-                                append-inner-icon="mdi-magnify"
-                                hide-details
-                                clearable
-                              />
-                            </v-col>
-                          </v-row>
-                        </v-col>
-
-                        <!-- 大螢幕兩欄佈局 (lg以上顯示) -->
-                        <v-row
-                          v-if="lgAndUp"
-                          class="my-3 px-3"
-                        >
-                          <!-- 左側按鈕區 -->
-                          <v-col
-                            cols="9"
-                            xxl="10"
-                          >
-                            <v-btn
-                              prepend-icon="mdi-microsoft-excel"
-                              color="teal-darken-2"
-                              class="me-4"
-                              @click="openExportDialog"
-                            >
-                              匯出 EXCEL
-                            </v-btn>
-                            <v-btn
-                              prepend-icon="mdi-account-cog"
-                              variant="outlined"
-                              color="blue-grey-darken-2"
-                              class="me-4"
-                              @click="openEmployeeManageDialog"
-                            >
-                              業務管理
-                            </v-btn>
-                            <v-btn
-                              prepend-icon="mdi-account-tie"
-                              variant="outlined"
-                              color="blue-grey-darken-2"
-                              class="me-4"
-                              @click="openSupervisorManageDialog"
-                            >
-                              業務主管
-                            </v-btn>
-                            <v-btn
-                              prepend-icon="mdi-plus"
-                              variant="outlined"
-                              color="blue-grey-darken-2"
-                              class="me-4"
-                              @click="openDialog(null)"
-                            >
-                              新增詢問
-                            </v-btn>
-                            <v-btn
-                              v-tooltip="isCurrentMonthActive ? '取消本月篩選' : '查看本月'"
-                              icon
-                              :color="isCurrentMonthActive ? 'orange-darken-2' : 'cyan-darken-2'"
-                              variant="text"
-                              size="34"
-                              @click="toggleCurrentMonth"
-                            >
-                              <v-icon
-                                size="20"
-                                style="padding-top: 2px;"
-                              >
-                                {{ isCurrentMonthActive ? 'mdi-calendar-remove' : 'mdi-calendar-month' }}
-                              </v-icon>
-                            </v-btn>
-                          </v-col>
-
-                          <!-- 右側搜尋區 -->
-                          <v-col
-                            cols="3"
-                            xxl="2"
-                            class="d-flex align-center "
-                          >
-                            <v-icon
-                              v-tooltip:start="'可搜尋客戶姓名、電話、Email、Line ID、詢問內容、進度 / 備註'"
-                              icon="mdi-information"
-                              size="small"
-                              color="blue-grey-darken-2"
-                              class="me-2"
-                            />
-                            <v-text-field
-                              v-model="quickSearch"
-                              :loading="isSearching"
-                              density="compact"
-                              variant="outlined"
-                              label="快速搜尋"
-                              append-inner-icon="mdi-magnify"
-                              hide-details
-                              clearable
-                            />
-                          </v-col>
-                        </v-row>
-                      </v-row>
-                    </v-col>
-
-                    <!-- 表格區 -->
-                    <v-col cols="12">
-                      <v-data-table-server
-                        v-model:items-per-page="tableItemsPerPage"
-                        v-model:sort-by="tableSortBy"
-                        :items-per-page-options="[10, 20, 50, 100]"
-                        :items="tableItems"
-                        :headers="tableHeaders"
-                        :loading="tableLoading"
-                        :items-length="tableItemsLength"
-                        :page="tablePage"
-                        hover
-                        density="compact"
-                        class="rounded-ts-lg rounded-te-lg"
-                        @update:options="handleTableOptionsChange"
-                      >
-                        <template #item="{ item, index }">
-                          <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
-                            <td>
-                              {{ item.company?.name }}
-                            </td>
-                            <td>
-                              <!-- inquiryDate column -->
-                              <div v-if="item.inquiryDate">
-                                <div>{{ formatDatePart(item.inquiryDate) }}</div>
-                                <div class="text-caption text-grey-darken-1">
-                                  <v-icon
-                                    size="14"
-                                    style="padding-bottom: 2px;"
-                                  >
-                                    mdi-clock-outline
-                                  </v-icon> {{ formatTimePart(item.inquiryDate) }}
-                                </div>
-                              </div>
-                            </td>
-                            <td>{{ item.source }}</td>
-                            <td>{{ item.inquiryPlace }}</td>
-                            <td>
-                              <div
-                                class="white-space-pre-wrap"
-                                v-html="formatInquiryContent(item.inquiryContent)"
-                              />
-                            </td>
-                            <td>{{ item.customerName }}</td>
-                            <td>
-                              <v-menu>
-                                <template #activator="{ props }">
-                                  <v-btn
-                                    v-bind="props"
-                                    :color="getCustomerTitleColor(item.customerTitle)"
-                                    variant="outlined"
-                                    class="px-2"
-                                    size="small"
-                                    :loading="updatingCustomerTitles.has(item._id)"
-                                  >
-                                    {{ item.customerTitle || '選擇稱謂' }}
-                                  </v-btn>
-                                </template>
-                                <v-list>
-                                  <v-list-item
-                                    v-for="title in titleOptions"
-                                    :key="title"
-                                    @click="updateCustomerTitle(item._id, title)"
-                                  >
-                                    <v-list-item-title>{{ title }}</v-list-item-title>
-                                  </v-list-item>
-                                </v-list>
-                              </v-menu>
-                            </td>
-                            <td>{{ item.customerPhone }}</td>
-                            <td>{{ item.customerLineId }}</td>
-                            <td>{{ item.customerEmail }}</td>
-                            <td>
-                              <v-menu max-height="320">
-                                <template #activator="{ props }">
-                                  <v-btn
-                                    v-if="item.salesPerson"
-                                    v-bind="props"
-                                    color="blue-darken-1"
-                                    variant="outlined"
-                                    class="px-2"
-                                    size="small"
-                                    :loading="updatingSalesPersons.has(item._id)"
-                                  >
-                                    {{ getSalesPersonIndex(item.salesPerson) }} {{ item.salesPerson.nickname || item.salesPerson.name }}
-                                  </v-btn>
-                                  <v-btn
-                                    v-else
-                                    v-bind="props"
-                                    color="grey"
-                                    variant="outlined"
-                                    class="px-2"
-                                    size="small"
-                                    :loading="updatingSalesPersons.has(item._id)"
-                                  >
-                                    選擇業務
-                                  </v-btn>
-                                </template>
-                                <v-list>
-                                  <v-list-item
-                                    v-for="person in companySalesPersonsMap.get(item.company._id) || []"
-                                    :key="person._id"
-                                    @click="updateSalesPerson(item._id, person._id)"
-                                  >
-                                    <v-list-item-title>{{ getSalesPersonIndex(person) }} {{ person.nickname || person.name }} ({{ person.employeeCode }})</v-list-item-title>
-                                  </v-list-item>
-                                </v-list>
-                              </v-menu>
-                            </td>
-                            <td>
-                              <div
-                                v-if="item.inquiryResult"
-                                class="inquiry-result-text"
-                                :class="getInquiryResultTextClass(item.inquiryResult)"
-                              >
-                                {{ item.inquiryResult }}
-                              </div>
-                              <div
-                                v-else
-                                class="inquiry-result-text text-grey-darken-1"
-                              >
-                                尚未選擇
-                              </div>
-                            </td>
-                            <td>
-                              <div class="d-flex align-center">
-                                <div class="white-space-pre-wrap flex-grow-1">
-                                  <template v-if="item.latestProgressNote?.content">
-                                    {{ item.latestProgressNote.content }}
-                                    <div
-                                      v-if="item.latestProgressNote"
-                                      class="text-caption text-grey-darken-1 "
-                                    >
-                                      <v-icon
-                                        size="14"
-                                        style="padding-bottom: 2px;"
-                                      >
-                                        mdi-clock-outline
-                                      </v-icon> <span>{{ formatProgressNoteTime(item.latestProgressNote.createdAt) }}</span>
-                                    </div>
-                                  </template>
-                                  <template v-else>
-                                    <div class="text-grey">
-                                      【 尚未新增紀錄 】
-                                    </div>
-                                  </template>
-                                </div>
-                                <v-btn
-                                  v-tooltip:top="'查看紀錄'"
-                                  icon
-                                  color="grey-darken-2"
-                                  variant="plain"
-                                  size="15"
-                                  class="ms-2"
-                                  :ripple="false"
-                                  @click="openSimpleDialog(item)"
-                                >
-                                  <v-icon>mdi-history</v-icon>
-                                </v-btn>
-                              </div>
-                            </td>
-                            <td class="text-center">
-                              <v-btn
-                                icon
-                                color="light-blue-darken-4"
-                                variant="plain"
-                                size="15"
-                                class="mx-2"
-                                :ripple="false"
-                                @click="openDialog(item)"
-                              >
-                                <v-icon>mdi-pencil</v-icon>
-                              </v-btn>
-                              <v-btn
-                                icon
-                                color="red-lighten-1"
-                                variant="plain"
-                                size="15"
-                                class="mx-2"
-                                :ripple="false"
-                                @click="confirmDelete(item)"
-                              >
-                                <v-icon>mdi-delete</v-icon>
-                              </v-btn>
-                            </td>
-                          </tr>
-                        </template>
-                      </v-data-table-server>
-                    </v-col>
-                  </v-row>
-                </v-card>
+                      搜尋
+                    </v-btn>
+                  </v-col>
+                  <v-col
+                    cols="4"
+                    sm="2"
+                    lg="4"
+                    class="pe-2"
+                  >
+                    <v-btn
+                      color="grey"
+                      width="40"
+                      block
+                      @click="resetSearch"
+                    >
+                      <v-icon>mdi-refresh</v-icon>
+                    </v-btn>
+                  </v-col>
+                </v-row>
               </v-col>
             </v-row>
-          </v-col>
-        </v-row>
+          </v-card-text>
+          <v-divider class="my-0" />
+
+          <!-- 功能按鈕和快速搜尋區 -->
+          <v-row class="px-1 px-sm-3 px-md-7 mt-1 bg-white">
+            <v-col
+              cols="12"
+              class="ps-4 pb-sm-4"
+            >
+              <v-row class="d-flex align-center px-5 px-md-2">
+                <v-btn
+                  prepend-icon="mdi-plus"
+                  variant="outlined"
+                  color="teal-darken-2"
+                  @click="openDialog(null)"
+                >
+                  新增詢問
+                </v-btn>
+                <v-btn
+                  prepend-icon="mdi-account-cog"
+                  variant="outlined"
+                  color="blue-grey-darken-2"
+                  class="ms-2 ms-sm-4"
+                  @click="openEmployeeManageDialog"
+                >
+                  業務管理
+                </v-btn>
+                <v-btn
+                  prepend-icon="mdi-microsoft-excel"
+                  color="teal-darken-2"
+                  class="ms-2 ms-sm-4"
+                  @click="openExportDialog"
+                >
+                  匯出
+                </v-btn>
+                <v-btn
+                  v-tooltip="isCurrentMonthActive ? '取消本月篩選' : '查看本月'"
+                  icon
+                  :color="isCurrentMonthActive ? 'orange-darken-2' : 'cyan-darken-2'"
+                  variant="text"
+                  size="34"
+                  class="ms-2 ms-sm-4"
+                  @click="toggleCurrentMonth"
+                >
+                  <v-icon
+                    size="20"
+                    style="padding-top: 2px;"
+                  >
+                    {{ isCurrentMonthActive ? 'mdi-calendar-remove' : 'mdi-calendar-month' }}
+                  </v-icon>
+                </v-btn>
+                <v-spacer />
+                <v-col
+                  cols="7"
+                  sm="6"
+                  md="4"
+                  lg="2"
+                  class="px-1 my-1"
+                >
+                  <div class="d-flex align-center">
+                    <v-text-field
+                      v-model="quickSearch"
+                      :loading="isSearching"
+                      density="compact"
+                      variant="outlined"
+                      placeholder="搜尋客戶姓名、電話、Email、Line ID、詢問內容、進度 / 備註"
+                      append-inner-icon="mdi-magnify"
+                      hide-details
+                      clearable
+                    />
+                  </div>
+                </v-col>
+              </v-row>
+            </v-col>
+
+            <!-- 表格區 -->
+            <v-col cols="12">
+              <v-data-table-server
+                v-model:items-per-page="tableItemsPerPage"
+                v-model:sort-by="tableSortBy"
+                :items-per-page-options="[10, 20, 50, 100]"
+                :items="tableItems"
+                :headers="tableHeaders"
+                :loading="tableLoading"
+                :items-length="tableItemsLength"
+                :page="tablePage"
+                hover
+                density="compact"
+                class="rounded-ts-lg rounded-te-lg"
+                @update:options="handleTableOptionsChange"
+              >
+                <template #item="{ item, index }">
+                  <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
+                    <td>
+                      {{ item.company?.name }}
+                    </td>
+                    <td>
+                      <!-- inquiryDate column -->
+                      <div v-if="item.inquiryDate">
+                        <div>{{ formatDatePart(item.inquiryDate) }}</div>
+                        <div class="text-caption text-grey-darken-1">
+                          <v-icon
+                            size="14"
+                            style="padding-bottom: 2px;"
+                          >
+                            mdi-clock-outline
+                          </v-icon> {{ formatTimePart(item.inquiryDate) }}
+                        </div>
+                      </div>
+                    </td>
+                    <td>{{ item.source }}</td>
+                    <td>{{ item.inquiryPlace }}</td>
+                    <td>
+                      <div
+                        class="white-space-pre-wrap"
+                        v-html="formatInquiryContent(item.inquiryContent)"
+                      />
+                    </td>
+                    <td>{{ item.customerName }}</td>
+                    <td>
+                      <v-menu>
+                        <template #activator="{ props }">
+                          <v-btn
+                            v-bind="props"
+                            :color="getCustomerTitleColor(item.customerTitle)"
+                            variant="outlined"
+                            class="px-2"
+                            size="small"
+                            :loading="updatingCustomerTitles.has(item._id)"
+                          >
+                            {{ item.customerTitle || '選擇稱謂' }}
+                          </v-btn>
+                        </template>
+                        <v-list>
+                          <v-list-item
+                            v-for="title in titleOptions"
+                            :key="title"
+                            @click="updateCustomerTitle(item._id, title)"
+                          >
+                            <v-list-item-title>{{ title }}</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </td>
+                    <td>{{ item.customerPhone }}</td>
+                    <td>{{ item.customerLineId }}</td>
+                    <td>{{ item.customerEmail }}</td>
+                    <td>
+                      <v-menu max-height="320">
+                        <template #activator="{ props }">
+                          <v-btn
+                            v-if="item.salesPerson"
+                            v-bind="props"
+                            color="blue-darken-1"
+                            variant="outlined"
+                            class="px-2"
+                            size="small"
+                            :loading="updatingSalesPersons.has(item._id)"
+                          >
+                            {{ getSalesPersonIndex(item.salesPerson) }} {{ item.salesPerson.nickname || item.salesPerson.name }}
+                          </v-btn>
+                          <v-btn
+                            v-else
+                            v-bind="props"
+                            color="grey"
+                            variant="outlined"
+                            class="px-2"
+                            size="small"
+                            :loading="updatingSalesPersons.has(item._id)"
+                          >
+                            選擇業務
+                          </v-btn>
+                        </template>
+                        <v-list>
+                          <v-list-item
+                            v-for="person in companySalesPersonsMap.get(item.company._id) || []"
+                            :key="person._id"
+                            @click="updateSalesPerson(item._id, person._id)"
+                          >
+                            <v-list-item-title>{{ getSalesPersonIndex(person) }} {{ person.nickname || person.name }} ({{ person.employeeCode }})</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </td>
+                    <td>
+                      <div
+                        v-if="item.inquiryResult"
+                        class="inquiry-result-text"
+                        :class="getInquiryResultTextClass(item.inquiryResult)"
+                      >
+                        {{ item.inquiryResult }}
+                      </div>
+                      <div
+                        v-else
+                        class="inquiry-result-text text-grey-darken-1"
+                      >
+                        尚未選擇
+                      </div>
+                    </td>
+                    <td>
+                      <div class="d-flex align-center">
+                        <div class="white-space-pre-wrap flex-grow-1">
+                          <template v-if="item.latestProgressNote?.content">
+                            {{ item.latestProgressNote.content }}
+                            <div
+                              v-if="item.latestProgressNote"
+                              class="text-caption text-grey-darken-1 "
+                            >
+                              <v-icon
+                                size="14"
+                                style="padding-bottom: 2px;"
+                              >
+                                mdi-clock-outline
+                              </v-icon> <span>{{ formatProgressNoteTime(item.latestProgressNote.createdAt) }}</span>
+                            </div>
+                          </template>
+                          <template v-else>
+                            <div class="text-grey">
+                              【 尚未新增紀錄 】
+                            </div>
+                          </template>
+                        </div>
+                        <v-btn
+                          v-tooltip:top="'查看紀錄'"
+                          icon
+                          color="grey-darken-2"
+                          variant="plain"
+                          size="15"
+                          class="ms-2"
+                          :ripple="false"
+                          @click="openSimpleDialog(item)"
+                        >
+                          <v-icon>mdi-history</v-icon>
+                        </v-btn>
+                      </div>
+                    </td>
+                    <td class="text-center">
+                      <v-btn
+                        icon
+                        color="light-blue-darken-4"
+                        variant="plain"
+                        size="15"
+                        class="mx-2"
+                        :ripple="false"
+                        @click="openDialog(item)"
+                      >
+                        <v-icon>mdi-pencil</v-icon>
+                      </v-btn>
+                      <v-btn
+                        icon
+                        color="red-lighten-1"
+                        variant="plain"
+                        size="15"
+                        class="mx-2"
+                        :ripple="false"
+                        @click="confirmDelete(item)"
+                      >
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </td>
+                  </tr>
+                </template>
+              </v-data-table-server>
+            </v-col>
+          </v-row>
+        </v-card>
       </v-col>
 
       <v-col
@@ -638,407 +483,410 @@
       v-model="dialog.open"
       persistent
       :width="dialogWidth"
+      :fullscreen="!smAndUp"
     >
-      <v-card class="rounded-lg">
-        <div class="card-title px-6 py-4 bg-blue-grey-darken-2 d-flex align-center">
-          <v-icon
-            size="20"
-            color="white"
-            class="me-2"
-          >
-            mdi-pencil
-          </v-icon>
-          {{ dialog.id ? '編輯詢問資料' : '新增詢問' }}
-          <v-spacer />
-          <v-btn
-            icon
-            color="white"
-            variant="plain"
-            class="opacity-100"
-            :ripple="false"
-            size="20"
-            @click="closeDialog"
-          >
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
+      <v-card class="rounded-lg inquiry-form-dialog">
+        <div
+          v-if="isDialogLoading"
+          class="d-flex justify-center align-center"
+          style="min-height: 458px;"
+        >
+          <v-progress-circular
+            indeterminate
+            color="deep-purple-darken-2"
+            size="64"
+            width="8"
+          />
         </div>
-        <v-card-text class="mt-6 mb-2 px-6">
-          <!-- 加入載入中動畫 -->
-          <div
-            v-if="isDialogLoading"
-            class="d-flex justify-center align-center"
-            style="min-height: 458px;"
-          >
-            <v-progress-circular
-              indeterminate
-              color="deep-purple-darken-2"
-              size="64"
-              width="8"
-            />
-          </div>
-
-          <!-- 表單內容 -->
+        <template v-else>
           <v-form
-            v-else
+            class="inquiry-form-dialog-form"
             @submit.prevent="submitInquiry"
           >
-            <v-row>
-              <v-col
-                cols="12"
-                class="sub-title text-blue-grey-darken-2 d-flex align-center justify-center"
-              >
-                <v-row>
-                  <v-col
-                    cols="3"
-                    sm="4"
-                    md="5"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-divider
-                      class="border-opacity-25"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-col>
-                  <v-col
-                    cols="6"
-                    sm="4"
-                    md="2"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-icon
-                      size="18"
-                      class="me-2"
-                    >
-                      mdi-account-details
-                    </v-icon> 客戶資料
-                  </v-col>
-                  <v-col
-                    cols="3"
-                    sm="4"
-                    md="5"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-divider
-                      class="border-opacity-25"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-col>
-                </v-row>
-              </v-col>
-
-              <!-- 客戶姓名 -->
-              <v-col
-                cols="12"
-                sm="4"
-              >
-                <v-text-field
-                  v-model="customerName.value.value"
-                  :error-messages="customerName.errorMessage.value"
-                  label="*客戶姓名"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-
-              <!-- 客戶稱謂 -->
-              <v-col
-                cols="12"
-                sm="4"
-              >
-                <v-select
-                  v-model="customerTitle.value.value"
-                  :error-messages="customerTitle.errorMessage.value"
-                  :items="titleOptions"
-                  label="稱謂"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-
-              <!-- 客戶電話 -->
-              <v-col
-                cols="12"
-                sm="4"
-              >
-                <v-text-field
-                  v-model="customerPhone.value.value"
-                  :error-messages="customerPhone.errorMessage.value"
-                  label="客戶電話"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-
-              <!-- 客戶 Line ID -->
-              <v-col
-                cols="12"
-                sm="6"
-              >
-                <v-text-field
-                  v-model="customerLineId.value.value"
-                  :error-messages="customerLineId.errorMessage.value"
-                  label="Line ID"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-
-              <!-- 客戶 Email -->
-              <v-col
-                cols="12"
-                sm="6"
-              >
-                <v-text-field
-                  v-model="customerEmail.value.value"
-                  :error-messages="customerEmail.errorMessage.value"
-                  label="Email"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-
-              <v-col
-                cols="12"
-                class="sub-title text-blue-grey-darken-2 d-flex align-center justify-center"
-              >
-                <v-row>
-                  <v-col
-                    cols="3"
-                    sm="4"
-                    md="5"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-divider
-                      class="border-opacity-25"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-col>
-                  <v-col
-                    cols="6"
-                    sm="4"
-                    md="2"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-icon
-                      size="18"
-                      class="me-2"
-                    >
-                      mdi-card-account-details-outline
-                    </v-icon> 基本資料
-                  </v-col>
-                  <v-col
-                    cols="3"
-                    sm="4"
-                    md="5"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-divider
-                      class="border-opacity-25"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-col>
-                </v-row>
-              </v-col>
-
-              <!-- 詢問日期 -->
-              <v-col
-                cols="12"
-                sm="4"
-              >
-                <v-date-input
-                  v-model="inquiryDate.value.value"
-                  :error-messages="inquiryDate.errorMessage.value"
-                  label="*日期"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                  prepend-icon
-                  :ok-text="'確認'"
-                  :cancel-text="'取消'"
-                />
-              </v-col>
-
-              <!-- 來源 -->
-              <v-col
-                cols="12"
-                sm="4"
-              >
-                <v-select
-                  v-model="source.value.value"
-                  :error-messages="source.errorMessage.value"
-                  :items="sourceOptions"
-                  label="*來源"
-                  item-title="text"
-                  item-value="value"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-
-              <!-- 地區 -->
-              <v-col
-                cols="12"
-                sm="4"
-              >
-                <v-autocomplete
-                  v-model="inquiryPlace.value.value"
-                  :error-messages="inquiryPlace.errorMessage.value"
-                  :items="placeOptions"
-                  label="*地區"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-
-              <!-- 公司選擇 -->
-              <v-col
-                cols="12"
-                sm="4"
-              >
-                <v-select
-                  v-model="company.value.value"
-                  :error-messages="company.errorMessage.value"
-                  :items="companies"
-                  :item-title="item => item ? `${item.name} (${item.companyId})` : ''"
-                  item-value="_id"
-                  label="*公司"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                />
-              </v-col>
-
-              <!-- 業務 -->
-              <v-col
-                cols="12"
-                sm="4"
-              >
-                <v-autocomplete
-                  v-model="salesPerson.value.value"
-                  :error-messages="salesPerson.errorMessage.value"
-                  :items="dialogSalesPersons"
-                  :item-title="item => item ? `${item.name} (${item.nickname ? item.nickname + ' ' : ''}${item.employeeCode})` : ''"
-                  item-value="_id"
-                  label="業務"
-                  variant="outlined"
-                  density="compact"
-                  clearable
-                  :disabled="!company.value.value"
-                  :hide-details="!!company.value.value"
-                  :messages="!company.value.value ? ['請先選擇公司'] : []"
-                />
-              </v-col>
-
-              <v-col
-                cols="12"
-                class="sub-title text-blue-grey-darken-2 d-flex align-center justify-center"
-              >
-                <v-row>
-                  <v-col
-                    cols="3"
-                    sm="4"
-                    md="5"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-divider
-                      class="border-opacity-25"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-col>
-                  <v-col
-                    cols="6"
-                    sm="4"
-                    md="2"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-icon
-                      size="18"
-                      class="me-2"
-                    >
-                      mdi-text-box
-                    </v-icon> 詢問相關
-                  </v-col>
-                  <v-col
-                    cols="3"
-                    sm="4"
-                    md="5"
-                    class="d-flex align-center justify-center"
-                  >
-                    <v-divider
-                      class="border-opacity-25"
-                      color="blue-grey-darken-2"
-                    />
-                  </v-col>
-                </v-row>
-              </v-col>
-
-              <!-- 詢問內容 -->
-              <v-col cols="12">
-                <v-textarea
-                  v-model="inquiryContent.value.value"
-                  :error-messages="inquiryContent.errorMessage.value"
-                  label="詢問內容"
-                  variant="outlined"
-                  density="compact"
-                  auto-grow
-                  hide-details
-                  rows="8"
-                />
-                <div class="d-flex align-end my-2">
-                  <v-text-field
-                    v-model="urlInput"
-                    label="請輸入欲插入的網址"
-                    variant="underlined"
-                    density="compact"
-                    class="me-2 mt-2"
-                    hide-details
-                    clearable
-                    @keydown.enter.prevent
-                  />
-                  <v-btn
-                    color="success"
-                    variant="outlined"
-                    size="small"
-                    :disabled="!urlInput"
-                    @click="confirmInsertUrl"
-                  >
-                    確認
-                  </v-btn>
-                </div>
-              </v-col>
-            </v-row>
-
-            <v-card-actions class="px-0 mt-4">
+            <v-card-title
+              :class="['d-flex align-center px-6 py-2 position-sticky top-0', dialog.id ? 'bg-light-blue-darken-2' : 'bg-teal-darken-2']"
+            >
+              <v-icon
+                icon="mdi-pencil"
+                :size="smAndUp ? '20' : '18'"
+                color="white"
+                class="me-2"
+              />
+              <span class="card-title text-white">{{ dialog.id ? '編輯詢問資料' : '新增詢問' }}</span>
               <v-spacer />
               <v-btn
-                color="grey-darken-1"
+                icon
+                variant="plain"
+                class="opacity-100"
+                :ripple="false"
+                color="white"
+                :size="smAndUp ? '36' : '32'"
+                @click="closeDialog"
+              >
+                <v-icon :size="smAndUp ? '22' : '18'">
+                  mdi-close
+                </v-icon>
+              </v-btn>
+            </v-card-title>
+
+            <v-card-text class="mt-2 px-6 overflow-y-auto inquiry-form-dialog-content">
+              <v-row class="mt-2">
+                <v-col
+                  cols="12"
+                  :class="['sub-title d-flex align-center justify-center', dialog.id ? 'text-light-blue-darken-2' : 'text-teal-darken-2']"
+                >
+                  <v-row>
+                    <v-col
+                      cols="3"
+                      sm="4"
+                      md="5"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-divider
+                        class="border-opacity-25"
+                        :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-2'"
+                      />
+                    </v-col>
+                    <v-col
+                      cols="6"
+                      sm="4"
+                      md="2"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-icon
+                        size="18"
+                        class="me-2"
+                      >
+                        mdi-account-details
+                      </v-icon> 客戶資料
+                    </v-col>
+                    <v-col
+                      cols="3"
+                      sm="4"
+                      md="5"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-divider
+                        class="border-opacity-25"
+                        :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-2'"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-col>
+
+                <!-- 客戶姓名 -->
+                <v-col
+                  cols="12"
+                  sm="4"
+                >
+                  <v-text-field
+                    v-model="customerName.value.value"
+                    :error-messages="customerName.errorMessage.value"
+                    label="*客戶姓名"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <!-- 客戶稱謂 -->
+                <v-col
+                  cols="12"
+                  sm="4"
+                >
+                  <v-select
+                    v-model="customerTitle.value.value"
+                    :error-messages="customerTitle.errorMessage.value"
+                    :items="titleOptions"
+                    label="稱謂"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <!-- 客戶電話 -->
+                <v-col
+                  cols="12"
+                  sm="4"
+                >
+                  <v-text-field
+                    v-model="customerPhone.value.value"
+                    :error-messages="customerPhone.errorMessage.value"
+                    label="客戶電話"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <!-- 客戶 Line ID -->
+                <v-col
+                  cols="12"
+                  sm="6"
+                >
+                  <v-text-field
+                    v-model="customerLineId.value.value"
+                    :error-messages="customerLineId.errorMessage.value"
+                    label="Line ID"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <!-- 客戶 Email -->
+                <v-col
+                  cols="12"
+                  sm="6"
+                >
+                  <v-text-field
+                    v-model="customerEmail.value.value"
+                    :error-messages="customerEmail.errorMessage.value"
+                    label="Email"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <v-col
+                  cols="12"
+                  :class="['sub-title d-flex align-center justify-center', dialog.id ? 'text-light-blue-darken-2' : 'text-teal-darken-2']"
+                >
+                  <v-row>
+                    <v-col
+                      cols="3"
+                      sm="4"
+                      md="5"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-divider
+                        class="border-opacity-25"
+                        :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-2'"
+                      />
+                    </v-col>
+                    <v-col
+                      cols="6"
+                      sm="4"
+                      md="2"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-icon
+                        size="18"
+                        class="me-2"
+                      >
+                        mdi-card-account-details-outline
+                      </v-icon> 基本資料
+                    </v-col>
+                    <v-col
+                      cols="3"
+                      sm="4"
+                      md="5"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-divider
+                        class="border-opacity-25"
+                        :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-2'"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-col>
+
+                <!-- 詢問日期 -->
+                <v-col
+                  cols="12"
+                  sm="4"
+                >
+                  <v-date-input
+                    v-model="inquiryDate.value.value"
+                    :error-messages="inquiryDate.errorMessage.value"
+                    label="*日期"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                    prepend-icon
+                    :ok-text="'確認'"
+                    :cancel-text="'取消'"
+                  />
+                </v-col>
+
+                <!-- 來源 -->
+                <v-col
+                  cols="12"
+                  sm="4"
+                >
+                  <v-select
+                    v-model="source.value.value"
+                    :error-messages="source.errorMessage.value"
+                    :items="sourceOptions"
+                    label="*來源"
+                    item-title="text"
+                    item-value="value"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <!-- 地區 -->
+                <v-col
+                  cols="12"
+                  sm="4"
+                >
+                  <v-autocomplete
+                    v-model="inquiryPlace.value.value"
+                    :error-messages="inquiryPlace.errorMessage.value"
+                    :items="placeOptions"
+                    label="*地區"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <!-- 公司選擇 -->
+                <v-col
+                  cols="12"
+                  sm="4"
+                >
+                  <v-select
+                    v-model="company.value.value"
+                    :error-messages="company.errorMessage.value"
+                    :items="companies"
+                    :item-title="item => item ? `${item.name} (${item.companyId})` : ''"
+                    item-value="_id"
+                    label="*公司"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                  />
+                </v-col>
+
+                <!-- 業務 -->
+                <v-col
+                  cols="12"
+                  sm="4"
+                >
+                  <v-autocomplete
+                    v-model="salesPerson.value.value"
+                    :error-messages="salesPerson.errorMessage.value"
+                    :items="dialogSalesPersons"
+                    :item-title="item => item ? `${item.name} (${item.nickname ? item.nickname + ' ' : ''}${item.employeeCode})` : ''"
+                    item-value="_id"
+                    label="業務"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                    :disabled="!company.value.value"
+                    :hide-details="!!company.value.value"
+                    :messages="!company.value.value ? ['請先選擇公司'] : []"
+                  />
+                </v-col>
+
+                <v-col
+                  cols="12"
+                  :class="['sub-title d-flex align-center justify-center', dialog.id ? 'text-light-blue-darken-2' : 'text-teal-darken-2']"
+                >
+                  <v-row>
+                    <v-col
+                      cols="3"
+                      sm="4"
+                      md="5"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-divider
+                        class="border-opacity-25"
+                        :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-2'"
+                      />
+                    </v-col>
+                    <v-col
+                      cols="6"
+                      sm="4"
+                      md="2"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-icon
+                        size="18"
+                        class="me-2"
+                      >
+                        mdi-text-box
+                      </v-icon> 詢問相關
+                    </v-col>
+                    <v-col
+                      cols="3"
+                      sm="4"
+                      md="5"
+                      class="d-flex align-center justify-center"
+                    >
+                      <v-divider
+                        class="border-opacity-25"
+                        :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-2'"
+                      />
+                    </v-col>
+                  </v-row>
+                </v-col>
+
+                <!-- 詢問內容 -->
+                <v-col cols="12">
+                  <v-textarea
+                    v-model="inquiryContent.value.value"
+                    :error-messages="inquiryContent.errorMessage.value"
+                    label="詢問內容"
+                    variant="outlined"
+                    density="compact"
+                    auto-grow
+                    hide-details
+                    rows="8"
+                  />
+                  <div class="d-flex align-end my-2">
+                    <v-text-field
+                      v-model="urlInput"
+                      label="請輸入欲插入的網址"
+                      variant="underlined"
+                      density="compact"
+                      class="me-2 mt-2"
+                      hide-details
+                      clearable
+                      @keydown.enter.prevent
+                    />
+                    <v-btn
+                      color="blue-grey-darken-2"
+                      variant="outlined"
+                      size="small"
+                      :disabled="!urlInput"
+                      @click="confirmInsertUrl"
+                    >
+                      確認
+                    </v-btn>
+                  </div>
+                </v-col>
+              </v-row>
+            </v-card-text>
+
+            <v-card-actions class="px-6 py-5">
+              <v-spacer />
+              <v-btn
                 variant="outlined"
-                class="me-1"
-                :size="buttonSize"
+                color="grey-darken-1"
+                :size="smAndUp ? 'default' : 'small'"
                 @click="closeDialog"
               >
                 取消
               </v-btn>
               <v-btn
-                color="teal-darken-1"
+                :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-1'"
                 variant="outlined"
                 type="submit"
-                class="ms-1"
-                :size="buttonSize"
+                class="ms-2"
+                :size="smAndUp ? 'default' : 'small'"
                 :loading="isSubmitting"
               >
                 {{ dialog.id ? '修改' : '新增' }}
               </v-btn>
             </v-card-actions>
           </v-form>
-        </v-card-text>
+        </template>
       </v-card>
     </v-dialog>
 
@@ -1646,7 +1494,7 @@
                 被指派的業務：{{ salesPersonAssignmentDialog.salesPersonName }}
               </div>
               <div class="text-grey-darken-2">
-                請確認指派業務是否正確，確認後會發送Email給被指派的業務。
+                請確認指派業務是否正確，確認後會發送通知給被指派的業務。
               </div>
             </div>
           </div>
@@ -1680,7 +1528,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
@@ -1692,7 +1540,7 @@ import { useForm, useField } from 'vee-validate'
 // 頁面定義
 definePage({
   meta: {
-    title: '直客詢問統計表管理 | TEST',
+    title: '直客詢問統計表管理 | Ystravel',
     login: true,
     permission: 'B2C_STATISTICS_MANAGEMENT_READ'
   }
@@ -1701,7 +1549,7 @@ definePage({
 // API 與工具初始化
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
-const { mdAndUp, smAndUp, lgAndUp } = useDisplay()
+const { mdAndUp, smAndUp } = useDisplay()
 
 // 響應式變數
 const dialogWidth = computed(() => mdAndUp.value ? '880' : '100%')
@@ -1715,7 +1563,7 @@ const tableHeaders = [
   { title: '日期 / 時間', key: 'inquiryDate', minWidth: '116px', align: 'start', sortable: true },
   { title: '來源', key: 'source', width: '90px', align: 'start', sortable: true },
   { title: '地區', key: 'inquiryPlace', minWidth: '84px', align: 'start', sortable: true },
-  { title: '詢問內容', key: 'inquiryContent', width: '240px', align: 'start', sortable: true },
+  { title: '詢問內容', key: 'inquiryContent', minWidth: '100px', align: 'start', sortable: true },
   { title: '客戶姓名', key: 'customerName', minWidth: '104px', align: 'start', sortable: true },
   { title: '稱謂', key: 'customerTitle', align: 'start', sortable: true },
   { title: '電話', key: 'customerPhone', align: 'start', sortable: true },
@@ -2710,7 +2558,6 @@ const openEmployeeManageDialog = async () => {
   tempSelectedEmployee.value = null
   // 清除 localStorage 中的排序資料，讓它與資料庫重新同步
   localStorage.removeItem('b2c_employee_order')
-  console.log('已清除 localStorage 中的排序資料')
 
   try {
     // 載入所有在職員工
@@ -2730,7 +2577,6 @@ const openEmployeeManageDialog = async () => {
         const savedOrderStr = localStorage.getItem('b2c_employee_order')
         if (savedOrderStr) {
           savedOrder = JSON.parse(savedOrderStr)
-          console.log('從 localStorage 讀取的排序:', savedOrder)
         }
       } catch (e) {
         console.error('讀取排序失敗:', e)
@@ -2762,22 +2608,12 @@ const openEmployeeManageDialog = async () => {
         })
       }
 
-      console.log('分組後的資料（排序前）:')
-      for (const [companyName, employees] of Object.entries(groupedByCompany)) {
-        console.log(`${companyName}:`, employees.map(e => `${e.name}(order=${e.order})`))
-      }
-
       // 對每個公司內的業務排序
       for (const employees of Object.values(groupedByCompany)) {
         employees.sort((a, b) => {
           // 按 order 排序
           return a.order - b.order
         })
-      }
-
-      console.log('排序後的資料:')
-      for (const [companyName, employees] of Object.entries(groupedByCompany)) {
-        console.log(`${companyName}:`, employees.map(e => `${e.name}(order=${e.order})`))
       }
 
       // 先設定已選擇的業務 ID
@@ -2891,35 +2727,24 @@ const removeSelectedEmployee = (employeeId) => {
 }
 
 const moveEmployee = (companyName, index, direction) => {
-  console.log(`移動員工: ${companyName} 第 ${index} 位 ${direction === 'up' ? '向上' : '向下'}`)
-
   // 從原始數據源中找出同公司的員工並按 order 排序
   const companyEmployees = selectedEmployeeDetails.value
     .filter(emp => (emp.company?.name || '未分類') === companyName)
     .sort((a, b) => a.order - b.order)
 
-  console.log('同公司員工排序前:')
-  companyEmployees.forEach((emp, i) => {
-    console.log(`${i}: ${emp.name} - order=${emp.order}`)
-  })
-
   // 確保索引有效
   if (index < 0 || index >= companyEmployees.length) {
-    console.log('索引無效')
     return
   }
 
   const newIndex = direction === 'up' ? index - 1 : index + 1
   if (newIndex < 0 || newIndex >= companyEmployees.length) {
-    console.log('新索引無效')
     return
   }
 
   // 交換兩個員工在數組中的位置
   const employee1 = companyEmployees[index]
   const employee2 = companyEmployees[newIndex]
-
-  console.log(`要交換的員工: ${employee1.name} 和 ${employee2.name}`)
 
   // 在整個數組中找到這兩個員工的索引
   const allEmployees = [...selectedEmployeeDetails.value]
@@ -2938,15 +2763,8 @@ const moveEmployee = (companyName, index, direction) => {
       }
     })
 
-    console.log('移動並重新排序後:')
-    companyEmployees.forEach((emp, idx) => {
-      console.log(`${idx}: ${emp.name} - order=${emp.order}`)
-    })
-
     // 更新整個數組
     selectedEmployeeDetails.value = [...allEmployees]
-  } else {
-    console.log('找不到員工索引')
   }
 }
 
@@ -2985,8 +2803,6 @@ const saveEmployees = async () => {
       })
     }
 
-    console.log('最終順序更新:', finalOrderUpdates)
-
     // 檢查是否有任何變更
     const originalOrders = {}
     originalData.result.forEach(emp => {
@@ -3008,13 +2824,6 @@ const saveEmployees = async () => {
       return
     }
 
-    console.log('檢查變更:', {
-      移除的業務: employeesToRemove,
-      新增的業務: employeesToAdd,
-      順序變更: hasOrderChanges,
-      最終順序: finalOrderUpdates
-    })
-
     let hasError = false
 
     // 如果有需要移除的業務，先將它們的 showInB2C 設為 false
@@ -3024,7 +2833,6 @@ const saveEmployees = async () => {
           employeeIds: employeesToRemove,
           showInB2C: false
         })
-        console.log('已移除業務:', employeesToRemove)
       } catch (error) {
         if (error?.response?.data?.message !== '資料未做任何變更') {
           hasError = true
@@ -3040,7 +2848,6 @@ const saveEmployees = async () => {
           employeeIds: employeesToAdd,
           showInB2C: true
         })
-        console.log('已新增業務:', employeesToAdd)
       } catch (error) {
         if (error?.response?.data?.message !== '資料未做任何變更') {
           hasError = true
@@ -3055,7 +2862,6 @@ const saveEmployees = async () => {
         await apiAuth.post('/employees/batch-update-order', {
           updates: finalOrderUpdates
         })
-        console.log('已更新業務順序:', finalOrderUpdates)
       } catch (error) {
         console.error('更新順序失敗:', error)
         hasError = true
@@ -3069,7 +2875,6 @@ const saveEmployees = async () => {
       orderMap[update.id] = update.order
     })
     localStorage.setItem('b2c_employee_order', JSON.stringify(orderMap))
-    console.log('保存到 localStorage 的排序:', orderMap)
 
     // 只有當所有操作都成功時才顯示成功訊息並更新UI
     if (!hasError) {
@@ -3100,8 +2905,6 @@ const saveEmployees = async () => {
 
       // 重新載入表格資料以確保顯示最新的業務順序
       await performSearch()
-
-      console.log('已重新載入所有資料')
     }
   } catch (error) {
     console.error('更新業務設定失敗:', error)
@@ -3115,71 +2918,6 @@ const saveEmployees = async () => {
 }
 
 // 業務主管相關函數
-const openSupervisorManageDialog = async () => {
-  supervisorManageDialog.value.open = true
-  isLoadingSupervisors.value = true
-  tempSelectedSupervisor.value = null
-
-  try {
-    // 載入所有在職員工
-    await searchSupervisors('')
-
-    // 載入已選擇的業務主管
-    const { data } = await apiAuth.get('/employees/suggestions', {
-      params: {
-        employmentStatus: '在職'
-      }
-    })
-    if (data.success) {
-      // 過濾出業務主管
-      const supervisors = data.result.filter(emp => emp.isB2CSupervisor)
-
-      // 清空和重設資料
-      selectedSupervisors.value = []
-      selectedSupervisorDetails.value = []
-
-      // 按公司分組
-      const groupedByCompany = {}
-
-      // 處理每個業務主管資料
-      for (const supervisor of supervisors) {
-        const companyName = supervisor.company?.name || '未分類'
-        if (!groupedByCompany[companyName]) {
-          groupedByCompany[companyName] = []
-        }
-
-        // 添加到分組
-        groupedByCompany[companyName].push({
-          ...supervisor,
-          nickname: supervisor.nickname || ''
-        })
-      }
-
-      // 先設定已選擇的業務主管 ID
-      for (const companySupervisors of Object.values(groupedByCompany)) {
-        for (const supervisor of companySupervisors) {
-          selectedSupervisors.value.push(supervisor._id)
-        }
-      }
-
-      // 再設定詳細資料
-      for (const companySupervisors of Object.values(groupedByCompany)) {
-        for (const supervisor of companySupervisors) {
-          selectedSupervisorDetails.value.push(supervisor)
-        }
-      }
-    }
-  } catch (error) {
-    console.error('載入業務主管資料失敗:', error)
-    createSnackbar({
-      text: error?.response?.data?.message || '載入業務主管資料失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  } finally {
-    isLoadingSupervisors.value = false
-  }
-}
-
 const closeSupervisorManageDialog = () => {
   supervisorManageDialog.value.open = false
   selectedSupervisors.value = []
@@ -3845,10 +3583,6 @@ const getInquiryResultTextClass = (result) => {
   font-weight: bold;
 }
 
-.text-label {
-  white-space: nowrap;
-}
-
 .progress-notes-table {
   :deep(thead) {
     background-color: #185869 !important;
@@ -3908,6 +3642,27 @@ const getInquiryResultTextClass = (result) => {
     color: #5C6BC0;
     text-decoration: underline;
   }
+}
+
+/* 新增/編輯詢問對話框：標題與 actions 固定，內容區可捲動 */
+.inquiry-form-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.inquiry-form-dialog .inquiry-form-dialog-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.inquiry-form-dialog .inquiry-form-dialog-content {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 </style>
 

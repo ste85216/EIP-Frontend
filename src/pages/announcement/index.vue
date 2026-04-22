@@ -1,73 +1,88 @@
 <template>
   <v-container max-width="1400">
-    <v-row class="elevation-4 rounded-lg py-4 pt-sm-6 pb-sm-4 px-1 px-sm-6 mt-2 mt-sm-6 mx-0 mx-sm-4 mx-md-4 mb-4 bg-white">
-      <!-- 標題 -->
+    <v-row class="pt-md-6 px-0 px-md-4">
       <v-col cols="12">
-        <v-row>
-          <!-- 篩選和搜尋區 -->
-          <v-col class="mb-sm-3">
-            <v-row class="d-flex align-center">
+        <v-card class="elevation-4 rounded-lg pt-6 py-md-7 px-0">
+          <div class="d-flex align-center px-4 px-sm-6">
+            <h3>
+              所有公告
+            </h3>
+            <v-spacer />
+          </div>
+          <v-divider class="mt-5 mb-1 mb-sm-3" />
+
+          <!-- 搜尋條件區塊 -->
+          <v-card-text class="pt-4 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
+            <v-row class="mb-2">
+              <!-- 類型篩選 -->
               <v-col
                 cols="12"
-                sm="3"
-                class="ps-3"
-              >
-                <h3>所有公告</h3>
-              </v-col>
-              <v-spacer />
-              <v-col
-                sm="4"
+                sm="6"
                 md="3"
                 lg="2"
-                class="pe-1"
+                class="px-1 pe-sm-2 py-1"
               >
-                <v-select
-                  v-model="searchCriteria.type"
-                  :items="typeOptions"
-                  item-title="title"
-                  item-value="value"
-                  label="類型篩選"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  clearable
-                />
+                <div class="d-flex flex-column">
+                  <span class="search-label">類型 :</span>
+                  <v-select
+                    v-model="searchCriteria.type"
+                    :items="typeOptions"
+                    item-title="title"
+                    item-value="value"
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                    placeholder="請選擇類型"
+                    hide-details
+                  />
+                </div>
               </v-col>
-              <v-col
-                sm="4"
-                lg="3"
-              >
-                <v-row class="d-flex align-center">
-                  <v-col class="d-flex align-center">
-                    <v-icon
-                      v-if="mdAndUp"
-                      v-tooltip:top="'可搜尋標題或內容'"
-                      icon="mdi-information"
-                      size="small"
-                      color="blue-grey-darken-2"
-                      class="me-4"
-                    />
-                    <v-text-field
-                      v-model="searchCriteria.search"
-                      label="快速搜尋"
-                      append-inner-icon="mdi-magnify"
-                      base-color="#666"
-                      color="blue-grey-darken-3"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                    />
-                  </v-col>
-                </v-row>
-              </v-col>
-            </v-row>
-          </v-col>
 
-          <v-col cols="12">
-            <!-- 表格 -->
+              <!-- 快速搜尋 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="3"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">快速搜尋 :</span>
+                  <v-text-field
+                    v-model="searchCriteria.search"
+                    :loading="isSearching"
+                    density="compact"
+                    variant="outlined"
+                    placeholder="搜尋標題或內容"
+                    append-inner-icon="mdi-magnify"
+                    hide-details
+                    clearable
+                  />
+                </div>
+              </v-col>
+
+              <!-- 重置按鈕 -->
+              <div class="d-flex align-end pt-3 pb-2 ms-auto ms-sm-1 me-1">
+                <v-btn
+                  color="grey"
+                  elevation="1"
+                  :size="smAndUp ? 'default' : 'small'"
+                  @click="resetSearch"
+                >
+                  <v-icon>
+                    mdi-refresh
+                  </v-icon>
+                </v-btn>
+              </div>
+            </v-row>
+          </v-card-text>
+          <v-divider class="mt-1 mb-2" />
+
+          <!-- 表格區塊 -->
+          <v-card-text class="px-sm-6 px-md-7">
             <v-data-table-server
               v-model:items-per-page="itemsPerPage"
+              :sort-by="sortBy"
               :headers="headers"
               :items="announcements"
               :loading="tableLoading"
@@ -77,7 +92,8 @@
               class="elevation-0 rounded"
               density="compact"
               @update:items-per-page="handleItemsPerPageChange"
-              @update:page="onUpdatePage"
+              @update:sort-by="handleSortByChange"
+              @update:page="handlePageChange"
             >
               <!-- Loading 狀態 -->
               <template #loading>
@@ -200,8 +216,8 @@
                 </tr>
               </template>
             </v-data-table-server>
-          </v-col>
-        </v-row>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
@@ -213,12 +229,12 @@ import { ref, onMounted, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 
 definePage({
   meta: {
-    title: '所有公告 | TEST',
+    title: '所有公告 | Ystravel',
     login: true
   }
 })
@@ -231,9 +247,11 @@ const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 // 響應式資料
 const announcements = ref([])
 const tableLoading = ref(false)
+const isSearching = ref(false)
 const itemsPerPage = ref(20)
 const currentPage = ref(1)
 const totalItems = ref(0)
+const sortBy = ref([{ key: 'createdAt', order: 'desc' }])
 
 // 搜尋條件
 const searchCriteria = ref({
@@ -254,19 +272,23 @@ const typeOptions = [
 // 每頁選項（含全部）
 const itemsPerPageOptions = [10, 20, 50, 100, { value: -1, title: '全部' }]
 
-// 表格標題（將「類型」與「標題」交換順序）
-const headers = computed(() => {
-  const base = [
-    { title: '類型', key: 'type', sortable: false, align: 'center', width: '145px' },
-    { title: '標題', key: 'title', sortable: false, align: 'center' },
-    { title: '建立者', key: 'creator', sortable: false, align: 'center', minWidth: '120px' },
-    { title: '發布時間', key: 'createdAt', sortable: true, align: 'center', minWidth: '120px' },
-    { title: '瀏覽次數', key: 'viewCount', sortable: true, align: 'center', minWidth: '120px' }
-  ]
+// 表格標題基礎定義
+const baseHeaders = [
+  { title: '類型', key: 'type', sortable: false, align: 'center', width: '145px' },
+  { title: '標題', key: 'title', sortable: false, align: 'center' },
+  { title: '建立者', key: 'creator', sortable: false, align: 'center', minWidth: '120px' },
+  { title: '發布時間', key: 'createdAt', sortable: true, align: 'center', minWidth: '120px' },
+  { title: '瀏覽次數', key: 'viewCount', sortable: true, align: 'center', minWidth: '120px' }
+]
 
-  return base.filter(h => {
-    if (h.key === 'creator' && !mdAndUp.value) return false // md 以下隱藏
-    if (h.key === 'viewCount' && !lgAndUp.value) return false // md 以下隱藏（僅 lg+ 顯示）
+// 表格標題（響應式過濾）
+const headers = computed(() => {
+  const mdUp = mdAndUp.value
+  const lgUp = lgAndUp.value
+
+  return baseHeaders.filter(h => {
+    if (h.key === 'creator' && !mdUp) return false // md 以下隱藏
+    if (h.key === 'viewCount' && !lgUp) return false // lg 以下隱藏（僅 lg+ 顯示）
     return true
   })
 })
@@ -277,9 +299,7 @@ const loadAnnouncements = async () => {
     tableLoading.value = true
     const params = {
       page: currentPage.value,
-      itemsPerPage: itemsPerPage.value === -1 ? (totalItems.value > 0 ? totalItems.value : 999999) : itemsPerPage.value,
-      sortBy: 'createdAt',
-      sortOrder: 'desc'
+      itemsPerPage: itemsPerPage.value === -1 ? (totalItems.value > 0 ? totalItems.value : 999999) : itemsPerPage.value
     }
 
     if (searchCriteria.value.type) {
@@ -291,6 +311,16 @@ const loadAnnouncements = async () => {
 
     // 只顯示有效的公告
     params.isActive = true
+
+    // 處理排序參數
+    if (sortBy.value && sortBy.value.length > 0 && sortBy.value[0].key) {
+      params.sortBy = sortBy.value[0].key
+      params.sortOrder = sortBy.value[0].order || 'desc'
+    } else {
+      // 預設按照 createdAt 降序排序（最新的在前）
+      params.sortBy = 'createdAt'
+      params.sortOrder = 'desc'
+    }
 
     const response = await apiAuth.get('/announcements', { params })
 
@@ -314,6 +344,14 @@ const loadAnnouncements = async () => {
   }
 }
 
+// 重置搜尋條件
+const resetSearch = () => {
+  searchCriteria.value.type = null
+  searchCriteria.value.search = ''
+  currentPage.value = 1
+  loadAnnouncements()
+}
+
 // 搜尋功能
 const performSearch = async () => {
   currentPage.value = 1
@@ -321,39 +359,40 @@ const performSearch = async () => {
 }
 
 // debounce 搜尋
-const debouncedSearch = debounce(() => {
-  currentPage.value = 1
-  tableLoading.value = true
-  performSearch()
-    .finally(() => {
-      tableLoading.value = false
-    })
+const debouncedSearch = debounce(async () => {
+  await performSearch()
+  isSearching.value = false
 }, 300)
 
-// 處理每頁筆數變更
-const handleItemsPerPageChange = () => {
+// 處理每頁項目數變更
+const handleItemsPerPageChange = (newItemsPerPage) => {
+  itemsPerPage.value = newItemsPerPage
   // 當選擇「全部」時，重置頁碼為 1
-  if (itemsPerPage.value === -1) {
+  if (newItemsPerPage === -1) {
     currentPage.value = 1
   }
   loadAnnouncements()
 }
 
+// 處理排序變更
+const handleSortByChange = (newSortBy) => {
+  sortBy.value = newSortBy
+  loadAnnouncements()
+}
+
 // 處理頁碼變更
-const onUpdatePage = (page) => {
+const handlePageChange = (newPage) => {
   // 當選擇「全部」時，不需要分頁
   if (itemsPerPage.value === -1) {
     return
   }
-
-  if (page < 1) page = 1
-  const maxPage = Math.ceil(totalItems.value / itemsPerPage.value)
-  if (page > maxPage) page = maxPage
-
-  if (currentPage.value !== page) {
-    currentPage.value = page
-    loadAnnouncements()
+  if (newPage < 1) {
+    currentPage.value = 1
+  } else {
+    const maxPage = Math.ceil(totalItems.value / itemsPerPage.value)
+    currentPage.value = newPage > maxPage ? maxPage : newPage
   }
+  loadAnnouncements()
 }
 
 // 查看公告詳情
@@ -431,17 +470,21 @@ const formatDateCompact = (date) => {
 }
 
 // 監聽搜尋條件變化
-watch(() => searchCriteria.value.search, () => {
-  debouncedSearch()
+watch(() => searchCriteria.value.search, (newVal, oldVal) => {
+  // 避免初始化時觸發
+  if (oldVal !== undefined) {
+    if (newVal !== undefined) {
+      isSearching.value = true
+      debouncedSearch()
+    }
+  }
 })
 
-watch(() => searchCriteria.value.type, () => {
-  currentPage.value = 1
-  tableLoading.value = true
-  performSearch()
-    .finally(() => {
-      tableLoading.value = false
-    })
+watch(() => searchCriteria.value.type, (newVal, oldVal) => {
+  // 避免初始化時觸發
+  if (oldVal !== undefined) {
+    performSearch()
+  }
 })
 
 // 組件掛載時載入資料
@@ -451,8 +494,29 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@use '@/styles/_rwd' as rwd;
-@use '@/styles/settings' as *;
+@use '@/styles/_rwd' as *;
+
+:deep(.v-field :not(.v-textarea .v-field) :not(.v-select .v-field)) {
+  .v-field__input {
+    font-size: 13px;
+    height: 36px !important;
+    padding-top: 4px !important;
+  }
+
+  .v-field__field {
+    height: 36px !important;
+  }
+  @include sm {
+    .v-field__input {
+      height: 40px !important;
+      padding-top: 8px !important;
+      font-size: 14px;
+    }
+    .v-field__field {
+      height: 40px !important;
+    }
+  }
+}
 
 :deep(.v-data-table) {
   thead {

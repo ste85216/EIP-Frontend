@@ -14,8 +14,8 @@
                 cols="12"
                 class="mt-1 px-lg-5"
               >
-                <v-card class="elevation-4 rounded-lg py-6 px-4 px-sm-2 px-xl-4">
-                  <v-card-title class="font-weight-bold d-flex align-center mb-2">
+                <v-card class="elevation-4 rounded-lg py-4 px-4 px-sm-2 px-xl-4">
+                  <v-card-title class="font-weight-bold d-flex align-center mb-2 px-2">
                     搜尋條件
                   </v-card-title>
                   <v-card-text class="pa-2">
@@ -116,6 +116,25 @@
                           clearable
                         />
                       </v-col>
+
+                      <!-- 系統用戶 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        lg="12"
+                      >
+                        <v-select
+                          v-model="searchCriteria.hasSystemUser"
+                          :items="hasSystemUserOptions"
+                          label="系統用戶"
+                          item-title="title"
+                          item-value="value"
+                          variant="outlined"
+                          density="compact"
+                          hide-details
+                          clearable
+                        />
+                      </v-col>
                     </v-row>
 
                     <v-row class="border rounded-lg border border-opacity-25 mb-2 mx-0">
@@ -206,9 +225,9 @@
                 class="px-3 px-lg-5"
               >
                 <v-card
-                  class="elevation-4 rounded-lg py-3 py-sm-5 px-2 px-sm-4"
+                  class="elevation-4 rounded-lg py-3 py-sm-5 px-2 px-sm-3"
                 >
-                  <v-card-title class="font-weight-bold d-flex justify-space-between mb-2">
+                  <v-card-title class="font-weight-bold d-flex justify-space-between mb-2 ps-3 pe-2">
                     <span>匯入 / 匯出 Excel</span>
                     <v-btn
                       v-tooltip:start="'下載範例檔案'"
@@ -267,11 +286,10 @@
         lg="10"
         class="px-6 ps-lg-4 pe-lg-8 mb-6"
       >
-        <v-row class="elevation-4 rounded-lg py-4 py-lg-6 px-1 px-sm-4 px-lg-6 mt-1 bg-white">
+        <v-row class="elevation-4 rounded-lg py-4 py-lg-4 px-1 px-sm-3 mt-1 bg-white">
           <!-- 標題和功能按鈕區 -->
           <v-col
             cols="12"
-            class="ps-4 pb-sm-4"
           >
             <v-row>
               <v-col>
@@ -461,7 +479,6 @@
                         >
                           <v-chip
                             size="small"
-                            variant="outlined"
                             :color="getStatusColor(item.employmentStatus)"
                           >
                             {{ item.employmentStatus }}
@@ -1750,7 +1767,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
@@ -1764,7 +1781,7 @@ import { useForm, useField } from 'vee-validate'
 // 頁面定義
 definePage({
   meta: {
-    title: '員工管理 | TEST',
+    title: '員工管理 | Ystravel',
     login: true,
     permission: 'EMPLOYEE_MANAGEMENT_READ'
   }
@@ -1780,7 +1797,7 @@ const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
 
 // 響應式變數
 const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
-const actionButtonSize = computed(() => smAndUp.value ? '32' : 'small')
+const actionButtonSize = computed(() => smAndUp.value ? '32' : '28')
 const dialogWidth = computed(() => mdAndUp.value ? '1200' : '100%')
 
 // 權限檢查
@@ -1821,6 +1838,7 @@ const searchCriteria = ref({
   employmentType: '',
   jobTitle: '',
   status: '在職', // 預設在職狀態
+  hasSystemUser: '',
   dateType: '',
   dateRange: []
 })
@@ -1843,6 +1861,11 @@ const statusOptions = [
   { title: '離職', value: '離職' },
   { title: '留職停薪', value: '留職停薪' },
   { title: '待入職', value: '待入職' }
+]
+
+const hasSystemUserOptions = [
+  { title: '是（已建立／已綁定）', value: 'true' },
+  { title: '否（尚未加入）', value: 'false' }
 ]
 
 // 日期類型選項
@@ -1943,6 +1966,10 @@ const performSearch = async () => {
       status: searchCriteria.value.status
     }
 
+    if (searchCriteria.value.hasSystemUser === 'true' || searchCriteria.value.hasSystemUser === 'false') {
+      params.hasSystemUser = searchCriteria.value.hasSystemUser
+    }
+
     // 當選擇顯示全部時，將頁碼設為1
     if (tableItemsPerPage.value === -1) {
       params.page = 1
@@ -1986,6 +2013,7 @@ const resetSearch = () => {
     employmentType: '',
     jobTitle: '',
     status: '在職', // 預設在職狀態
+    hasSystemUser: '',
     dateType: '',
     dateRange: []
   }
@@ -2464,15 +2492,15 @@ const handleReinstatementCancel = () => {
 const getStatusColor = (status) => {
   switch (status) {
     case '在職':
-      return 'teal-lighten-1'
+      return 'teal'
     case '離職':
-      return 'grey'
+      return 'grey-darken-1'
     case '留職停薪':
       return 'amber-darken-2'
     case '待入職':
       return 'light-blue-darken-1'
     default:
-      return 'grey'
+      return 'grey-darken-1'
   }
 }
 
@@ -3132,6 +3160,7 @@ const jobTitleOptions = [  // 有順序之分
   { text: '日本手配', value: '日本手配' },
   { text: '財務', value: '財務' },
   { text: '美編', value: '美編' },
+  { text: '影片剪輯師', value: '影片剪輯師' },
   { text: '行銷', value: '行銷' },
   { text: '網頁設計', value: '網頁設計' },
   { text: '工程師', value: '工程師' },
@@ -3216,6 +3245,23 @@ const confirmCopyEmployeeToUser = async () => {
   height: 48px !important;
   background-color: #455a64 !important;
   color: #fff !important;
+  th {
+    font-size: 13px !important;
+  }
+}
+
+.v-table :deep(tbody) {
+  tr {
+    min-height: 48px;
+  }
+  td {
+    height: 48px !important;
+    font-size: 13px !important;
+    transition: none !important;
+    div {
+      line-height: 1.6;
+    }
+  }
 }
 
 .odd-row {

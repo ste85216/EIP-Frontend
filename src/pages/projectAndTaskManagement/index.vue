@@ -195,8 +195,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.status === 'completed' ? 'teal-lighten-1' : 'grey-lighten-1'"
-                        class="me-2 pt-1"
-                        size="20"
+                        class="me-2"
+                        size="16"
                       >
                         {{ item.status === 'completed' ? 'mdi-check-circle' : 'mdi-check-circle-outline' }}
                       </v-icon>
@@ -280,8 +280,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.project?.iconColor === 'white' ? 'grey-lighten-1' : item.project?.iconColor"
-                        size="20"
-                        class="me-2"
+                        size="16"
+                        class="me-1"
                       >
                         mdi-square-rounded
                       </v-icon>
@@ -380,8 +380,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.status === 'completed' ? 'teal-lighten-1' : 'grey-lighten-1'"
-                        class="me-2 pt-1"
-                        size="20"
+                        class="me-2"
+                        size="16"
                       >
                         {{ item.status === 'completed' ? 'mdi-check-circle' : 'mdi-check-circle-outline' }}
                       </v-icon>
@@ -465,8 +465,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.project?.iconColor === 'white' ? 'grey-lighten-1' : item.project?.iconColor"
-                        size="20"
-                        class="me-2"
+                        size="16"
+                        class="me-1"
                       >
                         mdi-square-rounded
                       </v-icon>
@@ -565,8 +565,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.status === 'completed' ? 'teal-lighten-1' : 'grey-lighten-1'"
-                        class="me-2 pt-1"
-                        size="20"
+                        class="me-2"
+                        size="16"
                       >
                         {{ item.status === 'completed' ? 'mdi-check-circle' : 'mdi-check-circle-outline' }}
                       </v-icon>
@@ -650,8 +650,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.project?.iconColor === 'white' ? 'grey-lighten-1' : item.project?.iconColor"
-                        size="20"
-                        class="me-2"
+                        size="16"
+                        class="me-1"
                       >
                         mdi-square-rounded
                       </v-icon>
@@ -750,8 +750,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.status === 'completed' ? 'teal-lighten-1' : 'grey-lighten-1'"
-                        class="me-2 pt-1"
-                        size="20"
+                        class="me-2"
+                        size="16"
                       >
                         {{ item.status === 'completed' ? 'mdi-check-circle' : 'mdi-check-circle-outline' }}
                       </v-icon>
@@ -835,8 +835,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.project?.iconColor === 'white' ? 'grey-lighten-1' : item.project?.iconColor"
-                        size="20"
-                        class="me-2"
+                        size="16"
+                        class="me-1"
                       >
                         mdi-square-rounded
                       </v-icon>
@@ -935,8 +935,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         color="teal"
-                        class="me-2 pt-1"
-                        size="20"
+                        class="me-2"
+                        size="16"
                       >
                         mdi-check-circle
                       </v-icon>
@@ -1018,8 +1018,8 @@
                     <div class="d-flex align-center">
                       <v-icon
                         :color="item.project?.iconColor === 'white' ? 'grey-lighten-1' : item.project?.iconColor"
-                        size="20"
-                        class="me-2"
+                        size="16"
+                        class="me-1"
                       >
                         mdi-square-rounded
                       </v-icon>

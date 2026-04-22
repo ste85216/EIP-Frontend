@@ -63,6 +63,32 @@
             >
               {{ getStatusText(task.status) }}
             </v-chip>
+            <!-- 完成任務按鈕 -->
+            <v-btn
+              v-if="task?.status !== 'completed'"
+              icon
+              variant="plain"
+              size="small"
+              color="teal-darken-1"
+              @click="handleCompleteClick"
+            >
+              <v-icon size="18">
+                mdi-check-circle-outline
+              </v-icon>
+            </v-btn>
+            <!-- 重新開啟任務按鈕 -->
+            <v-btn
+              v-else
+              icon
+              variant="plain"
+              size="small"
+              color="teal-darken-1"
+              @click="handleReopenClick"
+            >
+              <v-icon size="18">
+                mdi-undo
+              </v-icon>
+            </v-btn>
             <v-btn
               icon
               variant="plain"
@@ -300,7 +326,7 @@
             <v-file-input
               ref="fileInputRef"
               v-model="selectedFiles"
-              label="選擇檔案"
+              label="選擇檔案 ( 10MB )"
               variant="outlined"
               density="compact"
               multiple
@@ -308,7 +334,16 @@
               chips
               counter
               :rules="[
-                v => !v || v.length <= 10 || '最多只能上傳 10 個檔案'
+                v => !v || v.length <= 10 || '最多只能上傳 10 個檔案',
+                v => {
+                  if (!v || v.length === 0) return true
+                  const maxFileSize = 10 * 1024 * 1024 // 10MB
+                  const oversizedFiles = v.filter(file => file.size > maxFileSize)
+                  if (oversizedFiles.length > 0) {
+                    return `檔案大小不能超過 10MB`
+                  }
+                  return true
+                }
               ]"
               @update:model-value="handleFileSelect"
             >
@@ -432,7 +467,23 @@
 
         <!-- 描述區域 -->
         <div class="field-section full-width">
-          <label class="field-label">描述</label>
+          <div class="d-flex align-center justify-space-between mb-3">
+            <label class="field-label">描述</label>
+            <v-btn
+              v-if="task?._id"
+              icon
+              variant="plain"
+              :ripple="false"
+              size="16"
+              color="grey"
+              class="pe-4"
+              @click="showDescriptionHistory"
+            >
+              <v-icon size="16">
+                mdi-history
+              </v-icon>
+            </v-btn>
+          </div>
 
           <!-- 描述載入中 -->
           <div
@@ -454,9 +505,30 @@
               v-model="taskDescription"
               placeholder="輸入任務描述..."
               :height="200"
-              @update:model-value="updateDescription"
-              @blur="handleDescriptionBlur"
+              @update:model-value="handleDescriptionChange"
             />
+          </div>
+
+          <!-- 儲存按鈕（外部右下方） -->
+          <div
+            v-if="!isLoadingDetails && task?._id"
+            class="description-save-button-wrapper"
+          >
+            <v-btn
+              color="teal-darken-1"
+              size="small"
+              :loading="isSavingDescription"
+              :disabled="!hasUnsavedDescription"
+              @click="saveDescription"
+            >
+              <v-icon
+                start
+                size="16"
+              >
+                mdi-content-save
+              </v-icon>
+              儲存
+            </v-btn>
           </div>
         </div>
       </div>
@@ -686,6 +758,56 @@
     @confirm="confirmDeleteAttachment"
   />
 
+  <!-- 描述歷史紀錄對話框 -->
+  <TaskDescriptionHistory
+    v-model="showDescriptionHistoryDialog"
+    :task-id="task?._id"
+  />
+
+  <!-- 關閉確認對話框 -->
+  <ConfirmDialog
+    v-model="showCloseConfirmDialog"
+    max-width="320"
+    title="未儲存的變更"
+    message="描述有尚未儲存的變更，是否要儲存後再關閉？"
+    confirm-button-text="儲存並關閉"
+    cancel-button-text="不儲存關閉"
+    confirm-button-color="orange-darken-2"
+    cancel-button-color="grey-darken-1"
+    header-color="bg-orange-darken-1"
+    header-icon="mdi-alert"
+    @confirm="confirmCloseWithSave"
+    @update:model-value="handleCloseConfirmDialogChange"
+  />
+
+  <!-- 完成任務確認對話框 -->
+  <ConfirmDialog
+    v-model="confirmCompleteDialog"
+    :dialog-width="'320'"
+    title="確認完成任務"
+    :message="`您確定要將任務「<span class='font-weight-bold text-teal-darken-2'>${task?.name || ''}</span>」標記為完成嗎？`"
+    confirm-button-text="確認"
+    cancel-button-text="取消"
+    :confirm-button-color="'teal-darken-1'"
+    :header-color="'bg-teal-darken-1'"
+    :header-icon="'mdi-check-circle'"
+    @confirm="confirmCompleteTask"
+  />
+
+  <!-- 重新開啟任務確認對話框 -->
+  <ConfirmDialog
+    v-model="confirmReopenDialog"
+    :dialog-width="'320'"
+    title="確認重新開啟任務"
+    :message="`您確定要將任務「<span class='font-weight-bold text-teal-darken-2'>${task?.name || ''}</span>」重新開啟嗎？`"
+    confirm-button-text="確認"
+    cancel-button-text="取消"
+    :confirm-button-color="'teal-darken-1'"
+    :header-color="'bg-teal-darken-1'"
+    :header-icon="'mdi-undo'"
+    @confirm="confirmReopenTask"
+  />
+
   <!-- 用戶 hover 菜單 -->
   <v-menu
     v-model="showUserMenu"
@@ -748,6 +870,8 @@ import MentionTextarea from '@/components/MentionTextarea.vue'
 import CommentImageUpload from '@/components/CommentImageUpload.vue'
 import CommentImagePreview from '@/components/CommentImagePreview.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
+import TaskDescriptionHistory from '@/components/TaskDescriptionHistory.vue'
+import ConfirmDialog from '@/components/ConfirmDialog.vue'
 
 const props = defineProps({
   modelValue: {
@@ -804,6 +928,23 @@ const attachmentToDelete = ref(null)
 const showUserMenu = ref(false)
 const hoveredUser = ref(null)
 const menuPosition = ref({ x: 0, y: 0 })
+
+// 描述歷史紀錄
+const showDescriptionHistoryDialog = ref(false)
+
+// 描述未儲存變更追蹤
+const hasUnsavedDescription = ref(false)
+
+// 完成任務確認對話框
+const confirmCompleteDialog = ref(false)
+
+// 重新開啟任務確認對話框
+const confirmReopenDialog = ref(false)
+
+// 關閉確認對話框
+const showCloseConfirmDialog = ref(false)
+const pendingClose = ref(false)
+const isResettingDescription = ref(false) // 標記是否正在重置描述
 
 // 詳情載入狀態與已載入任務ID
 const isLoadingDetails = ref(false)
@@ -905,9 +1046,64 @@ const checkForNewComments = (newTask) => {
 
 // 關閉側邊欄
 const closeSidebar = () => {
-  // 關閉前沖刷一次未送出的描述
-  flushDescriptionSave()
-  drawerOpen.value = false
+  // 檢查是否有未儲存的描述變更
+  // 確保任務ID匹配才檢查
+  if (hasUnsavedDescription.value && currentTaskIdForDescription.value === props.task?._id) {
+    pendingClose.value = true
+    showCloseConfirmDialog.value = true
+  } else {
+    drawerOpen.value = false
+  }
+}
+
+// 處理關閉確認對話框的變更
+const isConfirmingClose = ref(false)
+const handleCloseConfirmDialogChange = (value) => {
+  if (!value && pendingClose.value && !isConfirmingClose.value) {
+    // 對話框關閉且用戶點擊了取消（不儲存關閉）
+    confirmCloseWithoutSave()
+  }
+  if (!value) {
+    isConfirmingClose.value = false
+  }
+}
+
+// 確認關閉（不儲存）
+const confirmCloseWithoutSave = () => {
+  // 設置重置標記，避免觸發 handleDescriptionChange
+  isResettingDescription.value = true
+  // 重置描述為最後載入的內容
+  if (currentTaskIdForDescription.value === props.task?._id) {
+    taskDescription.value = lastLoadedDescription.value || ''
+  }
+  hasUnsavedDescription.value = false
+  showCloseConfirmDialog.value = false
+  // 設置 pendingClose 為 false，然後關閉
+  // 這樣 watch 就不會再次檢查
+  pendingClose.value = false
+  // 延遲關閉，確保對話框先關閉，然後重置標記
+  nextTick(() => {
+    drawerOpen.value = false
+    // 重置完成後，取消重置標記
+    setTimeout(() => {
+      isResettingDescription.value = false
+    }, 100)
+  })
+}
+
+// 確認關閉（先儲存）
+const confirmCloseWithSave = async () => {
+  isConfirmingClose.value = true
+  await saveDescription()
+  if (!hasUnsavedDescription.value) {
+    pendingClose.value = false
+    showCloseConfirmDialog.value = false
+    // 延遲關閉，確保對話框先關閉
+    nextTick(() => {
+      drawerOpen.value = false
+    })
+  }
+  isConfirmingClose.value = false
 }
 
 // 取得單筆任務詳情（開啟側欄時才載入重資料）
@@ -922,12 +1118,6 @@ const fetchTaskDetails = async () => {
 
     const { data } = await apiAuth.get(`/tasks/${props.task._id}`)
     if (data.success && data.data) {
-      console.log('📦 fetchTaskDetails 成功載入', {
-        taskId: data.data._id,
-        hasAttachments: data.data.attachments?.length || 0,
-        hasComments: data.data.comments?.length || 0
-      })
-
       lastLoadedTaskId.value = props.task._id
 
       // 直接本地更新 taskDescription，不觸發父組件更新
@@ -938,6 +1128,8 @@ const fetchTaskDetails = async () => {
           // 記錄最後載入的描述內容和對應的任務ID
           lastLoadedDescription.value = incomingDesc
           currentTaskIdForDescription.value = props.task._id
+          // 重置未儲存標記
+          hasUnsavedDescription.value = false
         }
       }
 
@@ -961,41 +1153,56 @@ const fetchTaskDetails = async () => {
 }
 
 // 更新描述
-// 防抖動計時器
-let descriptionUpdateTimer = null
 let isInitializing = ref(false) // 新增初始化標記（僅在任務 ID 變更時使用）
 const isSavingDescription = ref(false) // 本地保存期間避免被覆寫
 
-// 立即送出描述（用於失焦/關閉側欄時沖刷）
-const flushDescriptionSave = async () => {
+// 處理描述變更（僅追蹤變更，不自動儲存）
+const handleDescriptionChange = (newDescription) => {
+  if (!props.task || !props.task._id) return
+
+  // 如果正在重置描述，不執行更新
+  if (isResettingDescription.value) {
+    return
+  }
+
+  // 如果正在初始化或正在載入任務，不執行更新
+  if (isInitializing.value || isLoadingTask.value) {
+    return
+  }
+
+  // 確保任務ID匹配
+  if (currentTaskIdForDescription.value !== props.task._id) {
+    return
+  }
+
+  // 檢查描述內容是否真的改變了（與最後載入的內容比較）
+  const oldDesc = lastLoadedDescription.value || ''
+  const newDesc = newDescription || ''
+
+  if (oldDesc === newDesc) {
+    hasUnsavedDescription.value = false
+  } else {
+    // 標記為有未儲存的變更
+    hasUnsavedDescription.value = true
+  }
+}
+
+// 手動儲存描述
+const saveDescription = async () => {
   if (!props.task || !props.task._id) return
   if (isSavingDescription.value) return
-  if (descriptionUpdateTimer) {
-    clearTimeout(descriptionUpdateTimer)
-    descriptionUpdateTimer = null
-  }
 
   // 🔒 關鍵檢查：確保 taskDescription 對應的任務ID 和當前任務ID 一致
   // 防止切換任務時把A任務的描述保存到B任務中
   if (currentTaskIdForDescription.value !== props.task._id) {
-    console.log('⏭️ flushDescriptionSave 跳過：任務ID不匹配', {
-      currentTaskId: currentTaskIdForDescription.value,
-      propsTaskId: props.task._id
-    })
     return
   }
 
   // 檢查描述是否真的有變化
   if (taskDescription.value === lastLoadedDescription.value) {
-    console.log('⏭️ flushDescriptionSave 跳過：描述未變化')
+    hasUnsavedDescription.value = false
     return
   }
-
-  console.log('💾 flushDescriptionSave 開始保存', {
-    taskId: props.task._id,
-    taskName: props.task?.name,
-    descriptionLength: taskDescription.value?.length || 0
-  })
 
   try {
     isSavingDescription.value = true
@@ -1003,11 +1210,15 @@ const flushDescriptionSave = async () => {
       description: taskDescription.value
     })
     if (data.success) {
-      console.log('✅ flushDescriptionSave 保存成功')
       // 更新最後載入的描述內容和對應的任務ID
       lastLoadedDescription.value = taskDescription.value
       currentTaskIdForDescription.value = props.task._id
+      hasUnsavedDescription.value = false
       emit('task-updated', data.data)
+      createSnackbar({
+        text: '任務描述已儲存',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
     }
   } catch (error) {
     console.error('保存描述失敗:', error)
@@ -1018,56 +1229,6 @@ const flushDescriptionSave = async () => {
   } finally {
     isSavingDescription.value = false
   }
-}
-
-const handleDescriptionBlur = () => {
-  flushDescriptionSave()
-}
-
-const updateDescription = async (newDescription) => {
-  if (!props.task || !props.task._id) return
-
-  // 如果正在初始化或正在載入任務，不執行更新
-  if (isInitializing.value || isLoadingTask.value) return
-
-  // 檢查描述內容是否真的改變了（與最後載入的內容比較）
-  if (newDescription === lastLoadedDescription.value) return
-
-  // 清除之前的計時器
-  if (descriptionUpdateTimer) {
-    clearTimeout(descriptionUpdateTimer)
-  }
-
-  // 設定新的計時器，延遲 1 秒後保存
-  descriptionUpdateTimer = setTimeout(async () => {
-    try {
-      isSavingDescription.value = true
-      const { data } = await apiAuth.put(`/tasks/${props.task._id}`, {
-        description: newDescription
-      })
-
-      if (data.success) {
-        // 更新最後載入的描述內容和對應的任務ID
-        lastLoadedDescription.value = newDescription
-        currentTaskIdForDescription.value = props.task._id
-        emit('task-updated', data.data)
-        // 移除成功訊息，避免頻繁提示
-        // createSnackbar({
-        //   text: '描述更新成功',
-        //   snackbarProps: { color: 'teal-lighten-1' }
-        // })
-      }
-    } catch (error) {
-      console.error('更新描述失敗:', error)
-      createSnackbar({
-        text: error?.response?.data?.message || '更新描述失敗',
-        snackbarProps: { color: 'red-lighten-1' }
-      })
-    }
-    finally {
-      isSavingDescription.value = false
-    }
-  }, 1000) // 1 秒延遲
 }
 
 // 新增評論
@@ -1088,12 +1249,6 @@ const addComment = async () => {
     // 添加選擇的圖片
     selectedImages.value.forEach(file => {
       formData.append('images', file)
-    })
-
-    console.log('發送評論請求:', {
-      content: newComment.value.trim(),
-      mentionsCount: mentions.length,
-      imagesCount: selectedImages.value.length
     })
 
     const { data } = await apiAuth.post(`/tasks/${props.task._id}/comments`, formData, {
@@ -1162,7 +1317,6 @@ const handleMentionAdded = (mention) => {
 // 處理圖片選擇
 const handleImagesSelected = (files) => {
   selectedImages.value = files
-  console.log('選擇了圖片:', files.length, '張')
 }
 
 // 切換圖片上傳區域
@@ -1201,13 +1355,47 @@ const toggleAttachmentSection = () => {
 
 // 處理檔案選擇
 const handleFileSelect = (files) => {
-  console.log('選擇了檔案:', files?.length || 0, '個')
+  if (!files || files.length === 0) return
+
+  // 檢查檔案大小限制 (10MB)
+  const maxFileSize = 10 * 1024 * 1024 // 10MB
+  const oversizedFiles = files.filter(file => file.size > maxFileSize)
+
+  if (oversizedFiles.length > 0) {
+    const fileNames = oversizedFiles.map(file => file.name).join('、')
+    createSnackbar({
+      text: `以下檔案超過大小限制 (10MB)：${fileNames}`,
+      snackbarProps: { color: 'red-lighten-1', timeout: 5000 }
+    })
+
+    // 過濾掉超過大小的檔案
+    selectedFiles.value = files.filter(file => file.size <= maxFileSize)
+
+    // 如果所有檔案都超過大小，清空選擇
+    if (selectedFiles.value.length === 0) {
+      selectedFiles.value = []
+    }
+  }
 }
 
 // 上傳附件
 const uploadAttachments = async () => {
   if (!selectedFiles.value || selectedFiles.value.length === 0) return
   if (!props.task?._id) return
+
+  // 再次檢查檔案大小限制 (10MB) 作為雙重保護
+  const maxFileSize = 10 * 1024 * 1024 // 10MB
+  const oversizedFiles = selectedFiles.value.filter(file => file.size > maxFileSize)
+
+  if (oversizedFiles.length > 0) {
+    const fileNames = oversizedFiles.map(file => file.name).join('、')
+    createSnackbar({
+      text: `以下檔案超過大小限制 (10MB)：${fileNames}`,
+      snackbarProps: { color: 'red-lighten-1', timeout: 5000 }
+    })
+    uploadingAttachments.value = false
+    return
+  }
 
   uploadingAttachments.value = true
 
@@ -1242,7 +1430,7 @@ const uploadAttachments = async () => {
     console.error('上傳附件失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '上傳附件失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
     uploadingAttachments.value = false
@@ -1263,13 +1451,11 @@ const downloadAttachment = (attachment) => {
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
-
-    console.log('開始下載附件:', attachment.originalName)
   } catch (error) {
     console.error('下載附件失敗:', error)
     createSnackbar({
       text: '下載附件失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   }
 }
@@ -1301,7 +1487,7 @@ const confirmDeleteAttachment = async () => {
     console.error('刪除附件失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '刪除附件失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
     // 重置對話框狀態
@@ -1737,8 +1923,25 @@ const formatCommentWithMentions = (comment) => {
 
 
 // 監聽側邊欄開關，清空評論輸入或滾動到底部
-watch(drawerOpen, (newValue) => {
-  if (!newValue) {
+watch(drawerOpen, (newValue, oldValue) => {
+  if (!newValue && oldValue) {
+    // 側邊欄正在關閉
+
+    // 如果已經在處理關閉確認流程，跳過檢查
+    if (pendingClose.value) {
+      return
+    }
+
+    // 檢查是否有未儲存的描述變更
+    // 確保任務ID匹配才檢查
+    if (hasUnsavedDescription.value && currentTaskIdForDescription.value === props.task?._id) {
+      // 阻止關閉，恢復為開啟狀態
+      drawerOpen.value = true
+      // 顯示確認對話框
+      pendingClose.value = true
+      showCloseConfirmDialog.value = true
+      return // 不執行清理操作
+    }
     // 清空所有編輯狀態
     editingField.value = null
     editingTitle.value = null
@@ -1755,13 +1958,22 @@ watch(drawerOpen, (newValue) => {
     if (commentImageUploadRef.value) {
       commentImageUploadRef.value.clearImages()
     }
-    // 側欄關閉時再保險沖刷一次
-    flushDescriptionSave()
+    // 重置描述為最後載入的內容（確保未儲存的變更不會保留）
+    isResettingDescription.value = true
+    if (currentTaskIdForDescription.value === props.task?._id) {
+      taskDescription.value = lastLoadedDescription.value || ''
+    }
+    // 重置未儲存變更標記
+    hasUnsavedDescription.value = false
+    // 重置完成後，取消重置標記
+    nextTick(() => {
+      isResettingDescription.value = false
+    })
     // 重置載入標記
     // 不要清空 lastLoadedDescription 和 currentTaskIdForDescription
     // 保持它們的值，以便下次打開時正確比較和防止數據覆蓋
     isLoadingTask.value = false
-  } else {
+  } else if (newValue && !oldValue) {
     // 側邊欄開啟時，重置自動滾動狀態並滾動到底部
     shouldAutoScroll.value = true
     // 等待側邊欄動畫完成
@@ -1779,6 +1991,114 @@ const navigateToProject = () => {
   if (props.project?._id) {
     router.push(`/projectAndTaskManagement/projects/${props.project._id}`)
   }
+}
+
+// 顯示描述歷史紀錄
+const showDescriptionHistory = () => {
+  showDescriptionHistoryDialog.value = true
+}
+
+// 點擊完成按鈕
+const handleCompleteClick = () => {
+  if (!props.task || props.task.status === 'completed') return
+  confirmCompleteDialog.value = true
+}
+
+// 切換任務完成狀態（可指定完成或未完成）
+const toggleTaskCompletion = async (toCompleted = true) => {
+  if (!props.task || !props.task._id) return
+
+  try {
+    const payload = toCompleted
+      ? { status: 'completed', completedBy: userStore._id }
+      : { status: 'pending', completedBy: null, completedAt: null }
+
+    const { data } = await apiAuth.put(`/tasks/${props.task._id}`, payload)
+
+    if (data.success) {
+      // 後端若只回傳 completedBy 為 ObjectId，前端先補上完整 user 以利顯示
+      const returned = data.data || {}
+      if (returned.completedBy && typeof returned.completedBy === 'string') {
+        const self = {
+          _id: userStore._id,
+          name: userStore.name,
+          email: userStore.email,
+          avatar: userStore.avatar
+        }
+        returned.completedBy = self
+      }
+      emit('task-updated', returned)
+      createSnackbar({
+        text: toCompleted ? '任務已完成' : '任務已標記為未完成',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('更新任務狀態失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '更新任務狀態失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+// 確認完成任務
+const confirmCompleteTask = async () => {
+  if (!props.task) return
+  confirmCompleteDialog.value = false
+  await toggleTaskCompletion(true)
+}
+
+// 點擊重新開啟按鈕（觸發確認）
+const handleReopenClick = () => {
+  if (!props.task || props.task.status !== 'completed') return
+  confirmReopenDialog.value = true
+}
+
+// 重新開啟任務（從已完成狀態改為進行中）
+const reopenTask = async () => {
+  if (!props.task || !props.task._id) return
+
+  try {
+    // 根據是否有指派對象來決定狀態
+    // 如果有指派對象，狀態應該是 'in_progress'，否則為 'pending'
+    const newStatus = props.task.assignee ? 'in_progress' : 'pending'
+
+    const { data } = await apiAuth.put(`/tasks/${props.task._id}`, {
+      status: newStatus,
+      completedAt: null,
+      completedBy: null
+    })
+
+    if (data.success) {
+      const updatedTask = {
+        ...data.data,
+        status: newStatus,
+        completedAt: null,
+        completedBy: null
+      }
+
+      emit('task-updated', updatedTask)
+
+      createSnackbar({
+        text: '任務已重新開啟',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+    }
+  } catch (error) {
+    console.error('重新開啟任務失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '重新開啟任務失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  }
+}
+
+// 確認重新開啟任務
+const confirmReopenTask = async () => {
+  if (!props.task) return
+  confirmReopenDialog.value = false
+  await reopenTask()
 }
 
 // 取消編輯
@@ -1806,33 +2126,25 @@ watch(() => props.task, (newTask, oldTask) => {
     // 僅在非本地保存期間且內容確實不同時，才回填描述，避免輸入時閃爍
     // 僅在任務 ID 變更時回填描述，避免同一任務編輯期間被覆寫
     if (!oldTask || newTask._id !== oldTask._id) {
-      console.log('📝 watch props.task: 任務切換', {
-        oldTaskId: oldTask?._id,
-        newTaskId: newTask._id,
-        newTaskName: newTask.name
-      })
       if (!isSavingDescription.value) {
         const desc = newTask.description || ''
         taskDescription.value = desc
         // 記錄最後載入的描述內容和對應的任務ID
         lastLoadedDescription.value = desc
         currentTaskIdForDescription.value = newTask._id
-        console.log('📝 已更新描述和ID追蹤', {
-          descLength: desc.length,
-          taskId: newTask._id
-        })
+        // 重置未儲存標記
+        hasUnsavedDescription.value = false
       }
     } else {
       // 即使是相同任務，也要確保 lastLoadedDescription 是最新的（避免關閉後重開時比較失敗）
       if (!isSavingDescription.value && lastLoadedDescription.value !== newTask.description) {
-        console.log('📝 watch props.task: 同一任務，更新描述', {
-          taskId: newTask._id,
-          oldDescLength: lastLoadedDescription.value?.length || 0,
-          newDescLength: newTask.description?.length || 0
-        })
         const desc = newTask.description || ''
         lastLoadedDescription.value = desc
         currentTaskIdForDescription.value = newTask._id
+        // 如果描述被外部更新，重置未儲存標記
+        if (taskDescription.value === desc) {
+          hasUnsavedDescription.value = false
+        }
       }
     }
 
@@ -1871,13 +2183,9 @@ watch(() => props.project, (newProject) => {
   }
 }, { immediate: true })
 
-// 組件卸載時清理計時器
+// 組件卸載時清理
 onUnmounted(() => {
-  if (descriptionUpdateTimer) {
-    clearTimeout(descriptionUpdateTimer)
-  }
-  // 元件卸載時沖刷未送出的描述
-  flushDescriptionSave()
+  // 組件卸載時不自動儲存，讓用戶決定
 })
 </script>
 
@@ -1937,7 +2245,6 @@ onUnmounted(() => {
   font-size: 0.875rem;
   font-weight: 600;
   color: #666;
-  margin-bottom: 8px;
 }
 
 .attachment-label {
@@ -2096,6 +2403,14 @@ onUnmounted(() => {
   border: 1px solid rgb(var(--v-theme-outline-variant));
   border-radius: 8px;
   background-color: rgba(0, 0, 0, 0.02);
+}
+
+/* 儲存按鈕容器（外部右下方） */
+.description-save-button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  padding-top: 8px;
 }
 
 /* 附件相關樣式 */

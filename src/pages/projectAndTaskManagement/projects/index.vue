@@ -246,6 +246,8 @@ const fetchProjects = async () => {
     const { data } = await apiAuth.get('/projects/my-projects')
     if (data.success) {
       projects.value = data.data
+      // 同步到 store，讓側邊欄專案區塊能正確遞補（打星號後維持顯示 10 筆）
+      projectStore.setProjects(data.data)
     }
   } catch (error) {
     console.error('載入專案列表失敗:', error)

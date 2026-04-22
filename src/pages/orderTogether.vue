@@ -838,7 +838,7 @@ import UserRole from '@/enums/UserRole'
 // 頁面定義
 definePage({
   meta: {
-    title: '訂餐趣 | TEST',
+    title: '訂餐趣 | Ystravel',
     login: true
   }
 })
@@ -1013,7 +1013,7 @@ const loadRestaurants = async () => {
     console.error('載入餐廳列表失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '載入餐廳列表失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   } finally {
     loadingRestaurants.value = false
@@ -1046,7 +1046,7 @@ const handleRestaurantChange = async (restaurantId) => {
     console.error('載入餐廳資料失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '載入餐廳資料失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   }
 }
@@ -1159,7 +1159,7 @@ const submitOrder = async () => {
     console.error('送出訂單失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '送出訂單失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   }
 }
@@ -1176,7 +1176,7 @@ const showMenuImages = async () => {
     console.error('載入菜單圖片失敗:', error)
     createSnackbar({
       text: error?.response?.data?.message || '載入菜單圖片失敗',
-      snackbarProps: { color: 'error' }
+      snackbarProps: { color: 'red-lighten-1' }
     })
   }
 }

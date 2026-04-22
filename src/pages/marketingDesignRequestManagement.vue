@@ -1,44 +1,17 @@
 <!-- eslint-disable vue/no-v-html -->
 <template>
   <v-container max-width="2400">
-    <v-row class="pt-md-5 px-lg-10 px-xxl-6">
+    <v-row class="pt-md-6 px-0 px-md-4">
       <v-col cols="12">
-        <v-card class="elevation-4 rounded-lg py-3 py-sm-7 px-0">
-          <v-row class="d-flex align-center justify-space-between ps-8 pe-7 px-sm-10 py-5">
-            <h3
-              class="d-inline-block"
-              style="min-width: 160px;"
-            >
-              行銷美編需求申請管理
+        <v-card class="elevation-4 rounded-lg pt-6 py-md-7 px-0">
+          <div class="d-flex align-center px-4 px-sm-6 py-1">
+            <h3>
+              行銷美編申請管理
             </h3>
-            <span>
-              <v-btn
-                v-if="!smAndUp"
-                v-permission="'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE'"
-                icon="mdi-email-multiple"
-                color="blue-grey-darken-2"
-                variant="text"
-                :size="smAndUp ? 'default' : 'small'"
-                @click="openNotificationEmailDialog"
-              />
-              <v-btn
-                v-if="smAndUp"
-                v-permission="'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE'"
-                prepend-icon="mdi-email-multiple"
-                color="blue-grey-darken-2"
-                variant="outlined"
-                class="me-4"
-                :size="smAndUp ? 'default' : 'small'"
-                @click="openNotificationEmailDialog"
-              >
-                通知設定管理
-              </v-btn>
-
-            </span>
-          </v-row>
-          <v-divider class="mt-2 mt-sm-5 mb-2 mb-sm-6" />
+          </div>
+          <v-divider class="mt-5 mb-1 mb-sm-3" />
           <!-- 搜尋條件區塊 -->
-          <v-card-text class="pt-4 px-6 px-sm-7 px-md-9 pb-2">
+          <v-card-text class="pt-4 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
             <v-row class="mb-2">
               <!-- 申請日期 -->
               <v-col
@@ -49,7 +22,7 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">申請日期 :</span>
+                  <span class="search-label">申請日期 :</span>
                   <v-date-input
                     v-model="searchCriteria.applicationDate"
                     variant="outlined"
@@ -58,6 +31,7 @@
                     hide-details
                     clearable
                     multiple="range"
+                    placeholder="請選擇申請日期"
                     :cancel-text="'取消'"
                     :ok-text="'確認'"
                     :disabled="false"
@@ -76,11 +50,15 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">申請人 :</span>
+                  <span class="search-label">申請人 :</span>
                   <v-autocomplete
                     v-model="searchCriteria.applicant"
                     :items="applicantUsers"
-                    :item-title="item => item && item.name && item.userId ? `${item.name} (${item.userId})` : item && item.name ? item.name : ''"
+                    :item-title="item => {
+                      if (!item || !item.name) return ''
+                      const extNumber = item.employeeLink?.extNumber
+                      return extNumber ? `${item.name} (${extNumber})` : item.name
+                    }"
                     item-value="_id"
                     variant="outlined"
                     density="compact"
@@ -102,7 +80,7 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">申請類型 (大) :</span>
+                  <span class="search-label">申請類型 (大) :</span>
                   <v-select
                     v-model="searchCriteria.productCategory"
                     :items="productCategoryOptions"
@@ -128,7 +106,7 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">申請類型 :</span>
+                  <span class="search-label">申請類型 :</span>
                   <v-select
                     v-model="searchCriteria.productType"
                     :items="filteredProductTypeOptions"
@@ -153,7 +131,7 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">狀態 :</span>
+                  <span class="search-label">狀態 :</span>
                   <v-select
                     v-model="searchCriteria.status"
                     :items="statusOptions"
@@ -178,7 +156,7 @@
                 class="px-1 pe-sm-2 py-1"
               >
                 <div class="d-flex flex-column">
-                  <span class="text-label">處理人員 :</span>
+                  <span class="search-label">處理人員 :</span>
                   <v-autocomplete
                     v-model="searchCriteria.assignedDesigner"
                     :items="marketingDesigners"
@@ -226,7 +204,7 @@
                     cols="4"
                     sm="2"
                     lg="4"
-                    class="pe-1"
+                    class="pe-2"
                   >
                     <v-btn
                       color="grey"
@@ -242,7 +220,41 @@
               </v-col>
             </v-row>
           </v-card-text>
-          <v-divider class="my-2" />
+          <v-divider class="my-0" />
+
+          <!-- 功能按鈕和快速搜尋區 -->
+          <v-row class="px-1 px-sm-3 px-md-7 mt-1 bg-white">
+            <v-col
+              cols="12"
+              class="ps-4 pb-sm-4"
+            >
+              <v-row class="d-flex align-center px-5 px-md-2">
+                <v-spacer />
+                <v-col
+                  cols="7"
+                  sm="6"
+                  md="4"
+                  lg="2"
+                  class="px-1 my-1"
+                >
+                  <div class="d-flex align-center">
+                    <v-text-field
+                      v-model="quickSearch"
+                      :loading="isSearching"
+                      density="compact"
+                      variant="outlined"
+                      placeholder="搜尋申請編號、申請詳細資訊"
+                      append-inner-icon="mdi-magnify"
+                      hide-details
+                      clearable
+                      :disabled="false"
+                    />
+                  </div>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
+
           <!-- 表格區塊 -->
           <v-card-text class="px-sm-5 px-md-6 px-lg-7">
             <v-data-table-server
@@ -275,7 +287,7 @@
                       </div>
                     </div>
                   </td>
-                  <td>{{ item.applicant?.name }} ({{ item.applicant?.userId }})</td>
+                  <td>{{ item.applicant?.name }} ({{ item.applicant?.employeeLink?.extNumber || 'N/A' }})</td>
                   <td>{{ getProductTypeText(item.productType, item) }}</td>
                   <td class="text-center">
                     <v-menu
@@ -395,46 +407,48 @@
                     </v-menu>
                   </td>
                   <td class="text-center">
-                    <div
-                      v-if="item.departmentNote"
-                      class="department-note-cell"
-                    >
+                    <div class="department-note-cell">
                       <div
-                        v-if="!isCompletedOrCancelled(item.status)"
-                        class="department-note-text clickable"
-                        @click="openDepartmentNoteDialog(item)"
-                        v-html="formatDepartmentNote(item.departmentNote)"
-                      />
+                        v-if="getDisplayDepartmentNote(item) || item.quotaRank"
+                        class="department-note-text"
+                        :class="{ clickable: !isCompletedOrCancelled(item.status), disabled: isCompletedOrCancelled(item.status) }"
+                        @click="!isCompletedOrCancelled(item.status) && openDepartmentNoteDialog(item)"
+                      >
+                        <span
+                          v-if="item.quotaRank"
+                          class="quota-rank-badge"
+                          :class="item.quotaRank.startsWith('正取') ? 'regular' : 'backup'"
+                        >{{ item.quotaRank }}</span>
+                        <span
+                          v-if="getDisplayDepartmentNote(item)"
+                          v-html="formatDepartmentNote(getDisplayDepartmentNote(item))"
+                        />
+                      </div>
                       <div
                         v-else
-                        class="department-note-text disabled"
-                        v-html="formatDepartmentNote(item.departmentNote)"
-                      />
-                    </div>
-                    <div
-                      v-else
-                      class="department-note-cell"
-                    >
-                      <v-btn
-                        v-if="!isCompletedOrCancelled(item.status)"
-                        color="grey"
-                        variant="outlined"
-                        size="small"
-                        class="px-3"
-                        @click="openDepartmentNoteDialog(item)"
+                        class="department-note-cell"
                       >
-                        新增備註
-                      </v-btn>
-                      <v-btn
-                        v-else
-                        color="grey"
-                        variant="outlined"
-                        size="small"
-                        class="px-3 disabled-btn"
-                        disabled
-                      >
-                        新增備註
-                      </v-btn>
+                        <v-btn
+                          v-if="!isCompletedOrCancelled(item.status)"
+                          color="grey"
+                          variant="outlined"
+                          size="small"
+                          class="px-3"
+                          @click="openDepartmentNoteDialog(item)"
+                        >
+                          新增備註
+                        </v-btn>
+                        <v-btn
+                          v-else
+                          color="grey"
+                          variant="outlined"
+                          size="small"
+                          class="px-3 disabled-btn"
+                          disabled
+                        >
+                          新增備註
+                        </v-btn>
+                      </div>
                     </div>
                   </td>
                   <td class="text-center">
@@ -460,6 +474,63 @@
                     >
                       <v-icon>mdi-pencil</v-icon>
                     </v-btn>
+                    <v-btn
+                      v-if="permissionStore.hasPermission('MARKETING_DESIGN_REQUEST_DELETE')"
+                      icon
+                      color="red-darken-1"
+                      variant="plain"
+                      size="small"
+                      :ripple="false"
+                      :loading="deleting && deleteConfirmDialog.designRequestId === item._id"
+                      @click="openDeleteConfirmDialog(item)"
+                    >
+                      <v-icon>mdi-delete</v-icon>
+                    </v-btn>
+                  </td>
+                  <td class="text-center">
+                    <v-menu
+                      v-if="hasConvertedTask(item)"
+                      open-on-hover
+                      location="top"
+                      open-delay="50"
+                      close-delay="50"
+                      transition="fade-transition"
+                      :close-on-content-click="false"
+                    >
+                      <template #activator="{ props }">
+                        <v-btn
+                          v-bind="props"
+                          icon
+                          color="teal-darken-1"
+                          variant="plain"
+                          size="small"
+                          :ripple="false"
+                          @click.stop="navigateToProject(item)"
+                        >
+                          <v-icon size="18">
+                            mdi-check-circle
+                          </v-icon>
+                        </v-btn>
+                      </template>
+                      <v-card
+                        class="px-2 py-2"
+                        max-width="300"
+                      >
+                        <div class="d-flex align-center">
+                          <v-icon
+                            color="teal-darken-1"
+                            size="14"
+                            class="me-2"
+                          >
+                            mdi-check-circle
+                          </v-icon>
+                          <span class="text-caption">
+                            {{ getConvertedTaskText(item) }}
+                          </span>
+                        </div>
+                      </v-card>
+                    </v-menu>
+                    <span v-else>-</span>
                   </td>
                 </tr>
               </template>
@@ -476,27 +547,31 @@
       persistent
     >
       <v-card class="rounded-lg edit-dialog">
-        <v-card-title class="d-flex align-center px-6 py-1 mb-2 bg-light-blue-darken-2">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-light-blue-darken-2">
           <v-icon
             icon="mdi-pencil"
-            size="18"
+            size="20"
             color="white"
             class="me-2"
           />
-          <span class="card-title">編輯申請單</span>
+          <span class="card-title text-white">編輯申請單</span>
           <v-spacer />
           <v-btn
             icon
             variant="plain"
-            :ripple="false"
             class="opacity-100"
+            :ripple="false"
+            color="white"
+            size="36"
             @click="closeEditDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon size="22">
+              mdi-close
+            </v-icon>
           </v-btn>
         </v-card-title>
 
-        <v-card-text class="px-6 py-7">
+        <v-card-text class="px-6 py-4 mt-4">
           <v-form
             ref="editForm"
             v-model="editFormValid"
@@ -564,17 +639,13 @@
                 sm="6"
                 lg="4"
               >
-                <v-autocomplete
-                  v-model="editFormData.applicant"
-                  :items="employees"
-                  item-title="label"
-                  item-value="value"
+                <v-text-field
+                  :model-value="editApplicantDisplay"
                   label="* 申請人"
                   variant="outlined"
                   density="compact"
                   disabled
-                  clearable
-                  :menu-props="{ maxHeight: 400 }"
+                  readonly
                 />
               </v-col>
             </v-row>
@@ -654,7 +725,7 @@
                     </v-card>
                   </v-col>
 
-                  <!-- 上傳檔案欄位（放在所有子類型表單區塊上方） -->
+                  <!-- 共同欄位（放在所有子類型表單區塊上方） -->
                   <v-col
                     v-if="productTypeConfig?.requiredFiles && hasSelectedPrintingType"
                     cols="12"
@@ -664,29 +735,81 @@
                       class="pa-4 elevation-0 upload-file-card"
                     >
                       <div class="d-flex align-center mb-4">
-                        <span class="sub-title font-weight-bold text-light-blue-darken-3">※ 共同欄位: 上傳檔案</span>
+                        <span class="sub-title font-weight-bold text-light-blue-darken-3">※ 共同欄位</span>
                       </div>
-                      <div class="text-body-2 info-item-value">
-                        <div
-                          v-for="(file, index) in editFormData.files"
-                          :key="index"
-                          class="d-flex align-center mb-1"
+                      <v-row>
+                        <template
+                          v-for="field in productTypeConfig.requiredFiles"
+                          :key="field.name"
                         >
-                          <v-icon
-                            size="small"
-                            class="me-2"
+                          <!-- 行程簡稱欄位 -->
+                          <v-col
+                            v-if="field.type === 'text' && field.name === 'tripShortName'"
+                            :cols="field.cols?.xs || 12"
+                            :sm="field.cols?.sm || 3"
+                            :lg="field.cols?.lg || 3"
                           >
-                            {{ isImageFile(file) ? 'mdi-image' : 'mdi-file' }}
-                          </v-icon>
-                          <span class="text-grey-darken-1">{{ truncateFileName(getFileName(file), 20) }}</span>
-                        </div>
-                        <div
-                          v-if="!editFormData.files || editFormData.files.length === 0"
-                          class="text-grey-lighten-1"
-                        >
-                          ( 無 )
-                        </div>
-                      </div>
+                            <v-text-field
+                              v-model="editFormData[field.name]"
+                              :label="field.label"
+                              variant="outlined"
+                              density="compact"
+                              :rules="field.required ? [v => !!v || `請輸入${field.label.replace('* ', '')}`] : []"
+                            />
+                          </v-col>
+                          <!-- 上傳檔案欄位（disabled，不可編輯） -->
+                          <v-col
+                            v-else-if="field.type === 'file'"
+                            :cols="field.cols?.xs || 12"
+                            :sm="field.cols?.sm || 12"
+                            :lg="field.cols?.lg || 12"
+                          >
+                            <v-file-input
+                              :model-value="convertFilesToFileObjects(editFormData[field.name] || editFormData.files)"
+                              :label="getFileUploadLabel(field.label, field)"
+                              variant="outlined"
+                              density="compact"
+                              :multiple="field.multiple"
+                              :accept="field.accept"
+                              disabled
+                              readonly
+                              counter
+                              prepend-icon="mdi-paperclip"
+                              chips
+                              hide-details
+                            >
+                              <template #selection="{ fileNames }">
+                                <div
+                                  class="d-flex flex-wrap align-center"
+                                  style="gap: 4px;"
+                                >
+                                  <template
+                                    v-for="(fileName, index) in (fileNames && fileNames.length > 0 ? fileNames : getFileNamesFromData(editFormData[field.name] || editFormData.files))"
+                                    :key="fileName"
+                                  >
+                                    <v-chip
+                                      v-if="index < 2"
+                                      color="teal-darken-1"
+                                      size="small"
+                                      label
+                                      class="mb-1"
+                                    >
+                                      {{ truncateFileName(fileName, 15) }}
+                                    </v-chip>
+                                    <span
+                                      v-if="index === 2"
+                                      class="text-caption text-grey-darken-3 ms-1"
+                                    >
+                                      +{{ (fileNames && fileNames.length > 0 ? fileNames : getFileNamesFromData(editFormData[field.name] || editFormData.files)).length - 2 }} 個檔案
+                                    </span>
+                                  </template>
+                                </div>
+                              </template>
+                            </v-file-input>
+                            <!-- 顯示檔案名稱 chips（備用顯示） -->
+                          </v-col>
+                        </template>
+                      </v-row>
                     </v-card>
                   </v-col>
 
@@ -784,6 +907,138 @@
                   </template>
                 </template>
 
+                <!-- 館格修改、下架特殊處理 -->
+                <template v-else-if="editFormData.productType === 'galleryModifyRemove'">
+                  <v-col cols="12">
+                    <v-card class="mb-4 printing-checkbox-card elevation-0">
+                      <v-card-text class="py-4">
+                        <div class="card-title text-light-blue-darken-2 mb-3">
+                          <v-icon
+                            icon="mdi-checkbox-multiple-marked-outline"
+                            size="20"
+                            class="me-2"
+                          />
+                          請選擇需要的項目
+                        </div>
+                        <v-row>
+                          <v-col
+                            v-for="subType in productTypeConfig?.subTypes"
+                            :key="subType.name"
+                            cols="12"
+                            sm="6"
+                            md="3"
+                          >
+                            <v-checkbox
+                              v-model="editFormData.galleryTypes[subType.name]"
+                              :label="subType.label"
+                              color="light-blue-darken-2"
+                              hide-details
+                              density="compact"
+                              class="printing-checkbox"
+                            />
+                          </v-col>
+                        </v-row>
+                      </v-card-text>
+                    </v-card>
+                  </v-col>
+
+                  <!-- 子類型表單區塊 -->
+                  <template
+                    v-for="(section, sectionKey) in productTypeConfig?.sections"
+                    :key="sectionKey"
+                  >
+                    <v-col
+                      v-if="editFormData.galleryTypes?.[sectionKey]"
+                      cols="12"
+                    >
+                      <v-card class="mb-4 printing-section-card elevation-0">
+                        <div class="printing-section-header d-flex align-center px-5 py-3">
+                          <span class="sub-title text-light-blue-darken-2 font-weight-bold">※ {{ section.title }}</span>
+                        </div>
+                        <v-divider class="mb-0" />
+                        <v-card-text class="pt-4 pb-4 px-5">
+                          <v-row>
+                            <v-col
+                              v-for="field in section.fields"
+                              :key="field.name"
+                              :cols="field.cols?.xs || 12"
+                              :sm="field.cols?.sm || 6"
+                              :lg="field.cols?.lg || 4"
+                            >
+                              <!-- 文字輸入欄位 -->
+                              <v-text-field
+                                v-if="field.type === 'text'"
+                                :model-value="getNestedValue(editFormData, field.name)"
+                                :label="field.label"
+                                variant="outlined"
+                                density="compact"
+                                :rules="field.required ? [v => !!v || `請輸入${field.label.replace('* ', '')}`] : []"
+                                @update:model-value="(value) => setNestedValue(editFormData, field.name, value)"
+                              />
+                              <!-- 多行文字輸入欄位 -->
+                              <v-textarea
+                                v-else-if="field.type === 'textarea'"
+                                :model-value="getNestedValue(editFormData, field.name)"
+                                :label="field.label"
+                                variant="outlined"
+                                density="compact"
+                                :rules="field.required ? [v => !!v || `請輸入${field.label.replace('* ', '')}`] : []"
+                                auto-grow
+                                rows="5"
+                                @update:model-value="(value) => setNestedValue(editFormData, field.name, value)"
+                              />
+                              <!-- 檔案上傳欄位（disabled，不可編輯） -->
+                              <v-file-input
+                                v-else-if="field.type === 'file'"
+                                :model-value="convertFilesToFileObjects(getNestedValue(editFormData, field.name))"
+                                :label="getFileUploadLabel(field.label, field)"
+                                variant="outlined"
+                                density="compact"
+                                :multiple="field.multiple"
+                                :accept="field.accept"
+                                disabled
+                                readonly
+                                counter
+                                prepend-icon="mdi-paperclip"
+                                chips
+                                hide-details
+                              >
+                                <template #selection="{ fileNames }">
+                                  <div
+                                    class="d-flex flex-wrap align-center"
+                                    style="gap: 4px;"
+                                  >
+                                    <template
+                                      v-for="(fileName, index) in (fileNames && fileNames.length > 0 ? fileNames : getFileNamesFromData(getNestedValue(editFormData, field.name)))"
+                                      :key="fileName"
+                                    >
+                                      <v-chip
+                                        v-if="index < 2"
+                                        color="teal-darken-1"
+                                        size="small"
+                                        label
+                                        class="mb-1"
+                                      >
+                                        {{ truncateFileName(fileName, 15) }}
+                                      </v-chip>
+                                      <span
+                                        v-if="index === 2"
+                                        class="text-caption text-grey-darken-3 ms-1"
+                                      >
+                                        +{{ (fileNames && fileNames.length > 0 ? fileNames : getFileNamesFromData(getNestedValue(editFormData, field.name))).length - 2 }} 個檔案
+                                      </span>
+                                    </template>
+                                  </div>
+                                </template>
+                              </v-file-input>
+                            </v-col>
+                          </v-row>
+                        </v-card-text>
+                      </v-card>
+                    </v-col>
+                  </template>
+                </template>
+
                 <!-- 動態表單欄位 -->
                 <template v-else-if="formFields.length > 0">
                   <v-col
@@ -801,6 +1056,7 @@
                         :label="field.label"
                         variant="outlined"
                         density="compact"
+                        :disabled="field.conditionalRequired && editFormData[field.conditionalRequired.field] !== field.conditionalRequired.value"
                         :rules="
                           field.conditionalRequired && editFormData[field.conditionalRequired.field] === field.conditionalRequired.value
                             ? [v => !!v || `請輸入${field.label.replace('* ', '')}`]
@@ -826,6 +1082,7 @@
                         :label="field.label"
                         variant="outlined"
                         density="compact"
+                        :disabled="field.conditionalRequired && editFormData[field.conditionalRequired.field] !== field.conditionalRequired.value"
                         :rules="
                           field.conditionalRequired && editFormData[field.conditionalRequired.field] === field.conditionalRequired.value
                             ? [v => !!v || `請輸入${field.label.replace('* ', '')}`]
@@ -851,6 +1108,20 @@
                     />
 
                     <!-- 日期選擇欄位 -->
+                    <!-- 講座活動的日期時間欄位使用 datetime-local -->
+                    <v-text-field
+                      v-else-if="field.type === 'date' && (field.name === 'eventDateTime' || field.name === 'entryDateTime') && editFormData.productType === 'lectureEvent'"
+                      v-model="editFormData[field.name]"
+                      :label="field.label"
+                      type="datetime-local"
+                      variant="outlined"
+                      density="compact"
+                      :rules="
+                        field.conditionalRequired && editFormData[field.conditionalRequired.field] === field.conditionalRequired.value
+                          ? [v => !!v || `請選擇${field.label.replace('* ', '')}`]
+                          : (field.required ? [v => !!v || `請選擇${field.label.replace('* ', '')}`] : [])
+                      "
+                    />
                     <v-date-input
                       v-else-if="field.type === 'date'"
                       v-model="editFormData[field.name]"
@@ -892,48 +1163,50 @@
                       "
                     />
 
-                    <!-- 檔案上傳欄位 -->
+                    <!-- 檔案上傳欄位（disabled，不可編輯） -->
                     <div v-else-if="field.type === 'file'">
-                      <v-card
-                        class="info-item-card pa-3"
+                      <v-file-input
+                        :model-value="convertFilesToFileObjects(editFormData[field.name])"
+                        :label="getFileUploadLabel(field.label, field)"
                         variant="outlined"
+                        density="compact"
+                        :multiple="field.multiple"
+                        :accept="field.accept"
+                        disabled
+                        readonly
+                        counter
+                        prepend-icon="mdi-paperclip"
+                        chips
+                        hide-details
                       >
-                        <div class="d-flex align-center mb-2">
-                          <v-icon
-                            size="16"
-                            color="grey-darken-1"
-                            class="me-2"
-                          >
-                            mdi-file-document
-                          </v-icon>
-                          <span class="sub-card-title font-weight-bold text-grey-darken-1">
-                            {{ field.label || '上傳檔案' }}
-                          </span>
-                        </div>
-                        <div class="text-body-2 info-item-value">
-                          <div v-if="editFormData[field.name] && editFormData[field.name].length > 0">
-                            <div
-                              v-for="(file, idx) in editFormData[field.name]"
-                              :key="idx"
-                              class="d-flex align-center mb-1"
-                            >
-                              <v-icon
-                                size="small"
-                                class="me-2"
-                              >
-                                {{ isImageFile(file) ? 'mdi-image' : 'mdi-file' }}
-                              </v-icon>
-                              <span class="text-grey-darken-1">{{ truncateFileName(getFileName(file), 20) }}</span>
-                            </div>
-                          </div>
+                        <template #selection="{ fileNames }">
                           <div
-                            v-else
-                            class="text-grey-lighten-1"
+                            class="d-flex flex-wrap align-center"
+                            style="gap: 4px;"
                           >
-                            ( 無 )
+                            <template
+                              v-for="(fileName, index) in (fileNames && fileNames.length > 0 ? fileNames : getFileNamesFromData(editFormData[field.name]))"
+                              :key="fileName"
+                            >
+                              <v-chip
+                                v-if="index < 2"
+                                color="teal-darken-1"
+                                size="small"
+                                label
+                                class="mb-1"
+                              >
+                                {{ truncateFileName(fileName, 15) }}
+                              </v-chip>
+                              <span
+                                v-if="index === 2"
+                                class="text-caption text-grey-darken-3 ms-1"
+                              >
+                                +{{ (fileNames && fileNames.length > 0 ? fileNames : getFileNamesFromData(editFormData[field.name])).length - 2 }} 個檔案
+                              </span>
+                            </template>
                           </div>
-                        </div>
-                      </v-card>
+                        </template>
+                      </v-file-input>
                     </div>
 
                     <!-- 下拉選單欄位 -->
@@ -1147,7 +1420,7 @@
             取消
           </v-btn>
           <v-btn
-            color="teal-darken-1"
+            color="blue-darken-1"
             variant="outlined"
             class="ms-2"
             :loading="submitting"
@@ -1187,91 +1460,7 @@
       </v-card>
     </v-dialog>
 
-    <!-- 燈箱圖片預覽對話框 -->
-    <v-dialog
-      v-model="lightboxDialog.show"
-      fullscreen
-      transition="fade-transition"
-      @keydown.esc="closeLightbox"
-    >
-      <v-card
-        class="lightbox-card"
-      >
-        <v-btn
-          icon
-          class="lightbox-close-btn"
-          style="position: absolute; top: 24px; right: 32px; z-index: 1001; background: rgba(0,0,0,0.5);"
-          color="white"
-          size="large"
-          @click="closeLightbox"
-        >
-          <v-icon
-            size="32"
-            color="white"
-          >
-            mdi-close
-          </v-icon>
-        </v-btn>
-        <v-btn
-          icon
-          class="lightbox-download-btn me-2"
-          style="position: absolute; top: 24px; right: 90px; z-index: 1001; background: rgba(0,0,0,0.5);"
-          size="large"
-          @click="downloadFile(lightboxDialog.currentImage)"
-        >
-          <v-icon
-            size="28"
-            color="white"
-          >
-            mdi-download
-          </v-icon>
-        </v-btn>
-        <div class="lightbox-content">
-          <v-btn
-            v-if="lightboxDialog.images.length > 1"
-            icon="mdi-chevron-left"
-            size="large"
-            color="white"
-            class="lightbox-nav-btn lightbox-prev"
-            @click="previousImage"
-          >
-            <v-icon
-              size="32"
-              color="white"
-            >
-              mdi-chevron-left
-            </v-icon>
-          </v-btn>
-          <img
-            v-if="lightboxDialog.currentImage"
-            :src="lightboxDialog.currentImage"
-            class="lightbox-image"
-            alt="燈箱預覽圖片"
-          >
-          <v-btn
-            v-if="lightboxDialog.images.length > 1"
-            icon="mdi-chevron-right"
-            size="large"
-            color="white"
-            class="lightbox-nav-btn lightbox-next"
-            @click="nextImage"
-          >
-            <v-icon
-              size="32"
-              color="white"
-            >
-              mdi-chevron-right
-            </v-icon>
-          </v-btn>
-        </div>
-        <div
-          class="text-center mt-2"
-          style="color: #fff; opacity: 0.7;"
-        >
-          點擊右上角關閉，或按 ESC 離開預覽
-        </div>
-      </v-card>
-    </v-dialog>
+    <ImageLightbox ref="imageLightboxRef" />
 
     <!-- 查看詳細資料對話框 -->
     <v-dialog
@@ -1386,7 +1575,7 @@
                         color="blue-grey-darken-1"
                         class="me-2"
                       />
-                      <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">申請日期</span>
+                      <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">申請時間</span>
                     </div>
                     <div class="text-body-2">
                       {{ formatDate(viewFormData.applicationDate) }}
@@ -1415,7 +1604,7 @@
                       <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">申請人</span>
                     </div>
                     <div class="text-body-2">
-                      {{ viewFormData.applicant?.name ? `${viewFormData.applicant.name} (${viewFormData.applicant.userId})` : '( 無 )' }}
+                      {{ viewFormData.applicant?.name ? `${viewFormData.applicant.name} (${viewFormData.applicant?.employeeLink?.extNumber || 'N/A'})` : '( 無 )' }}
                     </div>
                   </v-card>
                 </v-col>
@@ -1437,15 +1626,50 @@
                       />
                       <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">狀態</span>
                     </div>
-                    <div class="text-body-2">
-                      <v-chip
-                        :color="getStatusColor(viewFormData.status)"
-                        size="small"
-                        label
-                        class="font-weight-medium elevation-0"
+                    <div class="info-item-card-block">
+                      <v-menu
+                        max-height="320"
+                        :disabled="isCompletedOrCancelled(viewFormData.status) || updatingStatus.has(viewFormData._id)"
                       >
-                        {{ getStatusText(viewFormData.status) }}
-                      </v-chip>
+                        <template #activator="{ props }">
+                          <div
+                            v-if="isCompletedOrCancelled(viewFormData.status)"
+                            class="status-text"
+                            :class="getStatusTextClass(viewFormData.status)"
+                          >
+                            {{ getStatusText(viewFormData.status) }}
+                          </div>
+                          <v-chip
+                            v-else
+                            v-bind="props"
+                            :color="getStatusColor(viewFormData.status)"
+                            size="small"
+                            label
+                            variant="outlined"
+                            class="font-weight-medium"
+                            :loading="updatingStatus.has(viewFormData._id)"
+                          >
+                            {{ getStatusText(viewFormData.status) }}
+                            <v-icon
+                              size="small"
+                              class="ms-1"
+                            >
+                              mdi-chevron-down
+                            </v-icon>
+                          </v-chip>
+                        </template>
+                        <v-list>
+                          <v-list-item
+                            v-for="status in statusOptions"
+                            :key="status.value"
+                            @click="updateStatus(viewFormData._id, status.value)"
+                          >
+                            <v-list-item-title>
+                              {{ status.text }}
+                            </v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
                     </div>
                   </v-card>
                 </v-col>
@@ -1467,8 +1691,75 @@
                       />
                       <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">處理人員</span>
                     </div>
-                    <div class="text-body-2">
-                      {{ viewFormData.assignedDesigner?.name || '尚未指派' }}
+                    <div class="info-item-card-block">
+                      <v-menu
+                        max-height="320"
+                        :disabled="isCompletedOrCancelled(viewFormData.status) || updatingDesigners.has(viewFormData._id)"
+                      >
+                        <template #activator="{ props }">
+                          <v-btn
+                            v-if="viewFormData.assignedDesigner"
+                            v-bind="props"
+                            color="blue-darken-1"
+                            variant="outlined"
+                            class="px-3"
+                            size="small"
+                            :loading="updatingDesigners.has(viewFormData._id)"
+                            :disabled="isCompletedOrCancelled(viewFormData.status) || updatingDesigners.has(viewFormData._id)"
+                          >
+                            {{ viewFormData.assignedDesigner.name }}
+                            <v-icon
+                              v-if="!isCompletedOrCancelled(viewFormData.status)"
+                              size="small"
+                              class="ms-1"
+                            >
+                              mdi-chevron-down
+                            </v-icon>
+                          </v-btn>
+                          <v-btn
+                            v-else
+                            v-bind="props"
+                            color="grey"
+                            variant="outlined"
+                            class="px-3"
+                            size="small"
+                            :loading="updatingDesigners.has(viewFormData._id)"
+                            :disabled="isCompletedOrCancelled(viewFormData.status) || updatingDesigners.has(viewFormData._id)"
+                          >
+                            尚未指派
+                            <v-icon
+                              v-if="!isCompletedOrCancelled(viewFormData.status)"
+                              size="small"
+                              class="ms-1"
+                            >
+                              mdi-chevron-down
+                            </v-icon>
+                          </v-btn>
+                        </template>
+                        <v-list>
+                          <v-list-item
+                            v-for="designer in marketingDesigners"
+                            :key="designer._id"
+                            @click="updateAssignedDesigner(viewFormData._id, designer._id)"
+                          >
+                            <v-list-item-title>{{ designer.name }}{{ designer.userId ? ` (${designer.userId})` : '' }}</v-list-item-title>
+                          </v-list-item>
+                          <v-divider />
+                          <v-list-item
+                            @click="updateAssignedDesigner(viewFormData._id, null)"
+                          >
+                            <v-list-item-title class="text-red-darken-1">
+                              <v-icon
+                                size="small"
+                                class="me-2"
+                              >
+                                mdi-close
+                              </v-icon>
+                              清除指派
+                            </v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
                     </div>
                   </v-card>
                 </v-col>
@@ -1487,166 +1778,14 @@
                 <span class="text-blue-grey-darken-2 card-title">申請資訊</span>
               </div>
               <!-- 印刷相關特殊顯示 -->
-              <v-row v-if="viewFormData.productType === 'printing'">
-                <!-- 檔案欄位（最上方，可下載預覽） -->
-                <v-col
-                  v-if="viewFormData.files && viewFormData.files.length > 0"
-                  cols="12"
-                >
-                  <v-card
-                    class="info-item-card pa-3"
-                    variant="outlined"
-                  >
-                    <div class="d-flex align-center mb-2">
-                      <v-icon
-                        size="16"
-                        color="blue-grey-darken-1"
-                        class="me-2"
-                      >
-                        mdi-file-document
-                      </v-icon>
-                      <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">上傳檔案</span>
-                    </div>
-                    <div class="text-body-2 info-item-value">
-                      <div class="d-flex flex-column">
-                        <div
-                          v-for="(file, index) in viewFormData.files"
-                          :key="index"
-                          class="d-flex align-center mb-2 px-2 rounded-sm"
-                          style="border: 1px solid #e6e6e6;"
-                        >
-                          <v-icon
-                            size="small"
-                            class="me-2"
-                            :color="isImageFile(file) ? 'blue' : 'grey'"
-                          >
-                            {{ isImageFile(file) ? 'mdi-image' : 'mdi-file' }}
-                          </v-icon>
-                          <span class="text-grey-darken-1 me-2 flex-grow-1">{{ truncateFileName(getFileName(file), 25) }}</span>
-                          <!-- 圖片預覽按鈕 -->
-                          <v-btn
-                            v-if="isImageFile(file)"
-                            icon
-                            size="small"
-                            color="blue"
-                            variant="text"
-                            class="me-1"
-                            @click="openLightbox(viewFormData.files, index)"
-                          >
-                            <v-icon>mdi-eye</v-icon>
-                          </v-btn>
-                          <!-- 下載按鈕 -->
-                          <v-btn
-                            icon
-                            size="small"
-                            color="green"
-                            variant="text"
-                            @click="downloadFile(file)"
-                          >
-                            <v-icon>mdi-download</v-icon>
-                          </v-btn>
-                        </div>
-                        <!-- 批量下載按鈕 -->
-                        <v-btn
-                          color="green-darken-1"
-                          variant="outlined"
-                          size="small"
-                          prepend-icon="mdi-download-multiple"
-                          class="mt-2"
-                          @click="downloadAllFiles(viewFormData.files)"
-                        >
-                          下載所有檔案
-                        </v-btn>
-                      </div>
-                    </div>
-                  </v-card>
-                </v-col>
-                <!-- 依勾選子類型顯示卡片 -->
-                <template
-                  v-for="(section, sectionKey) in productTypeConfig?.sections"
-                  :key="sectionKey"
-                >
+              <template v-if="viewFormData.productType === 'printing'">
+                <!-- 共同欄位顯示區塊（最上方） -->
+                <v-row>
+                  <!-- 行程簡稱 -->
                   <v-col
-                    v-if="viewFormData.printingTypes?.[sectionKey]"
+                    v-if="viewFormData.tripShortName"
                     cols="12"
-                  >
-                    <v-card
-                      class="info-printing-card pa-3 mb-4"
-                      variant="outlined"
-                    >
-                      <div class="d-flex align-center mb-2">
-                        <v-icon
-                          size="16"
-                          color="blue-grey-darken-1"
-                          class="me-2"
-                        >
-                          mdi-shape
-                        </v-icon>
-                        <span class="sub-title text-blue-grey-darken-2 font-weight-bold">※ {{ section.title }}</span>
-                      </div>
-                      <v-divider class="mb-3" />
-                      <v-row>
-                        <v-col
-                          v-for="field in section.fields"
-                          :key="field.name"
-                          :cols="field.cols?.xs || 12"
-                          :sm="field.cols?.sm || 6"
-                          :lg="field.cols?.lg || 4"
-                        >
-                          <v-card
-                            class="info-item-card pa-3"
-                            variant="outlined"
-                          >
-                            <div class="d-flex align-center mb-2">
-                              <v-icon
-                                :icon="getFieldIcon(field.type)"
-                                size="16"
-                                color="blue-grey-darken-1"
-                                class="me-2"
-                              />
-                              <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">{{ getDisplayLabel(field.label) }}</span>
-                            </div>
-                            <div class="text-body-2 info-item-value">
-                              <template v-if="field.type === 'text'">
-                                <span
-                                  v-if="getNestedValue(viewFormData, field.name)"
-                                  style="white-space: pre-line;"
-                                >{{ getNestedValue(viewFormData, field.name) }}</span>
-                                <span v-else>( 無 )</span>
-                              </template>
-                              <template v-else-if="field.type === 'textarea'">
-                                <span
-                                  v-if="getNestedValue(viewFormData, field.name)"
-                                  style="white-space: pre-line;"
-                                >{{ getNestedValue(viewFormData, field.name) }}</span>
-                                <span v-else>( 無 )</span>
-                              </template>
-                              <template v-else-if="field.type === 'date'">
-                                {{ getNestedValue(viewFormData, field.name) ? formatDate(getNestedValue(viewFormData, field.name)) : '( 無 )' }}
-                              </template>
-                              <template v-else-if="field.type === 'number'">
-                                {{ getNestedValue(viewFormData, field.name) !== null && getNestedValue(viewFormData, field.name) !== undefined && getNestedValue(viewFormData, field.name) !== '' ? getNestedValue(viewFormData, field.name) : '( 無 )' }}
-                              </template>
-                              <template v-else-if="field.type === 'select'">
-                                {{ typeof getNestedValue(viewFormData, field.name) === 'boolean' ? (getNestedValue(viewFormData, field.name) ? '是' : '否') : '( 無 )' }}
-                              </template>
-                            </div>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </v-card>
-                  </v-col>
-                </template>
-              </v-row>
-              <v-row v-else>
-                <template
-                  v-for="field in visibleViewFormFields"
-                  :key="field.name"
-                >
-                  <v-col
-                    :cols="field.cols?.xs || 12"
-                    :sm="field.cols?.sm || 6"
-                    :lg="field.cols?.lg || 4"
+                    sm="6"
                   >
                     <v-card
                       class="info-item-card pa-3"
@@ -1654,238 +1793,556 @@
                     >
                       <div class="d-flex align-center mb-2">
                         <v-icon
-                          :icon="getFieldIcon(field.type)"
                           size="16"
                           color="blue-grey-darken-1"
                           class="me-2"
-                        />
-                        <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">{{ getDisplayLabel(field.label) }}</span>
+                        >
+                          mdi-text
+                        </v-icon>
+                        <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">行程簡稱</span>
                       </div>
                       <div class="text-body-2 info-item-value">
-                        <!-- 文字欄位 -->
-                        <template v-if="field.type === 'text'">
-                          <span
-                            v-if="viewFormData[field.name]"
-                            style="white-space: pre-line;"
-                          >{{ viewFormData[field.name] }}</span>
-                          <span v-else>( 無 )</span>
-                        </template>
-                        <!-- 多行文字欄位 -->
-                        <template v-else-if="field.type === 'textarea'">
-                          <span
-                            v-if="viewFormData[field.name]"
-                            style="white-space: pre-line;"
-                          >{{ viewFormData[field.name] }}</span>
-                          <span v-else>( 無 )</span>
-                        </template>
-                        <!-- 日期欄位 -->
-                        <template v-else-if="field.type === 'date'">
-                          {{ viewFormData[field.name] ? formatDate(viewFormData[field.name]) : '( 無 )' }}
-                        </template>
-                        <!-- 數字欄位 -->
-                        <template v-else-if="field.type === 'number'">
-                          {{ viewFormData[field.name] !== null && viewFormData[field.name] !== undefined && viewFormData[field.name] !== '' ? viewFormData[field.name] : '( 無 )' }}
-                        </template>
-                        <!-- 核取方塊 -->
-                        <template v-else-if="field.type === 'checkbox'">
-                          <v-icon :color="viewFormData[field.name] ? 'success' : 'grey'">
-                            {{ viewFormData[field.name] ? 'mdi-check-circle' : 'mdi-close-circle' }}
-                          </v-icon>
-                          {{ viewFormData[field.name] ? '是' : '否' }}
-                        </template>
-                        <!-- 下拉選單 -->
-                        <template v-else-if="field.type === 'select'">
-                          {{ typeof viewFormData[field.name] === 'boolean' ? (viewFormData[field.name] ? '是' : '否') : '( 無 )' }}
-                        </template>
-                        <!-- 檔案欄位 -->
-                        <template v-else-if="field.type === 'file'">
-                          <template v-if="viewFormData[field.name] && viewFormData[field.name].length > 0">
-                            <div class="d-flex flex-column">
-                              <div
-                                v-for="(file, index) in viewFormData[field.name]"
-                                :key="index"
-                                class="d-flex align-center mb-2 px-2 rounded-sm"
-                                style="border: 1px solid #e6e6e6;"
-                              >
-                                <v-icon
-                                  size="small"
-                                  class="me-2"
-                                  :color="isImageFile(file) ? 'blue' : 'grey'"
-                                >
-                                  {{ isImageFile(file) ? 'mdi-image' : 'mdi-file' }}
-                                </v-icon>
-                                <span class="text-grey-darken-1 me-2 flex-grow-1">{{ truncateFileName(getFileName(file), 25) }}</span>
-                                <!-- 圖片預覽按鈕 -->
-                                <v-btn
-                                  v-if="isImageFile(file)"
-                                  icon
-                                  size="small"
-                                  color="blue"
-                                  variant="text"
-                                  class="me-1"
-                                  @click="openLightbox(viewFormData[field.name], index)"
-                                >
-                                  <v-icon>mdi-eye</v-icon>
-                                </v-btn>
-                                <!-- 下載按鈕 -->
-                                <v-btn
-                                  icon
-                                  size="small"
-                                  color="green"
-                                  variant="text"
-                                  @click="downloadFile(file)"
-                                >
-                                  <v-icon>mdi-download</v-icon>
-                                </v-btn>
-                              </div>
-                              <!-- 批量下載按鈕 -->
-                              <v-btn
-                                color="green-darken-1"
-                                variant="outlined"
-                                size="small"
-                                prepend-icon="mdi-download-multiple"
-                                class="mt-2"
-                                @click="downloadAllFiles(viewFormData[field.name])"
-                              >
-                                下載所有檔案
-                              </v-btn>
-                            </div>
-                          </template>
-                          <template v-else>
-                            <span class="text-grey">( 無 )</span>
-                          </template>
-                        </template>
-                        <!-- 行程陣列欄位 -->
-                        <div
-                          v-else-if="field.type === 'array'"
-                          class="w-100 py-4 px-3 rounded"
+                        {{ viewFormData.tripShortName }}
+                      </div>
+                    </v-card>
+                  </v-col>
+                  <!-- 上傳檔案 -->
+                  <v-col
+                    v-if="viewFormData.files && viewFormData.files.length > 0"
+                    cols="12"
+                    :sm="viewFormData.tripShortName ? 6 : 12"
+                  >
+                    <v-card
+                      class="info-item-card pa-3"
+                      variant="outlined"
+                    >
+                      <div class="d-flex align-center mb-2">
+                        <v-icon
+                          size="16"
+                          color="blue-grey-darken-1"
+                          class="me-2"
                         >
+                          mdi-file-document
+                        </v-icon>
+                        <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">上傳檔案</span>
+                      </div>
+                      <div class="text-body-2 info-item-value">
+                        <div class="d-flex flex-column">
                           <div
-                            v-if="!viewFormData[field.name] || viewFormData[field.name].length === 0"
-                            class="text-center py-8"
+                            v-for="(file, index) in viewFormData.files"
+                            :key="index"
+                            class="d-flex align-center mb-2 px-2 rounded-sm"
+                            style="border: 1px solid #e6e6e6;"
                           >
                             <v-icon
-                              icon="mdi-map-marker-off"
-                              size="48"
-                              color="grey-lighten-1"
-                              class="mb-3"
-                            />
-                            <div class="text-grey-lighten-1">
-                              尚未新增任何行程
-                            </div>
-                          </div>
-
-                          <v-row v-else>
-                            <v-col
-                              v-for="(item, index) in viewFormData[field.name]"
-                              :key="index"
-                              cols="12"
-                              md="6"
-                              class="mb-1"
+                              size="small"
+                              class="me-2"
+                              :color="isImageFile(file) ? 'blue' : 'grey'"
                             >
-                              <div class="px-3 border rounded-lg h-100 d-flex flex-column">
-                                <div
-                                  class="d-flex justify-space-between align-center my-2"
-                                  style="height: 40px;"
-                                >
-                                  <span class="text-subtitle-2 text-grey-darken-1">行程 {{ index + 1 }}</span>
-                                </div>
-                                <v-row class="pb-2">
-                                  <!-- 團體名稱 -->
-                                  <v-col
-                                    cols="12"
-                                    lg="6"
-                                    class="pb-0"
-                                  >
-                                    <v-text-field
-                                      v-model="viewFormData[field.name][index].groupName"
-                                      label="* 團體名稱"
-                                      variant="outlined"
-                                      density="compact"
-                                      class="mb-1"
-                                      readonly
-                                      clearable
-                                    />
-                                  </v-col>
-                                  <!-- 出發日期 -->
-                                  <v-col
-                                    cols="12"
-                                    lg="6"
-                                    class="pb-0"
-                                  >
-                                    <v-text-field
-                                      v-model="viewFormData[field.name][index].departureDate"
-                                      label="出發日期"
-                                      variant="outlined"
-                                      density="compact"
-                                      class="mb-1"
-                                      readonly
-                                      clearable
-                                    />
-                                  </v-col>
-                                  <!-- 同業價 -->
-                                  <v-col
-                                    cols="12"
-                                    lg="6"
-                                    class="pb-0"
-                                  >
-                                    <v-text-field
-                                      v-model.number="viewFormData[field.name][index].agentPrice"
-                                      label="* 同業價"
-                                      type="number"
-                                      variant="outlined"
-                                      density="compact"
-                                      class="mb-1"
-                                      readonly
-                                      clearable
-                                      prepend-inner-icon="mdi-currency-usd"
-                                    />
-                                  </v-col>
-                                  <!-- 直客價 -->
-                                  <v-col
-                                    cols="12"
-                                    lg="6"
-                                    class="pb-0"
-                                  >
-                                    <v-text-field
-                                      v-model.number="viewFormData[field.name][index].retailPrice"
-                                      label="* 直客價"
-                                      type="number"
-                                      variant="outlined"
-                                      density="compact"
-                                      class="mb-1"
-                                      readonly
-                                      clearable
-                                      prepend-inner-icon="mdi-currency-usd"
-                                    />
-                                  </v-col>
-                                  <!-- 行程特色 -->
-                                  <v-col
-                                    cols="12"
-                                    class="pb-0"
-                                  >
-                                    <v-textarea
-                                      v-model="viewFormData[field.name][index].tripHighlights"
-                                      label="行程特色"
-                                      variant="outlined"
-                                      density="compact"
-                                      class="mb-1"
-                                      readonly
-                                      auto-grow
-                                      rows="3"
-                                      clearable
-                                    />
-                                  </v-col>
-                                </v-row>
-                              </div>
-                            </v-col>
-                          </v-row>
+                              {{ isImageFile(file) ? 'mdi-image' : 'mdi-file' }}
+                            </v-icon>
+                            <span class="text-grey-darken-1 me-2 flex-grow-1">{{ truncateFileName(getFileName(file), 25) }}</span>
+                            <!-- 圖片預覽按鈕 -->
+                            <v-btn
+                              v-if="isImageFile(file)"
+                              icon
+                              size="small"
+                              color="blue"
+                              variant="text"
+                              class="me-1"
+                              @click="openLightbox(viewFormData.files, index)"
+                            >
+                              <v-icon>mdi-eye</v-icon>
+                            </v-btn>
+                            <!-- 下載按鈕 -->
+                            <v-btn
+                              icon
+                              size="small"
+                              color="green"
+                              variant="text"
+                              @click="downloadFile(file)"
+                            >
+                              <v-icon>mdi-download</v-icon>
+                            </v-btn>
+                          </div>
+                          <!-- 批量下載按鈕 -->
+                          <v-btn
+                            color="green-darken-1"
+                            variant="outlined"
+                            size="small"
+                            prepend-icon="mdi-download-multiple"
+                            class="mt-2"
+                            @click="downloadAllFiles(viewFormData.files)"
+                          >
+                            下載所有檔案
+                          </v-btn>
                         </div>
                       </div>
                     </v-card>
                   </v-col>
-                </template>
-              </v-row>
+                </v-row>
+                <!-- 依勾選子類型顯示卡片 -->
+                <v-row>
+                  <template
+                    v-for="(section, sectionKey) in productTypeConfig?.sections"
+                    :key="sectionKey"
+                  >
+                    <v-col
+                      v-if="viewFormData.printingTypes?.[sectionKey]"
+                      cols="12"
+                    >
+                      <v-card
+                        class="info-printing-card pa-3 mb-4"
+                        variant="outlined"
+                      >
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            size="16"
+                            color="blue-grey-darken-1"
+                            class="me-2"
+                          >
+                            mdi-shape
+                          </v-icon>
+                          <span class="sub-title text-blue-grey-darken-2 font-weight-bold">※ {{ section.title }}</span>
+                        </div>
+                        <v-divider class="mb-3" />
+                        <v-row>
+                          <v-col
+                            v-for="field in section.fields"
+                            :key="field.name"
+                            :cols="field.cols?.xs || 12"
+                            :sm="field.cols?.sm || 6"
+                            :lg="field.cols?.lg || 4"
+                          >
+                            <v-card
+                              class="info-item-card pa-3"
+                              variant="outlined"
+                            >
+                              <div class="d-flex align-center mb-2">
+                                <v-icon
+                                  :icon="getFieldIcon(field.type)"
+                                  size="16"
+                                  color="blue-grey-darken-1"
+                                  class="me-2"
+                                />
+                                <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">{{ getDisplayLabel(field.label) }}</span>
+                              </div>
+                              <div class="text-body-2 info-item-value">
+                                <template v-if="field.type === 'text'">
+                                  <span
+                                    v-if="getNestedValue(viewFormData, field.name)"
+                                    style="white-space: pre-line;"
+                                  >{{ getNestedValue(viewFormData, field.name) }}</span>
+                                  <span v-else>( 無 )</span>
+                                </template>
+                                <template v-else-if="field.type === 'textarea'">
+                                  <span
+                                    v-if="getNestedValue(viewFormData, field.name)"
+                                    style="white-space: pre-line;"
+                                  >{{ getNestedValue(viewFormData, field.name) }}</span>
+                                  <span v-else>( 無 )</span>
+                                </template>
+                                <template v-else-if="field.type === 'date'">
+                                  {{ getNestedValue(viewFormData, field.name) ? formatDate(getNestedValue(viewFormData, field.name)) : '( 無 )' }}
+                                </template>
+                                <template v-else-if="field.type === 'number'">
+                                  {{ getNestedValue(viewFormData, field.name) !== null && getNestedValue(viewFormData, field.name) !== undefined && getNestedValue(viewFormData, field.name) !== '' ? getNestedValue(viewFormData, field.name) : '( 無 )' }}
+                                </template>
+                                <template v-else-if="field.type === 'select'">
+                                  {{ typeof getNestedValue(viewFormData, field.name) === 'boolean' ? (getNestedValue(viewFormData, field.name) ? '是' : '否') : '( 無 )' }}
+                                </template>
+                              </div>
+                            </v-card>
+                          </v-col>
+                        </v-row>
+                      </v-card>
+                    </v-col>
+                  </template>
+                </v-row>
+              </template>
+              <!-- 館格修改、下架特殊顯示 -->
+              <template v-else-if="viewFormData.productType === 'galleryModifyRemove'">
+                <v-row>
+                  <!-- 根據選擇顯示對應資料 -->
+                  <template
+                    v-for="(section, sectionKey) in productTypeConfig?.sections"
+                    :key="sectionKey"
+                  >
+                    <v-col
+                      v-if="viewFormData.galleryTypes?.[sectionKey]"
+                      cols="12"
+                    >
+                      <v-card
+                        class="info-printing-card pa-3 mb-4"
+                        variant="outlined"
+                      >
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            size="16"
+                            color="blue-grey-darken-1"
+                            class="me-2"
+                          >
+                            mdi-shape
+                          </v-icon>
+                          <span class="sub-title text-blue-grey-darken-2 font-weight-bold">※ {{ section.title }}</span>
+                        </div>
+                        <v-divider class="mb-3" />
+                        <v-row>
+                          <v-col
+                            v-for="field in section.fields"
+                            :key="field.name"
+                            :cols="field.cols?.xs || 12"
+                            :sm="field.cols?.sm || 6"
+                            :lg="field.cols?.lg || 4"
+                          >
+                            <v-card
+                              class="info-item-card pa-3"
+                              variant="outlined"
+                            >
+                              <div class="d-flex align-center mb-2">
+                                <v-icon
+                                  :icon="getFieldIcon(field.type)"
+                                  size="16"
+                                  color="blue-grey-darken-1"
+                                  class="me-2"
+                                />
+                                <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">{{ getDisplayLabel(field.label) }}</span>
+                              </div>
+                              <div class="text-body-2 info-item-value">
+                                <template v-if="field.type === 'text'">
+                                  <span
+                                    v-if="getNestedValue(viewFormData, field.name)"
+                                    style="white-space: pre-line;"
+                                  >{{ getNestedValue(viewFormData, field.name) }}</span>
+                                  <span v-else>( 無 )</span>
+                                </template>
+                                <template v-else-if="field.type === 'textarea'">
+                                  <span
+                                    v-if="getNestedValue(viewFormData, field.name)"
+                                    style="white-space: pre-line;"
+                                  >{{ getNestedValue(viewFormData, field.name) }}</span>
+                                  <span v-else>( 無 )</span>
+                                </template>
+                                <template v-else-if="field.type === 'file'">
+                                  <template v-if="getNestedValue(viewFormData, field.name) && getNestedValue(viewFormData, field.name).length > 0">
+                                    <div class="d-flex flex-column">
+                                      <div
+                                        v-for="(file, index) in getNestedValue(viewFormData, field.name)"
+                                        :key="index"
+                                        class="d-flex align-center mb-2 px-2 rounded-sm"
+                                        style="border: 1px solid #e6e6e6;"
+                                      >
+                                        <v-icon
+                                          size="small"
+                                          class="me-2"
+                                          :color="isImageFile(file) ? 'blue' : 'grey'"
+                                        >
+                                          {{ isImageFile(file) ? 'mdi-image' : 'mdi-file' }}
+                                        </v-icon>
+                                        <span class="text-grey-darken-1 me-2 flex-grow-1">{{ truncateFileName(getFileName(file), 25) }}</span>
+                                        <!-- 圖片預覽按鈕 -->
+                                        <v-btn
+                                          v-if="isImageFile(file)"
+                                          icon
+                                          size="small"
+                                          color="blue"
+                                          variant="text"
+                                          class="me-1"
+                                          @click="openLightbox(getNestedValue(viewFormData, field.name), index)"
+                                        >
+                                          <v-icon>mdi-eye</v-icon>
+                                        </v-btn>
+                                        <!-- 下載按鈕 -->
+                                        <v-btn
+                                          icon
+                                          size="small"
+                                          color="green"
+                                          variant="text"
+                                          @click="downloadFile(file)"
+                                        >
+                                          <v-icon>mdi-download</v-icon>
+                                        </v-btn>
+                                      </div>
+                                      <!-- 批量下載按鈕 -->
+                                      <v-btn
+                                        color="green-darken-1"
+                                        variant="outlined"
+                                        size="small"
+                                        prepend-icon="mdi-download-multiple"
+                                        class="mt-2"
+                                        @click="downloadAllFiles(getNestedValue(viewFormData, field.name))"
+                                      >
+                                        下載所有檔案
+                                      </v-btn>
+                                    </div>
+                                  </template>
+                                  <template v-else>
+                                    <span class="text-grey">( 無 )</span>
+                                  </template>
+                                </template>
+                              </div>
+                            </v-card>
+                          </v-col>
+                        </v-row>
+                      </v-card>
+                    </v-col>
+                  </template>
+                </v-row>
+              </template>
+              <template v-else>
+                <v-row>
+                  <template
+                    v-for="field in visibleViewFormFields"
+                    :key="field.name"
+                  >
+                    <v-col
+                      :cols="field.cols?.xs || 12"
+                      :sm="field.cols?.sm || 6"
+                      :lg="field.cols?.lg || 4"
+                    >
+                      <v-card
+                        class="info-item-card pa-3"
+                        variant="outlined"
+                      >
+                        <div class="d-flex align-center mb-2">
+                          <v-icon
+                            :icon="getFieldIcon(field.type)"
+                            size="16"
+                            color="blue-grey-darken-1"
+                            class="me-2"
+                          />
+                          <span class="sub-card-title font-weight-bold text-blue-grey-darken-1">{{ getDisplayLabel(field.label) }}</span>
+                        </div>
+                        <div class="text-body-2 info-item-value">
+                          <!-- 文字欄位 -->
+                          <template v-if="field.type === 'text'">
+                            <span
+                              v-if="viewFormData[field.name]"
+                              style="white-space: pre-line;"
+                            >{{ viewFormData[field.name] }}</span>
+                            <span v-else>( 無 )</span>
+                          </template>
+                          <!-- 多行文字欄位 -->
+                          <template v-else-if="field.type === 'textarea'">
+                            <span
+                              v-if="viewFormData[field.name]"
+                              style="white-space: pre-line;"
+                            >{{ viewFormData[field.name] }}</span>
+                            <span v-else>( 無 )</span>
+                          </template>
+                          <!-- 日期欄位 -->
+                          <!-- 講座活動的日期時間欄位顯示日期+時間 -->
+                          <template v-else-if="field.type === 'date' && (field.name === 'eventDateTime' || field.name === 'entryDateTime') && viewFormData.productType === 'lectureEvent'">
+                            {{ viewFormData[field.name] ? formatDateTime(viewFormData[field.name]) : '( 無 )' }}
+                          </template>
+                          <template v-else-if="field.type === 'date'">
+                            {{ viewFormData[field.name] ? formatDate(viewFormData[field.name]) : '( 無 )' }}
+                          </template>
+                          <!-- 數字欄位 -->
+                          <template v-else-if="field.type === 'number'">
+                            {{ viewFormData[field.name] !== null && viewFormData[field.name] !== undefined && viewFormData[field.name] !== '' ? viewFormData[field.name] : '( 無 )' }}
+                          </template>
+                          <!-- 核取方塊 -->
+                          <template v-else-if="field.type === 'checkbox'">
+                            <v-icon :color="viewFormData[field.name] ? 'success' : 'grey'">
+                              {{ viewFormData[field.name] ? 'mdi-check-circle' : 'mdi-close-circle' }}
+                            </v-icon>
+                            {{ viewFormData[field.name] ? '是' : '否' }}
+                          </template>
+                          <!-- 下拉選單 -->
+                          <template v-else-if="field.type === 'select'">
+                            {{ typeof viewFormData[field.name] === 'boolean' ? (viewFormData[field.name] ? '是' : '否') : '( 無 )' }}
+                          </template>
+                          <!-- 檔案欄位 -->
+                          <template v-else-if="field.type === 'file'">
+                            <template v-if="viewFormData[field.name] && viewFormData[field.name].length > 0">
+                              <div class="d-flex flex-column">
+                                <div
+                                  v-for="(file, index) in viewFormData[field.name]"
+                                  :key="index"
+                                  class="d-flex align-center mb-2 px-2 rounded-sm"
+                                  style="border: 1px solid #e6e6e6;"
+                                >
+                                  <v-icon
+                                    size="small"
+                                    class="me-2"
+                                    :color="isImageFile(file) ? 'blue' : 'grey'"
+                                  >
+                                    {{ isImageFile(file) ? 'mdi-image' : 'mdi-file' }}
+                                  </v-icon>
+                                  <span class="text-grey-darken-1 me-2 flex-grow-1">{{ truncateFileName(getFileName(file), 25) }}</span>
+                                  <!-- 圖片預覽按鈕 -->
+                                  <v-btn
+                                    v-if="isImageFile(file)"
+                                    icon
+                                    size="small"
+                                    color="blue"
+                                    variant="text"
+                                    class="me-1"
+                                    @click="openLightbox(viewFormData[field.name], index)"
+                                  >
+                                    <v-icon>mdi-eye</v-icon>
+                                  </v-btn>
+                                  <!-- 下載按鈕 -->
+                                  <v-btn
+                                    icon
+                                    size="small"
+                                    color="green"
+                                    variant="text"
+                                    @click="downloadFile(file)"
+                                  >
+                                    <v-icon>mdi-download</v-icon>
+                                  </v-btn>
+                                </div>
+                                <!-- 批量下載按鈕 -->
+                                <v-btn
+                                  color="green-darken-1"
+                                  variant="outlined"
+                                  size="small"
+                                  prepend-icon="mdi-download-multiple"
+                                  class="mt-2"
+                                  @click="downloadAllFiles(viewFormData[field.name])"
+                                >
+                                  下載所有檔案
+                                </v-btn>
+                              </div>
+                            </template>
+                            <template v-else>
+                              <span class="text-grey">( 無 )</span>
+                            </template>
+                          </template>
+                          <!-- 行程陣列欄位 -->
+                          <div
+                            v-else-if="field.type === 'array'"
+                            class="w-100 py-4 px-3 rounded"
+                          >
+                            <div
+                              v-if="!viewFormData[field.name] || viewFormData[field.name].length === 0"
+                              class="text-center py-8"
+                            >
+                              <v-icon
+                                icon="mdi-map-marker-off"
+                                size="48"
+                                color="grey-lighten-1"
+                                class="mb-3"
+                              />
+                              <div class="text-grey-lighten-1">
+                                尚未新增任何行程
+                              </div>
+                            </div>
+
+                            <v-row v-else>
+                              <v-col
+                                v-for="(item, index) in viewFormData[field.name]"
+                                :key="index"
+                                cols="12"
+                                md="6"
+                                class="mb-1"
+                              >
+                                <div class="px-3 border rounded-lg h-100 d-flex flex-column">
+                                  <div
+                                    class="d-flex justify-space-between align-center my-2"
+                                    style="height: 40px;"
+                                  >
+                                    <span class="text-subtitle-2 text-grey-darken-1">行程 {{ index + 1 }}</span>
+                                  </div>
+                                  <v-row class="pb-2">
+                                    <!-- 團體名稱 -->
+                                    <v-col
+                                      cols="12"
+                                      lg="6"
+                                      class="pb-0"
+                                    >
+                                      <v-text-field
+                                        v-model="viewFormData[field.name][index].groupName"
+                                        label="* 團體名稱"
+                                        variant="outlined"
+                                        density="compact"
+                                        class="mb-1"
+                                        readonly
+                                        clearable
+                                      />
+                                    </v-col>
+                                    <!-- 出發日期 -->
+                                    <v-col
+                                      cols="12"
+                                      lg="6"
+                                      class="pb-0"
+                                    >
+                                      <v-text-field
+                                        v-model="viewFormData[field.name][index].departureDate"
+                                        label="出發日期"
+                                        variant="outlined"
+                                        density="compact"
+                                        class="mb-1"
+                                        readonly
+                                        clearable
+                                      />
+                                    </v-col>
+                                    <!-- 同業價 -->
+                                    <v-col
+                                      cols="12"
+                                      lg="6"
+                                      class="pb-0"
+                                    >
+                                      <v-text-field
+                                        v-model.number="viewFormData[field.name][index].agentPrice"
+                                        label="* 同業價"
+                                        type="number"
+                                        variant="outlined"
+                                        density="compact"
+                                        class="mb-1"
+                                        readonly
+                                        clearable
+                                        prepend-inner-icon="mdi-currency-usd"
+                                      />
+                                    </v-col>
+                                    <!-- 直客價 -->
+                                    <v-col
+                                      cols="12"
+                                      lg="6"
+                                      class="pb-0"
+                                    >
+                                      <v-text-field
+                                        v-model.number="viewFormData[field.name][index].retailPrice"
+                                        label="* 直客價"
+                                        type="number"
+                                        variant="outlined"
+                                        density="compact"
+                                        class="mb-1"
+                                        readonly
+                                        clearable
+                                        prepend-inner-icon="mdi-currency-usd"
+                                      />
+                                    </v-col>
+                                    <!-- 行程特色 -->
+                                    <v-col
+                                      cols="12"
+                                      class="pb-0"
+                                    >
+                                      <v-textarea
+                                        v-model="viewFormData[field.name][index].tripHighlights"
+                                        label="行程特色"
+                                        variant="outlined"
+                                        density="compact"
+                                        class="mb-1"
+                                        readonly
+                                        auto-grow
+                                        rows="3"
+                                        clearable
+                                      />
+                                    </v-col>
+                                  </v-row>
+                                </div>
+                              </v-col>
+                            </v-row>
+                          </div>
+                        </div>
+                      </v-card>
+                    </v-col>
+                  </template>
+                </v-row>
+              </template>
             </v-col>
           </v-row>
         </v-card-text>
@@ -1909,15 +2366,29 @@
       max-width="500"
       persistent
     >
-      <v-card class="rounded-lg pb-4">
-        <v-card-title class="d-flex align-center px-6 py-4 bg-orange-darken-2">
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-orange-darken-2">
           <v-icon
             icon="mdi-alert-circle"
-            size="20"
+            :size="smAndUp ? '20' : '18'"
             color="white"
-            class="me-3"
+            class="me-2"
           />
           <span class="card-title text-white">確認狀態變更</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="cancelStatusUpdate"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
         </v-card-title>
 
         <v-card-text class="px-6 pt-6 pb-0">
@@ -1956,18 +2427,28 @@
                 />
                 <span class="text-orange-darken-2 font-weight-bold">重要提醒</span>
               </div>
-              <p class="text-body-2 text-grey-darken-1 mb-0">
+              <p
+                v-if="statusConfirmDialog.productType === 'customerComment'"
+                class="text-body-2 text-grey-darken-1 mb-0"
+              >
+                更改為結案狀態後，申請單狀態將會更新。<strong>客戶評論的圖片將會被保留</strong>，不會被刪除。
+              </p>
+              <p
+                v-else
+                class="text-body-2 text-grey-darken-1 mb-0"
+              >
                 更改為結案狀態後，<strong>申請者上傳的所有圖片及檔案將會被永久刪除</strong>，此操作無法復原。
               </p>
             </div>
           </div>
         </v-card-text>
 
-        <v-card-actions class="px-6 py-4">
+        <v-card-actions class="px-6 pb-6 pt-2">
           <v-spacer />
           <v-btn
             variant="outlined"
             color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
             @click="cancelStatusUpdate"
           >
             取消變更
@@ -1976,6 +2457,7 @@
             color="orange-darken-2"
             class="ms-2"
             variant="outlined"
+            :size="smAndUp ? 'default' : 'small'"
             :loading="updatingStatus.has(statusConfirmDialog.designRequestId)"
             @click="confirmStatusUpdate"
           >
@@ -1985,373 +2467,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- 通知 EMAIL 管理對話框 -->
-    <v-dialog
-      v-model="notificationEmailDialog.show"
-      max-width="1000"
-      persistent
-    >
-      <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-1 bg-blue-grey-darken-2">
-          <v-icon
-            icon="mdi-email-multiple"
-            size="20"
-            color="white"
-            class="me-3"
-          />
-          <span class="card-title text-white">通知設定管理</span>
-          <v-spacer />
-          <v-btn
-            icon
-            variant="plain"
-            color="white"
-            :ripple="false"
-            class="opacity-100"
-            @click="closeNotificationEmailDialog"
-          >
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-
-        <v-card-text class="px-6 py-6">
-          <!-- 新增通知設定表單 -->
-          <v-form ref="notificationEmailFormRef">
-            <v-row>
-              <v-col cols="12">
-                <div class="d-flex align-center mb-0">
-                  <v-icon
-                    icon="mdi-plus-circle"
-                    size="18"
-                    color="blue-grey-darken-2"
-                    class="me-2"
-                  />
-                  <span class="text-blue-grey-darken-2 card-title">新增通知設定</span>
-                </div>
-              </v-col>
-
-              <v-col cols="12">
-                <v-autocomplete
-                  v-model="notificationEmailForm.user"
-                  :items="availableUsers"
-                  item-title="label"
-                  item-value="value"
-                  label="* 選擇用戶"
-                  variant="outlined"
-                  density="compact"
-                  :rules="[v => !!v || '請選擇用戶']"
-                  prepend-inner-icon="mdi-account"
-                  :filter="customFilter"
-                  clearable
-                />
-              </v-col>
-
-              <v-col
-                cols="12"
-                class="pt-0 mb-3"
-              >
-                <v-card
-                  class="pa-4 elevation-0 notification-email-card"
-                >
-                  <div class="d-flex align-center mb-3">
-                    <v-icon
-                      icon="mdi-checkbox-multiple-marked-outline"
-                      size="18"
-                      color="grey-darken-1"
-                      class="me-2"
-                    />
-                    <span class="text-grey-darken-1 font-weight-bold">選擇需要通知的大分類</span>
-                  </div>
-
-                  <v-row>
-                    <v-col
-                      v-for="category in categoryOptions"
-                      :key="category.value"
-                      cols="12"
-                      sm="6"
-                      md="2"
-                    >
-                      <v-checkbox
-                        :model-value="notificationEmailForm.categories.includes(category.value)"
-                        :label="category.label"
-                        color="grey-darken-1"
-                        hide-details
-                        density="compact"
-                        @update:model-value="(checked) => toggleCategory(category.value, checked)"
-                      />
-                    </v-col>
-                  </v-row>
-                </v-card>
-              </v-col>
-
-              <v-col cols="12">
-                <v-textarea
-                  v-model="notificationEmailForm.note"
-                  label="備註"
-                  variant="outlined"
-                  density="compact"
-                  rows="2"
-                  prepend-inner-icon="mdi-note-text"
-                />
-              </v-col>
-
-              <v-col
-                cols="12"
-                class="d-flex justify-end pt-0"
-              >
-                <v-btn
-                  color="teal-darken-2"
-                  variant="outlined"
-                  :size="smAndUp ? 'default' : 'small'"
-                  :loading="addingEmail"
-                  @click="addNotificationEmail"
-                >
-                  新增
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-form>
-
-          <v-divider class="my-6" />
-
-          <!-- 通知設定列表 -->
-          <div>
-            <div class="d-flex align-center mb-4">
-              <v-icon
-                icon="mdi-format-list-bulleted"
-                size="18"
-                color="blue-grey-darken-2"
-                class="me-2"
-              />
-              <span class="text-blue-grey-darken-2 card-title">通知設定列表</span>
-            </div>
-
-            <template v-if="notificationEmailsLoading">
-              <div class="d-flex justify-center align-center py-8">
-                <v-progress-circular
-                  indeterminate
-                  color="blue-grey-darken-2"
-                  size="40"
-                />
-              </div>
-            </template>
-            <template v-else>
-              <div
-                v-if="notificationEmails.length === 0"
-                class="text-center py-8"
-              >
-                <v-icon
-                  icon="mdi-email-off"
-                  size="48"
-                  color="grey-lighten-1"
-                  class="mb-3"
-                />
-                <div class="text-grey-lighten-1">
-                  尚未設定任何EMAIL
-                </div>
-              </div>
-              <v-list v-else>
-                <v-list-item
-                  v-for="email in notificationEmails"
-                  :key="email._id"
-                  class="mb-3 border rounded px-4 py-3"
-                  style="flex-direction: column; align-items: flex-start;"
-                >
-                  <div class="d-flex align-center mb-1">
-                    <v-icon
-                      icon="mdi-account-circle"
-                      size="22"
-                      color="blue-grey-darken-2"
-                      class="me-3"
-                    />
-                    <span class="text-grey-darken-3 font-weight-bold me-4">{{ email.user?.name }}</span>
-                    <span
-                      class="me-4 text-grey-darken-2"
-                      style="font-size: 14px;"
-                    >{{ email.user?.email }}</span>
-                    <span
-                      class="me-4 text-grey"
-                      style="font-size: 14px;"
-                    >備註：{{ email.note || '' }}</span>
-                    <v-spacer />
-                    <v-btn
-                      icon
-                      color="light-blue-darken-4"
-                      variant="plain"
-                      size="small"
-                      @click="openEditEmailDialog(email)"
-                    >
-                      <v-icon>mdi-pencil</v-icon>
-                    </v-btn>
-                    <v-btn
-                      icon
-                      color="red-darken-1"
-                      variant="plain"
-                      size="small"
-                      :loading="deletingEmailId === email._id"
-                      @click="openDeleteEmailConfirmDialog(email)"
-                    >
-                      <v-icon>mdi-delete</v-icon>
-                    </v-btn>
-                  </div>
-                  <div class="d-flex align-center flex-wrap mt-1">
-                    <v-chip
-                      v-for="category in email.categories"
-                      :key="category"
-                      color="blue-grey-darken-2"
-                      text-color="white"
-                      class="me-2 mb-1 font-weight-bold"
-                      size="small"
-                      label
-                    >
-                      {{ getCategoryLabel(category) }}
-                    </v-chip>
-                  </div>
-                </v-list-item>
-              </v-list>
-            </template>
-          </div>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <!-- 編輯通知設定對話框 -->
-    <v-dialog
-      v-model="editEmailDialog.show"
-      max-width="800"
-      persistent
-    >
-      <v-card class="rounded-lg">
-        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-darken-1">
-          <v-icon
-            icon="mdi-pencil"
-            size="20"
-            color="white"
-            class="me-3"
-          />
-          <span class="card-title text-white">編輯通知設定</span>
-          <v-spacer />
-          <v-btn
-            icon
-            variant="text"
-            color="white"
-            @click="closeEditEmailDialog"
-          >
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
-
-        <v-card-text class="px-6 py-6">
-          <v-form ref="editEmailFormRef">
-            <v-row>
-              <v-col cols="12">
-                <div class="d-flex align-center mb-3">
-                  <v-icon
-                    icon="mdi-account-circle"
-                    size="18"
-                    color="blue-darken-1"
-                    class="me-2"
-                  />
-                  <span class="text-blue-darken-1 card-title">用戶資訊</span>
-                </div>
-                <v-card
-                  class="pa-4 elevation-0 notification-email-card mb-4"
-                >
-                  <div class="d-flex align-center">
-                    <v-icon
-                      icon="mdi-account"
-                      size="20"
-                      color="grey-darken-1"
-                      class="me-3"
-                    />
-                    <div>
-                      <div class="font-weight-bold text-grey-darken-3">
-                        {{ editEmailForm.userName }}
-                      </div>
-                      <div class="text-grey-darken-2">
-                        {{ editEmailForm.userEmail }}
-                      </div>
-                    </div>
-                  </div>
-                </v-card>
-              </v-col>
-
-              <v-col
-                cols="12"
-                class="pt-0 mb-3"
-              >
-                <v-card
-                  class="pa-4 elevation-0 notification-email-card"
-                >
-                  <div class="d-flex align-center mb-3">
-                    <v-icon
-                      icon="mdi-checkbox-multiple-marked-outline"
-                      size="18"
-                      color="grey-darken-1"
-                      class="me-2"
-                    />
-                    <span class="text-grey-darken-1 font-weight-bold">選擇需要通知的大分類</span>
-                  </div>
-
-                  <v-row>
-                    <v-col
-                      v-for="category in categoryOptions"
-                      :key="category.value"
-                      cols="12"
-                      sm="6"
-                      md="4"
-                    >
-                      <v-checkbox
-                        :model-value="editEmailForm.categories.includes(category.value)"
-                        :label="category.label"
-                        color="grey-darken-1"
-                        hide-details
-                        density="compact"
-                        @update:model-value="(checked) => toggleEditCategory(category.value, checked)"
-                      />
-                    </v-col>
-                  </v-row>
-                </v-card>
-              </v-col>
-
-              <v-col cols="12">
-                <v-textarea
-                  v-model="editEmailForm.note"
-                  label="備註"
-                  variant="outlined"
-                  density="compact"
-                  rows="2"
-                  prepend-inner-icon="mdi-note-text"
-                />
-              </v-col>
-
-              <v-col
-                cols="12"
-                class="d-flex justify-end pt-0"
-              >
-                <v-btn
-                  color="blue-darken-1"
-                  variant="outlined"
-                  :loading="updatingEmail"
-                  @click="updateNotificationEmail"
-                >
-                  更新
-                </v-btn>
-              </v-col>
-            </v-row>
-          </v-form>
-        </v-card-text>
-      </v-card>
-    </v-dialog>
-
-    <!-- 刪除通知設定確認對話框 -->
-    <ConfirmDeleteDialog
-      v-model="deleteEmailConfirmDialog.show"
-      title="確認刪除通知設定"
-      :message="deleteEmailConfirmDialog.message"
-      confirm-button-text="確認"
-      cancel-button-text="取消"
-      @confirm="confirmDeleteNotificationEmail"
-    />
 
     <!-- 指派處理人員確認對話框 -->
     <ConfirmDialog
@@ -2365,6 +2480,20 @@
       header-color="bg-blue-darken-1"
       header-icon="mdi-account-check"
       @confirm="confirmAssignDesigner"
+    />
+
+    <!-- 刪除確認對話框 -->
+    <ConfirmDialog
+      v-model="deleteConfirmDialog.show"
+      :max-width="320"
+      title="確認刪除申請單"
+      :message="`確定要刪除申請單 <strong>${deleteConfirmDialog.designRequestNumber}</strong> 嗎？此操作無法復原。`"
+      confirm-button-text="確認刪除"
+      cancel-button-text="取消"
+      confirm-button-color="red-darken-1"
+      header-color="bg-red-darken-1"
+      header-icon="mdi-alert-circle"
+      @confirm="confirmDelete"
     />
 
     <!-- 部門備註編輯對話框 -->
@@ -2468,21 +2597,22 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
-import { definePage } from 'vue-router/auto'
+import { definePage, useRouter } from 'vue-router/auto'
 import { useDisplay } from 'vuetify'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
-import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
+import debounce from 'lodash/debounce'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
-// 移除未使用的 userStore 匯入
+import ImageLightbox from '@/components/ImageLightbox.vue'
+import { usePermissionStore } from '@/stores/permission'
 
 // 頁面定義
 definePage({
   meta: {
-    title: '行銷美編需求申請管理 | TEST',
+    title: '行銷美編申請管理 | Ystravel',
     login: true,
     permission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ'
   }
@@ -2490,7 +2620,8 @@ definePage({
 
 const { apiAuth } = useApi()
 const createSnackbar = useSnackbar()
-// 移除未使用的 userStore 變數
+const router = useRouter()
+const permissionStore = usePermissionStore()
 const { smAndUp } = useDisplay()
 const buttonSize = computed(() => !smAndUp.value ? 'small' : 'default')
 
@@ -2501,14 +2632,7 @@ const imagePreviewDialog = reactive({
   currentImage: null
 })
 
-// 燈箱對話框
-const lightboxDialog = reactive({
-  show: false,
-  currentImage: null,
-  currentImageName: '',
-  currentIndex: 0,
-  images: []
-})
+const imageLightboxRef = ref(null)
 
 const loading = ref(false)
 const tableItems = ref([])
@@ -2520,13 +2644,14 @@ const tableOptions = reactive({
 })
 const tableHeaders = [
   { title: '申請編號', key: 'designRequestNumber', sortable: true },
-  { title: '申請日期', key: 'applicationDate', sortable: true },
+  { title: '申請時間', key: 'applicationDate', sortable: true },
   { title: '申請人', key: 'applicant.name', sortable: false },
   { title: '申請類型', key: 'productType', minWidth: 100, sortable: false },
   { title: '狀態', key: 'status', align: 'center', sortable: true },
   { title: '處理人員', key: 'assignedDesigner.name', align: 'center', sortable: false },
   { title: '部門備註', key: 'departmentNote', width: 300, align: 'center', sortable: false },
-  { title: '操作', key: 'actions', align: 'center', sortable: false }
+  { title: '操作', key: 'actions', align: 'center', sortable: false },
+  { title: '轉換', key: 'convertedTask', align: 'center', sortable: false }
 ]
 const statusOptions = [
   { value: 'pending', text: '待處理' },
@@ -2551,12 +2676,16 @@ const productTypeOptions = ref([])
 const productCategoryOptions = ref([])
 const searchCriteria = reactive({
   applicationDate: [],
-  applicant: '',
-  productCategory: '',
-  productType: '',
-  status: '',
-  assignedDesigner: ''
+  applicant: null,
+  productCategory: null,
+  productType: null,
+  status: null,
+  assignedDesigner: null
 })
+
+// 快速搜尋
+const quickSearch = ref('')
+const isSearching = ref(false)
 
 // 新增查看對話框相關變數
 const viewDialog = reactive({ show: false })
@@ -2569,49 +2698,10 @@ const statusConfirmDialog = reactive({
   designRequestId: null,
   newStatus: null,
   currentStatus: null,
-  designRequestNumber: ''
+  designRequestNumber: '',
+  productType: ''
 })
 
-// 通知 EMAIL 管理相關變數
-const notificationEmailDialog = reactive({ show: false })
-const notificationEmailForm = reactive({
-  user: '',
-  categories: [],
-  note: ''
-})
-const notificationEmailFormRef = ref(null)
-const notificationEmails = ref([])
-const users = ref([])
-const addingEmail = ref(false)
-
-// 大分類選項
-const categoryOptions = [
-  { value: 'printing', label: '印刷相關' },
-  { value: 'map', label: '地圖相關' },
-  { value: 'dm', label: 'DM相關' },
-  { value: 'electronic', label: '電子說資' }
-]
-
-// 編輯 EMAIL 對話框相關變數
-const editEmailDialog = reactive({ show: false })
-const editEmailForm = reactive({
-  id: '',
-  userName: '',
-  userEmail: '',
-  categories: [],
-  note: ''
-})
-const editEmailFormRef = ref(null)
-const updatingEmail = ref(false)
-const originalEditEmailData = ref({}) // 新增：記錄原始資料
-
-// 刪除 EMAIL 確認對話框相關變數
-const deleteEmailConfirmDialog = reactive({
-  show: false,
-  emailId: null,
-  emailName: '',
-  message: ''
-})
 
 // 部門備註編輯對話框相關變數
 const departmentNoteDialog = reactive({
@@ -2622,6 +2712,7 @@ const departmentNoteDialog = reactive({
   newNote: ''
 })
 const updatingDepartmentNote = ref(false)
+
 
 // URL插入相關變數
 const departmentNoteUrlInput = ref('')
@@ -2635,9 +2726,37 @@ const assignDesignerConfirmDialog = reactive({
   designRequestNumber: ''
 })
 
+// 刪除確認對話框相關變數
+const deleteConfirmDialog = reactive({
+  show: false,
+  designRequestId: null,
+  designRequestNumber: ''
+})
+const deleting = ref(false)
+
+
 // 計算屬性：過濾顯示的欄位
 const visibleViewFormFields = computed(() => {
   return viewFormFields.value.filter(field => field.name !== 'needAirlineHighlight' && field.name !== 'needUseLogo')
+})
+
+// 計算屬性：編輯對話框中申請人的顯示文字
+const editApplicantDisplay = computed(() => {
+  if (!editFormData.applicant) return ''
+  // 將 _id 轉換為字串進行比較
+  const applicantId = String(editFormData.applicant)
+  const employee = employees.value.find(e => String(e.value) === applicantId)
+  if (!employee) {
+    // 如果找不到，嘗試從原始資料中獲取
+    if (editFormData._originalApplicant) {
+      const extNumber = editFormData._originalApplicant.employeeLink?.extNumber
+      return extNumber
+        ? `${editFormData._originalApplicant.name} (${extNumber})`
+        : editFormData._originalApplicant.name || ''
+    }
+    return ''
+  }
+  return employee.label || employee.name || ''
 })
 
 // 計算屬性：根據大分類過濾申請類型選項
@@ -2649,7 +2768,10 @@ const filteredProductTypeOptions = computed(() => {
   const categoryMap = {
     'printing': ['printing'],
     'map': ['seriesMap', 'seriesMapModify', 'SPMap'],
-    'dm': ['newDMSingle', 'newDMMultiple', 'modifyDM']
+    'dm': ['newDMSingle', 'newDMMultiple', 'modifyDM'],
+    'itRelated': ['newElectronicInfo', 'coSellingTour'],
+    'website': ['homepageBanner', 'hostedTour', 'galleryModifyRemove'],
+    'other': ['coupon', 'lectureEvent', 'customerComment']
   }
 
   const allowedTypes = categoryMap[searchCriteria.productCategory] || []
@@ -2671,11 +2793,12 @@ const handleApplicationDateClear = () => {
 
 const resetSearch = () => {
   searchCriteria.applicationDate = []
-  searchCriteria.applicant = ''
-  searchCriteria.productCategory = ''
-  searchCriteria.productType = ''
-  searchCriteria.status = ''
-  searchCriteria.assignedDesigner = ''
+  searchCriteria.applicant = null
+  searchCriteria.productCategory = null
+  searchCriteria.productType = null
+  searchCriteria.status = null
+  searchCriteria.assignedDesigner = null
+  quickSearch.value = ''
   fetchTableData()
 }
 
@@ -2690,7 +2813,8 @@ const fetchTableData = async () => {
       page: tableOptions.page,
       itemsPerPage: tableOptions.itemsPerPage,
       sortBy: tableOptions.sortBy[0]?.key,
-      sortOrder: tableOptions.sortBy[0]?.order
+      sortOrder: tableOptions.sortBy[0]?.order,
+      search: quickSearch.value
     }
     if (searchCriteria.applicant) params.applicant = searchCriteria.applicant
     if (searchCriteria.productCategory) params.productCategory = searchCriteria.productCategory
@@ -2720,22 +2844,34 @@ const fetchTableData = async () => {
     if (data.success) {
       tableItems.value = data.result.data
       totalItems.value = data.result.totalItems
-      // 診斷：抽樣輸出 assignedDesigner
-      // do nothing when console fails
-      try {
-        console.log('[MD-Manage] fetchTableData sample:', (tableItems.value || []).slice(0, 5).map(it => ({ id: it._id, no: it.designRequestNumber, assignedDesigner: it.assignedDesigner ? { _id: it.assignedDesigner._id, name: it.assignedDesigner.name, userId: it.assignedDesigner.userId } : null })))
-      } catch { /* noop */ }
     }
   } catch (error) {
     createSnackbar({ text: error?.response?.data?.message || '取得表格資料失敗', snackbarProps: { color: 'red-lighten-1' } })
   } finally {
     loading.value = false
+    isSearching.value = false
   }
 }
 
+// 表格選項變更處理
 const handleTableOptionsChange = () => {
   fetchTableData()
 }
+
+// 監聽快速搜尋
+const debouncedSearch = debounce(() => {
+  tableOptions.page = 1
+  fetchTableData()
+}, 300)
+
+// 監聽快速搜尋變更
+watch(quickSearch, (newValue) => {
+  // 有搜尋值時觸發搜尋
+  if (newValue !== undefined) {
+    isSearching.value = true
+    debouncedSearch()
+  }
+})
 
 const fetchProductTypes = async () => {
   try {
@@ -2765,7 +2901,7 @@ const fetchProductCategories = async () => {
 // 大分類變更處理
 const handleProductCategoryChange = () => {
   // 當大分類變更時，清空申請類型選擇
-  searchCriteria.productType = ''
+  searchCriteria.productType = null
 }
 
 const fetchEmployees = async () => {
@@ -2774,8 +2910,21 @@ const fetchEmployees = async () => {
     const { data } = await apiAuth.get('/users/public/all')
     if (data.success) {
       const users = (data.result?.data || []).slice().sort((a, b) => String(a?.userId ?? '').localeCompare(String(b?.userId ?? '')))
-      applicantUsers.value = users.map(u => ({ _id: u._id, name: u.name, userId: u.userId }))
-      employees.value = users.map(u => ({ label: `${u.name} (${u.userId})`, value: u._id }))
+      applicantUsers.value = users.map(u => ({
+        _id: u._id,
+        name: u.name,
+        userId: u.userId,
+        employeeLink: u.employeeLink
+      }))
+      employees.value = users.map(u => {
+        const extNumber = u.employeeLink?.extNumber
+        return {
+          label: extNumber ? `${u.name} (${extNumber})` : u.name,
+          value: u._id,
+          name: u.name,
+          employeeLink: u.employeeLink
+        }
+      })
     }
   } catch {
     // 忽略錯誤
@@ -2789,7 +2938,6 @@ const fetchMarketingDesigners = async () => {
       const users = Array.isArray(data.result?.data) ? data.result.data.slice() : []
       users.sort((a, b) => String(a?.userId ?? '').localeCompare(String(b?.userId ?? '')))
       marketingDesigners.value = users.map(u => ({ _id: u._id, name: u.name, userId: u.userId }))
-      try { console.log('[MD-Manage] designers(users):', marketingDesigners.value) } catch { /* noop */ }
     }
   } catch {
     marketingDesigners.value = []
@@ -2799,9 +2947,12 @@ const fetchMarketingDesigners = async () => {
 const customFilter = (item, queryText) => {
   const textToSearch = (queryText || '').toLowerCase()
   const raw = item.raw || item
-  const itemText = raw && raw.name && (raw.userId || raw.employeeCode)
-    ? `${raw.name} ${raw.userId || raw.employeeCode}`.toLowerCase()
-    : raw && raw.name ? raw.name.toLowerCase() : ''
+  const extNumber = raw?.employeeLink?.extNumber
+  const itemText = raw && raw.name
+    ? extNumber
+      ? `${raw.name} ${extNumber}`.toLowerCase()
+      : raw.name.toLowerCase()
+    : ''
   return itemText.includes(textToSearch)
 }
 
@@ -2811,6 +2962,7 @@ const formatDate = (date) => {
   if (isNaN(d.getTime())) return ''
   return d.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
+
 
 // 1. 新增 getPrintingTypeText 輔助函數（如前述）
 const getPrintingTypeText = (printingTypes) => {
@@ -2828,11 +2980,31 @@ const getPrintingTypeText = (printingTypes) => {
   return selected.length > 0 ? `【印刷相關】- ${selected.join('、')}` : '【印刷相關】'
 }
 
+// 取得館格修改、下架子類型顯示文字
+const getGalleryTypeText = (galleryTypes) => {
+  if (!galleryTypes) return '【網站相關】 - 館格修改、下架'
+  const map = {
+    modify: '館格修改',
+    removal: '館格下架'
+  }
+  const selected = Object.entries(galleryTypes)
+    .filter(([, v]) => v)
+    .map(([k]) => map[k])
+    .filter(Boolean)
+  if (selected.length === 0) return '【網站相關】 - 館格修改、下架'
+  if (selected.length === 1) return `【網站相關】 - ${selected[0]}`
+  return '【網站相關】 - 館格修改、下架'
+}
+
 // 2. 修正 getProductTypeText，正確使用 item 參數
 const getProductTypeText = (type, item) => {
   if (type === 'printing') {
     if (item && item.printingTypes) return getPrintingTypeText(item.printingTypes)
     return '【印刷相關】'
+  }
+  if (type === 'galleryModifyRemove') {
+    if (item && item.galleryTypes) return getGalleryTypeText(item.galleryTypes)
+    return '【網站相關】 - 館格修改、下架'
   }
   const option = productTypeOptions.value.find(opt => opt.value === type)
   return option ? option.label : type
@@ -2875,16 +3047,29 @@ const getStatusTextClass = (status) => {
   }
 }
 
-const getFileName = (filePath) => {
-  if (!filePath) return ''
-  const parts = filePath.split('/')
-  return parts[parts.length - 1]
+const getFileName = (file) => {
+  if (!file) return ''
+  // 如果是物件（包含 url 和 originalName），優先使用 originalName
+  if (typeof file === 'object' && file !== null && file.originalName) {
+    return file.originalName
+  }
+  // 如果是字串（舊格式或直接是路徑），從路徑中提取檔名
+  if (typeof file === 'string') {
+    const parts = file.split('/')
+    return parts[parts.length - 1]
+  }
+  // 如果是物件但只有 url，從 url 中提取檔名
+  if (typeof file === 'object' && file !== null && file.url) {
+    const parts = file.url.split('/')
+    return parts[parts.length - 1]
+  }
+  return ''
 }
 
 // 判斷是否為圖片檔案
-const isImageFile = (filePath) => {
-  if (!filePath) return false
-  const fileName = getFileName(filePath).toLowerCase()
+const isImageFile = (file) => {
+  if (!file) return false
+  const fileName = getFileName(file).toLowerCase()
   return /\.(jpg|jpeg|png|gif|webp)$/.test(fileName)
 }
 
@@ -2893,36 +3078,49 @@ const openLightbox = (files, index) => {
   const imageFiles = files.filter(file => isImageFile(file))
   if (imageFiles.length === 0) return
 
-  lightboxDialog.images = imageFiles
-  lightboxDialog.currentIndex = index
-  lightboxDialog.currentImage = imageFiles[index]
-  lightboxDialog.currentImageName = getFileName(imageFiles[index])
-  lightboxDialog.show = true
+  const originalImageFiles = files.filter(file => isImageFile(file))
+  const clickedFile = files[index]
+  const clickedFileIndex = originalImageFiles.findIndex((img) => {
+    if (typeof clickedFile === 'object' && clickedFile !== null && typeof img === 'object' && img !== null) {
+      return clickedFile.url === img.url
+    }
+    return clickedFile === img
+  })
+  const targetIndex = clickedFileIndex >= 0 ? clickedFileIndex : 0
+
+  const imageUrls = imageFiles.map(file => getFileUrl(file)).filter(url => url)
+
+  if (!imageUrls.length || !imageLightboxRef.value) return
+
+  imageLightboxRef.value.open(imageUrls, targetIndex)
 }
 
-// 關閉燈箱
-const closeLightbox = () => {
-  lightboxDialog.show = false
-  lightboxDialog.currentImage = null
-  lightboxDialog.currentImageName = ''
-  lightboxDialog.currentIndex = 0
-  lightboxDialog.images = []
-}
-
-// 上一張圖片
-const previousImage = () => {
-  if (lightboxDialog.images.length <= 1) return
-  lightboxDialog.currentIndex = (lightboxDialog.currentIndex - 1 + lightboxDialog.images.length) % lightboxDialog.images.length
-  lightboxDialog.currentImage = lightboxDialog.images[lightboxDialog.currentIndex]
-  lightboxDialog.currentImageName = getFileName(lightboxDialog.currentImage)
-}
-
-// 下一張圖片
-const nextImage = () => {
-  if (lightboxDialog.images.length <= 1) return
-  lightboxDialog.currentIndex = (lightboxDialog.currentIndex + 1) % lightboxDialog.images.length
-  lightboxDialog.currentImage = lightboxDialog.images[lightboxDialog.currentIndex]
-  lightboxDialog.currentImageName = getFileName(lightboxDialog.currentImage)
+// 取得完整檔案 URL
+const getFileUrl = (file) => {
+  if (!file) return ''
+  // 如果是物件（包含 url），使用 url
+  if (typeof file === 'object' && file !== null && file.url) {
+    const url = file.url
+    // 如果已經是完整 URL，直接返回
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url
+    }
+    // 如果是相對路徑，加上 API base URL
+    const baseURL = import.meta.env.VITE_API || 'http://localhost:4002'
+    return `${baseURL}${url.startsWith('/') ? '' : '/'}${url}`
+  }
+  // 如果是字串（舊格式）
+  if (typeof file === 'string') {
+    const filePath = file
+    // 如果已經是完整 URL，直接返回
+    if (filePath.startsWith('http://') || filePath.startsWith('https://')) {
+      return filePath
+    }
+    // 如果是相對路徑，加上 API base URL
+    const baseURL = import.meta.env.VITE_API || 'http://localhost:4002'
+    return `${baseURL}${filePath.startsWith('/') ? '' : '/'}${filePath}`
+  }
+  return ''
 }
 
 // 批量下載所有檔案
@@ -2945,19 +3143,26 @@ const downloadAllFiles = async (files) => {
     let successCount = 0
     let failCount = 0
 
-    await Promise.all(files.map(async (fileUrl) => {
+    await Promise.all(files.map(async (file) => {
       try {
+        // 取得檔案的 URL（支援物件和字串格式）
+        const fileUrl = typeof file === 'object' && file !== null && file.url
+          ? getFileUrl(file)
+          : typeof file === 'string'
+            ? getFileUrl(file)
+            : file
+
         const response = await fetch(fileUrl)
         if (response.ok) {
           const blob = await response.blob()
-          zip.file(getFileName(fileUrl), blob)
+          zip.file(getFileName(file), blob)
           successCount++
         } else {
           console.warn(`檔案下載失敗: ${fileUrl}`)
           failCount++
         }
       } catch (error) {
-        console.error(`檔案下載錯誤: ${fileUrl}`, error)
+        console.error(`檔案下載錯誤:`, error)
         failCount++
       }
     }))
@@ -3013,16 +3218,57 @@ const openEditDialog = async (item) => {
   const processedItem = { ...item }
 
   // 處理日期欄位，將 ISO 字串轉換為 Date 物件
-  // 只有 requestedByDate 是真正的日期欄位，departureDate 是字串類型
-  const dateFields = ['requestedByDate']
+  // requestedByDate、expiryDate 和 commentDate 是真正的日期欄位，departureDate 是字串類型
+  const dateFields = ['requestedByDate', 'expiryDate', 'commentDate']
   dateFields.forEach(field => {
     if (processedItem[field] && typeof processedItem[field] === 'string') {
       processedItem[field] = new Date(processedItem[field])
     }
   })
 
+  // 處理講座活動的日期時間欄位，轉換為 datetime-local 格式
+  if (processedItem.productType === 'lectureEvent') {
+    if (processedItem.eventDateTime && typeof processedItem.eventDateTime === 'string') {
+      const date = new Date(processedItem.eventDateTime)
+      if (!isNaN(date.getTime())) {
+        // 轉換為 datetime-local 格式 (YYYY-MM-DDTHH:mm)
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        processedItem.eventDateTime = `${year}-${month}-${day}T${hours}:${minutes}`
+      }
+    }
+    if (processedItem.entryDateTime && typeof processedItem.entryDateTime === 'string') {
+      const date = new Date(processedItem.entryDateTime)
+      if (!isNaN(date.getTime())) {
+        // 轉換為 datetime-local 格式 (YYYY-MM-DDTHH:mm)
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        const hours = String(date.getHours()).padStart(2, '0')
+        const minutes = String(date.getMinutes()).padStart(2, '0')
+        processedItem.entryDateTime = `${year}-${month}-${day}T${hours}:${minutes}`
+      }
+    }
+  }
+
+  // 處理巢狀物件中的 requestedByDate 欄位
+  if (processedItem.infoBookletCover?.requestedByDate && typeof processedItem.infoBookletCover.requestedByDate === 'string') {
+    processedItem.infoBookletCover.requestedByDate = new Date(processedItem.infoBookletCover.requestedByDate)
+  }
+  if (processedItem.banner?.requestedByDate && typeof processedItem.banner.requestedByDate === 'string') {
+    processedItem.banner.requestedByDate = new Date(processedItem.banner.requestedByDate)
+  }
+
   // 處理申請人資料，轉換為 v-autocomplete 需要的格式
   if (processedItem.applicant && typeof processedItem.applicant === 'object') {
+    // 保留原始申請人資料以供顯示使用
+    processedItem._originalApplicant = {
+      name: processedItem.applicant.name,
+      employeeLink: processedItem.applicant.employeeLink
+    }
     // v-autocomplete 使用 item-value/value 綁定 _id
     processedItem.applicant = processedItem.applicant._id || processedItem.applicant.id
   }
@@ -3073,6 +3319,35 @@ const openEditDialog = async (item) => {
     // 處理檔案欄位，確保 files 欄位存在
     if (!processedItem.files) {
       processedItem.files = []
+    }
+  }
+
+  // 特殊處理：館格修改、下架類型
+  if (processedItem.productType === 'galleryModifyRemove') {
+    // 確保 galleryTypes 存在，如果沒有則根據現有資料推斷
+    if (!processedItem.galleryTypes) {
+      processedItem.galleryTypes = {
+        modify: !!(processedItem.modify && Object.values(processedItem.modify).some(v => v && v !== '')),
+        removal: !!(processedItem.removal && Object.values(processedItem.removal).some(v => v && v !== ''))
+      }
+    }
+
+    // 確保各子類型的資料結構存在
+    if (!processedItem.modify) {
+      processedItem.modify = {
+        branch: '',
+        groupId: '',
+        files: [],
+        note: ''
+      }
+    }
+    if (!processedItem.removal) {
+      processedItem.removal = {
+        branch: '',
+        groupId: '',
+        files: [],
+        note: ''
+      }
     }
   }
 
@@ -3132,12 +3407,36 @@ const confirmEditSubmit = async () => {
     const submitData = { ...editFormData }
 
     // 將 Date 物件轉換為 ISO 字串
-    const dateFields = ['requestedByDate']
+    const dateFields = ['requestedByDate', 'expiryDate', 'commentDate']
     dateFields.forEach(field => {
       if (submitData[field] instanceof Date) {
         submitData[field] = submitData[field].toISOString()
       }
     })
+
+    // 處理講座活動的日期時間欄位，將 datetime-local 格式轉換為 ISO 字串
+    if (submitData.productType === 'lectureEvent') {
+      if (submitData.eventDateTime && typeof submitData.eventDateTime === 'string' && submitData.eventDateTime.includes('T')) {
+        const date = new Date(submitData.eventDateTime)
+        if (!isNaN(date.getTime())) {
+          submitData.eventDateTime = date.toISOString()
+        }
+      }
+      if (submitData.entryDateTime && typeof submitData.entryDateTime === 'string' && submitData.entryDateTime.includes('T')) {
+        const date = new Date(submitData.entryDateTime)
+        if (!isNaN(date.getTime())) {
+          submitData.entryDateTime = date.toISOString()
+        }
+      }
+    }
+
+    // 處理巢狀物件中的 requestedByDate 欄位
+    if (submitData.infoBookletCover?.requestedByDate instanceof Date) {
+      submitData.infoBookletCover.requestedByDate = submitData.infoBookletCover.requestedByDate.toISOString()
+    }
+    if (submitData.banner?.requestedByDate instanceof Date) {
+      submitData.banner.requestedByDate = submitData.banner.requestedByDate.toISOString()
+    }
 
     // 處理行程陣列中的日期欄位
     if (submitData.itinerary && Array.isArray(submitData.itinerary)) {
@@ -3147,6 +3446,10 @@ const confirmEditSubmit = async () => {
 
     // 編輯模式下不需要處理檔案上傳，直接使用 JSON
     const submitDataToSend = { ...submitData }
+
+    // 排除 assignedDesigner 欄位，因為處理人員的變更應該使用專門的 API
+    // 如果包含在編輯請求中，可能會導致後端誤判並新增不必要的 progressHistory 記錄
+    delete submitDataToSend.assignedDesigner
 
     // 修正 coachSign.useInfoBookletCover 型別
     if (submitDataToSend.coachSign) {
@@ -3158,7 +3461,12 @@ const confirmEditSubmit = async () => {
       submitDataToSend.printingTypes = JSON.stringify(submitDataToSend.printingTypes)
     }
 
-    // 處理巢狀物件資料
+    // 處理館格修改、下架資料
+    if (submitDataToSend.galleryTypes) {
+      submitDataToSend.galleryTypes = JSON.stringify(submitDataToSend.galleryTypes)
+    }
+
+    // 處理印刷相關巢狀物件資料
     const nestedFields = ['infoBookletCover', 'banner', 'coachSign']
     nestedFields.forEach(field => {
       if (submitDataToSend[field] && submitDataToSend.printingTypes) {
@@ -3174,6 +3482,31 @@ const confirmEditSubmit = async () => {
           fieldsToSend.forEach(subKey => {
             if (!submitDataToSend[field][subKey]) {
               submitDataToSend[field][subKey] = ''
+            }
+          })
+        }
+      }
+    })
+
+    // 處理館格修改、下架巢狀物件資料
+    const galleryNestedFields = ['modify', 'removal']
+    galleryNestedFields.forEach(field => {
+      if (submitDataToSend[field] && submitDataToSend.galleryTypes) {
+        const galleryTypes = JSON.parse(submitDataToSend.galleryTypes)
+        if (galleryTypes[field]) {
+          // 確保所有欄位都送出
+          const fieldDefinitions = {
+            modify: ['branch', 'groupId', 'files', 'note'],
+            removal: ['branch', 'groupId', 'files', 'note']
+          }
+          const fieldsToSend = fieldDefinitions[field] || []
+          fieldsToSend.forEach(subKey => {
+            if (!submitDataToSend[field][subKey]) {
+              if (subKey === 'files') {
+                submitDataToSend[field][subKey] = []
+              } else {
+                submitDataToSend[field][subKey] = ''
+              }
             }
           })
         }
@@ -3200,11 +3533,15 @@ const updatingDesigners = ref(new Set())
 const updateAssignedDesigner = async (designRequestId, newDesignerId) => {
   if (updatingDesigners.value.has(designRequestId)) return
 
-  try {
-    const currentItem = tableItems.value.find(item => item._id === designRequestId)
+  const currentItem = tableItems.value.find(item => item._id === designRequestId)
 
+  try {
     // 檢查當前狀態是否為已完成或已取消，如果是則不允許變更處理人員
     if (isCompletedOrCancelled(currentItem.status)) {
+      // 恢復對話框中的處理人員
+      if (viewDialog.show && viewFormData._id === designRequestId) {
+        viewFormData.assignedDesigner = currentItem.assignedDesigner
+      }
       createSnackbar({
         text: `狀態為「${getStatusText(currentItem.status)}」的申請單無法再變更處理人員`,
         snackbarProps: { color: 'red-lighten-1' }
@@ -3215,6 +3552,10 @@ const updateAssignedDesigner = async (designRequestId, newDesignerId) => {
     // 檢查是否為清除指派
     if (newDesignerId === null) {
       if (!currentItem.assignedDesigner) {
+        // 恢復對話框中的處理人員
+        if (viewDialog.show && viewFormData._id === designRequestId) {
+          viewFormData.assignedDesigner = currentItem.assignedDesigner
+        }
         createSnackbar({ text: '資料未做任何變更', snackbarProps: { color: 'red-lighten-1' } })
         return
       }
@@ -3222,6 +3563,10 @@ const updateAssignedDesigner = async (designRequestId, newDesignerId) => {
       await performAssignDesigner(designRequestId, newDesignerId)
       return
     } else if (currentItem.assignedDesigner?._id === newDesignerId) {
+      // 恢復對話框中的處理人員
+      if (viewDialog.show && viewFormData._id === designRequestId) {
+        viewFormData.assignedDesigner = currentItem.assignedDesigner
+      }
       createSnackbar({ text: '資料未做任何變更', snackbarProps: { color: 'red-lighten-1' } })
       return
     }
@@ -3253,9 +3598,10 @@ const confirmAssignDesigner = async () => {
 const performAssignDesigner = async (designRequestId, newDesignerId) => {
   if (updatingDesigners.value.has(designRequestId)) return
 
-  try {
-    const currentItem = tableItems.value.find(item => item._id === designRequestId)
+  const currentItem = tableItems.value.find(item => item._id === designRequestId)
+  const oldAssignedDesigner = currentItem.assignedDesigner ? { ...currentItem.assignedDesigner } : null
 
+  try {
     updatingDesigners.value.add(designRequestId)
 
     const { data } = await apiAuth.patch(`/marketing/design-requests/${designRequestId}`, {
@@ -3263,7 +3609,6 @@ const performAssignDesigner = async (designRequestId, newDesignerId) => {
     })
 
     if (data.success) {
-      try { console.log('[MD-Manage] performAssignDesigner resp:', { designRequestId, newDesignerId, result: data.result }) } catch { /* noop */ }
       // 以後端回傳為優先；若未附上 assignedDesigner，採本地 fallback
       let nextAssigned = null
       if (newDesignerId === null) {
@@ -3278,12 +3623,18 @@ const performAssignDesigner = async (designRequestId, newDesignerId) => {
       }
 
       currentItem.assignedDesigner = nextAssigned
-      try { console.log('[MD-Manage] performAssignDesigner applied:', { id: currentItem._id, assignedDesigner: currentItem.assignedDesigner }) } catch { /* noop */ }
 
       // 同步可能的狀態更新
       if (data.result && data.result.status && data.result.status !== currentItem.status) {
         currentItem.status = data.result.status
-        console.log('狀態已自動更新:', data.result.status)
+      }
+
+      // 同步更新對話框中的資料
+      if (viewDialog.show && viewFormData._id === designRequestId) {
+        viewFormData.assignedDesigner = nextAssigned
+        if (data.result && data.result.status && data.result.status !== viewFormData.status) {
+          viewFormData.status = data.result.status
+        }
       }
 
       if (newDesignerId === null) {
@@ -3294,6 +3645,16 @@ const performAssignDesigner = async (designRequestId, newDesignerId) => {
     }
   } catch (error) {
     console.error('更新處理人員失敗:', error)
+    // 恢復對話框中的處理人員
+    if (viewDialog.show && viewFormData._id === designRequestId) {
+      const currentItem = tableItems.value.find(item => item._id === designRequestId)
+      if (currentItem) {
+        viewFormData.assignedDesigner = currentItem.assignedDesigner
+      } else {
+        // 如果找不到項目，恢復為舊的處理人員
+        viewFormData.assignedDesigner = oldAssignedDesigner
+      }
+    }
     createSnackbar({ text: error?.response?.data?.message || '更新處理人員失敗', snackbarProps: { color: 'red-lighten-1' } })
   } finally {
     updatingDesigners.value.delete(designRequestId)
@@ -3306,15 +3667,24 @@ const updateStatus = async (designRequestId, newStatus) => {
   if (updatingStatus.value.has(designRequestId)) return
 
   const currentItem = tableItems.value.find(item => item._id === designRequestId)
+  const oldStatus = currentItem.status
 
   // 檢查狀態是否相同
   if (currentItem.status === newStatus) {
+    // 恢復對話框中的狀態
+    if (viewDialog.show && viewFormData._id === designRequestId) {
+      viewFormData.status = oldStatus
+    }
     createSnackbar({ text: '資料未做任何變更', snackbarProps: { color: 'red-lighten-1' } })
     return
   }
 
   // 檢查當前狀態是否為已完成或已取消，如果是則不允許變更
   if (isCompletedOrCancelled(currentItem.status)) {
+    // 恢復對話框中的狀態
+    if (viewDialog.show && viewFormData._id === designRequestId) {
+      viewFormData.status = oldStatus
+    }
     createSnackbar({
       text: `狀態為「${getStatusText(currentItem.status)}」的申請單無法再變更狀態`,
       snackbarProps: { color: 'red-lighten-1' }
@@ -3324,10 +3694,15 @@ const updateStatus = async (designRequestId, newStatus) => {
 
   // 如果是結案狀態（已完成或已取消），先顯示確認對話框
   if (newStatus === 'completed' || newStatus === 'cancelled') {
+    // 先恢復對話框中的狀態，因為 v-model 已經改變了
+    if (viewDialog.show && viewFormData._id === designRequestId) {
+      viewFormData.status = oldStatus
+    }
     statusConfirmDialog.designRequestId = designRequestId
     statusConfirmDialog.newStatus = newStatus
     statusConfirmDialog.currentStatus = currentItem.status
     statusConfirmDialog.designRequestNumber = currentItem.designRequestNumber
+    statusConfirmDialog.productType = currentItem.productType || ''
     statusConfirmDialog.show = true
     return
   }
@@ -3340,8 +3715,10 @@ const updateStatus = async (designRequestId, newStatus) => {
 const performStatusUpdate = async (designRequestId, newStatus) => {
   if (updatingStatus.value.has(designRequestId)) return
 
+  const currentItem = tableItems.value.find(item => item._id === designRequestId)
+  const oldStatus = currentItem.status
+
   try {
-    const currentItem = tableItems.value.find(item => item._id === designRequestId)
     updatingStatus.value.add(designRequestId)
 
     const { data } = await apiAuth.patch(`/marketing/design-requests/${designRequestId}`, {
@@ -3351,31 +3728,64 @@ const performStatusUpdate = async (designRequestId, newStatus) => {
     if (data.success) {
       // 如果是結案狀態，重新獲取完整資料以反映檔案刪除
       if (newStatus === 'completed' || newStatus === 'cancelled') {
+        // 保留原本的 convertedTask 資訊
+        const originalConvertedTask = currentItem.convertedTask
         // 重新獲取該筆資料的完整資訊
         try {
           const detailResponse = await apiAuth.get(`/marketing/design-requests/${designRequestId}`)
           if (detailResponse.data.success) {
             // 更新本地資料為最新的完整資料
             const updatedItem = detailResponse.data.result
+            // 如果重新獲取的資料沒有 convertedTask，保留原本的
+            if (originalConvertedTask && !updatedItem.convertedTask) {
+              updatedItem.convertedTask = originalConvertedTask
+            }
             const index = tableItems.value.findIndex(item => item._id === designRequestId)
             if (index !== -1) {
               tableItems.value[index] = updatedItem
             }
+            // 同步更新對話框中的資料
+            if (viewDialog.show && viewFormData._id === designRequestId) {
+              viewFormData.status = updatedItem.status
+            }
           }
         } catch (detailError) {
           console.error('重新獲取資料失敗:', detailError)
-          // 如果重新獲取失敗，至少更新狀態
+          // 如果重新獲取失敗，至少更新狀態，並保留 convertedTask
           currentItem.status = newStatus
+          if (originalConvertedTask && !currentItem.convertedTask) {
+            currentItem.convertedTask = originalConvertedTask
+          }
+          // 同步更新對話框中的資料
+          if (viewDialog.show && viewFormData._id === designRequestId) {
+            viewFormData.status = newStatus
+            // 同步其他可能的更新
+            Object.assign(viewFormData, currentItem)
+          }
         }
       } else {
         // 非結案狀態，只更新狀態
         currentItem.status = newStatus
+        // 同步更新對話框中的資料
+        if (viewDialog.show && viewFormData._id === designRequestId) {
+          viewFormData.status = newStatus
+        }
       }
 
       createSnackbar({ text: '狀態更新成功', snackbarProps: { color: 'teal-lighten-1' } })
     }
   } catch (error) {
     console.error('更新狀態失敗:', error)
+    // 恢復對話框中的狀態
+    if (viewDialog.show && viewFormData._id === designRequestId) {
+      const errorCurrentItem = tableItems.value.find(item => item._id === designRequestId)
+      if (errorCurrentItem) {
+        viewFormData.status = errorCurrentItem.status
+      } else {
+        // 如果找不到項目，恢復為舊狀態
+        viewFormData.status = oldStatus
+      }
+    }
     createSnackbar({ text: error?.response?.data?.message || '更新狀態失敗', snackbarProps: { color: 'red-lighten-1' } })
   } finally {
     updatingStatus.value.delete(designRequestId)
@@ -3390,6 +3800,10 @@ const confirmStatusUpdate = async () => {
 
 // 取消狀態更新
 const cancelStatusUpdate = () => {
+  // 確保對話框中的狀態恢復為原狀態
+  if (viewDialog.show && viewFormData._id === statusConfirmDialog.designRequestId) {
+    viewFormData.status = statusConfirmDialog.currentStatus
+  }
   statusConfirmDialog.show = false
 }
 
@@ -3406,7 +3820,8 @@ const openViewDialog = async (item) => {
     processedItem.applicant = {
       name: processedItem.applicant.name,
       userId: processedItem.applicant.userId,
-      _id: processedItem.applicant._id || processedItem.applicant.id
+      _id: processedItem.applicant._id || processedItem.applicant.id,
+      employeeLink: processedItem.applicant.employeeLink
     }
   }
   Object.assign(viewFormData, processedItem)
@@ -3456,6 +3871,26 @@ const formatTime = (date) => {
   }
 }
 
+// 格式化日期時間（顯示日期+時間）
+const formatDateTime = (date) => {
+  if (!date) return ''
+  try {
+    const dateObj = new Date(date)
+    if (isNaN(dateObj.getTime())) return ''
+    return dateObj.toLocaleString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+  } catch (e) {
+    console.error('Error formatting date time:', e)
+    return ''
+  }
+}
+
 // 取得欄位類型對應的圖標
 const getFieldIcon = (fieldType) => {
   const iconMap = {
@@ -3496,11 +3931,173 @@ const truncateFileName = (name, length = 15) => {
   return `${name.substring(0, length)}...`
 }
 
+// 取得檔案名稱陣列
+const getFileNamesFromData = (files) => {
+  if (!files || !Array.isArray(files) || files.length === 0) {
+    return []
+  }
+  return files.map(file => getFileName(file)).filter(name => name)
+}
 
+// 將檔案 URL 轉換為 File 物件（用於 disabled 的 v-file-input 顯示）
+const convertFilesToFileObjects = (files) => {
+  if (!files || !Array.isArray(files) || files.length === 0) {
+    return []
+  }
+
+  // 創建 File 物件陣列，每個檔案都創建一個假的 File 物件
+  return files.map(file => {
+    const fileName = getFileName(file)
+    if (!fileName) return null
+    // 創建一個包含檔案名稱的 Blob，然後轉換為 File
+    const blob = new Blob([''], { type: 'application/octet-stream' })
+    const fakeFile = new File([blob], fileName, {
+      type: 'application/octet-stream',
+      lastModified: Date.now()
+    })
+    return fakeFile
+  }).filter(file => file !== null)
+}
+
+// 取得檔案上傳標籤
+const getFileUploadLabel = (originalLabel, field) => {
+  if (!originalLabel) return ''
+
+  const parts = []
+
+  // 大小限制
+  parts.push('10MB')
+
+  // 格式限制（只有在有指定格式時才顯示）
+  if (field.accept && field.accept.trim() !== '') {
+    const acceptText = getFileAcceptTextShort(field.accept)
+    if (acceptText && acceptText !== '*') {
+      parts.push(acceptText)
+    }
+  }
+
+  // 如果有限制說明，添加到 label
+  if (parts.length > 0) {
+    return `${originalLabel} ( ${parts.join('、')} )`
+  }
+
+  return originalLabel
+}
+
+// 取得檔案格式的簡短文字
+const getFileAcceptTextShort = (accept) => {
+  if (!accept) return ''
+
+  const formatMap = {
+    'image/*': '圖片',
+    '.pdf': 'PDF',
+    '.doc': 'Word',
+    '.docx': 'Word',
+    '.ai': 'AI',
+    '.xls': 'XLS',
+    '.xlsx': 'XLSX',
+    '.txt': 'TXT',
+    '.zip': 'ZIP',
+    '.rar': 'RAR'
+  }
+
+  // 處理 accept 字串（可能是逗號分隔的多個格式）
+  const formats = accept.split(',').map(f => f.trim())
+  const readableFormats = formats.map(format => {
+    // 如果是 image/*，返回簡短文字
+    if (format === 'image/*') {
+      return '圖片'
+    }
+    // 如果是具體的副檔名，從 map 中查找
+    const mapped = formatMap[format]
+    if (mapped) {
+      return mapped
+    }
+    // 如果沒有對應的簡短文字，返回原始格式（去掉點）
+    return format.replace(/^\./, '').toUpperCase()
+  })
+
+  // 去重並過濾空值
+  const uniqueFormats = [...new Set(readableFormats)].filter(f => f)
+
+  return uniqueFormats.join('、')
+}
+
+// 檢查是否有任務轉換資訊
+const hasConvertedTask = (item) => {
+  // 檢查多種可能的資料結構
+  if (item.convertedTask && item.convertedTask.project && item.convertedTask.category) {
+    return true
+  }
+  if (item.task && item.task.project && item.task.category) {
+    return true
+  }
+  if (item.taskProject && item.taskCategory) {
+    return true
+  }
+  // 檢查是否有任務 ID（可能後端只回傳任務 ID）
+  if (item.convertedTaskId || item.taskId) {
+    return true
+  }
+  return false
+}
+
+// 取得任務轉換資訊的文字
+const getConvertedTaskText = (item) => {
+  let projectName = ''
+  let categoryName = ''
+
+  // 檢查多種可能的資料結構
+  if (item.convertedTask) {
+    // 後端回傳的格式：{ project: { name: '...' }, category: '...' }
+    projectName = item.convertedTask.project?.name || item.convertedTask.project || ''
+    categoryName = item.convertedTask.category || ''
+  } else if (item.task) {
+    projectName = item.task.project?.name || item.task.project || ''
+    categoryName = item.task.category || ''
+  } else if (item.taskProject) {
+    projectName = typeof item.taskProject === 'string' ? item.taskProject : (item.taskProject?.name || '')
+    categoryName = item.taskCategory || ''
+  }
+
+  if (projectName && categoryName) {
+    return `已轉換為「${projectName}」-「${categoryName}」任務`
+  } else if (projectName) {
+    return `已轉換為「${projectName}」專案任務`
+  } else if (categoryName) {
+    return `已轉換為「${categoryName}」任務`
+  }
+  return '已轉換為任務'
+}
+
+// 跳轉到專案頁面（開新分頁）
+const navigateToProject = (item) => {
+  let projectId = null
+
+  // 檢查多種可能的資料結構
+  if (item.convertedTask && item.convertedTask.project) {
+    // 後端回傳的格式：{ project: { _id: '...', name: '...' } }
+    projectId = item.convertedTask.project._id || item.convertedTask.project
+  } else if (item.task && item.task.project) {
+    projectId = item.task.project._id || item.task.project
+  } else if (item.taskProject) {
+    projectId = typeof item.taskProject === 'string' ? item.taskProject : (item.taskProject._id || item.taskProject)
+  }
+
+  if (projectId) {
+    const route = router.resolve(`/projectAndTaskManagement/projects/${projectId}`)
+    window.open(route.href, '_blank')
+  } else {
+    createSnackbar({
+      text: '無法取得專案資訊',
+      snackbarProps: { color: 'orange-lighten-1' }
+    })
+  }
+}
 
 // 下載檔案
-const downloadFile = async (filePath) => {
-  if (!filePath) {
+const downloadFile = async (file) => {
+  if (!file) {
     createSnackbar({
       text: '檔案路徑無效',
       snackbarProps: { color: 'red-lighten-1' }
@@ -3514,13 +4111,20 @@ const downloadFile = async (filePath) => {
       snackbarProps: { color: 'teal-lighten-1' }
     })
 
-    const response = await fetch(filePath)
+    // 取得檔案的 URL（支援物件和字串格式）
+    const fileUrl = typeof file === 'object' && file !== null && file.url
+      ? getFileUrl(file)
+      : typeof file === 'string'
+        ? getFileUrl(file)
+        : file
+
+    const response = await fetch(fileUrl)
     if (response.ok) {
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
-      link.download = getFileName(filePath)
+      link.download = getFileName(file)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -3545,144 +4149,14 @@ const downloadFile = async (filePath) => {
   }
 }
 
-// 通知 EMAIL 管理相關方法
-const notificationEmailsLoading = ref(false)
 
-const fetchNotificationEmails = async () => {
-  notificationEmailsLoading.value = true
-  try {
-    const { data } = await apiAuth.get('/notificationEmails')
-    if (data.success) {
-      notificationEmails.value = data.result
-    }
-  } catch (error) {
-    console.error('取得通知設定列表失敗:', error)
-    createSnackbar({
-      text: error?.response?.data?.message || '取得通知設定列表失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  } finally {
-    notificationEmailsLoading.value = false
+
+// 監聽折價券/禮券類型變更，當不是「其他」時清空「其他類型」
+watch(() => editFormData.couponType, (newValue) => {
+  if (editFormData.productType === 'coupon' && newValue !== '其他') {
+    editFormData.couponTypeOther = ''
   }
-}
-
-const fetchUsers = async () => {
-  try {
-    const { data } = await apiAuth.get('/notificationEmails/users')
-    if (data.success) {
-      users.value = data.result.map(user => ({
-        value: user._id,
-        label: `${user.name} - ${user.email}`
-      }))
-    }
-  } catch (error) {
-    console.error('取得用戶列表失敗:', error)
-    createSnackbar({
-      text: error?.response?.data?.message || '取得用戶列表失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  }
-}
-
-const openNotificationEmailDialog = () => {
-  notificationEmailDialog.show = true
-  fetchNotificationEmails()
-  fetchUsers()
-}
-
-const closeNotificationEmailDialog = () => {
-  notificationEmailDialog.show = false
-  // 重置表單
-  notificationEmailForm.user = ''
-  notificationEmailForm.categories = []
-  notificationEmailForm.note = ''
-  if (notificationEmailFormRef.value) {
-    notificationEmailFormRef.value.resetValidation()
-  }
-}
-
-const addNotificationEmail = async () => {
-  // 觸發 v-form 驗證
-  const { valid } = await notificationEmailFormRef.value.validate();
-  if (!valid) {
-    return;
-  }
-
-  // 驗證至少選擇一個大分類
-  if (!notificationEmailForm.categories || notificationEmailForm.categories.length === 0) {
-    createSnackbar({
-      text: '請至少選擇一個大分類',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-    return;
-  }
-
-  // 新增 debug log
-  console.log('送出通知設定 user:', notificationEmailForm.user)
-  console.log('送出通知設定 categories:', notificationEmailForm.categories)
-  console.log('送出通知設定 note:', notificationEmailForm.note)
-
-  addingEmail.value = true
-  try {
-    const { data } = await apiAuth.post('/notificationEmails', notificationEmailForm)
-    if (data.success) {
-      createSnackbar({
-        text: '通知設定新增成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
-      // 清空欄位
-      notificationEmailForm.user = ''
-      notificationEmailForm.categories = []
-      notificationEmailForm.note = ''
-      await nextTick()
-      if (notificationEmailFormRef.value) {
-        notificationEmailFormRef.value.resetValidation()
-      }
-      await fetchNotificationEmails()
-    }
-  } catch (error) {
-    console.error('新增通知設定失敗:', error)
-    createSnackbar({
-      text: error?.response?.data?.message || '新增通知設定失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  } finally {
-    addingEmail.value = false
-  }
-}
-
-// 開啟刪除通知設定確認對話框
-const openDeleteEmailConfirmDialog = (notification) => {
-  deleteEmailConfirmDialog.emailId = notification._id
-  deleteEmailConfirmDialog.emailName = notification.user?.name
-  deleteEmailConfirmDialog.message = `您確定要刪除 <strong>${notification.user?.name}</strong> (${notification.user?.email}) 的通知設定嗎？此操作無法復原。`
-  deleteEmailConfirmDialog.show = true
-}
-
-// 確認刪除通知設定
-const confirmDeleteNotificationEmail = async () => {
-  const emailId = deleteEmailConfirmDialog.emailId
-  deletingEmailId.value = emailId
-  try {
-    const { data } = await apiAuth.delete(`/notificationEmails/${emailId}`)
-    if (data.success) {
-      createSnackbar({
-        text: '通知設定刪除成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
-      await fetchNotificationEmails()
-    }
-  } catch (error) {
-    console.error('刪除通知設定失敗:', error)
-    createSnackbar({
-      text: error?.response?.data?.message || '刪除通知設定失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  } finally {
-    deletingEmailId.value = null
-    deleteEmailConfirmDialog.show = false
-  }
-}
+})
 
 onMounted(() => {
   fetchProductTypes()
@@ -3711,46 +4185,6 @@ const setNestedValue = (obj, path, value) => {
   target[lastKey] = value
 }
 
-const deletingEmailId = ref(null)
-
-// 取得大分類標籤
-const getCategoryLabel = (category) => {
-  const categoryMap = {
-    'printing': '印刷相關',
-    'map': '地圖相關',
-    'dm': 'DM相關',
-    'electronic': '電子說資'
-  }
-  return categoryMap[category] || category
-}
-
-// 切換大分類選擇
-const toggleCategory = (categoryValue, checked) => {
-  if (checked) {
-    if (!notificationEmailForm.categories.includes(categoryValue)) {
-      notificationEmailForm.categories.push(categoryValue)
-    }
-  } else {
-    const index = notificationEmailForm.categories.indexOf(categoryValue)
-    if (index > -1) {
-      notificationEmailForm.categories.splice(index, 1)
-    }
-  }
-}
-
-// 切換編輯對話框中的大分類選擇
-const toggleEditCategory = (categoryValue, checked) => {
-  if (checked) {
-    if (!editEmailForm.categories.includes(categoryValue)) {
-      editEmailForm.categories.push(categoryValue)
-    }
-  } else {
-    const index = editEmailForm.categories.indexOf(categoryValue)
-    if (index > -1) {
-      editEmailForm.categories.splice(index, 1)
-    }
-  }
-}
 
 // 複製申請單資訊
 const copyRequestInfo = async () => {
@@ -3769,7 +4203,7 @@ const copyRequestInfo = async () => {
       infoText += `申請日期：${formatDate(viewFormData.applicationDate)} ${formatTime(viewFormData.applicationDate)}\n`
     }
     if (viewFormData.applicant?.name) {
-      infoText += `申請人：${viewFormData.applicant.name} (${viewFormData.applicant.employeeCode})\n`
+      infoText += `申請人：${viewFormData.applicant.name} (${viewFormData.applicant?.employeeLink?.extNumber || 'N/A'})\n`
     }
     if (viewFormData.assignedDesigner?.name) {
       infoText += `處理人員：${viewFormData.assignedDesigner.name}\n`
@@ -3796,6 +4230,31 @@ const copyRequestInfo = async () => {
                 infoText += `${displayLabel}：${value}\n`
               } else if (field.type === 'select') {
                 infoText += `${displayLabel}：${typeof value === 'boolean' ? (value ? '是' : '否') : value}\n`
+              } else {
+                infoText += `${displayLabel}：${value}\n`
+              }
+            }
+          })
+        }
+      })
+    } else if (viewFormData.productType === 'galleryModifyRemove') {
+      // 館格修改、下架特殊處理
+      const sections = productTypeConfig.value?.sections || {}
+      Object.entries(sections).forEach(([sectionKey, section]) => {
+        if (viewFormData.galleryTypes?.[sectionKey]) {
+          infoText += `\n【${section.title}】\n`
+          section.fields.forEach(field => {
+            const value = getNestedValue(viewFormData, field.name)
+            if (value !== null && value !== undefined && value !== '') {
+              const displayLabel = getDisplayLabel(field.label).replace('* ', '')
+              if (field.type === 'file') {
+                if (Array.isArray(value) && value.length > 0) {
+                  infoText += `${displayLabel}：\n`
+                  value.forEach((file, index) => {
+                    const fileName = getFileName(file)
+                    infoText += `  檔案 ${index + 1}：${fileName}\n`
+                  })
+                }
               } else {
                 infoText += `${displayLabel}：${value}\n`
               }
@@ -3858,104 +4317,6 @@ const copyRequestInfo = async () => {
   }
 }
 
-// 用戶下拉選單選項，排除已設定過的 user
-const availableUsers = computed(() => {
-  const usedUserIds = notificationEmails.value.map(e => e.user?._id)
-  return users.value.filter(u => !usedUserIds.includes(u.value))
-})
-
-// 開啟編輯通知設定對話框
-const openEditEmailDialog = (email) => {
-  editEmailForm.id = email._id
-  editEmailForm.userName = email.user?.name || ''
-  editEmailForm.userEmail = email.user?.email || ''
-  editEmailForm.categories = [...(email.categories || [])]
-  editEmailForm.note = email.note || ''
-  editEmailDialog.show = true
-
-  // 新增：deep clone 一份原始資料
-  originalEditEmailData.value = JSON.parse(JSON.stringify({
-    id: email._id,
-    userName: email.user?.name || '',
-    userEmail: email.user?.email || '',
-    categories: [...(email.categories || [])],
-    note: email.note || ''
-  }))
-}
-
-// 關閉編輯通知設定對話框
-const closeEditEmailDialog = () => {
-  editEmailDialog.show = false
-  // 重置表單
-  editEmailForm.id = ''
-  editEmailForm.userName = ''
-  editEmailForm.userEmail = ''
-  editEmailForm.categories = []
-  editEmailForm.note = ''
-  // 重置原始資料
-  originalEditEmailData.value = {}
-  if (editEmailFormRef.value) {
-    editEmailFormRef.value.resetValidation()
-  }
-}
-
-// 更新通知設定
-const updateNotificationEmail = async () => {
-  // 驗證至少選擇一個大分類
-  if (!editEmailForm.categories || editEmailForm.categories.length === 0) {
-    createSnackbar({
-      text: '請至少選擇一個大分類',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-    return
-  }
-
-  // 新增：比對資料
-  const currentData = {
-    id: editEmailForm.id,
-    userName: editEmailForm.userName,
-    userEmail: editEmailForm.userEmail,
-    categories: [...editEmailForm.categories].sort(), // 排序以確保比較準確
-    note: editEmailForm.note || ''
-  }
-
-  const originalData = {
-    id: originalEditEmailData.value.id,
-    userName: originalEditEmailData.value.userName,
-    userEmail: originalEditEmailData.value.userEmail,
-    categories: [...(originalEditEmailData.value.categories || [])].sort(), // 排序以確保比較準確
-    note: originalEditEmailData.value.note || ''
-  }
-
-  if (JSON.stringify(currentData) === JSON.stringify(originalData)) {
-    createSnackbar({ text: '資料未做任何變更', snackbarProps: { color: 'red-lighten-1' } })
-    return
-  }
-
-  updatingEmail.value = true
-  try {
-    const { data } = await apiAuth.put(`/notificationEmails/${editEmailForm.id}`, {
-      categories: editEmailForm.categories,
-      note: editEmailForm.note
-    })
-    if (data.success) {
-      createSnackbar({
-        text: '通知設定更新成功',
-        snackbarProps: { color: 'teal-lighten-1' }
-      })
-      closeEditEmailDialog()
-      await fetchNotificationEmails()
-    }
-  } catch (error) {
-    console.error('更新通知設定失敗:', error)
-    createSnackbar({
-      text: error?.response?.data?.message || '更新通知設定失敗',
-      snackbarProps: { color: 'red-lighten-1' }
-    })
-  } finally {
-    updatingEmail.value = false
-  }
-}
 
 // 部門備註相關函數
 const openDepartmentNoteDialog = (item) => {
@@ -3970,8 +4331,9 @@ const openDepartmentNoteDialog = (item) => {
 
   departmentNoteDialog.designRequestId = item._id
   departmentNoteDialog.designRequestNumber = item.designRequestNumber
-  departmentNoteDialog.currentNote = item.departmentNote || ''
-  departmentNoteDialog.newNote = item.departmentNote || ''
+  const noteToEdit = getDisplayDepartmentNote(item) || ''
+  departmentNoteDialog.currentNote = noteToEdit
+  departmentNoteDialog.newNote = noteToEdit
   departmentNoteDialog.show = true
 }
 
@@ -3999,6 +4361,16 @@ const confirmInsertDepartmentNoteUrl = () => {
   departmentNoteDialog.newNote = before + buttonHtml + after
 
   departmentNoteUrlInput.value = ''
+}
+
+// 取得用於顯示的部門備註（有 quotaRank 時移除舊的候補/備取前綴，避免重複顯示）
+const getDisplayDepartmentNote = (item) => {
+  const note = item?.departmentNote || ''
+  if (!note) return ''
+  if (item?.quotaRank) {
+    return note.replace(/^(?:候補|備取)\s*\d+\s*\n?/, '').trim()
+  }
+  return note
 }
 
 // 格式化部門備註內容
@@ -4048,21 +4420,47 @@ const confirmUpdateDepartmentNote = async () => {
     updatingDepartmentNote.value = false
   }
 }
+
+// 開啟刪除確認對話框
+const openDeleteConfirmDialog = (item) => {
+  deleteConfirmDialog.designRequestId = item._id
+  deleteConfirmDialog.designRequestNumber = item.designRequestNumber
+  deleteConfirmDialog.show = true
+}
+
+// 確認刪除
+const confirmDelete = async () => {
+  if (!deleteConfirmDialog.designRequestId) return
+
+  deleting.value = true
+  try {
+    const { data } = await apiAuth.delete(`/marketing/design-requests/${deleteConfirmDialog.designRequestId}`)
+
+    if (data.success) {
+      createSnackbar({
+        text: '申請單刪除成功',
+        snackbarProps: { color: 'teal-lighten-1' }
+      })
+      deleteConfirmDialog.show = false
+      // 重新載入表格資料
+      fetchTableData()
+    }
+  } catch (error) {
+    console.error('刪除申請單失敗:', error)
+    createSnackbar({
+      text: error?.response?.data?.message || '刪除申請單失敗',
+      snackbarProps: { color: 'red-lighten-1' }
+    })
+  } finally {
+    deleting.value = false
+  }
+}
+
+
 </script>
 
 <style lang="scss" scoped>
 @use '@/styles/_rwd' as *;
-/* 搜尋區域樣式 */
-.text-label {
-  color: #455a64;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  margin-bottom: 8px;
-  @include sm {
-    font-size: 14px;
-  }
-}
 
 :deep(.v-field :not(.v-textarea .v-field)) {
   .v-field__input {
@@ -4090,6 +4488,24 @@ const confirmUpdateDepartmentNote = async () => {
     height: 48px;
     background-color: #455a64 !important;
     color: #fff !important;
+    th {
+      font-size: 13px !important;
+    }
+  }
+  tbody tr {
+    min-height: 48px;
+  }
+  td {
+    height: 48px !important;
+    div {
+      line-height: 1.6;
+    }
+  }
+}
+
+:deep(.v-data-table__tbody) {
+  td {
+    font-size: 13px !important;
   }
 }
 .odd-row { background-color: #f6f8fa; }
@@ -4128,6 +4544,14 @@ const confirmUpdateDepartmentNote = async () => {
   border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
+.info-item-card-block {
+  background: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
 .info-printing-card {
   border: 1px solid rgba(0,0,0,0.1) !important;
 }
@@ -4145,68 +4569,6 @@ const confirmUpdateDepartmentNote = async () => {
   margin-top: 4px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   min-height: 38px;
-}
-
-/* 燈箱樣式 */
-.lightbox-card {
-  background: rgba(0, 0, 0, 0.8) !important;
-}
-
-.lightbox-close-btn {
-  position: absolute;
-  top: 24px;
-  right: 32px;
-  z-index: 1001;
-  background: rgba(0,0,0,0.5) !important;
-}
-
-.lightbox-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: calc(100vh - 64px);
-  position: relative;
-}
-
-.lightbox-image {
-  max-width: 90%;
-  max-height: 90%;
-  object-fit: contain;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-}
-
-.lightbox-nav-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.5) !important;
-  border-radius: 50%;
-  z-index: 10;
-}
-
-.lightbox-prev {
-  left: 20px;
-}
-
-.lightbox-next {
-  right: 20px;
-}
-
-.lightbox-nav-btn:hover {
-  background: rgba(255,255,255,0.2) !important;
-  box-shadow: 0 0 8px #fff;
-}
-
-/* 在 style 區塊加上 hover 效果 */
-.lightbox-close-btn:hover {
-  background: rgba(255,255,255,0.2) !important;
-  box-shadow: 0 0 8px #fff;
-}
-
-.lightbox-download-btn:hover {
-  background: rgba(255,255,255,0.2) !important;
-  box-shadow: 0 0 8px #fff;
 }
 
 /* 狀態確認對話框樣式 */
@@ -4260,21 +4622,20 @@ const confirmUpdateDepartmentNote = async () => {
 /* 狀態文字樣式 */
 .status-text {
   text-align: center;
-  padding: 4px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
-  font-size: 13px;
-  font-weight: bold;
+  font-size: 12px;
   min-width: 60px;
   display: inline-block;
 
   &.teal-lighten-1 {
-    background-color: #e0f2f1;
-    color: #00695c;
+    background-color: #E8F5E9;
+    color: #43A047;
   }
 
   &.red-lighten-1 {
-    background-color: #ffcdd2;
-    color: #c62828;
+    background-color: #FFEBEE;
+    color: #EF5350;
   }
 
   &.grey-lighten-2 {
@@ -4328,5 +4689,24 @@ const confirmUpdateDepartmentNote = async () => {
   background: #f5f5f5;
   border-color: #e0e0e0;
   color: #9e9e9e;
+}
+
+.quota-rank-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 6px;
+  &.regular {
+    background-color: #E8F5E9;
+    color: #43A047;
+    border: 1px solid #C8E6C9;
+  }
+  &.backup {
+    background-color: #eee;
+    color: #888;
+    border: 1px solid #bdbdbd;
+  }
 }
 </style>

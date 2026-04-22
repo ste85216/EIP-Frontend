@@ -18,6 +18,16 @@
         </div>
         <div class="d-flex align-center">
           <v-btn
+            v-if="hasBasePermissions"
+            color="white"
+            variant="outlined"
+            class="me-2"
+            size="small"
+            @click="resetToBasePermissions"
+          >
+            回到原角色權限
+          </v-btn>
+          <v-btn
             color="white"
             variant="outlined"
             class="me-2"
@@ -27,6 +37,7 @@
             重置
           </v-btn>
           <v-btn
+            v-if="currentRole"
             color="white"
             variant="outlined"
             class="me-6"
@@ -408,11 +419,26 @@ const props = defineProps({
   currentRole: {
     type: Object,
     default: null
+  },
+  // 角色權限（作為基礎）
+  basePermissions: {
+    type: Array,
+    default: () => []
+  },
+  // 額外權限
+  extraPermissions: {
+    type: Array,
+    default: () => []
+  },
+  // 拒絕權限
+  deniedPermissions: {
+    type: Array,
+    default: () => []
   }
 })
 
 // Emits
-const emit = defineEmits(['update:modelValue', 'save', 'copy'])
+const emit = defineEmits(['update:modelValue', 'save', 'copy', 'resetToBase'])
 
 // Store 和工具
 const permissionStore = usePermissionStore()
@@ -480,7 +506,33 @@ const permissionModules = ref([
     pagePermission: 'MARKETING_DESIGN_REQUEST_PAGE_READ',
     features: [
       { key: 'read', name: '查看需求申請', permission: 'MARKETING_DESIGN_REQUEST_APPLY_READ' },
-      { key: 'designerTag', name: '標註為處理人員', permission: 'MARKETING_DESIGN_REQUEST_DESIGNER_TAG' },
+    ]
+  },
+  {
+    key: 'educationTrainingVideo',
+    name: '影片專區',
+    icon: 'mdi-video-outline',
+    category: 'common',
+    pagePermission: 'EDUCATION_TRAINING_VIDEO_PAGE_READ',
+    features: [
+    ]
+  },
+  {
+    key: 'evaluationMyPending',
+    name: '我的考核',
+    icon: 'mdi-clipboard-edit-outline',
+    category: 'common',
+    pagePermission: 'EVALUATION_MY_PENDING_READ',
+    features: [
+    ]
+  },
+  {
+    key: 'employeeCommentScheduleView',
+    name: '評論排程表',
+    icon: 'mdi-calendar-clock',
+    category: 'common',
+    pagePermission: 'EMPLOYEE_COMMENT_SCHEDULE_READ',
+    features: [
     ]
   },
   {
@@ -492,7 +544,7 @@ const permissionModules = ref([
     features: [
       // { key: 'teamRead', name: '查看團隊', permission: 'TEAM_READ' },
       { key: 'teamCreate', name: '新增團隊', permission: 'TEAM_CREATE' },
-      { key: 'projectAndTaskManage', name: '管理專案與任務', permission: 'PROJECT_AND_TASK_MANAGE' },
+      // { key: 'projectAndTaskManage', name: '管理專案與任務', permission: 'PROJECT_AND_TASK_MANAGE' },
       // { key: 'teamUpdate', name: '編輯團隊', permission: 'TEAM_UPDATE' },
       // { key: 'teamDelete', name: '刪除團隊', permission: 'TEAM_DELETE' },
       // { key: 'projectRead', name: '查看專案', permission: 'PROJECT_READ' },
@@ -516,6 +568,16 @@ const permissionModules = ref([
     pagePermission: 'B2C_STATISTICS_READ',
     features: [
       { key: 'read', name: '查看直客詢問', permission: 'CUSTOMER_INQUIRY_STATISTICS_READ' },
+    ]
+  },
+  {
+    key: 'lectureEventStatistics',
+    name: '講座活動統計表',
+    icon: 'mdi-calendar-clock',
+    category: 'business',
+    pagePermission: 'LECTURE_EVENT_STATISTICS_READ',
+    features: [
+      { key: 'attendeeUpdate', name: '新增／編輯參加者（統計頁，不含刪除）', permission: 'LECTURE_EVENT_STATISTICS_ATTENDEE_UPDATE' },
     ]
   },
   {
@@ -582,15 +644,77 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'employeeCommentScheduleManagement',
+    name: '評論排程管理',
+    icon: 'mdi-calendar-clock',
+    category: 'business',
+    pagePermission: 'EMPLOYEE_COMMENT_SCHEDULE_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看排程', permission: 'EMPLOYEE_COMMENT_SCHEDULE_READ' },
+      { key: 'create', name: '建立排程', permission: 'EMPLOYEE_COMMENT_SCHEDULE_CREATE' },
+      { key: 'update', name: '編輯排程', permission: 'EMPLOYEE_COMMENT_SCHEDULE_UPDATE' },
+      { key: 'delete', name: '刪除排程', permission: 'EMPLOYEE_COMMENT_SCHEDULE_DELETE' },
+      { key: 'manage', name: '管理排程', permission: 'EMPLOYEE_COMMENT_SCHEDULE_MANAGE' },
+    ]
+  },
+  {
+    key: 'employeeCommentCandidateManagement',
+    name: '評論名單管理',
+    icon: 'mdi-account-group',
+    category: 'business',
+    pagePermission: 'EMPLOYEE_COMMENT_CANDIDATE_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看名單', permission: 'EMPLOYEE_COMMENT_CANDIDATE_READ' },
+      { key: 'create', name: '新增排除員工', permission: 'EMPLOYEE_COMMENT_CANDIDATE_CREATE' },
+      { key: 'update', name: '編輯名單', permission: 'EMPLOYEE_COMMENT_CANDIDATE_UPDATE' },
+      { key: 'delete', name: '刪除排除員工', permission: 'EMPLOYEE_COMMENT_CANDIDATE_DELETE' },
+    ]
+  },
+  {
     key: 'marketingDesignRequestManagement',
-    name: '行銷美編需求申請管理',
+    name: '行銷美編申請管理',
     icon: 'mdi-form-select',
     category: 'business',
     pagePermission: 'MARKETING_DESIGN_REQUEST_MANAGEMENT_READ',
     features: [
       { key: 'read', name: '查看行美申請', permission: 'MARKETING_DESIGN_REQUEST_READ' },
       { key: 'update', name: '編輯行美申請', permission: 'MARKETING_DESIGN_REQUEST_UPDATE' },
-      { key: 'notificationManage', name: '通知設定管理', permission: 'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE' },
+      { key: 'delete', name: '刪除行美申請', permission: 'MARKETING_DESIGN_REQUEST_DELETE' },
+      { key: 'designerTag', name: '標註為處理人員', permission: 'MARKETING_DESIGN_REQUEST_DESIGNER_TAG' },
+    ]
+  },
+  {
+    key: 'customerCommentManagement',
+    name: '客戶評論管理',
+    icon: 'mdi-comment-text-multiple',
+    category: 'business',
+    pagePermission: 'CUSTOMER_COMMENT_MANAGEMENT_READ',
+    features: [
+      { key: 'manage', name: '管理客戶評論', permission: 'CUSTOMER_COMMENT_MANAGE' },
+      { key: 'reviewerTag', name: '標註為審核者', permission: 'CUSTOMER_COMMENT_REVIEWER_TAG' },
+      { key: 'senderTag', name: '標註為寄出者', permission: 'CUSTOMER_COMMENT_SENDER_TAG' },
+    ]
+  },
+  {
+    key: 'lectureEventManagement',
+    name: '講座活動管理',
+    icon: 'mdi-presentation',
+    category: 'business',
+    pagePermission: 'LECTURE_EVENT_MANAGEMENT_READ',
+    features: [
+      { key: 'manage', name: '管理講座活動', permission: 'LECTURE_EVENT_MANAGE' },
+    ]
+  },
+  {
+    key: 'marketingDesignRequestSettings',
+    name: '行銷美編申請設定',
+    icon: 'mdi-form-select',
+    category: 'business',
+    pagePermission: 'MARKETING_DESIGN_REQUEST_SETTINGS_READ',
+    features: [
+      { key: 'settingManage', name: '申請限制設定', permission: 'MARKETING_DESIGN_REQUEST_SETTING_MANAGE' },
+      { key: 'notificationManage', name: '通知設定', permission: 'MARKETING_DESIGN_REQUEST_NOTIFICATION_MANAGE' },
+      { key: 'taskConversionManage', name: '任務轉換管理', permission: 'MARKETING_DESIGN_REQUEST_TASK_CONVERSION_MANAGE' },
     ]
   },
   {
@@ -650,6 +774,15 @@ const permissionModules = ref([
       { key: 'sparePartInventoryUpdate', name: '編輯備品庫存', permission: 'SPARE_PART_INVENTORY_UPDATE' }
     ]
   },
+  {
+    key: 'selfAssessmentStatistics',
+    name: '部門自評統計表',
+    icon: 'mdi-chart-box-multiple-outline',
+    category: 'business',
+    pagePermission: 'SELF_ASSESSMENT_STATISTICS_READ',
+    features: [
+    ]
+  },
   { key: 'employeeList',
     name: '公司員工列表',
     icon: 'mdi-account-group',
@@ -671,6 +804,7 @@ const permissionModules = ref([
       { key: 'delete', name: '刪除員工', permission: 'EMPLOYEE_DELETE' },
       { key: 'export', name: '匯出員工資料', permission: 'EMPLOYEE_EXPORT' },
       { key: 'import', name: '匯入員工資料', permission: 'EMPLOYEE_IMPORT' },
+      { key: 'tag', name: '員工異動通知', permission: 'EMPLOYEE_CHANGE_NOTIFICATION_TAG' },
     ]
   },
   {
@@ -693,7 +827,55 @@ const permissionModules = ref([
       { key: 'locationDelete', name: '刪除公司地點', permission: 'COMPANY_LOCATION_DELETE' }
     ]
   },
-
+  {
+    key: 'evaluationManagement',
+    name: '考核管理',
+    icon: 'mdi-clipboard-check-outline',
+    category: 'organization',
+    pagePermission: 'EVALUATION_MANAGEMENT_READ',
+    features: [
+      { key: 'manage', name: '管理考核批次', permission: 'EVALUATION_MANAGEMENT_MANAGE' }
+    ]
+  },
+  {
+    key: 'attendanceManagement',
+    name: '出勤管理',
+    icon: 'mdi-calendar-check-outline',
+    category: 'organization',
+    pagePermission: 'ATTENDANCE_MANAGEMENT_READ',
+    features: [
+      { key: 'manage', name: '管理出勤', permission: 'ATTENDANCE_MANAGE' },
+    ]
+  },
+  {
+    key: 'evaluationTemplateManagement',
+    name: '考核表單管理',
+    icon: 'mdi-clipboard-text-outline',
+    category: 'organization',
+    pagePermission: 'EVALUATION_TEMPLATE_MANAGEMENT_READ',
+    features: [
+      { key: 'manage', name: '管理考核表單', permission: 'EVALUATION_TEMPLATE_MANAGE' },
+    ]
+  },
+  {
+    key: 'attendanceFormTemplateManagement',
+    name: '出勤表單管理',
+    icon: 'mdi-calendar-clock',
+    category: 'organization',
+    pagePermission: 'ATTENDANCE_FORM_TEMPLATE_MANAGEMENT_READ',
+    features: [
+      { key: 'manage', name: '管理出勤表單模板', permission: 'ATTENDANCE_FORM_TEMPLATE_MANAGE' },
+    ]
+  },
+  {
+    key: 'selfAssessmentManagement',
+    name: '自評管理',
+    icon: 'mdi-account-details-outline',
+    category: 'organization',
+    pagePermission: 'SELF_ASSESSMENT_MANAGEMENT_READ',
+    features: [
+    ]
+  },
   {
     key: 'hardwareDeviceManagement',
     name: '硬體設備管理',
@@ -767,6 +949,15 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'taiwanHolidayManagement',
+    name: '假日管理',
+    icon: 'mdi-calendar-clock',
+    category: 'system',
+    pagePermission: 'TAIWAN_HOLIDAY_MANAGEMENT_READ',
+    features: [
+    ]
+  },
+  {
     key: 'announcementManagement',
     name: '公告管理',
     icon: 'mdi-bullhorn',
@@ -819,6 +1010,20 @@ const permissionModules = ref([
     ]
   },
   {
+    key: 'educationTrainingVideoManagement',
+    name: '影片管理',
+    icon: 'mdi-video-outline',
+    category: 'system',
+    pagePermission: 'EDUCATION_TRAINING_VIDEO_MANAGEMENT_READ',
+    features: [
+      { key: 'read', name: '查看影片', permission: 'EDUCATION_TRAINING_VIDEO_READ' },
+      { key: 'create', name: '新增影片', permission: 'EDUCATION_TRAINING_VIDEO_CREATE' },
+      { key: 'update', name: '編輯影片', permission: 'EDUCATION_TRAINING_VIDEO_UPDATE' },
+      { key: 'delete', name: '刪除影片', permission: 'EDUCATION_TRAINING_VIDEO_DELETE' },
+      { key: 'categoryManagement', name: '影片分類管理', permission: 'EDUCATION_TRAINING_VIDEO_CATEGORY_MANAGE'}
+    ]
+  },
+  {
     key: 'auditLog',
     name: '異動紀錄',
     icon: 'mdi-history',
@@ -842,6 +1047,39 @@ const currentRoleName = computed(() => {
 const availableRoles = computed(() => {
   if (!props.currentRole) return allRoles.value
   return allRoles.value.filter(role => role._id !== props.currentRole._id)
+})
+
+// 是否有基礎權限（角色權限）
+const hasBasePermissions = computed(() => {
+  return props.basePermissions && props.basePermissions.length > 0
+})
+
+// 將權限轉換為代碼（統一格式）
+const getPermissionCode = (perm) => {
+  if (typeof perm === 'string') return perm
+  return perm.code || perm._id || perm
+}
+
+// 計算當前應該顯示的權限代碼（角色權限 + 額外權限 - 拒絕權限）
+const currentDisplayPermissionCodes = computed(() => {
+  const basePermCodes = new Set(
+    props.basePermissions.map(getPermissionCode).map(c => String(c))
+  )
+
+  const extraPermCodes = new Set(
+    props.extraPermissions.map(getPermissionCode).map(c => String(c))
+  )
+
+  const deniedPermCodes = new Set(
+    props.deniedPermissions.map(getPermissionCode).map(c => String(c))
+  )
+
+  // 合併：角色權限 + 額外權限 - 拒絕權限
+  const result = new Set(basePermCodes)
+  extraPermCodes.forEach(code => result.add(code))
+  deniedPermCodes.forEach(code => result.delete(code))
+
+  return Array.from(result)
 })
 
 // 分類切換與分群
@@ -883,22 +1121,34 @@ const initializeModulePermissions = () => {
 
 // 載入當前權限
 const loadCurrentPermissions = () => {
-  if (!props.permissions || props.permissions.length === 0) {
-    initializeModulePermissions()
-    return
-  }
-
   // 初始化所有模組狀態
   initializeModulePermissions()
 
+  // 確定要使用的權限代碼集合
+  let permissionCodes = new Set()
+
+  if (hasBasePermissions.value) {
+    // 使用計算出的權限代碼
+    permissionCodes = new Set(currentDisplayPermissionCodes.value)
+  } else if (props.permissions && props.permissions.length > 0) {
+    // 使用傳入的權限
+    props.permissions.forEach(p => {
+      const code = getPermissionCode(p)
+      permissionCodes.add(String(code))
+    })
+  } else {
+    // 沒有權限，保持初始化狀態
+    return
+  }
+
   // 檢查頁面權限
   permissionModules.value.forEach(module => {
-    const hasPagePermission = props.permissions.some(p => p.code === module.pagePermission)
+    const hasPagePermission = permissionCodes.has(String(module.pagePermission))
     modulePermissions.value[module.key].pageAccess = hasPagePermission
 
     // 檢查功能權限
     module.features.forEach(feature => {
-      const hasFeaturePermission = props.permissions.some(p => p.code === feature.permission)
+      const hasFeaturePermission = permissionCodes.has(String(feature.permission))
       modulePermissions.value[module.key][feature.key] = hasFeaturePermission
     })
   })
@@ -935,7 +1185,32 @@ const savePermissions = () => {
     })
   })
 
-  emit('save', selectedPermissions)
+  // 如果有基礎權限，計算額外權限和拒絕權限
+  if (hasBasePermissions.value) {
+    const basePermCodes = new Set(
+      props.basePermissions.map(getPermissionCode).map(c => String(c))
+    )
+
+    const selectedPermCodes = new Set(selectedPermissions.map(c => String(c)))
+
+    // 額外權限：選中但不在角色權限中的
+    const extraPerms = selectedPermissions.filter(perm => {
+      return !basePermCodes.has(String(perm))
+    })
+
+    // 拒絕權限：在角色權限中但未選中的
+    const deniedPerms = Array.from(basePermCodes).filter(basePermCode => {
+      return !selectedPermCodes.has(String(basePermCode))
+    })
+
+    emit('save', {
+      permissions: selectedPermissions,
+      extraPermissions: extraPerms,
+      deniedPermissions: deniedPerms
+    })
+  } else {
+    emit('save', selectedPermissions)
+  }
 }
 
 // 關閉對話框
@@ -950,6 +1225,22 @@ const resetPermissions = () => {
 
   createSnackbar({
     text: '權限已重置',
+    snackbarProps: { color: 'teal-lighten-1' }
+  })
+}
+
+// 重置為角色權限
+const resetToBasePermissions = () => {
+  if (!hasBasePermissions.value) return
+
+  // 發送重置事件，讓父組件處理
+  emit('resetToBase')
+
+  // 重新載入權限（會使用基礎權限）
+  loadCurrentPermissions()
+
+  createSnackbar({
+    text: '已重置為原角色權限',
     snackbarProps: { color: 'teal-lighten-1' }
   })
 }
@@ -1070,6 +1361,13 @@ const copyPermissions = async () => {
 watch(() => props.permissions, () => {
   loadCurrentPermissions()
 }, { immediate: true })
+
+// 監聽基礎權限、額外權限、拒絕權限變化
+watch(() => [props.basePermissions, props.extraPermissions, props.deniedPermissions], () => {
+  if (hasBasePermissions.value) {
+    loadCurrentPermissions()
+  }
+}, { deep: true })
 
 // 監聽對話框開啟
 watch(() => props.modelValue, (newValue) => {

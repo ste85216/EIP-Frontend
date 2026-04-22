@@ -54,6 +54,12 @@ const myCustomLightTheme = {
 }
 // https://vuetifyjs.com/en/introduction/why-vuetify/#feature-guides
 export default createVuetify({
+  defaults: {
+    VDateInput: {
+      placeholder: '請選擇日期，勿手動輸入',
+      class: 'date-input',
+    }
+  },
   theme: {
     defaultTheme: 'myCustomLightTheme',
     themes: {

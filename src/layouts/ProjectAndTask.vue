@@ -56,7 +56,7 @@
         flat
         to="/"
       >
-        回測試系統
+        回永信系統
       </v-btn>
       <v-btn
         v-if="user.isLogin && !smAndUp"
@@ -878,6 +878,7 @@
     </v-navigation-drawer>
 
     <v-main>
+      <MarqueeBar layout="projectAndTask" />
       <router-view />
     </v-main>
 
@@ -908,6 +909,7 @@ import UserAvatar from '@/components/UserAvatar.vue'
 import CreateTeamDialog from '@/components/CreateTeamDialog.vue'
 import CreateProjectDialog from '@/components/CreateProjectDialog.vue'
 import NotificationInbox from '@/components/NotificationInbox.vue'
+import MarqueeBar from '@/components/MarqueeBar.vue'
 
 const { mdAndUp, lgAndUp, name: breakpoint } = useDisplay()
 const route = useRoute()

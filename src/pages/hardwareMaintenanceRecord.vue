@@ -261,8 +261,7 @@
                       icon
                       color="light-blue-darken-4"
                       variant="plain"
-                      width="28"
-                      :size="buttonSize"
+                      :size="smAndUp ? '28' : '24'"
                       :ripple="false"
                       class="me-2"
                       @click="openDialog(item)"
@@ -273,8 +272,7 @@
                       icon
                       color="red-lighten-1"
                       variant="plain"
-                      width="28"
-                      :size="buttonSize"
+                      :size="smAndUp ? '28' : '24'"
                       :ripple="false"
                       @click="openDeleteDialog(item)"
                     >
@@ -297,29 +295,31 @@
       :no-click-animation="isSubmitting"
     >
       <v-card class="rounded-lg">
-        <div class="card-title px-6 py-3 bg-blue-grey-darken-2 d-flex align-center">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2">
           <v-icon
-            size="20"
+            :size="smAndUp ? '20' : '18'"
             color="white"
             class="me-2"
           >
             mdi-wrench
           </v-icon>
-          {{ dialog.id ? '編輯維修記錄' : '新增維修記錄' }}
+          <span class="card-title text-white">{{ dialog.id ? '編輯維修記錄' : '新增維修記錄' }}</span>
           <v-spacer />
           <v-btn
             icon
-            color="white"
             variant="plain"
             class="opacity-100"
             :ripple="false"
-            size="20"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
             @click="closeDialog"
           >
-            <v-icon>mdi-close</v-icon>
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
           </v-btn>
-        </div>
-        <v-card-text class="mt-6 mb-0 px-6 pb-4">
+        </v-card-title>
+        <v-card-text class="px-6 py-4 mt-4">
           <v-form
             ref="maintenanceFormRef"
             :disabled="isSubmitting"
@@ -399,8 +399,6 @@
                 />
               </v-col>
 
-
-
               <v-col cols="12">
                 <v-textarea
                   v-model="note.value.value"
@@ -413,31 +411,29 @@
                 />
               </v-col>
             </v-row>
-
-            <v-card-actions class="px-0 mt-4">
-              <v-spacer />
-              <v-btn
-                color="grey-darken-1"
-                variant="outlined"
-                :size="buttonSize"
-                :loading="isSubmitting"
-                @click="closeDialog"
-              >
-                取消
-              </v-btn>
-              <v-btn
-                color="teal-darken-1"
-                variant="outlined"
-                type="submit"
-                class="ms-1"
-                :size="buttonSize"
-                :loading="isSubmitting"
-              >
-                送出
-              </v-btn>
-            </v-card-actions>
           </v-form>
         </v-card-text>
+        <v-card-actions class="px-6 pb-5 pt-1">
+          <v-spacer />
+          <v-btn
+            variant="outlined"
+            color="grey-darken-1"
+            :size="smAndUp ? 'default' : 'small'"
+            @click="closeDialog"
+          >
+            取消
+          </v-btn>
+          <v-btn
+            color="teal-darken-1"
+            variant="outlined"
+            class="ms-2"
+            :size="smAndUp ? 'default' : 'small'"
+            :loading="isSubmitting"
+            @click="submitMaintenance"
+          >
+            送出
+          </v-btn>
+        </v-card-actions>
       </v-card>
     </v-dialog>
 
@@ -624,7 +620,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { definePage } from 'vue-router/auto'
 import { useDisplay } from 'vuetify'
 import { useApi } from '@/composables/axios'
@@ -638,7 +634,7 @@ import html2pdf from 'html2pdf.js'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '硬體維修記錄 | TEST',
+    title: '硬體維修記錄 | Ystravel',
     login: true,
     permissions: ['HARDWARE_MAINTENANCE_RECORD_PAGE_READ']
   }
@@ -650,7 +646,6 @@ const createSnackbar = useSnackbar()
 const { smAndUp, mdAndUp } = useDisplay()
 
 // ===== 響應式變數 =====
-const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
 const dialogWidth = computed(() => {
   if (mdAndUp.value) return '900'
   if (smAndUp.value) return '600'
@@ -980,7 +975,7 @@ const formatDate = (date) => {
   const year = d.getFullYear()
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+  return `${year}/${month}/${day}`
 }
 
 const getCategoryName = (id) => {
@@ -1464,13 +1459,27 @@ const selectAllHardwareCategories = () => {
     background-color: #455A64;
     color: white;
     height: 48px;
+    th {
+      font-size: 13px !important;
+    }
   }
   :deep(tbody) {
-    tr:nth-child(even) {
-      background-color: #fffaf0;
+    tr {
+      min-height: 48px;
+      &:nth-child(even) {
+        background-color: #fffaf0;
+      }
+      &:nth-child(odd) {
+        background-color: #f6f8fa;
+      }
     }
-    tr:nth-child(odd) {
-      background-color: #f6f8fa;
+    td {
+      height: 48px !important;
+      font-size: 13px !important;
+      transition: none !important;
+      div {
+        line-height: 1.6;
+      }
     }
   }
 }

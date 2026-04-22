@@ -375,7 +375,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import * as yup from 'yup'
 import { definePage } from 'vue-router/auto'
 import { useForm, useField } from 'vee-validate'
@@ -391,7 +391,7 @@ import { useRouter } from 'vue-router'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '管理者管理 | TEST',
+    title: '管理者管理 | Ystravel',
     login: true,
     roles: [UserRole.ADMIN]
   }

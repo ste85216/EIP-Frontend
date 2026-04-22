@@ -1,236 +1,256 @@
 <template>
-  <v-container max-width="2160">
-    <v-row class="pt-md-5">
-      <v-col
-        cols="12"
-        lg="2"
-      >
-        <v-row>
-          <v-col
-            cols="12"
-            class="mt-1 ps-lg-6 pe-lg-0"
-          >
-            <v-card class="elevation-4 rounded-lg py-4 py-sm-6 px-4 px-sm-4 px-md-4 px-xl-4">
-              <v-card-title class="font-weight-bold d-flex align-center px-3">
-                搜尋條件
-              </v-card-title>
-              <v-card-text class="pa-2">
-                <v-row>
-                  <v-col
-                    cols="12"
-                    lg="12"
-                  >
-                    <v-row>
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        lg="12"
-                        class="pb-0"
-                      >
-                        <v-autocomplete
-                          v-model="searchCriteria.theme"
-                          :items="themeOptions"
-                          label="行銷主題"
-                          item-title="name"
-                          item-value="_id"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          clearable
-                          class="mb-3"
-                        />
-                      </v-col>
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        lg="12"
-                        class="pb-0"
-                      >
-                        <v-autocomplete
-                          v-model="searchCriteria.channel"
-                          :items="channelOptions"
-                          label="廣告渠道"
-                          item-title="name"
-                          item-value="_id"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          clearable
-                          class="mb-3"
-                          @update:model-value="handleChannelChange"
-                        />
-                      </v-col>
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        lg="12"
-                        class="pb-0"
-                      >
-                        <v-autocomplete
-                          v-model="searchCriteria.platform"
-                          :items="getFilteredPlatformOptions(searchCriteria.channel)"
-                          :label="searchCriteria.channel ? '平台' : '平台 ( 請先選擇廣告渠道 )'"
-                          item-title="name"
-                          item-value="_id"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          clearable
-                          class="mb-3"
-                          :disabled="!searchCriteria.channel"
-                        />
-                      </v-col>
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        lg="12"
-                        class="pb-0"
-                      >
-                        <v-autocomplete
-                          v-model="searchCriteria.detail"
-                          :items="detailOptions"
-                          label="線別"
-                          item-title="name"
-                          item-value="_id"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          clearable
-                          class="mb-3"
-                        />
-                      </v-col>
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        lg="12"
-                        class="pb-0"
-                      >
-                        <v-date-input
-                          v-model="searchCriteria.createdDateRange"
-                          label="建立日期"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          multiple="range"
-                          prepend-icon
-                          clearable
-                          :cancel-text="'取消'"
-                          :ok-text="'確認'"
-                          class="mb-3"
-                        />
-                      </v-col>
-                      <v-col
-                        cols="12"
-                        sm="6"
-                        lg="12"
-                        class="pb-0"
-                      >
-                        <v-date-input
-                          v-model="searchCriteria.invoiceDateRange"
-                          label="發票日期"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          multiple="range"
-                          prepend-icon
-                          clearable
-                          :cancel-text="'取消'"
-                          :ok-text="'確認'"
-                          class="mb-3"
-                        />
-                      </v-col>
-                    </v-row>
-                    <v-row class="d-flex justify-space-between">
-                      <v-col cols="3">
-                        <v-btn
-                          color="grey"
-                          width="40"
-                          block
-                          @click="resetSearch"
-                        >
-                          <v-icon>mdi-refresh</v-icon>
-                        </v-btn>
-                      </v-col>
-                      <v-col
-                        cols="9"
-                        class="ps-0"
-                      >
-                        <v-btn
-                          color="cyan-darken-2"
-                          prepend-icon="mdi-magnify"
-                          :loading="isLoading"
-                          block
-                          @click="performSearch"
-                        >
-                          搜尋
-                        </v-btn>
-                      </v-col>
-                    </v-row>
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-col>
-      <v-col
-        cols="12"
-        lg="10"
-      >
-        <v-row class="elevation-4 rounded-lg py-4 py-lg-8 px-1 px-sm-2 px-md-3 px-lg-7 mt-1 mx-0 mx-lg-4 mb-4 bg-white">
-          <!-- 標題區塊 -->
-          <v-col
-            cols="12"
-            class="ps-3 pb-2 pb-lg-6 d-flex align-center"
-          >
-            <h3 class="d-inline">
+  <v-container max-width="2400">
+    <v-row class="pt-md-6 px-0 px-md-4">
+      <v-col cols="12">
+        <v-card class="elevation-4 rounded-lg pt-6 py-md-7 px-0">
+          <div class="d-flex align-center px-4 px-sm-6 py-1">
+            <h3>
               實際支出管理
             </h3>
-          </v-col>
+          </div>
+          <v-divider class="mt-5 mb-1 mb-sm-3" />
+
+          <!-- 搜尋條件區塊 -->
+          <v-card-text class="pt-4 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
+            <v-row class="mb-2">
+              <!-- 行銷主題 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">行銷主題 :</span>
+                  <v-autocomplete
+                    v-model="searchCriteria.theme"
+                    :items="themeOptions"
+                    item-title="name"
+                    item-value="_id"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    placeholder="請選擇行銷主題"
+                  />
+                </div>
+              </v-col>
+
+              <!-- 廣告渠道 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">廣告渠道 :</span>
+                  <v-autocomplete
+                    v-model="searchCriteria.channel"
+                    :items="channelOptions"
+                    item-title="name"
+                    item-value="_id"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    placeholder="請選擇廣告渠道"
+                    @update:model-value="handleChannelChange"
+                  />
+                </div>
+              </v-col>
+
+              <!-- 平台 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">平台 :</span>
+                  <v-autocomplete
+                    v-model="searchCriteria.platform"
+                    :items="getFilteredPlatformOptions(searchCriteria.channel)"
+                    item-title="name"
+                    item-value="_id"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    :placeholder="searchCriteria.channel ? '請選擇平台' : '請先選擇廣告渠道'"
+                    :disabled="!searchCriteria.channel"
+                  />
+                </div>
+              </v-col>
+
+              <!-- 線別 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">線別 :</span>
+                  <v-autocomplete
+                    v-model="searchCriteria.detail"
+                    :items="detailOptions"
+                    item-title="name"
+                    item-value="_id"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    clearable
+                    placeholder="請選擇線別"
+                  />
+                </div>
+              </v-col>
+
+              <!-- 建立日期 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">建立日期 :</span>
+                  <v-date-input
+                    v-model="searchCriteria.createdDateRange"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    multiple="range"
+                    prepend-icon
+                    clearable
+                    placeholder="請選擇日期"
+                    :cancel-text="'取消'"
+                    :ok-text="'確認'"
+                  />
+                </div>
+              </v-col>
+
+              <!-- 發票日期 -->
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+                lg="2"
+                class="px-1 pe-sm-2 py-1"
+              >
+                <div class="d-flex flex-column">
+                  <span class="search-label">發票日期 :</span>
+                  <v-date-input
+                    v-model="searchCriteria.invoiceDateRange"
+                    variant="outlined"
+                    density="compact"
+                    hide-details
+                    multiple="range"
+                    prepend-icon
+                    clearable
+                    placeholder="請選擇日期"
+                    :cancel-text="'取消'"
+                    :ok-text="'確認'"
+                  />
+                </div>
+              </v-col>
+              <v-col
+                lg="10"
+                class="d-none d-md-block"
+              />
+              <!-- 搜尋按鈕 -->
+              <v-col
+                cols="12"
+                md="8"
+                lg="2"
+              >
+                <v-row class="d-sm-flex justify-sm-end">
+                  <v-col
+                    cols="8"
+                    sm="4"
+                    lg="8"
+                    class="ps-1 pe-0"
+                  >
+                    <v-btn
+                      color="cyan-darken-2"
+                      prepend-icon="mdi-magnify"
+                      :loading="isLoading"
+                      block
+                      @click="performSearch"
+                    >
+                      搜尋
+                    </v-btn>
+                  </v-col>
+                  <v-col
+                    cols="4"
+                    sm="2"
+                    lg="4"
+                    class="pe-2"
+                  >
+                    <v-btn
+                      color="grey"
+                      width="40"
+                      block
+                      @click="resetSearch"
+                    >
+                      <v-icon>mdi-refresh</v-icon>
+                    </v-btn>
+                  </v-col>
+                </v-row>
+              </v-col>
+            </v-row>
+          </v-card-text>
+          <v-divider class="my-0" />
+
+          <!-- 功能按鈕和快速搜尋區 -->
+          <v-row class="px-1 px-sm-3 px-md-7 mt-1 bg-white">
+            <v-col
+              cols="12"
+              class="ps-4 pb-sm-4"
+            >
+              <v-row class="d-flex align-center px-5 px-md-2">
+                <v-btn
+                  color="teal-darken-2"
+                  prepend-icon="mdi-plus"
+                  variant="outlined"
+                  @click="openDialog()"
+                >
+                  新增實際支出
+                </v-btn>
+                <v-spacer />
+                <v-col
+                  cols="7"
+                  sm="6"
+                  md="4"
+                  lg="2"
+                  class="px-1 my-1"
+                >
+                  <div class="d-flex align-center">
+                    <v-text-field
+                      v-model="searchText"
+                      :loading="isSearching"
+                      density="compact"
+                      variant="outlined"
+                      placeholder="搜尋備註、建立者"
+                      append-inner-icon="mdi-magnify"
+                      hide-details
+                      clearable
+                      @update:model-value="handleSearch"
+                    />
+                  </div>
+                </v-col>
+              </v-row>
+            </v-col>
+          </v-row>
 
           <!-- 表格區塊 -->
-          <v-col
-            cols="12"
-            class="pb-0 pb-lg-4"
-          >
-            <div class="d-flex align-center mb-4">
-              <v-btn
-                color="blue-grey-darken-1"
-                variant="outlined"
-                :size="buttonSize"
-                prepend-icon="mdi-plus"
-                @click="openDialog()"
-              >
-                新增實際支出
-              </v-btn>
-              <div
-                style="width: 260px;"
-                class="ms-auto d-flex align-center"
-              >
-                <v-icon
-                  v-tooltip:start="'可搜尋備註、建立者'"
-                  icon="mdi-information"
-                  size="small"
-                  color="blue-grey-darken-2"
-                  class="ms-2 me-2"
-                />
-                <v-text-field
-                  v-model="searchText"
-                  label="快速搜尋"
-                  append-inner-icon="mdi-magnify"
-                  :loading="isSearching"
-                  base-color="#666"
-                  color="blue-grey-darken-3"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  clearable
-                  @update:model-value="handleSearch"
-                />
-              </div>
-            </div>
-          </v-col>
-          <v-col cols="12">
+          <v-card-text class="px-sm-6 px-md-7">
             <v-data-table-server
               v-model:items-per-page="itemsPerPage"
               v-model:page="page"
@@ -241,7 +261,8 @@
               :items-length="totalItems"
               :items-per-page-options="[10, 20, 50, 100]"
               :loading="isLoading"
-              class="elevation-0 rounded-lg"
+              hover
+              class="rounded-ts-lg rounded-te-lg"
               @update:options="handleTableOptionsChange"
             >
               <template #[`item.invoiceDate`]="{ item }">
@@ -368,7 +389,9 @@
                     icon
                     color="light-blue-darken-4"
                     variant="plain"
-                    :size="buttonSize"
+                    size="22"
+                    class="mx-2"
+                    :ripple="false"
                     @click="editItem(item)"
                   >
                     <v-icon>mdi-pencil</v-icon>
@@ -378,7 +401,9 @@
                     icon
                     color="teal-darken-2"
                     variant="plain"
-                    :size="buttonSize"
+                    size="22"
+                    class="mx-2"
+                    :ripple="false"
                     @click="copyItem(item)"
                   >
                     <v-icon>mdi-content-copy</v-icon>
@@ -386,8 +411,8 @@
                 </div>
               </template>
             </v-data-table-server>
-          </v-col>
-        </v-row>
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
 
@@ -398,7 +423,7 @@
       :width="dialogWidth"
       :fullscreen="!smAndUp"
     >
-      <v-card class="rounded-lg">
+      <v-card class="rounded-lg expense-form-dialog">
         <div
           v-if="isLoadingEdit"
           class="d-flex justify-center align-center"
@@ -414,33 +439,37 @@
           <v-form
             ref="form"
             :disabled="isSubmitting"
+            class="expense-form-dialog-form"
             @submit.prevent="submit"
           >
-            <div class="card-title px-8 py-4 bg-blue-grey-darken-2 d-flex align-center">
+            <v-card-title
+              :class="['d-flex align-center px-6 py-2 position-sticky top-0', dialog.id ? 'bg-light-blue-darken-2' : 'bg-teal-darken-2']"
+            >
               <v-icon
-                size="20"
+                icon="mdi-list-box-outline"
+                :size="smAndUp ? '20' : '18'"
                 color="white"
                 class="me-2"
-              >
-                mdi-list-box-outline
-              </v-icon>
-              {{ dialog.id ? '編輯實際支出' : '新增實際支出' }}
+              />
+              <span class="card-title text-white">{{ dialog.id ? '編輯實際支出' : '新增實際支出' }}</span>
               <v-spacer />
               <v-btn
                 icon
-                color="white"
                 variant="plain"
                 class="opacity-100"
                 :ripple="false"
-                size="20"
+                color="white"
+                :size="smAndUp ? '36' : '32'"
                 @click="closeDialog"
               >
-                <v-icon>mdi-close</v-icon>
+                <v-icon :size="smAndUp ? '22' : '18'">
+                  mdi-close
+                </v-icon>
               </v-btn>
-            </div>
+            </v-card-title>
 
-            <v-card-text class="mt-6 mb-4 px-6">
-              <v-row>
+            <v-card-text class="mt-2 px-6 overflow-y-auto expense-form-dialog-content">
+              <v-row class="mt-4">
                 <v-col
                   cols="12"
                   lg="3"
@@ -796,39 +825,33 @@
               </v-row>
             </v-card-text>
 
-            <v-card-actions class="px-7 mb-4">
-              <v-hover>
-                <template #default="{ isHovering, props }">
-                  <v-btn
-                    v-if="dialog.id"
-                    v-bind="props"
-                    :color="isHovering ? 'red-lighten-1' : 'grey'"
-                    variant="outlined"
-                    :size="buttonSize"
-                    prepend-icon="mdi-delete"
-                    @click="confirmDeleteDialog = true"
-                  >
-                    刪除
-                  </v-btn>
-                </template>
-              </v-hover>
+            <v-card-actions class="px-6 py-5">
+              <v-btn
+                v-if="dialog.id"
+                color="grey"
+                variant="outlined"
+                :size="smAndUp ? 'default' : 'small'"
+                prepend-icon="mdi-delete"
+                @click="confirmDeleteDialog = true"
+              >
+                刪除
+              </v-btn>
               <v-spacer />
               <v-btn
-                color="grey-darken-1"
                 variant="outlined"
-                class="me-1"
-                :size="buttonSize"
+                color="grey-darken-1"
+                :size="smAndUp ? 'default' : 'small'"
                 :loading="isSubmitting"
                 @click="closeDialog"
               >
                 取消
               </v-btn>
               <v-btn
-                color="teal-darken-1"
+                :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-1'"
                 variant="outlined"
                 type="submit"
-                class="ms-1"
-                :size="buttonSize"
+                class="ms-2"
+                :size="smAndUp ? 'default' : 'small'"
                 :loading="isSubmitting"
                 :disabled="isSubmitting"
               >
@@ -873,7 +896,7 @@
           <div class="d-flex justify-space-between align-center">
             <div>
               <div class="text-grey-darken-2 mb-4">
-                請輸入要分配給各線別的<span class="text-pink-lighten-1 font-weight-bold">總金額</span>，系統會自動平均分配給未填寫金額的線別。
+                請輸入要分配給各線別的<span class="text-grey-darken-3 font-weight-bold">總金額</span>，系統會自動平均分配給未填寫金額的線別。
               </div>
               <amount-input
                 v-model="amountDialog.amount"
@@ -1112,7 +1135,7 @@ import { useSnackbar } from 'vuetify-use-dialog'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import { useRouter } from 'vue-router'
 import * as yup from 'yup'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { formatNumber } from '@/utils/format'
 import AmountInput from '../components/AmountInput.vue'
 
@@ -1140,7 +1163,7 @@ const formatToDate = (dateString) => {
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '實際支出管理 | TEST',
+    title: '實際支出管理 | Ystravel',
     login: true,
     permission: 'MARKETING_EXPENSE_MANAGEMENT_READ'
   }
@@ -1154,7 +1177,6 @@ const router = useRouter()
 
 // ===== 響應式設定與螢幕斷點 =====
 const { smAndUp, mdAndUp, lgAndUp } = useDisplay()
-const buttonSize = computed(() => smAndUp.value ? 'default' : 'small')
 const detailButtonSize = computed(() => smAndUp.value ? '32' : '16')
 const detailButtonIconSize = computed(() => smAndUp.value ? '18' : '14')
 const dialogWidth = computed(() => smAndUp.value ? '1520' : '100%')
@@ -1962,9 +1984,21 @@ onMounted(async () => {
 <style lang="scss" scoped>
 :deep(.v-data-table) {
   thead {
-    background: #455a64;
-    color: #fff;
     height: 48px;
+    background-color: #455a64 !important;
+    color: #fff !important;
+    th {
+      font-size: 13px !important;
+    }
+  }
+  tbody tr {
+    min-height: 48px;
+  }
+  td {
+    height: 48px !important;
+    div {
+      line-height: 1.6;
+    }
   }
   .v-data-table__tr {
     &:nth-child(odd) {
@@ -1976,6 +2010,12 @@ onMounted(async () => {
     &:hover {
       background: #e0e0e0 !important;
     }
+  }
+}
+
+:deep(.v-data-table__tbody) {
+  td {
+    font-size: 13px !important;
   }
 }
 
@@ -2128,5 +2168,26 @@ onMounted(async () => {
 
 .details-cell {
   cursor: pointer;
+}
+
+/* 新增/編輯對話框：標題與 actions 固定，內容區可捲動 */
+.expense-form-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.expense-form-dialog .expense-form-dialog-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.expense-form-dialog .expense-form-dialog-content {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 </style>

@@ -96,6 +96,7 @@
                 <!-- 備品表格 -->
                 <v-data-table-server
                   v-model:items-per-page="itemsPerPage"
+                  v-model:sort-by="sparePartSortBy"
                   :items="spareParts"
                   :headers="sparePartHeaders"
                   :loading="sparePartLoading"
@@ -259,6 +260,7 @@
                 <!-- 倉庫表格 -->
                 <v-data-table-server
                   v-model:items-per-page="itemsPerPage"
+                  v-model:sort-by="warehouseSortBy"
                   :items="warehouses"
                   :headers="warehouseHeaders"
                   :loading="warehouseLoading"
@@ -386,6 +388,7 @@
                 <!-- 廠商表格 -->
                 <v-data-table-server
                   v-model:items-per-page="itemsPerPage"
+                  v-model:sort-by="manufacturerSortBy"
                   :items="manufacturers"
                   :headers="manufacturerHeaders"
                   :loading="isLoading"
@@ -400,16 +403,38 @@
                     <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
                       <td>{{ item.name }}</td>
                       <td>
-                        <v-chip
-                          :color="item.isActive ? 'success' : 'error'"
-                          size="small"
-                          variant="tonal"
+                        <span v-if="item.contactPerson">
+                          {{ item.contactPerson }}
+                        </span>
+                        <span
+                          v-else
+                          class="text-grey"
                         >
-                          {{ item.isActive ? '啟用' : '停用' }}
-                        </v-chip>
+                          -
+                        </span>
                       </td>
-                      <td>{{ formatDate(item.createdAt) }}</td>
-                      <td>{{ item.creator?.name || '-' }}</td>
+                      <td>
+                        <span v-if="item.phone">
+                          {{ item.phone }}
+                        </span>
+                        <span
+                          v-else
+                          class="text-grey"
+                        >
+                          -
+                        </span>
+                      </td>
+                      <td>
+                        <span v-if="item.email">
+                          {{ item.email }}
+                        </span>
+                        <span
+                          v-else
+                          class="text-grey"
+                        >
+                          -
+                        </span>
+                      </td>
                       <td>
                         <span v-if="item.note">
                           {{ item.note }}
@@ -421,6 +446,17 @@
                           -
                         </span>
                       </td>
+                      <td>
+                        <v-chip
+                          :color="item.isActive ? 'success' : 'error'"
+                          size="small"
+                          variant="tonal"
+                        >
+                          {{ item.isActive ? '啟用' : '停用' }}
+                        </v-chip>
+                      </td>
+                      <td>{{ formatDate(item.createdAt) }}</td>
+                      <td>{{ item.creator?.name || '-' }}</td>
                       <td class="text-center">
                         <v-btn
                           icon
@@ -505,6 +541,34 @@
                   :rules="[v => !!v || '請輸入廠商名稱', v => (v && v.length <= 200) || '廠商名稱不能超過200個字元']"
                 />
               </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="formData.contactPerson"
+                  label="聯絡人"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[v => !v || v.length <= 100 || '聯絡人不能超過100個字元']"
+                />
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="formData.phone"
+                  label="電話"
+                  variant="outlined"
+                  density="compact"
+                  :rules="[v => !v || v.length <= 50 || '電話不能超過50個字元']"
+                />
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="formData.email"
+                  label="Email"
+                  variant="outlined"
+                  density="compact"
+                  type="email"
+                  :rules="[v => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || '請輸入有效的Email格式', v => !v || v.length <= 200 || 'Email不能超過200個字元']"
+                />
+              </v-col>
               <v-col cols="12">
                 <v-textarea
                   v-model="formData.note"
@@ -512,7 +576,6 @@
                   variant="outlined"
                   density="compact"
                   rows="3"
-                  clearable
                   hide-details
                 />
               </v-col>
@@ -675,7 +738,6 @@
                   variant="outlined"
                   density="compact"
                   rows="3"
-                  clearable
                   hide-details
                 />
               </v-col>
@@ -796,7 +858,6 @@
                   variant="outlined"
                   density="compact"
                   rows="3"
-                  clearable
                   hide-details
                 />
               </v-col>
@@ -1076,14 +1137,14 @@ import { usePermissionStore } from '@/stores/permission'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useRouter } from 'vue-router'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import draggable from 'vuedraggable'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '備品管理 | TEST',
+    title: '備品管理 | Ystravel',
     login: true,
     permission: 'SPARE_PART_MANAGEMENT_READ'
   }
@@ -1173,6 +1234,7 @@ const manufacturers = ref([])
 const manufacturerCurrentPage = ref(1)
 const manufacturerTotalPages = ref(1)
 const manufacturerTotalItems = ref(0)
+const manufacturerSortBy = ref([{ key: 'createdAt', order: 'desc' }])
 const itemsPerPage = ref(10)
 
 // ===== 廠商搜尋相關 =====
@@ -1196,6 +1258,9 @@ const dialog = ref({
 
 const formData = ref({
   name: '',
+  contactPerson: '',
+  phone: '',
+  email: '',
   note: '',
   isActive: true
 })
@@ -1217,6 +1282,7 @@ const warehouses = ref([])
 const warehouseCurrentPage = ref(1)
 const warehouseTotalPages = ref(1)
 const warehouseTotalItems = ref(0)
+const warehouseSortBy = ref([{ key: 'order', order: 'asc' }])
 const showWarehouseSortDialog = ref(false)
 const sortableWarehouses = ref([])
 const isUpdatingWarehouseOrder = ref(false)
@@ -1272,6 +1338,7 @@ const isUpdatingOrder = ref(false)
 const sparePartCurrentPage = ref(1)
 const sparePartTotalPages = ref(1)
 const sparePartTotalItems = ref(0)
+const sparePartSortBy = ref([{ key: 'order', order: 'asc' }])
 
 // ===== 備品搜尋相關 =====
 const sparePartSearchText = ref('')
@@ -1337,10 +1404,13 @@ const warehousesLoading = computed(() => warehouseLoading.value)
 // ===== 表格標題 =====
 const manufacturerHeaders = [
   { title: '廠商名稱', key: 'name', sortable: true },
-  { title: '狀態', key: 'isActive', sortable: true },
-  { title: '建立時間', key: 'createdAt', sortable: true },
-  { title: '建立者', key: 'creator', sortable: false },
+  { title: '聯絡人', key: 'contactPerson', sortable: false },
+  { title: '電話', key: 'phone', sortable: false },
+  { title: 'Email', key: 'email', sortable: false },
   { title: '備註', key: 'note' },
+  { title: '狀態', key: 'isActive', sortable: true },
+  { title: '建立日期', key: 'createdAt', sortable: false },
+  { title: '建立者', key: 'creator', sortable: false },
   { title: '操作', key: 'action', sortable: false, align: 'center' }
 ]
 
@@ -1348,7 +1418,7 @@ const warehouseHeaders = [
   { title: '排序', key: 'order', sortable: false, align: 'center', width: '80px' },
   { title: '倉庫名稱', key: 'name', sortable: true },
   { title: '狀態', key: 'isActive', sortable: true },
-  { title: '建立時間', key: 'createdAt', sortable: true },
+  { title: '建立日期', key: 'createdAt', sortable: false },
   { title: '建立者', key: 'creator', sortable: false },
   { title: '公司', key: 'company', sortable: false },
   { title: '地址', key: 'address' },
@@ -1360,7 +1430,7 @@ const sparePartHeaders = [
   { title: '排序', key: 'order', sortable: false, align: 'center', width: '80px' },
   { title: '備品名稱', key: 'name', sortable: true },
   { title: '狀態', key: 'isActive', sortable: true },
-  { title: '建立時間', key: 'createdAt', sortable: true },
+  { title: '建立日期', key: 'createdAt', sortable: false },
   { title: '建立者', key: 'creator', sortable: false },
   { title: '廠商', key: 'manufacturer', sortable: false },
   { title: '倉庫', key: 'warehouses', sortable: false },
@@ -1400,6 +1470,16 @@ const loadManufacturers = async () => {
       params.search = quickSearchText.value
     }
 
+    // 處理排序參數
+    if (manufacturerSortBy.value && manufacturerSortBy.value.length > 0 && manufacturerSortBy.value[0].key) {
+      params.sortBy = manufacturerSortBy.value[0].key
+      params.sortOrder = manufacturerSortBy.value[0].order || 'desc'
+    } else {
+      // 預設按照 createdAt 降序排序（最新的在前）
+      params.sortBy = 'createdAt'
+      params.sortOrder = 'desc'
+    }
+
     const { data } = await apiAuth.get('/manufacturers', { params })
 
     if (data.success) {
@@ -1425,6 +1505,16 @@ const loadWarehouses = async () => {
 
     if (warehouseSearchText.value) {
       params.search = warehouseSearchText.value
+    }
+
+    // 處理排序參數
+    if (warehouseSortBy.value && warehouseSortBy.value.length > 0 && warehouseSortBy.value[0].key) {
+      params.sortBy = warehouseSortBy.value[0].key
+      params.sortOrder = warehouseSortBy.value[0].order || 'asc'
+    } else {
+      // 預設按照 order 排序
+      params.sortBy = 'order'
+      params.sortOrder = 'asc'
     }
 
     const { data } = await apiAuth.get('/warehouses', { params })
@@ -1454,6 +1544,16 @@ const loadSpareParts = async () => {
       params.search = sparePartSearchText.value
     }
 
+    // 處理排序參數
+    if (sparePartSortBy.value && sparePartSortBy.value.length > 0 && sparePartSortBy.value[0].key) {
+      params.sortBy = sparePartSortBy.value[0].key
+      params.sortOrder = sparePartSortBy.value[0].order || 'asc'
+    } else {
+      // 預設按照 order 排序
+      params.sortBy = 'order'
+      params.sortOrder = 'asc'
+    }
+
     const { data } = await apiAuth.get('/spareParts', { params })
 
     if (data.success) {
@@ -1475,6 +1575,9 @@ const openDialog = () => {
   }
   formData.value = {
     name: '',
+    contactPerson: '',
+    phone: '',
+    email: '',
     note: '',
     isActive: true
   }
@@ -1490,6 +1593,9 @@ const editItem = (item) => {
   }
   formData.value = {
     name: item.name,
+    contactPerson: item.contactPerson || '',
+    phone: item.phone || '',
+    email: item.email || '',
     note: item.note || '',
     isActive: item.isActive
   }
@@ -1502,6 +1608,9 @@ const closeDialog = () => {
   }
   formData.value = {
     name: '',
+    contactPerson: '',
+    phone: '',
+    email: '',
     note: '',
     isActive: true
   }
@@ -1511,13 +1620,20 @@ const closeDialog = () => {
 }
 
 const submit = async () => {
-  if (!formValid.value || isSubmitting.value) return
+  if (isSubmitting.value) return
+
+  // 觸發表單驗證
+  const { valid } = await form.value.validate()
+  if (!valid) return
 
   try {
     isSubmitting.value = true
 
     const submitData = {
       name: formData.value.name,
+      contactPerson: formData.value.contactPerson || '',
+      phone: formData.value.phone || '',
+      email: formData.value.email || '',
       note: formData.value.note || '',
       isActive: formData.value.isActive
     }
@@ -1664,7 +1780,11 @@ const closeWarehouseDialog = () => {
 }
 
 const submitWarehouse = async () => {
-  if (!warehouseFormValid.value || warehouseSubmitting.value) return
+  if (warehouseSubmitting.value) return
+
+  // 觸發表單驗證
+  const { valid } = await warehouseForm.value.validate()
+  if (!valid) return
 
   try {
     warehouseSubmitting.value = true
@@ -1801,7 +1921,11 @@ const closeSparePartDialog = () => {
 }
 
 const submitSparePart = async () => {
-  if (!sparePartFormValid.value || sparePartSubmitting.value) return
+  if (sparePartSubmitting.value) return
+
+  // 觸發表單驗證
+  const { valid } = await sparePartForm.value.validate()
+  if (!valid) return
 
   try {
     sparePartSubmitting.value = true
@@ -2004,20 +2128,41 @@ const updateWarehouseOrder = async () => {
 
 // ===== 表格選項變更處理 =====
 const handleSparePartTableOptionsChange = async (options) => {
-  sparePartCurrentPage.value = options.page
-  itemsPerPage.value = options.itemsPerPage
+  if (options.page !== undefined) {
+    sparePartCurrentPage.value = options.page
+  }
+  if (options.itemsPerPage !== undefined) {
+    itemsPerPage.value = options.itemsPerPage
+  }
+  if (options.sortBy !== undefined) {
+    sparePartSortBy.value = options.sortBy
+  }
   await loadSpareParts()
 }
 
 const handleWarehouseTableOptionsChange = async (options) => {
-  warehouseCurrentPage.value = options.page
-  itemsPerPage.value = options.itemsPerPage
+  if (options.page !== undefined) {
+    warehouseCurrentPage.value = options.page
+  }
+  if (options.itemsPerPage !== undefined) {
+    itemsPerPage.value = options.itemsPerPage
+  }
+  if (options.sortBy !== undefined) {
+    warehouseSortBy.value = options.sortBy
+  }
   await loadWarehouses()
 }
 
 const handleManufacturerTableOptionsChange = async (options) => {
-  manufacturerCurrentPage.value = options.page
-  itemsPerPage.value = options.itemsPerPage
+  if (options.page !== undefined) {
+    manufacturerCurrentPage.value = options.page
+  }
+  if (options.itemsPerPage !== undefined) {
+    itemsPerPage.value = options.itemsPerPage
+  }
+  if (options.sortBy !== undefined) {
+    manufacturerSortBy.value = options.sortBy
+  }
   await loadManufacturers()
 }
 

@@ -71,29 +71,18 @@
                 sm="4"
                 lg="3"
               >
-                <v-row class="d-flex align-center">
-                  <v-col class="d-flex align-center">
-                    <v-icon
-                      v-if="mdAndUp"
-                      v-tooltip:top="'可搜尋名稱或描述'"
-                      icon="mdi-information"
-                      size="small"
-                      color="blue-grey-darken-2"
-                      class="me-4"
-                    />
-                    <v-text-field
-                      v-model="searchCriteria.quickSearch"
-                      label="快速搜尋"
-                      append-inner-icon="mdi-magnify"
-                      base-color="#666"
-                      color="blue-grey-darken-3"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                    />
-                  </v-col>
-                </v-row>
+                <v-text-field
+                  v-model="searchCriteria.quickSearch"
+                  :loading="isSearching"
+                  placeholder="搜尋名稱或描述"
+                  append-inner-icon="mdi-magnify"
+                  base-color="#666"
+                  color="blue-grey-darken-3"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                />
               </v-col>
             </v-row>
           </v-col>
@@ -101,6 +90,7 @@
             <!-- 表格 -->
             <v-data-table-server
               v-model:items-per-page="itemsPerPage"
+              v-model:sort-by="sortBy"
               :headers="headers"
               :items="resources"
               :loading="tableLoading"
@@ -484,7 +474,7 @@ import { definePage } from 'vue-router/auto'
 import { ref, onMounted, watch } from 'vue'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 import { useForm, useField } from 'vee-validate'
@@ -493,7 +483,7 @@ import draggable from 'vuedraggable'
 
 definePage({
   meta: {
-    title: '共享資源管理 | TEST',
+    title: '共享資源管理 | Ystravel',
     login: true,
     permission: 'SHARED_RESOURCE_READ'
   }
@@ -506,9 +496,11 @@ const { smAndUp } = useDisplay()
 // 響應式資料
 const resources = ref([])
 const tableLoading = ref(false)
+const isSearching = ref(false)
 const itemsPerPage = ref(10)
 const currentPage = ref(1)
 const totalItems = ref(0)
+const sortBy = ref([{ key: 'order', order: 'asc' }])
 
 // 搜尋條件
 const searchCriteria = ref({
@@ -618,6 +610,16 @@ const loadResources = async () => {
       params.search = searchCriteria.value.quickSearch
     }
 
+    // 處理排序參數
+    if (sortBy.value && sortBy.value.length > 0 && sortBy.value[0].key) {
+      params.sortBy = sortBy.value[0].key
+      params.sortOrder = sortBy.value[0].order || 'asc'
+    } else {
+      // 預設按照 order 排序
+      params.sortBy = 'order'
+      params.sortOrder = 'asc'
+    }
+
     const response = await apiAuth.get('/sharedResources', { params })
     resources.value = response.data.result.data
     totalItems.value = response.data.result.totalItems
@@ -639,13 +641,12 @@ const performSearch = async () => {
 }
 
 // debounce 搜尋
-const debouncedQuickSearch = debounce(() => {
+const debouncedQuickSearch = debounce(async () => {
   currentPage.value = 1
   tableLoading.value = true
-  performSearch()
-    .finally(() => {
-      tableLoading.value = false
-    })
+  await performSearch()
+  tableLoading.value = false
+  isSearching.value = false
 }, 300)
 
 // 表格選項變更
@@ -655,6 +656,9 @@ const handleTableOptions = (options) => {
   }
   if (options.itemsPerPage !== undefined) {
     itemsPerPage.value = options.itemsPerPage
+  }
+  if (options.sortBy !== undefined) {
+    sortBy.value = options.sortBy
   }
   loadResources()
 }
@@ -956,7 +960,10 @@ const formatFileSize = (bytes) => {
 
 // 監聽搜尋條件變化
 watch(() => searchCriteria.value.quickSearch, (newVal) => {
-  debouncedQuickSearch(newVal)
+  if (newVal !== undefined) {
+    isSearching.value = true
+    debouncedQuickSearch(newVal)
+  }
 })
 
 watch(() => searchCriteria.value.type, () => {
@@ -988,23 +995,9 @@ onMounted(() => {
 @use '@/styles/settings' as *;
 
 :deep(.v-data-table) {
-  thead {
-    height: 48px;
-    background-color: #455a64 !important;
-    color: #fff !important;
-    th {
-      font-size: 13px !important;
-    }
-  }
-  tbody tr {
-    min-height: 48px;
-  }
-  td {
-    height: 48px !important;
-    div {
-      line-height: 1.6;
-    }
-  }
+  thead { height: 48px !important; background-color: #455a64 !important; color: #fff !important; tr { height: 48px !important; } th { height: 48px !important; font-size: 13px !important; } }
+  tbody tr { min-height: 48px; }
+  td { height: 48px !important; div { line-height: 1.6; } }
 }
 
 :deep(.v-data-table__tbody) {

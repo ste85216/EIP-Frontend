@@ -190,8 +190,8 @@ const backgroundOptions = ref([
     url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_pingu.png'
   },
   {
-    name: '史迪奇',
-    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_stitch.png'
+    name: '比奇堡',
+    url: 'https://eip.ystravel.com.tw/uploads/card-bg/bg_profile_bikiniBottom.png'
   },
   {
     name: '鳥居',

@@ -139,6 +139,27 @@
               </v-col>
             </v-row>
           </v-col>
+          <!-- 1b. 瑞皇專案報價單 -->
+          <v-col
+            v-if="currentTemplate && selectedTemplate && currentTemplate === templateComponents.RayHuangQuotationNewTemplate.preview"
+            cols="12"
+          >
+            <v-row>
+              <v-col cols="12">
+                <v-card elevation="0">
+                  <v-card-text class="px-0 pt-0 pb-2">
+                    <RayHuangQuotationNewTemplateFormFields
+                      ref="formFieldsRef"
+                      v-model="formData"
+                      :validate="enableValidation"
+                      :is-viewing="isViewing"
+                      :disabled="isViewing"
+                    />
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-col>
           <!-- 2. 永信旅遊報價單 -->
           <v-col
             v-if="currentTemplate && selectedTemplate && currentTemplate === templateComponents.YstravelQuotationTemplate.preview"
@@ -154,6 +175,28 @@
                       v-model="formData"
                       :validate="enableValidation"
                       :is-viewing="isViewing"
+                    />
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-col>
+          <!-- 3. 專案報價單 -->
+          <v-col
+            v-if="currentTemplate && selectedTemplate && currentTemplate === templateComponents.ProjectQuotationTemplate.preview"
+            cols="12"
+          >
+            <v-row>
+              <v-col cols="12">
+                <!-- 報價單表單 -->
+                <v-card elevation="0">
+                  <v-card-text class="px-0 pt-0 pb-2">
+                    <ProjectQuotationFormFields
+                      ref="formFieldsRef"
+                      v-model="formData"
+                      :validate="enableValidation"
+                      :is-viewing="isViewing"
+                      :disabled="isViewing"
                     />
                   </v-card-text>
                 </v-card>
@@ -443,7 +486,7 @@
                       v-model="templateForm.componentName"
                       :error-messages="templateErrors.componentName"
                       label="組件名稱*"
-                      placeholder="例如: RayHuangQuotationTemplate"
+                      placeholder="例如: RayHuangQuotationTemplate、RayHuangQuotationNewTemplate"
                       variant="outlined"
                       density="compact"
                       clearable
@@ -1020,7 +1063,7 @@ import { definePage } from 'vue-router/auto'
 import { useUserStore } from '@/stores/user'
 import { usePermissionStore } from '@/stores/permission'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
 import ConfirmDialog from '@/components/ConfirmDialog.vue'
@@ -1032,16 +1075,30 @@ const RayHuangQuotationTemplate = defineAsyncComponent(() =>
 const RayHuangQuotationFormFields = defineAsyncComponent(() =>
   import('@/components/templates/RayHuangQuotationTemplate/RayHuangQuotationFormFields.vue')
 )
+const RayHuangQuotationNewTemplate = defineAsyncComponent(() =>
+  import('@/components/templates/RayHuangQuotationNewTemplate/index.vue')
+)
+const RayHuangQuotationNewTemplateFormFields = defineAsyncComponent(() =>
+  import('@/components/templates/RayHuangQuotationNewTemplate/RayHuangQuotationNewTemplateFormFields.vue')
+)
 const YstravelQuotationTemplate = defineAsyncComponent(() =>
   import('@/components/templates/YstravelQuotationTemplate/index.vue')
 )
 const YstravelQuotationFormFields = defineAsyncComponent(() =>
   import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue')
 )
+const ProjectQuotationTemplate = defineAsyncComponent(() =>
+  import('@/components/templates/ProjectQuotationTemplate/index.vue')
+)
+const ProjectQuotationFormFields = defineAsyncComponent(() =>
+  import('@/components/templates/ProjectQuotationTemplate/ProjectQuotationFormFields.vue')
+)
 
 // 動態引入 schema
 const rayHuangQuotationSchema = ref(null)
+const rayHuangQuotationNewTemplateSchema = ref(null)
 const ystravelQuotationSchema = ref(null)
+const projectQuotationSchema = ref(null)
 
 // 動態引入 PDF 相關庫
 const html2pdf = ref(null)
@@ -1053,9 +1110,13 @@ const initDependencies = async () => {
   try {
     // 載入 schema
     const rayHuangSchema = await import('@/components/templates/RayHuangQuotationTemplate/schema')
+    const rayHuangNewSchema = await import('@/components/templates/RayHuangQuotationNewTemplate/schema')
     const ystravelSchema = await import('@/components/templates/YstravelQuotationTemplate/schema')
+    const projectQuotationSchemaModule = await import('@/components/templates/ProjectQuotationTemplate/schema')
     rayHuangQuotationSchema.value = rayHuangSchema.quotationSchema
+    rayHuangQuotationNewTemplateSchema.value = rayHuangNewSchema.quotationSchema
     ystravelQuotationSchema.value = ystravelSchema.quotationSchema
+    projectQuotationSchema.value = projectQuotationSchemaModule.quotationSchema
 
     // 載入 PDF 相關庫
     const html2pdfModule = await import('html2pdf.js')
@@ -1076,7 +1137,7 @@ const initDependencies = async () => {
 
 definePage({
   meta: {
-    title: '表單產生器 | TEST',
+    title: '表單產生器 | Ystravel',
     login: true,
     permission: 'FORM_GENERATOR_READ'
   }
@@ -1142,10 +1203,20 @@ const templateComponents = {
     fields: RayHuangQuotationFormFields,
     schema: rayHuangQuotationSchema
   },
+  RayHuangQuotationNewTemplate: {
+    preview: RayHuangQuotationNewTemplate,
+    fields: RayHuangQuotationNewTemplateFormFields,
+    schema: rayHuangQuotationNewTemplateSchema
+  },
   YstravelQuotationTemplate: {
     preview: YstravelQuotationTemplate,
     fields: YstravelQuotationFormFields,
     schema: ystravelQuotationSchema
+  },
+  ProjectQuotationTemplate: {
+    preview: ProjectQuotationTemplate,
+    fields: ProjectQuotationFormFields,
+    schema: projectQuotationSchema
   }
 }
 
@@ -1262,6 +1333,106 @@ const resetFormData = (templateType) => {
       }
       break
 
+    case 'RayHuangQuotationNewTemplate':
+      formData.value = {
+        date: new Date(),
+        customerName: '',
+        customerAddress: '',
+        customerTaxId: '',
+        customerContact: '',
+        customerDepartment: '',
+        customerPhone: '',
+        customerEmail: '',
+        customerMobile: '',
+        projectType: '',
+        projectName: '',
+        workDays: '',
+        specialNote: '',
+        validityDays: '',
+        delayDays: '',
+        includeContract: false,
+        currentPage: 'quotation',
+        items: [
+          {
+            name: '',
+            description: '',
+            workDays: '',
+            quantity: 1,
+            unit: '份',
+            price: ''
+          }
+        ],
+        contract: {
+          page1: {
+            partyA: '',
+            partyB: '瑞皇國際股份有限公司',
+            projectName: '',
+            totalAmount: '',
+            estimatedWorkDays: 'X',
+            contractYear: '',
+            contractMonth: '',
+            contractDay: '',
+            depositAmount: '',
+            paymentMethod: {
+              singlePayment: false,
+              singlePaymentDate: {
+                year: '',
+                month: '',
+                day: ''
+              },
+              deposit: false,
+              depositAmount: '',
+              depositDate: {
+                year: '',
+                month: '',
+                day: ''
+              },
+              finalPaymentAmount: '',
+              finalPaymentDate: {
+                year: '',
+                month: '',
+                day: ''
+              }
+            },
+            paymentType: {
+              cash: false,
+              transfer: false,
+              check: false,
+              checkDate: {
+                year: '',
+                month: '',
+                day: ''
+              }
+            }
+          },
+          page2: {
+            designProposalCount: '',
+            responseDay: '',
+            designRevisionCount: '',
+            printRevisionCount: '',
+            providedItems: ''
+          },
+          page3: {
+            otherAgreements: '',
+            partyA: {
+              companyName: '',
+              representative: '',
+              address: '',
+              phone: '',
+              taxId: ''
+            },
+            partyB: {
+              companyName: '瑞皇國際股份有限公司',
+              representative: '陳淑貞',
+              address: '10467 台北市中山區松江路 220 號 4 樓之 5',
+              phone: '02-25623385',
+              taxId: '62187830'
+            }
+          }
+        }
+      }
+      break
+
     case 'YstravelQuotationTemplate':
       formData.value = {
         date: new Date(),
@@ -1302,6 +1473,106 @@ const resetFormData = (templateType) => {
         includeContract: false,
         currentPage: 'quotation',
         contract: null
+      }
+      break
+
+    case 'ProjectQuotationTemplate':
+      formData.value = {
+        date: new Date(),
+        customerName: '',
+        customerAddress: '',
+        customerTaxId: '',
+        customerContact: '',
+        customerDepartment: '',
+        customerPhone: '',
+        customerEmail: '',
+        customerMobile: '',
+        projectType: '',
+        projectName: '',
+        workDays: '',
+        specialNote: '',
+        validityDays: '',
+        delayDays: '',
+        includeContract: false,
+        currentPage: 'quotation',
+        items: [
+          {
+            name: '',
+            description: '',
+            workDays: '',
+            quantity: 1,
+            unit: '份',
+            price: ''
+          }
+        ],
+        contract: {
+          page1: {
+            partyA: '',
+            partyB: '銳皇國際股份有限公司',
+            projectName: '',
+            totalAmount: '',
+            estimatedWorkDays: 'X',
+            contractYear: '',
+            contractMonth: '',
+            contractDay: '',
+            depositAmount: '',
+            paymentMethod: {
+              singlePayment: false,
+              singlePaymentDate: {
+                year: '',
+                month: '',
+                day: ''
+              },
+              deposit: false,
+              depositAmount: '',
+              depositDate: {
+                year: '',
+                month: '',
+                day: ''
+              },
+              finalPaymentAmount: '',
+              finalPaymentDate: {
+                year: '',
+                month: '',
+                day: ''
+              }
+            },
+            paymentType: {
+              cash: false,
+              transfer: false,
+              check: false,
+              checkDate: {
+                year: '',
+                month: '',
+                day: ''
+              }
+            }
+          },
+          page2: {
+            designProposalCount: '',
+            responseDay: '',
+            designRevisionCount: '',
+            printRevisionCount: '',
+            providedItems: ''
+          },
+          page3: {
+            otherAgreements: '',
+            partyA: {
+              companyName: '',
+              representative: '',
+              address: '',
+              phone: '',
+              taxId: ''
+            },
+            partyB: {
+              companyName: '銳皇國際股份有限公司',
+              representative: '陳淑貞',
+              address: '10467 台北市中山區松江路 220 號 4 樓之 5',
+              phone: '02-25623385',
+              taxId: '83213438'
+            }
+          }
+        }
       }
       break
 
@@ -1402,8 +1673,22 @@ const handleTemplateChange = async (templateId) => {
               }
               break
             }
+            case 'RayHuangQuotationNewTemplate': {
+              const response = await apiAuth.get('/forms/ray-huang-quotation/next-number', {params: {templateId}})
+              if (response.data.success) {
+                formNumber = response.data.result
+              }
+              break
+            }
             case 'YstravelQuotationTemplate': {
               const response = await apiAuth.get('/forms/ystravel-quotation/next-number', {params: {templateId}})
+              if (response.data.success) {
+                formNumber = response.data.result
+              }
+              break
+            }
+            case 'ProjectQuotationTemplate': {
+              const response = await apiAuth.get('/forms/project-quotation/next-number', {params: {templateId}})
               if (response.data.success) {
                 formNumber = response.data.result
               }
@@ -2102,8 +2387,12 @@ onMounted(async () => {
     await Promise.all([
       import('@/components/templates/RayHuangQuotationTemplate/index.vue'),
       import('@/components/templates/RayHuangQuotationTemplate/RayHuangQuotationFormFields.vue'),
+      import('@/components/templates/RayHuangQuotationNewTemplate/index.vue'),
+      import('@/components/templates/RayHuangQuotationNewTemplate/RayHuangQuotationNewTemplateFormFields.vue'),
       import('@/components/templates/YstravelQuotationTemplate/index.vue'),
-      import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue')
+      import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue'),
+      import('@/components/templates/ProjectQuotationTemplate/index.vue'),
+      import('@/components/templates/ProjectQuotationTemplate/ProjectQuotationFormFields.vue')
     ]);
 
     // 當用戶實際需要時才載入相依套件
@@ -2317,8 +2606,12 @@ const editHistory = async (history) => {
     await Promise.all([
       import('@/components/templates/RayHuangQuotationTemplate/index.vue'),
       import('@/components/templates/RayHuangQuotationTemplate/RayHuangQuotationFormFields.vue'),
+      import('@/components/templates/RayHuangQuotationNewTemplate/index.vue'),
+      import('@/components/templates/RayHuangQuotationNewTemplate/RayHuangQuotationNewTemplateFormFields.vue'),
       import('@/components/templates/YstravelQuotationTemplate/index.vue'),
-      import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue')
+      import('@/components/templates/YstravelQuotationTemplate/YstravelQuotationFormFields.vue'),
+      import('@/components/templates/ProjectQuotationTemplate/index.vue'),
+      import('@/components/templates/ProjectQuotationTemplate/ProjectQuotationFormFields.vue')
     ]);
 
     // 設置編輯狀態
@@ -2404,8 +2697,96 @@ const editHistory = async (history) => {
             };
             break;
           }
+          case 'RayHuangQuotationNewTemplate': {
+            formData.value = {
+              formNumber: completeHistory.formNumber,
+              date: completeHistory.formData?.date ? new Date(completeHistory.formData.date) : new Date(completeHistory.createdAt),
+              customerName: completeHistory.formData?.customerName || '',
+              customerAddress: completeHistory.formData?.customerAddress || '',
+              customerTaxId: completeHistory.formData?.customerTaxId || '',
+              customerContact: completeHistory.formData?.customerContact || '',
+              customerDepartment: completeHistory.formData?.customerDepartment || '',
+              customerPhone: completeHistory.formData?.customerPhone || '',
+              customerEmail: completeHistory.formData?.customerEmail || '',
+              customerMobile: completeHistory.formData?.customerMobile || '',
+              projectType: completeHistory.formData?.projectType || '',
+              projectName: completeHistory.formData?.projectName || '',
+              workDays: completeHistory.formData?.workDays || '',
+              specialNote: completeHistory.formData?.specialNote || '',
+              validityDays: completeHistory.formData?.validityDays || '',
+              delayDays: completeHistory.formData?.delayDays || '',
+              items: Array.isArray(completeHistory.formData?.items) && completeHistory.formData.items.length > 0
+                ? completeHistory.formData.items
+                : [{
+                    name: '',
+                    description: '',
+                    workDays: '',
+                    quantity: 1,
+                    unit: '份',
+                    price: ''
+                  }],
+              costs: Array.isArray(completeHistory.formData?.costs) && completeHistory.formData.costs.length > 0
+                ? completeHistory.formData.costs
+                : [{
+                    costName: '',
+                    costAmount: 0,
+                    remark: ''
+                  }],
+              includeContract: completeHistory.formData?.includeContract || false,
+              contract: completeHistory.formData?.contract || {
+                page1: {},
+                page2: {},
+                page3: {}
+              }
+            };
+            break;
+          }
           case 'YstravelQuotationTemplate': {
             // ... YstravelQuotationTemplate 的程式碼 ...
+            break;
+          }
+          case 'ProjectQuotationTemplate': {
+            formData.value = {
+              formNumber: completeHistory.formNumber,
+              date: completeHistory.formData?.date ? new Date(completeHistory.formData.date) : new Date(completeHistory.createdAt),
+              customerName: completeHistory.formData?.customerName || '',
+              customerAddress: completeHistory.formData?.customerAddress || '',
+              customerTaxId: completeHistory.formData?.customerTaxId || '',
+              customerContact: completeHistory.formData?.customerContact || '',
+              customerDepartment: completeHistory.formData?.customerDepartment || '',
+              customerPhone: completeHistory.formData?.customerPhone || '',
+              customerEmail: completeHistory.formData?.customerEmail || '',
+              customerMobile: completeHistory.formData?.customerMobile || '',
+              projectType: completeHistory.formData?.projectType || '',
+              projectName: completeHistory.formData?.projectName || '',
+              workDays: completeHistory.formData?.workDays || '',
+              specialNote: completeHistory.formData?.specialNote || '',
+              validityDays: completeHistory.formData?.validityDays || '',
+              delayDays: completeHistory.formData?.delayDays || '',
+              items: Array.isArray(completeHistory.formData?.items) && completeHistory.formData.items.length > 0
+                ? completeHistory.formData.items
+                : [{
+                    name: '',
+                    description: '',
+                    workDays: '',
+                    quantity: 1,
+                    unit: '份',
+                    price: ''
+                  }],
+              costs: Array.isArray(completeHistory.formData?.costs) && completeHistory.formData.costs.length > 0
+                ? completeHistory.formData.costs
+                : [{
+                    costName: '',
+                    costAmount: 0,
+                    remark: ''
+                  }],
+              includeContract: completeHistory.formData?.includeContract || false,
+              contract: completeHistory.formData?.contract || {
+                page1: {},
+                page2: {},
+                page3: {}
+              }
+            };
             break;
           }
         }
@@ -2646,7 +3027,21 @@ const viewForm = async (history) => {
             };
             break;
           }
+          case 'RayHuangQuotationNewTemplate': {
+            formData.value = {
+              ...completeHistory.formData,
+              formNumber: completeHistory.formNumber
+            };
+            break;
+          }
           case 'YstravelQuotationTemplate': {
+            formData.value = {
+              ...completeHistory.formData,
+              formNumber: completeHistory.formNumber
+            };
+            break;
+          }
+          case 'ProjectQuotationTemplate': {
             formData.value = {
               ...completeHistory.formData,
               formNumber: completeHistory.formNumber
@@ -2984,7 +3379,7 @@ const formatDateTime = (date) => {
   const hours = String(d.getHours()).padStart(2, '0')
   const minutes = String(d.getMinutes()).padStart(2, '0')
   const seconds = String(d.getSeconds()).padStart(2, '0')
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`
 }
 </script>
 <style lang="scss" scoped>

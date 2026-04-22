@@ -5,14 +5,14 @@
  */
 
 // Composables
-import { createRouter, createWebHashHistory, START_LOCATION } from 'vue-router/auto'
+import { createRouter, createWebHistory, START_LOCATION } from 'vue-router/auto'
 import { setupLayouts } from 'virtual:generated-layouts'
 import { routes } from 'vue-router/auto-routes'
 import { useUserStore } from '@/stores/user'
 import { usePermissionStore } from '@/stores/permission'
 
 const router = createRouter({
-  history: createWebHashHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: setupLayouts(routes),
   scrollBehavior (to, from) {
     // 只有當路徑發生變化時，才滾動到頂部
@@ -72,9 +72,10 @@ router.beforeEach(async (to, from, next) => {
     next('/login')
   }
   // 檢查權限（新系統）
+  // 注意：LINE 綁定檢查由 App.vue 統一處理，包括對話框顯示和路由重導向
   else if (to.meta.permission || to.meta.permissions) {
     let hasPermission = false
-    
+
     if (to.meta.permission) {
       // 單一權限檢查
       hasPermission = permissionStore.hasPermission(to.meta.permission)

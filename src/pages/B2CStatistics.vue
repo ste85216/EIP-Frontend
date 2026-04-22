@@ -11,14 +11,14 @@
                 cols="12"
                 class="mt-1 px-lg-6 px-xl-4 px-xxl-2"
               >
-                <v-card class="elevation-4 rounded-lg py-3 py-sm-7 px-0">
-                  <div class="d-flex align-center pt-2 pt-sm-0 px-4 px-sm-7">
-                    <h3 class="me-4">
+                <v-card class="elevation-4 rounded-lg pt-6 py-md-7 px-0">
+                  <div class="d-flex align-center px-4 px-sm-6 py-1">
+                    <h3>
                       直客詢問統計表
                     </h3>
                   </div>
-                  <v-divider class="mt-5 mb-6" />
-                  <v-card-text class="pt-0 pt-lg-3 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
+                  <v-divider class="mt-5 mb-1 mb-sm-3" />
+                  <v-card-text class="pt-4 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
                     <v-row class="mb-2">
                       <!-- 來源選擇 -->
                       <v-col
@@ -29,7 +29,7 @@
                         class="px-1 pe-sm-2 py-1"
                       >
                         <div class="d-flex flex-column">
-                          <span class="text-label">來源 :</span>
+                          <span class="search-label">來源 :</span>
                           <v-select
                             v-model="searchCriteria.source"
                             :items="sourceOptions"
@@ -54,7 +54,7 @@
                         class="px-1 pe-sm-2 py-1"
                       >
                         <div class="d-flex flex-column">
-                          <span class="text-label">業務 :</span>
+                          <span class="search-label">業務 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.salesPerson"
                             :items="searchSalesPersons"
@@ -84,7 +84,7 @@
                         class="px-1 pe-sm-2 py-1"
                       >
                         <div class="d-flex flex-column">
-                          <span class="text-label">日期 :</span>
+                          <span class="search-label">日期 :</span>
                           <v-date-input
                             v-model="searchCriteria.dateRange"
                             variant="outlined"
@@ -111,7 +111,7 @@
                         class="px-1 pe-sm-2 py-1"
                       >
                         <div class="d-flex flex-column">
-                          <span class="text-label">地區 :</span>
+                          <span class="search-label">地區 :</span>
                           <v-autocomplete
                             v-model="searchCriteria.inquiryPlace"
                             :items="placeOptions"
@@ -134,7 +134,7 @@
                         class="px-1 pe-sm-2 py-1"
                       >
                         <div class="d-flex flex-column">
-                          <span class="text-label">結果 :</span>
+                          <span class="search-label">結果 :</span>
                           <v-select
                             v-model="searchCriteria.inquiryResult"
                             :items="inquiryResultOptions"
@@ -195,7 +195,7 @@
                       </v-col>
                     </v-row>
                   </v-card-text>
-                  <v-divider class="my-0 my-lg-3" />
+                  <v-divider class="my-0" />
 
                   <!-- 功能按鈕和快速搜尋區 -->
                   <v-row class="px-1 px-sm-3 px-md-7 mt-1 bg-white">
@@ -238,27 +238,19 @@
                         </v-col>
                         <v-spacer />
                         <v-col
-                          cols="6"
-                          md="5"
-                          lg="3"
-                          xl="2"
-                          class="ps-0 pe-1 my-1"
+                          cols="7"
+                          sm="6"
+                          md="4"
+                          lg="2"
+                          class="px-1 my-1"
                         >
                           <div class="d-flex align-center">
-                            <v-icon
-                              v-if="smAndUp"
-                              v-tooltip:start="'可搜尋客戶姓名、電話、Email、Line ID、詢問內容、進度 / 備註'"
-                              icon="mdi-information"
-                              size="small"
-                              color="blue-grey-darken-2"
-                              class="me-2"
-                            />
                             <v-text-field
                               v-model="quickSearch"
                               :loading="isSearching"
                               density="compact"
                               variant="outlined"
-                              label="快速搜尋"
+                              placeholder="可搜尋客戶姓名、電話、Email、Line ID、詢問內容、進度 / 備註"
                               append-inner-icon="mdi-magnify"
                               hide-details
                               clearable
@@ -545,6 +537,7 @@
               <template #item="{ item, index }">
                 <tr :class="{ 'odd-row': index % 2 === 0, 'even-row': index % 2 !== 0 }">
                   <td>{{ item.content }}</td>
+                  <td>{{ item.createdBy || '-' }}</td>
                   <td>{{ formatProgressNoteTime(item.createdAt) }}</td>
                 </tr>
               </template>
@@ -764,7 +757,7 @@
                 被指派的業務：{{ salesPersonAssignmentDialog.salesPersonName }}
               </div>
               <div class="text-grey-darken-2">
-                請確認指派業務是否正確，確認後會發送Email給被指派的業務。
+                請確認指派業務是否正確，確認後會發送通知給被指派的業務。
               </div>
             </div>
           </div>
@@ -798,7 +791,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
@@ -806,7 +799,7 @@ import { definePage } from 'vue-router/auto'
 // 頁面定義
 definePage({
   meta: {
-    title: '直客詢問統計表 | TEST',
+    title: '直客詢問統計表 | Ystravel',
     login: true,
     permission: 'B2C_STATISTICS_READ'
   }
@@ -890,6 +883,7 @@ const isAddingNote = ref(false)
 const confirmNoteDialog = ref(false)
 const progressNotesHeaders = [
   { title: '進度/備註內容', key: 'content', align: 'start' },
+  { title: '建立者', key: 'createdBy', width: '120px', align: 'start' },
   { title: '建立時間', key: 'createdAt', width: '170px', align: 'start' }
 ]
 
@@ -1064,6 +1058,11 @@ const handleSalesPersonChange = (value) => {
 // 修改 performSearch 函數
 const performSearch = async () => {
   try {
+    // 確保用戶公司資料已經載入，如果還沒有載入則先載入
+    if (!currentUserCompany.value) {
+      await loadCurrentUserEmployee()
+    }
+
     const params = {
       page: tablePage.value,
       itemsPerPage: tableItemsPerPage.value,
@@ -1814,18 +1813,6 @@ onUnmounted(() => {
     &:hover {
       background-color: #283593;
     }
-  }
-}
-
-/* 搜尋區域樣式 */
-.text-label {
-  color: #455a64;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  margin-bottom: 8px;
-  @include sm {
-    font-size: 14px;
   }
 }
 

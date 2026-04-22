@@ -112,10 +112,10 @@
               <!-- 通知圖示 -->
               <div class="notification-icon me-3">
                 <v-icon
-                  :color="getNotificationIconColor(notification.type)"
-                  size="20"
+                  :color="getNotificationIconColor(notification)"
+                  size="18"
                 >
-                  {{ getNotificationIcon(notification.type) }}
+                  {{ getNotificationIcon(notification) }}
                 </v-icon>
               </div>
 
@@ -145,6 +145,29 @@
                     class="project-name"
                   >
                     行銷美編需求申請
+                  </div>
+                  <!-- 員工資訊 -->
+                  <div
+                    v-if="notification.employee"
+                    class="project-name"
+                    @click.stop="handleEmployeeClick"
+                  >
+                    員工管理
+                  </div>
+                  <!-- 公告資訊 -->
+                  <div
+                    v-if="notification.announcement"
+                    class="project-name"
+                  >
+                    公告詳情
+                  </div>
+                  <!-- 考核填寫／截止提醒 -->
+                  <div
+                    v-if="notification.type === 'evaluation_batch'"
+                    class="project-name"
+                    @click.stop="handleEvaluationMyPendingClick"
+                  >
+                    我的考核
                   </div>
                 </div>
 
@@ -318,8 +341,20 @@ const isLoading = computed(() => notificationStore.isLoading)
 
 const buttonSize = computed(() => !smAndUp.value ? 'small' : 'default')
 
-// 取得通知圖示
-const getNotificationIcon = (type) => {
+function inboxItemTypeKey (notificationOrType) {
+  const isObj = notificationOrType != null && typeof notificationOrType === 'object'
+  const type = isObj ? notificationOrType.type : notificationOrType
+  if (type === 'evaluation_batch' && isObj) {
+    const rk = notificationOrType.metadata?.reminderKind
+    if (rk === '3days' || rk === 'dueDay') return 'evaluation_batch_due_reminder'
+    return 'evaluation_batch_notice'
+  }
+  return type
+}
+
+// 取得通知圖示（可傳整則通知物件，以便區分考核批次通知 vs 截止提醒）
+const getNotificationIcon = (notificationOrType) => {
+  const key = inboxItemTypeKey(notificationOrType)
   const iconMap = {
     'task_due_reminder': 'mdi-clock-alert',
     'task_mention': 'mdi-at',
@@ -331,13 +366,22 @@ const getNotificationIcon = (type) => {
     'task_reopen': 'mdi-restart',
     'sales_person_assignment': 'mdi-account-arrow-right',
     'marketing_design_request': 'mdi-palette',
-    'marketing_design_request_assignment': 'mdi-palette-outline'
+    'marketing_design_request_assignment': 'mdi-palette-outline',
+    'employee_create': 'mdi-account-plus',
+    'employee_resignation': 'mdi-account-remove',
+    'employee_department_change': 'mdi-account-switch',
+    'employee_comment_reminder': 'mdi-comment-alert',
+    'employee_comment_overdue': 'mdi-comment-alert-outline',
+    'announcement': 'mdi-bullhorn',
+    'evaluation_batch_notice': 'mdi-clipboard-text-outline',
+    'evaluation_batch_due_reminder': 'mdi-calendar-alert'
   }
-  return iconMap[type] || 'mdi-bell'
+  return iconMap[key] || 'mdi-bell'
 }
 
 // 取得通知圖示顏色
-const getNotificationIconColor = (type) => {
+const getNotificationIconColor = (notificationOrType) => {
+  const key = inboxItemTypeKey(notificationOrType)
   const colorMap = {
     'task_due_reminder': 'orange-darken-1',
     'task_mention': 'blue',
@@ -349,9 +393,17 @@ const getNotificationIconColor = (type) => {
     'task_reopen': 'blue-darken-1',
     'sales_person_assignment': 'orange-darken-2',
     'marketing_design_request': 'purple-darken-2',
-    'marketing_design_request_assignment': 'blue-darken-2'
+    'marketing_design_request_assignment': 'blue-darken-2',
+    'employee_create': 'teal-darken-1',
+    'employee_resignation': 'red-darken-1',
+    'employee_department_change': 'blue-darken-1',
+    'employee_comment_reminder': 'orange-darken-1',
+    'employee_comment_overdue': 'red-darken-1',
+    'announcement': 'blue-darken-2',
+    'evaluation_batch_notice': 'teal-darken-1',
+    'evaluation_batch_due_reminder': 'deep-orange-darken-2'
   }
-  return colorMap[type] || 'grey'
+  return colorMap[key] || 'grey'
 }
 
 // 格式化時間
@@ -372,11 +424,27 @@ const formatTime = (dateString) => {
   return date.toLocaleDateString('zh-TW')
 }
 
+const emit = defineEmits(['open-employee-comment'])
+
 // 處理通知點擊
 const handleNotificationClick = async (notification) => {
   // 標記為已讀
   if (!notification.isRead) {
     await handleMarkAsRead(notification._id)
+  }
+
+  // 員工評論遲交通知：導向排程頁讓遲交者查看被多排的兩次
+  if (notification.type === 'employee_comment_overdue') {
+    router.push('/employeeCommentSchedule')
+    menu.value = false
+    return
+  }
+
+  // 員工評論提醒：開啟員工評論對話框
+  if (notification.type === 'employee_comment_reminder' && notification.metadata?.scheduleId) {
+    emit('open-employee-comment', notification.metadata.scheduleId)
+    menu.value = false
+    return
   }
 
   // 根據通知類型導航
@@ -389,6 +457,14 @@ const handleNotificationClick = async (notification) => {
   } else if (notification.designRequest) {
     // 行銷美編需求申請相關通知，導航到行銷美編需求申請管理
     router.push('/marketingDesignRequestManagement')
+  } else if (notification.employee) {
+    // 員工相關通知，導航到員工管理
+    router.push('/employeeManagement')
+  } else if (notification.announcement) {
+    // 公告相關通知，導航到公告詳細頁面
+    router.push(`/announcement/${notification.announcement._id}`)
+  } else if (notification.type === 'evaluation_batch') {
+    router.push('/evaluationMyPending')
   }
 
   // 關閉選單
@@ -398,6 +474,18 @@ const handleNotificationClick = async (notification) => {
 // 處理專案點擊
 const handleProjectClick = (project) => {
   router.push(`/projectAndTaskManagement/projects/${project._id}`)
+  menu.value = false
+}
+
+// 處理員工點擊
+const handleEmployeeClick = () => {
+  router.push('/employeeManagement')
+  menu.value = false
+}
+
+// 考核填寫／截止提醒：導向我的考核
+const handleEvaluationMyPendingClick = () => {
+  router.push('/evaluationMyPending')
   menu.value = false
 }
 
@@ -532,11 +620,6 @@ onMounted(async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.notification-icon {
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
 .notification-content {

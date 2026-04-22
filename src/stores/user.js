@@ -17,6 +17,7 @@ export const useUserStore = defineStore('user', () => {
   const avatar = ref('')
   const backgroundImage = ref('')
   const isDefaultPasswordChanged = ref(true)
+  const isSystemAccount = ref(false)
   const _id = ref('')
 
   // 計算屬性
@@ -109,8 +110,9 @@ export const useUserStore = defineStore('user', () => {
         avatar.value = data.result.avatar
         backgroundImage.value = data.result.backgroundImage || ''
         isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
+        isSystemAccount.value = data.result.isSystemAccount || false
         _id.value = data.result._id
-        
+
         // 登入成功後載入用戶資料和權限
         try {
           await profile()
@@ -122,7 +124,7 @@ export const useUserStore = defineStore('user', () => {
           console.error('載入用戶資料或權限失敗:', error)
           // 即使載入失敗也不影響登入流程
         }
-        
+
         return '登入成功'
       } else {
         throw new Error(data.message || '登入失敗')
@@ -149,8 +151,9 @@ export const useUserStore = defineStore('user', () => {
         avatar.value = response.data.result.avatar
         backgroundImage.value = response.data.result.backgroundImage || ''
         isDefaultPasswordChanged.value = response.data.result.isDefaultPasswordChanged
+        isSystemAccount.value = response.data.result.isSystemAccount || false
         _id.value = response.data.result._id
-        
+
         // 登入成功後載入用戶資料和權限
         try {
           await profile()
@@ -162,7 +165,7 @@ export const useUserStore = defineStore('user', () => {
           console.error('載入用戶資料或權限失敗:', error)
           // 即使載入失敗也不影響登入流程
         }
-        
+
         return '登入成功'
       } else {
         throw new Error(response.data.message)
@@ -188,6 +191,7 @@ export const useUserStore = defineStore('user', () => {
       avatar.value = data.result.avatar
       backgroundImage.value = data.result.backgroundImage || ''
       isDefaultPasswordChanged.value = data.result.isDefaultPasswordChanged
+      isSystemAccount.value = data.result.isSystemAccount || false
       _id.value = data.result._id
     } catch (error) {
       console.log(error)
@@ -310,6 +314,7 @@ export const useUserStore = defineStore('user', () => {
     note.value = ''
     avatar.value = ''
     backgroundImage.value = ''
+    isSystemAccount.value = false
     _id.value = ''
   }
 
@@ -325,6 +330,7 @@ export const useUserStore = defineStore('user', () => {
     avatar,
     backgroundImage,
     isDefaultPasswordChanged,
+    isSystemAccount,
     _id,
 
     // 計算屬性
@@ -358,6 +364,6 @@ export const useUserStore = defineStore('user', () => {
 }, {
   persist: {
     key: 'ginternational',
-    paths: ['token']
+    paths: ['token', 'isSystemAccount']
   }
 })

@@ -1,6 +1,6 @@
 <template>
   <v-card
-    class="marquee-card  rounded-0"
+    :class="['marquee-card rounded-0', { 'marquee-fixed': props.layout === 'default' }]"
     elevation="0"
     :style="{
       visibility: showMarquee ? 'visible' : 'hidden',
@@ -98,6 +98,13 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useApi } from '@/composables/axios'
 
+const props = defineProps({
+  layout: {
+    type: String,
+    default: 'default',
+    validator: (value) => ['default', 'projectAndTask'].includes(value)
+  }
+})
 
 const { apiAuth } = useApi()
 
@@ -214,7 +221,9 @@ const areItemsEqual = (oldItems, newItems) => {
 
 const fetchActive = async (shouldRestart = true) => {
   try {
-    const { data } = await apiAuth.get('/marquees/active')
+    const { data } = await apiAuth.get('/marquees/active', {
+      params: { layout: props.layout }
+    })
     if (data.success) {
       const list = data.result || []
       const newItems = list.map(item => ({ id: item._id, type: item.type, text: item.content }))
@@ -407,6 +416,14 @@ const getAnnouncementTypeIcon = (type) => {
 .marquee-card {
   background: #555;
   overflow: hidden;
+
+  &.marquee-fixed {
+    position: fixed;
+    top: 100px;
+    left: var(--v-layout-left, 0);
+    right: var(--v-layout-right, 0);
+    z-index: 5;
+  }
 }
 
 .marquee-wrapper {

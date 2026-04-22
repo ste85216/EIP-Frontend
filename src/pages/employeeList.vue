@@ -694,7 +694,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
@@ -702,7 +702,7 @@ import { definePage } from 'vue-router/auto'
 // 頁面定義
 definePage({
   meta: {
-    title: '公司員工列表 | TEST',
+    title: '公司員工列表 | Ystravel',
     login: true,
     permission: 'EMPLOYEE_LIST_READ'
   }
@@ -786,6 +786,7 @@ const jobTitleOptions = [
   { text: '日本手配', value: '日本手配' },
   { text: '財務', value: '財務' },
   { text: '美編', value: '美編' },
+  { text: '影片剪輯師', value: '影片剪輯師' },
   { text: '行銷', value: '行銷' },
   { text: '網頁設計', value: '網頁設計' },
   { text: '工程師', value: '工程師' },

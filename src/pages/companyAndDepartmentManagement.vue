@@ -5,17 +5,17 @@
       <!-- 標題區 -->
       <v-col
         cols="12"
-        class="ps-3 pb-6 d-flex align-center"
+        class="ps-3 pb-4 d-flex align-center"
       >
         <h3>公司部門管理</h3>
-        <v-icon
+        <!-- <v-icon
           v-if="smAndUp"
           v-tooltip="'人數為「在職」人數'"
           icon="mdi-information"
           size="small"
           color="blue-grey-darken-2"
           class="ms-4"
-        />
+        /> -->
       </v-col>
 
       <!-- 功能按鈕和搜尋區 -->
@@ -198,18 +198,31 @@
       persistent
       max-width="940"
     >
-      <v-card class="rounded-lg ps-8 pe-4 py-4">
-        <div class="card-title pb-2 d-flex justify-space-between align-center">
-          公司管理
-          <v-btn
-            icon="mdi-close"
-            color="red-lighten-1"
-            variant="plain"
-            :size="buttonSize"
-            @click="closeCompanyDialog"
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-2 position-sticky top-0">
+          <v-icon
+            icon="mdi-domain"
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
           />
-        </div>
-        <v-card-text class="ps-2">
+          <span class="card-title text-white">公司管理</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="closeCompanyDialog"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="px-8 pt-8 pb-9">
           <v-row>
             <!-- 左側現有公司列表 -->
             <v-col
@@ -313,7 +326,7 @@
                     color="teal-darken-1"
                     variant="outlined"
                     type="submit"
-                    size="small"
+                    :size="buttonSize"
                     :loading="isSubmitting"
                   >
                     新增
@@ -332,11 +345,31 @@
       persistent
       width="320"
     >
-      <v-card class="rounded-lg pa-4">
-        <div class="card-title px-4 py-3">
-          編輯公司
-        </div>
-        <v-card-text class="pb-1 px-4">
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 mb-2 bg-teal-darken-2 position-sticky top-0">
+          <v-icon
+            icon="mdi-pencil"
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
+          />
+          <span class="card-title text-white">編輯公司</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="closeEditCompanyDialog"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="px-6 py-4">
           <v-form @submit.prevent="submitEditCompany">
             <v-text-field
               v-model="editCompanyDialog.companyId"
@@ -353,11 +386,12 @@
               variant="outlined"
               density="compact"
             />
-            <v-card-actions class="pa-0 mt-2">
+            <v-card-actions class="px-0 pt-4">
               <v-spacer />
               <v-btn
                 color="grey-darken-1"
                 variant="outlined"
+                :size="buttonSize"
                 @click="closeEditCompanyDialog"
               >
                 取消
@@ -366,6 +400,7 @@
                 color="teal-darken-1"
                 variant="outlined"
                 type="submit"
+                :size="buttonSize"
                 :loading="isSubmitting"
                 class="ms-2"
               >
@@ -403,11 +438,31 @@
       persistent
       width="320"
     >
-      <v-card class="rounded-lg px-2 pt-4">
-        <div class="card-title ps-6 py-3">
-          {{ departmentDialog.id ? '編輯部門' : '新增部門' }}
-        </div>
-        <v-card-text>
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 mb-2 bg-blue-grey-darken-2 position-sticky top-0">
+          <v-icon
+            icon="mdi-account-multiple-plus"
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
+          />
+          <span class="card-title text-white">{{ departmentDialog.id ? '編輯部門' : '新增部門' }}</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="closeDepartmentDialog"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="px-6 py-4">
           <v-form @submit.prevent="submitDepartment">
             <v-select
               v-model="departmentForm.company"
@@ -462,7 +517,7 @@
               persistent-hint
               :disabled="!departmentForm.company"
             />
-            <v-card-actions class="pa-0 mt-2">
+            <v-card-actions class="px-0 pt-4">
               <v-spacer />
               <v-btn
                 color="grey-darken-1"
@@ -493,18 +548,31 @@
       v-model="locationDialog.open"
       max-width="1200"
     >
-      <v-card class="rounded-lg px-2 py-4">
-        <div class="card-title ps-6 pe-3 pb-2 d-flex justify-space-between align-center">
-          公司地點管理
-          <v-btn
-            icon="mdi-close"
-            color="red-lighten-1"
-            variant="plain"
-            :size="buttonSize"
-            @click="closeLocationDialog"
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-blue-grey-darken-2 position-sticky top-0">
+          <v-icon
+            icon="mdi-office-building-marker"
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
           />
-        </div>
-        <v-card-text>
+          <span class="card-title text-white">公司地點管理</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="closeLocationDialog"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-card-text class="px-6 py-6">
           <v-row>
             <v-col cols="12">
               <v-table
@@ -568,37 +636,62 @@
       persistent
       width="400"
     >
-      <v-card class="rounded-lg px-4 pt-7 pb-6">
-        <v-form @submit.prevent="submitEditLocations">
-          <div class="card-title px-4 pb-2 d-flex align-center justify-space-between">
-            <span>新增 / 編輯公司地點</span>
-            <div>
-              <v-btn
-                v-tooltip:start="'批量新增地點'"
-                icon
-                color="grey-darken-1"
-                size="22"
-                class="me-2"
-                @click="openBatchLocationDialog"
-              >
-                <v-icon size="14">
-                  mdi-plus-box-multiple-outline
-                </v-icon>
-              </v-btn>
-              <v-btn
-                v-tooltip:start="'新增地點'"
-                icon
-                color="grey-darken-1"
-                size="22"
-                @click="addEditingLocation"
-              >
-                <v-icon size="14">
-                  mdi-plus
-                </v-icon>
-              </v-btn>
-            </div>
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-2 position-sticky top-0">
+          <v-icon
+            icon="mdi-map-marker"
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
+          />
+          <span class="card-title text-white">新增 / 編輯公司地點</span>
+          <v-spacer />
+          <div>
+            <v-btn
+              v-tooltip:start="'批量新增地點'"
+              icon
+              variant="plain"
+              class="opacity-100 me-1"
+              :ripple="false"
+              color="white"
+              :size="smAndUp ? '28' : '24'"
+              @click="openBatchLocationDialog"
+            >
+              <v-icon :size="smAndUp ? '18' : '16'">
+                mdi-plus-box-multiple-outline
+              </v-icon>
+            </v-btn>
+            <v-btn
+              v-tooltip:start="'新增地點'"
+              icon
+              variant="plain"
+              class="opacity-100 me-1"
+              :ripple="false"
+              color="white"
+              :size="smAndUp ? '28' : '24'"
+              @click="addEditingLocation"
+            >
+              <v-icon :size="smAndUp ? '18' : '16'">
+                mdi-plus
+              </v-icon>
+            </v-btn>
           </div>
-          <v-card-text class="mt-3 pa-3">
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="closeEditLocationDialog"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
+        <v-form @submit.prevent="submitEditLocations">
+          <v-card-text class="px-6 py-4">
             <v-row>
               <v-col
                 v-for="(location, index) in editingLocations"
@@ -680,7 +773,7 @@
               </v-col>
             </v-row>
           </v-card-text>
-          <v-card-actions class="px-3 pt-4">
+          <v-card-actions class="px-6 py-4">
             <v-spacer />
             <v-btn
               color="grey-darken-1"
@@ -712,12 +805,32 @@
       persistent
       width="300"
     >
-      <v-card class="rounded-lg px-4 pt-7 pb-6">
+      <v-card class="rounded-lg">
+        <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-2 position-sticky top-0">
+          <v-icon
+            icon="mdi-plus-box-multiple-outline"
+            :size="smAndUp ? '20' : '18'"
+            color="white"
+            class="me-2"
+          />
+          <span class="card-title text-white">批量新增地點</span>
+          <v-spacer />
+          <v-btn
+            icon
+            variant="plain"
+            class="opacity-100"
+            :ripple="false"
+            color="white"
+            :size="smAndUp ? '36' : '32'"
+            @click="closeBatchLocationDialog"
+          >
+            <v-icon :size="smAndUp ? '22' : '18'">
+              mdi-close
+            </v-icon>
+          </v-btn>
+        </v-card-title>
         <v-form @submit.prevent="handleBatchLocationAdd">
-          <div class="card-title px-4 pb-2">
-            批量新增地點
-          </div>
-          <v-card-text class="mt-3 pa-3">
+          <v-card-text class="px-6 py-4">
             <v-text-field
               v-model="batchLocationDialog.count"
               label="請輸入要新增的地點數量"
@@ -730,12 +843,12 @@
               hide-details="auto"
             />
           </v-card-text>
-          <v-card-actions class="px-3 pt-4">
+          <v-card-actions class="px-6 py-4">
             <v-spacer />
             <v-btn
               color="grey-darken-1"
               variant="outlined"
-              size="small"
+              :size="buttonSize"
               @click="closeBatchLocationDialog"
             >
               取消
@@ -743,8 +856,8 @@
             <v-btn
               color="teal-darken-1"
               variant="outlined"
-              class="ms-1"
-              size="small"
+              class="ms-2"
+              :size="buttonSize"
               type="submit"
             >
               確定
@@ -759,7 +872,8 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
-import { debounce } from 'lodash'
+// import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { useApi } from '@/composables/axios'
 import { useSnackbar } from 'vuetify-use-dialog'
 import { definePage } from 'vue-router/auto'
@@ -769,7 +883,7 @@ import { useUserStore } from '@/stores/user'
 
 definePage({
   meta: {
-    title: '公司部門管理 | TEST',
+    title: '公司部門管理 | Ystravel',
     login: true,
     permission: 'COMPANY_AND_DEPARTMENT_MANAGEMENT_READ'
   }
@@ -865,7 +979,12 @@ const defaultDepartments = [
 // 載入公司列表
 const loadCompanies = async () => {
   try {
-    const { data } = await apiAuth.get('/companies/all')
+    const { data } = await apiAuth.get('/companies/all', {
+      params: {
+        itemsPerPage: 1000,
+        page: 1
+      }
+    })
     if (data.success) {
       companies.value = data.result.data
     }

@@ -1,222 +1,263 @@
 <template>
-  <v-container max-width="2160">
-    <v-row class="pt-md-5">
-      <v-col
-        cols="12"
-        lg="2"
-      >
+  <v-container max-width="2400">
+    <v-row class="pt-md-5 px-lg-0 px-xxl-6">
+      <v-col cols="12">
         <v-row>
-          <v-col
-            cols="12"
-            class="mt-1 ps-lg-6 pe-lg-0"
-          >
-            <v-card class="elevation-4 rounded-lg py-6 px-4 px-sm-2 px-xl-4">
-              <v-card-title class="font-weight-bold d-flex align-center">
-                搜尋條件
-              </v-card-title>
-              <v-card-text class="pa-2">
-                <v-row>
-                  <v-col
-                    cols="12"
-                    sm="6"
-                    lg="12"
-                  >
-                    <v-select
-                      v-model="searchCriteria.year"
-                      :items="searchYearOptions"
-                      label="年度"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      class="mb-6"
-                    />
-                    <v-autocomplete
-                      v-model="searchCriteria.theme"
-                      :items="themeOptions"
-                      label="行銷主題"
-                      item-title="name"
-                      item-value="_id"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      clearable
-                      class="mb-6"
-                    />
-                    <v-date-input
-                      v-model="searchCriteria.createdDateRange"
-                      label="建立日期"
-                      variant="outlined"
-                      density="compact"
-                      hide-details
-                      multiple="range"
-                      prepend-icon
-                      clearable
-                      :cancel-text="'取消'"
-                      :ok-text="'確認'"
-                      class="mb-6"
-                    />
-                    <v-row class="d-flex justify-space-between">
-                      <v-col cols="3">
-                        <v-btn
-                          color="grey"
-                          width="40"
-                          block
-                          @click="resetSearch"
-                        >
-                          <v-icon>mdi-refresh</v-icon>
-                        </v-btn>
-                      </v-col>
+          <v-col cols="12">
+            <v-row>
+              <v-col
+                cols="12"
+                class="mt-1 px-lg-6 px-xl-4 px-xxl-2"
+              >
+                <v-card class="elevation-4 rounded-lg pt-6 py-md-7 px-0">
+                  <div class="d-flex align-center px-4 px-sm-6 py-1">
+                    <h3>
+                      行銷預算管理
+                    </h3>
+                  </div>
+                  <v-divider class="mt-5 mb-1 mb-sm-3" />
+                  <v-card-text class="pt-4 px-6 ps-sm-8 pe-sm-7 px-md-9 pb-2">
+                    <v-row class="mb-2">
+                      <!-- 年度 -->
                       <v-col
-                        cols="9"
-                        class="ps-0"
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="px-1 pe-sm-2 py-1"
                       >
-                        <v-btn
-                          color="cyan-darken-2"
-                          prepend-icon="mdi-magnify"
-                          :loading="isLoading"
-                          block
-                          @click="performSearch"
-                        >
-                          搜尋
-                        </v-btn>
+                        <div class="d-flex flex-column">
+                          <span class="search-label">年度 :</span>
+                          <v-select
+                            v-model="searchCriteria.year"
+                            :items="searchYearOptions"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            clearable
+                            placeholder="請選擇年度"
+                          />
+                        </div>
+                      </v-col>
+
+                      <!-- 行銷主題 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="px-1 pe-sm-2 py-1"
+                      >
+                        <div class="d-flex flex-column">
+                          <span class="search-label">行銷主題 :</span>
+                          <v-autocomplete
+                            v-model="searchCriteria.theme"
+                            :items="themeOptions"
+                            item-title="name"
+                            item-value="_id"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            clearable
+                            placeholder="請選擇行銷主題"
+                          />
+                        </div>
+                      </v-col>
+
+                      <!-- 建立日期 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="px-1 pe-sm-2 py-1"
+                      >
+                        <div class="d-flex flex-column">
+                          <span class="search-label">建立日期 :</span>
+                          <v-date-input
+                            v-model="searchCriteria.createdDateRange"
+                            variant="outlined"
+                            density="compact"
+                            hide-details
+                            multiple="range"
+                            prepend-icon
+                            clearable
+                            placeholder="請選擇日期"
+                            :cancel-text="'取消'"
+                            :ok-text="'確認'"
+                          />
+                        </div>
+                      </v-col>
+
+                      <!-- 搜尋按鈕 -->
+                      <v-col
+                        cols="12"
+                        sm="6"
+                        md="4"
+                        lg="2"
+                        class="pe-sm-4 d-flex"
+                      >
+                        <v-row>
+                          <v-col
+                            cols="8"
+                            sm="8"
+                            lg="8"
+                            class="ps-1 pe-0 pb-2 d-flex align-end"
+                          >
+                            <v-btn
+                              color="cyan-darken-2"
+                              prepend-icon="mdi-magnify"
+                              :loading="isLoading"
+                              block
+                              @click="performSearch"
+                            >
+                              搜尋
+                            </v-btn>
+                          </v-col>
+                          <v-col
+                            cols="4"
+                            sm="4"
+                            lg="4"
+                            class="pe-1 pb-2 d-flex align-end"
+                          >
+                            <v-btn
+                              color="grey"
+                              width="40"
+                              block
+                              @click="resetSearch"
+                            >
+                              <v-icon>mdi-refresh</v-icon>
+                            </v-btn>
+                          </v-col>
+                        </v-row>
                       </v-col>
                     </v-row>
-                  </v-col>
-                </v-row>
-              </v-card-text>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-col>
-      <v-col>
-        <v-row class="elevation-4 rounded-lg py-4 py-sm-8 px-1 px-sm-10 mt-1 mx-0 mx-sm-4 ms-md-4 me-md-4 mb-4 bg-white">
-          <!-- 標題區塊 -->
-          <v-col
-            cols="12"
-            class="ps-3 pb-6 d-flex align-center"
-          >
-            <h3
-              class="d-inline"
-            >
-              行銷預算管理
-            </h3>
-          </v-col>
+                  </v-card-text>
+                  <v-divider class="my-0" />
 
-          <!-- 表格區塊 -->
-          <v-col cols="12">
-            <div class="d-flex align-center mb-4">
-              <v-btn
-                color="blue-grey-darken-1"
-                variant="outlined"
-                prepend-icon="mdi-plus"
-                @click="openDialog()"
-              >
-                新增預算表
-              </v-btn>
-              <div
-                style="width: 260px;"
-                class="ms-auto d-flex align-center"
-              >
-                <v-icon
-                  v-tooltip:start="'可搜尋備註、建立者'"
-                  icon="mdi-information"
-                  size="small"
-                  color="blue-grey-darken-2"
-                  class="me-2"
-                />
-                <v-text-field
-                  v-model="quickSearchText"
-                  label="快速搜尋"
-                  append-inner-icon="mdi-magnify"
-                  :loading="isLoading"
-                  base-color="#666"
-                  color="blue-grey-darken-3"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  clearable
-                  @update:model-value="handleQuickSearch"
-                />
-              </div>
-            </div>
-          </v-col>
-          <v-col cols="12">
-            <v-data-table-server
-              v-model:items-per-page="itemsPerPage"
-              v-model:page="page"
-              v-model:sort-by="tableSortBy"
-              density="compact"
-              :headers="headers"
-              :items="items"
-              :items-length="totalItems"
-              :items-per-page-options="[10, 20, 50, 100]"
-              :loading="isLoading"
-              class="elevation-0 rounded-lg"
-              @update:options="handleTableOptionsChange"
-            >
-              <template #[`item.actions`]="{ item }">
-                <v-btn
-                  icon
-                  color="light-blue-darken-4"
-                  variant="plain"
-                  :size="buttonSize"
-                  @click="editItem(item)"
-                >
-                  <v-icon>mdi-pencil</v-icon>
-                </v-btn>
-              </template>
-              <template #[`item.annualTotalBudget`]="{ item }">
-                {{ formatNumber(item.annualTotalBudget) }}
-              </template>
-              <template #[`item.totalBudget`]="{ item }">
-                {{ formatNumber(item.totalBudget) }}
-              </template>
-              <template #[`item.createdAt`]="{ item }">
-                {{ formatDate(item.createdAt) }}
-              </template>
-              <template #[`item.note`]="{ item }">
-                <template v-if="item.note">
-                  <v-menu
-                    location="top"
-                    transition="fade-transition"
-                    :close-on-content-click="true"
-                    :close-on-back="true"
-                  >
-                    <template #activator="{ props }">
-                      <div
-                        v-bind="props"
-                        class="note-cell"
-                      >
-                        {{ item.note }}
-                      </div>
-                    </template>
-                    <v-card
-                      min-width="300"
-                      max-width="400"
-                      class="rounded-lg menu-card"
-                      elevation="3"
+                  <!-- 功能按鈕和快速搜尋區 -->
+                  <v-row class="px-1 px-sm-3 px-md-7 mt-1 bg-white">
+                    <v-col
+                      cols="12"
+                      class="ps-4 pb-sm-4"
                     >
-                      <v-card-text class="pa-0">
-                        <div class="menu-header px-3 py-2">
-                          <v-icon
-                            size="16"
-                            color="white"
-                            class="me-2"
+                      <v-row class="d-flex align-center px-5 px-md-2">
+                        <v-btn
+                          color="teal-darken-2"
+                          prepend-icon="mdi-plus"
+                          variant="outlined"
+                          @click="openDialog()"
+                        >
+                          新增預算表
+                        </v-btn>
+                        <v-spacer />
+                        <v-col
+                          cols="7"
+                          sm="6"
+                          md="4"
+                          lg="2"
+                          class="px-1 my-1"
+                        >
+                          <div class="d-flex align-center">
+                            <v-text-field
+                              v-model="quickSearchText"
+                              :loading="isLoading"
+                              density="compact"
+                              variant="outlined"
+                              placeholder="搜尋備註、建立者"
+                              append-inner-icon="mdi-magnify"
+                              hide-details
+                              clearable
+                              @update:model-value="handleQuickSearch"
+                            />
+                          </div>
+                        </v-col>
+                      </v-row>
+                    </v-col>
+                  </v-row>
+
+                  <!-- 表格區塊 -->
+                  <v-card-text class="px-sm-6 px-md-7">
+                    <v-data-table-server
+                      v-model:items-per-page="itemsPerPage"
+                      v-model:page="page"
+                      v-model:sort-by="tableSortBy"
+                      density="compact"
+                      :headers="headers"
+                      :items="items"
+                      :items-length="totalItems"
+                      :items-per-page-options="[10, 20, 50, 100]"
+                      :loading="isLoading"
+                      hover
+                      class="rounded-ts-lg rounded-te-lg"
+                      @update:options="handleTableOptionsChange"
+                    >
+                      <template #[`item.actions`]="{ item }">
+                        <v-btn
+                          icon
+                          color="light-blue-darken-4"
+                          variant="plain"
+                          :size="buttonSize"
+                          @click="editItem(item)"
+                        >
+                          <v-icon>mdi-pencil</v-icon>
+                        </v-btn>
+                      </template>
+                      <template #[`item.annualTotalBudget`]="{ item }">
+                        {{ formatNumber(item.annualTotalBudget) }}
+                      </template>
+                      <template #[`item.totalBudget`]="{ item }">
+                        {{ formatNumber(item.totalBudget) }}
+                      </template>
+                      <template #[`item.createdAt`]="{ item }">
+                        {{ formatDate(item.createdAt) }}
+                      </template>
+                      <template #[`item.note`]="{ item }">
+                        <template v-if="item.note">
+                          <v-menu
+                            location="top"
+                            transition="fade-transition"
+                            :close-on-content-click="true"
+                            :close-on-back="true"
                           >
-                            mdi-text-box
-                          </v-icon>
-                          <span class="text-white text-subtitle-2">備註內容</span>
-                        </div>
-                        <div class="menu-card-text pa-4 pt-3">
-                          {{ item.note }}
-                        </div>
-                      </v-card-text>
-                    </v-card>
-                  </v-menu>
-                </template>
-              </template>
-            </v-data-table-server>
+                            <template #activator="{ props }">
+                              <div
+                                v-bind="props"
+                                class="note-cell"
+                              >
+                                {{ item.note }}
+                              </div>
+                            </template>
+                            <v-card
+                              min-width="300"
+                              max-width="400"
+                              class="rounded-lg menu-card"
+                              elevation="3"
+                            >
+                              <v-card-text class="pa-0">
+                                <div class="menu-header px-3 py-2">
+                                  <v-icon
+                                    size="16"
+                                    color="white"
+                                    class="me-2"
+                                  >
+                                    mdi-text-box
+                                  </v-icon>
+                                  <span class="text-white text-subtitle-2">備註內容</span>
+                                </div>
+                                <div class="menu-card-text pa-4 pt-3">
+                                  {{ item.note }}
+                                </div>
+                              </v-card-text>
+                            </v-card>
+                          </v-menu>
+                        </template>
+                      </template>
+                    </v-data-table-server>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
           </v-col>
         </v-row>
       </v-col>
@@ -229,40 +270,54 @@
       max-width="2600"
       :fullscreen="!smAndUp"
     >
-      <v-form
-        ref="form"
-        :disabled="isSubmitting"
-        @submit.prevent="submit"
-      >
-        <v-card class="rounded-lg pb-4">
-          <div class="card-title px-6 py-6 d-flex justify-space-between align-center">
-            {{ dialog.id ? '編輯預算表' : '新增預算表' }}
-            <v-btn
-              icon
-              color="red-lighten-1"
-              variant="plain"
-              :size="buttonSize"
-              @click="closeDialog"
+      <v-card class="rounded-lg budget-form-dialog">
+        <div
+          v-if="isLoadingBudget"
+          class="d-flex justify-center align-center"
+          style="min-height: 300px;"
+        >
+          <v-progress-circular
+            indeterminate
+            color="blue-grey-darken-2"
+            size="64"
+          />
+        </div>
+        <template v-else>
+          <v-form
+            ref="form"
+            :disabled="isSubmitting"
+            class="budget-form-dialog-form"
+            @submit.prevent="submit"
+          >
+            <v-card-title
+              :class="['d-flex align-center px-6 py-2 position-sticky top-0', dialog.id ? 'bg-light-blue-darken-2' : 'bg-teal-darken-2']"
             >
-              <v-icon>mdi-close</v-icon>
-            </v-btn>
-          </div>
-
-          <v-card-text>
-            <div
-              v-if="isLoadingBudget"
-              class="d-flex justify-center align-center"
-              style="min-height: 300px;"
-            >
-              <v-progress-circular
-                indeterminate
-                color="deep-purple-darken-2"
-                size="64"
+              <v-icon
+                icon="mdi-currency-usd"
+                :size="smAndUp ? '20' : '18'"
+                color="white"
+                class="me-2"
               />
-            </div>
-            <template v-else>
+              <span class="card-title text-white">{{ dialog.id ? '編輯預算表' : '新增預算表' }}</span>
+              <v-spacer />
+              <v-btn
+                icon
+                variant="plain"
+                class="opacity-100"
+                :ripple="false"
+                color="white"
+                :size="smAndUp ? '36' : '32'"
+                @click="closeDialog"
+              >
+                <v-icon :size="smAndUp ? '22' : '18'">
+                  mdi-close
+                </v-icon>
+              </v-btn>
+            </v-card-title>
+
+            <v-card-text class="mt-2 pb-0 px-6 overflow-y-auto budget-form-dialog-content">
               <!-- 年度和主題選擇 -->
-              <v-row class="mb-6">
+              <v-row class="mt-2">
                 <v-col
                   cols="3"
                 >
@@ -323,7 +378,7 @@
               </v-row>
 
               <!-- 預算表格 -->
-              <div class="budget-table">
+              <div class="budget-table ">
                 <div class="budget-table-title mb-4 d-flex align-center position-relative">
                   <div class="budget-title-center">
                     <span class="align-self-center">
@@ -497,14 +552,17 @@
                           </td>
                           <td class="platform-col">
                             <v-autocomplete
-                              v-model="platform.platformId"
-                              :items="getFilteredPlatformOptions(channel.channelId)"
+                              :key="`platform-${channelIndex}-${platformIndex}-${channel.channelId}-${platform.selectedId || 'empty'}`"
+                              :model-value="getSelectedPlatformObject(channel.channelId, channelIndex, platformIndex, platform.selectedId)"
+                              :items="getFilteredPlatformOptions(channel.channelId, channelIndex, platformIndex)"
                               item-title="name"
-                              item-value="_id"
+                              item-value="_uniqueValue"
+                              return-object
                               variant="outlined"
                               density="compact"
                               hide-details
                               class="platform-select"
+                              @update:model-value="(val) => handlePlatformChange(val, channelIndex, platformIndex)"
                             />
                           </td>
                           <!-- 平台排序按鈕 -->
@@ -579,56 +637,52 @@
                   </tbody>
                 </v-table>
               </div>
-            </template>
-          </v-card-text>
+            </v-card-text>
 
-          <v-card-actions class="px-6 py-4">
-            <v-hover>
-              <template #default="{ isHovering, props }">
-                <v-btn
-                  v-if="dialog.id"
-                  v-bind="props"
-                  :color="isHovering ? 'red-lighten-1' : 'grey'"
-                  variant="outlined"
-                  prepend-icon="mdi-delete"
-                  :size="buttonSize"
-                  @click="confirmDeleteDialog = true"
-                >
-                  永久刪除
-                </v-btn>
-              </template>
-            </v-hover>
-            <v-spacer />
-            <v-btn
-              color="grey-darken-1"
-              variant="outlined"
-              :size="buttonSize"
-              :loading="isSubmitting"
-              @click="closeDialog"
-            >
-              取消
-            </v-btn>
-            <v-btn
-              color="teal-darken-1"
-              variant="outlined"
-              type="submit"
-              class="ms-2"
-              :size="buttonSize"
-              :loading="isSubmitting"
-              :disabled="(dialog.id && !hasChanges) || isSubmitting"
-            >
-              送出
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-form>
+            <v-card-actions class="px-6 py-5">
+              <v-btn
+                v-if="dialog.id"
+                color="grey"
+                variant="outlined"
+                :size="smAndUp ? 'default' : 'small'"
+                prepend-icon="mdi-delete"
+                @click="confirmDeleteDialog = true"
+              >
+                永久刪除
+              </v-btn>
+              <v-spacer />
+              <v-btn
+                variant="outlined"
+                color="grey-darken-1"
+                :size="smAndUp ? 'default' : 'small'"
+                :loading="isSubmitting"
+                @click="closeDialog"
+              >
+                取消
+              </v-btn>
+              <v-btn
+                :color="dialog.id ? 'light-blue-darken-2' : 'teal-darken-1'"
+                variant="outlined"
+                type="submit"
+                class="ms-2"
+                :size="smAndUp ? 'default' : 'small'"
+                :loading="isSubmitting"
+                :disabled="(dialog.id && !hasChanges) || isSubmitting"
+              >
+                送出
+              </v-btn>
+            </v-card-actions>
+          </v-form>
+        </template>
+      </v-card>
     </v-dialog>
 
     <!-- 確認刪除對話框 -->
     <ConfirmDeleteDialogWithTextField
       v-model="confirmDeleteDialog"
       title="確認刪除預算表"
-      :message="`確定要刪除「<span class='text-pink-lighten-1' style='font-weight: 800;'>${originalData?.year}年度${originalData?.theme?.name}</span>」的預算表嗎？此操作無法復原。`"
+      :max-width="360"
+      :message="`確定要刪除「<span class='text-red-lighten-1' style='font-weight: 800;'>${originalData?.year}年度${originalData?.theme?.name}</span>」的預算表嗎？此操作無法復原。`"
       :expected-name="`${originalData?.year}年度${originalData?.theme?.name}`"
       input-label="預算表名稱"
       @confirm="deleteBudget"
@@ -637,16 +691,18 @@
     <!-- 確認刪除渠道對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmDeleteChannelDialog.show"
+      :max-width="320"
       title="確認刪除廣告渠道"
-      :message="`確定要刪除「<span class='text-pink-lighten-1' style='font-weight: 800;'> ${getChannelName(confirmDeleteChannelDialog.channelId)} </span>」廣告渠道嗎？會連同底下平台及金額一併刪除。`"
+      :message="`確定要刪除「<span class='text-red-lighten-1' style='font-weight: 800;'> ${getChannelName(confirmDeleteChannelDialog.channelId)} </span>」廣告渠道嗎？會連同底下平台及金額一併刪除。`"
       @confirm="confirmDeleteChannel"
     />
 
     <!-- 確認刪除平台對話框 -->
     <ConfirmDeleteDialog
       v-model="confirmDeletePlatformDialog.show"
+      :max-width="320"
       title="確認刪除平台"
-      :message="`確定要刪除「<span class='text-teal-darken-1' style='font-weight: 800;'> ${getPlatformName(confirmDeletePlatformDialog.platformId)} </span>」平台嗎？ 會連同底下金額一併刪除。`"
+      :message="`確定要刪除「<span class='text-red-darken-1' style='font-weight: 800;'> ${getPlatformName(confirmDeletePlatformDialog.platformId)} </span>」平台嗎？ 會連同底下金額一併刪除。`"
       @confirm="confirmDeletePlatform"
     />
 
@@ -654,16 +710,37 @@
     <v-dialog
       v-model="quickFillDialog.show"
       max-width="320"
+      persistent
     >
-      <v-form
-        ref="quickFillForm"
-        @submit.prevent="validateAndApplyQuickFill"
-      >
-        <v-card class="px-6 pt-6 pb-3 rounded-lg">
-          <div class="card-title">
-            快速填入月份金額
-          </div>
-          <v-card-text class="px-0 pb-2">
+      <v-card class="rounded-lg">
+        <v-form
+          ref="quickFillForm"
+          @submit.prevent="validateAndApplyQuickFill"
+        >
+          <v-card-title class="d-flex align-center px-6 py-2 bg-teal-darken-2">
+            <v-icon
+              icon="mdi-format-list-numbered"
+              :size="smAndUp ? '20' : '18'"
+              color="white"
+              class="me-2"
+            />
+            <span class="card-title text-white">快速填入月份金額</span>
+            <v-spacer />
+            <v-btn
+              icon
+              variant="plain"
+              class="opacity-100"
+              :ripple="false"
+              color="white"
+              :size="smAndUp ? '36' : '32'"
+              @click="quickFillDialog.show = false"
+            >
+              <v-icon :size="smAndUp ? '22' : '18'">
+                mdi-close
+              </v-icon>
+            </v-btn>
+          </v-card-title>
+          <v-card-text class="px-6 pt-4 pb-0">
             <div class="text-grey mb-4">
               輸入金額將填入該平台的所有月份
             </div>
@@ -677,11 +754,12 @@
               @keyup.enter="validateAndApplyQuickFill"
             />
           </v-card-text>
-          <v-card-actions class="px-0 pt-0">
+          <v-card-actions class="px-6 py-4">
             <v-spacer />
             <v-btn
-              color="grey-darken-1"
               variant="outlined"
+              color="grey-darken-1"
+              :size="smAndUp ? 'default' : 'small'"
               @click="quickFillDialog.show = false"
             >
               取消
@@ -690,12 +768,14 @@
               color="teal-darken-1"
               variant="outlined"
               type="submit"
+              class="ms-2"
+              :size="smAndUp ? 'default' : 'small'"
             >
               確認
             </v-btn>
           </v-card-actions>
-        </v-card>
-      </v-form>
+        </v-form>
+      </v-card>
     </v-dialog>
   </v-container>
 </template>
@@ -712,7 +792,7 @@ import { useUserStore } from '@/stores/user'
 import * as yup from 'yup'
 import ConfirmDeleteDialogWithTextField from '@/components/ConfirmDeleteDialogWithTextField.vue'
 import ConfirmDeleteDialog from '@/components/ConfirmDeleteDialog.vue'
-import { debounce } from 'lodash'
+import debounce from 'lodash/debounce'
 import { formatNumber } from '@/utils/format'
 import AmountInput from '../components/AmountInput.vue'
 
@@ -720,7 +800,7 @@ import AmountInput from '../components/AmountInput.vue'
 // ===== 頁面設定 =====
 definePage({
   meta: {
-    title: '行銷預算管理 | TEST',
+    title: '行銷預算管理 | Ystravel',
     login: true,
     permission: 'MARKETING_BUDGET_MANAGEMENT_READ'
   }
@@ -794,6 +874,7 @@ const yearOptions = ref([])
 const themeOptions = ref([])
 const channelOptions = ref([])
 const platformOptions = ref([])
+const platformDetailOptions = ref([])
 
 // ===== 搜尋相關設定 =====
 const searchCriteria = ref({
@@ -849,7 +930,8 @@ const getBudgetDifferenceClass = computed(() => {
 const budgetData = ref([{
   channelId: '',
   platforms: [{
-    platformId: '',
+    platformId: '', // 用於識別平台（如果有平台細項，則是父平台 ID）
+    selectedId: '', // 實際選擇的 ID（可能是平台或平台細項）
     budget: {
       JAN: '',
       FEB: '',
@@ -893,8 +975,23 @@ const getChannelName = (channelId) => {
   return channel ? channel.name : ''
 }
 
-// 獲取平台名稱的方法
+// 獲取平台名稱的方法（支援平台細項）
 const getPlatformName = (platformId) => {
+  if (!platformId) return ''
+
+  // 先檢查是否為平台細項
+  const platformDetail = platformDetailOptions.value.find(d => d._id === platformId)
+  if (platformDetail) {
+    // 找到對應的平台
+    const parentPlatformId = platformDetail.parentId?._id || platformDetail.parentId
+    const parentPlatform = platformOptions.value.find(p => p._id === parentPlatformId)
+    if (parentPlatform) {
+      return `${parentPlatform.name} - ${platformDetail.name}`
+    }
+    return platformDetail.name
+  }
+
+  // 如果不是平台細項，則查找平台
   const platform = platformOptions.value.find(p => p._id === platformId)
   return platform ? platform.name : ''
 }
@@ -905,7 +1002,7 @@ const removeChannel = (channelIndex) => {
 
   // 檢查渠道是否為空且所有平台和金額都是空的
   const isEmpty = !channel.channelId && channel.platforms.every(platform => {
-    return !platform.platformId && Object.values(platform.budget).every(value => !value)
+    return !platform.selectedId && !platform.platformId && Object.values(platform.budget).every(value => !value)
   })
 
   if (isEmpty && budgetData.value.length > 1) {
@@ -934,6 +1031,7 @@ const confirmDeleteChannel = () => {
 const addPlatform = (channelIndex) => {
   budgetData.value[channelIndex].platforms.push({
     platformId: '',
+    selectedId: '',
     budget: {
       JAN: '',
       FEB: '',
@@ -967,7 +1065,7 @@ const removePlatform = (channelIndex, platformIndex) => {
   const platform = platforms[platformIndex]
 
   // 檢查平台是否為空且所有金額都是空的
-  const isEmpty = !platform.platformId && Object.values(platform.budget).every(value => !value)
+  const isEmpty = !platform.selectedId && !platform.platformId && Object.values(platform.budget).every(value => !value)
 
   if (isEmpty) {
     // 如果是空的就直接刪除
@@ -976,7 +1074,7 @@ const removePlatform = (channelIndex, platformIndex) => {
     // 是否顯示確認對話框
     confirmDeletePlatformDialog.value = {
       show: true,
-      platformId: platform.platformId,
+      platformId: platform.selectedId || platform.platformId,
       channelIndex,
       platformIndex
     }
@@ -1001,6 +1099,7 @@ const addChannel = () => {
     channelId: '',
     platforms: [{
       platformId: '',
+      selectedId: '',
       budget: {
         JAN: '',
         FEB: '',
@@ -1099,12 +1198,14 @@ const loadOptions = async () => {
       { data: yearData },
       { data: themeData },
       { data: channelData },
-      { data: platformData }
+      { data: platformData },
+      { data: platformDetailData }
     ] = await Promise.all([
       apiAuth.get('/marketing/budgets/years'),
       apiAuth.get('/marketing/categories/options', { params: { type: 0 } }),
       apiAuth.get('/marketing/categories/options', { params: { type: 1 } }),
-      apiAuth.get('/marketing/categories/options', { params: { type: 2 } })
+      apiAuth.get('/marketing/categories/options', { params: { type: 2 } }),
+      apiAuth.get('/marketing/categories/options', { params: { type: 4 } })
     ])
 
     if (yearData.success) {
@@ -1118,6 +1219,9 @@ const loadOptions = async () => {
     }
     if (platformData.success) {
       platformOptions.value = platformData.result
+    }
+    if (platformDetailData.success) {
+      platformDetailOptions.value = platformDetailData.result
     }
   } catch (error) {
     handleError(error)
@@ -1149,6 +1253,7 @@ const openDialog = () => {
     channelId: '',
     platforms: [{
       platformId: '',
+      selectedId: '',
       budget: {
         JAN: '',
         FEB: '',
@@ -1170,7 +1275,6 @@ const openDialog = () => {
 const editItem = async (item) => {
   try {
     if (!item || !item._id) {
-      // console.error('無效的項目:', item)
       return
     }
 
@@ -1182,6 +1286,18 @@ const editItem = async (item) => {
 
     // 設置載入狀態
     isLoadingBudget.value = true
+
+    // 確保 platformDetailOptions 已載入
+    if (platformDetailOptions.value.length === 0) {
+      try {
+        const { data: platformDetailData } = await apiAuth.get('/marketing/categories/options', { params: { type: 4 } })
+        if (platformDetailData.success) {
+          platformDetailOptions.value = platformDetailData.result
+        }
+      } catch (error) {
+        console.error('載入平台細項選項失敗:', error)
+      }
+    }
 
     const { data } = await apiAuth.get(`/marketing/budgets/${item._id}`)
     if (data.success) {
@@ -1201,8 +1317,23 @@ const editItem = async (item) => {
             platforms: []
           }
         }
+
+        // 判斷 platform._id 是平台還是平台細項
+        const platformId = item.platform._id
+        const isPlatformDetail = platformDetailOptions.value.some(
+          detail => detail._id === platformId
+        )
+
+        // 如果是平台細項，需要找到對應的平台 ID
+        let actualPlatformId = platformId
+        if (isPlatformDetail) {
+          const detail = platformDetailOptions.value.find(d => d._id === platformId)
+          actualPlatformId = detail?.parentId?._id || detail?.parentId || platformId
+        }
+
         channelGroups[item.channel._id].platforms.push({
-          platformId: item.platform._id,
+          platformId: actualPlatformId, // 用於識別平台（如果有平台細項，則是父平台 ID）
+          selectedId: platformId, // 實際選擇的 ID（可能是平台或平台細項），用於顯示選項
           budget: item.monthlyBudget
         })
       })
@@ -1233,6 +1364,7 @@ const closeDialog = () => {
       channelId: '',
       platforms: [{
         platformId: '',
+        selectedId: '',
         budget: {
           JAN: '',
           FEB: '',
@@ -1295,7 +1427,7 @@ const submit = handleSubmit(async (values) => {
     // 驗證預算資料
     const hasEmptyChannel = budgetData.value.some(channel => !channel.channelId)
     const hasEmptyPlatform = budgetData.value.some(channel =>
-      channel.platforms.some(platform => !platform.platformId)
+      channel.platforms.some(platform => !platform.selectedId && !platform.platformId)
     )
 
     if (hasEmptyChannel || hasEmptyPlatform) {
@@ -1315,7 +1447,7 @@ const submit = handleSubmit(async (values) => {
       items: budgetData.value.flatMap(channel =>
         channel.platforms.map(platform => ({
           channel: channel.channelId,
-          platform: platform.platformId,
+          platform: platform.selectedId || platform.platformId, // 使用 selectedId（可能是平台或平台細項）
           monthlyBudget: {
             JAN: platform.budget.JAN === '' ? 0 : Number(platform.budget.JAN),
             FEB: platform.budget.FEB === '' ? 0 : Number(platform.budget.FEB),
@@ -1578,10 +1710,80 @@ const validateYear = (event) => {
 }
 
 // ===== 平台選擇相關方法 =====
-// 根據廣告渠道過濾平台選項
-const getFilteredPlatformOptions = (channelId) => {
+// 根據廣告渠道過濾平台選項（整合平台細項）
+// 使用緩存來避免重複計算，並為每個 autocomplete 實例生成唯一的選項
+const platformOptionsCache = new Map()
+
+const getFilteredPlatformOptions = (channelId, channelIndex = -1, platformIndex = -1) => {
   if (!channelId) return []
-  return platformOptions.value.filter(platform => platform.parentId?._id === channelId)
+
+  // 生成緩存鍵
+  const cacheKey = channelId
+  let options = platformOptionsCache.get(cacheKey)
+
+  // 如果緩存中沒有，則計算選項
+  if (!options) {
+    const platforms = platformOptions.value.filter(platform => platform.parentId?._id === channelId)
+    options = []
+    const seenIds = new Set() // 用於追蹤已使用的 ID
+
+    platforms.forEach((platform) => {
+      // 找出該平台下的所有平台細項
+      const details = platformDetailOptions.value.filter(
+        detail => detail.parentId?._id === platform._id || detail.parentId === platform._id
+      )
+
+      if (details.length > 0) {
+        // 如果有平台細項，則每個細項都作為一個選項
+        details.forEach((detail) => {
+          const detailId = detail._id?.$oid || detail._id
+
+          if (seenIds.has(detailId)) {
+            return // 跳過重複的 ID
+          }
+
+          seenIds.add(detailId)
+
+          options.push({
+            _id: detailId, // 使用平台細項的 ID
+            name: `${platform.name} - ${detail.name}`,
+            platformId: platform._id?.$oid || platform._id, // 保留平台 ID 用於識別
+            platformDetailId: detailId,
+            isPlatformDetail: true
+          })
+        })
+      } else {
+        // 如果沒有平台細項，則直接使用平台
+        const platformId = platform._id?.$oid || platform._id
+
+        if (seenIds.has(platformId)) {
+          return // 跳過重複的 ID
+        }
+
+        seenIds.add(platformId)
+
+        options.push({
+          _id: platformId,
+          name: platform.name,
+          platformId: platformId,
+          isPlatformDetail: false
+        })
+      }
+    })
+
+    // 存入緩存（不包含實例特定的 key）
+    platformOptionsCache.set(cacheKey, options)
+  }
+
+  // 為每個 autocomplete 實例生成唯一的 value，結合 channelIndex 和 platformIndex 確保唯一性
+  // 這樣即使多個 autocomplete 使用相同的選項，每個選項的 value 也是唯一的
+  const uniqueOptions = options.map((option, idx) => ({
+    ...option,
+    _uniqueValue: `${channelIndex}-${platformIndex}-${option._id}-${idx}`,
+    _uniqueKey: `${channelId}-${channelIndex}-${platformIndex}-${option._id}-${idx}`
+  }))
+
+  return uniqueOptions
 }
 
 // 監聽廣告渠道變更
@@ -1589,8 +1791,55 @@ const handleChannelChange = (channelId, channelIndex) => {
   // 當廣告渠道變更時，清空該渠道下所有平台的選擇
   const channel = budgetData.value[channelIndex]
   channel.platforms.forEach(platform => {
+    platform.selectedId = ''
     platform.platformId = ''
   })
+}
+
+// 根據 selectedId 獲取對應的選項物件（用於 v-autocomplete 的 model-value）
+const getSelectedPlatformObject = (channelId, channelIndex, platformIndex, selectedId) => {
+  if (!selectedId || !channelId) return null
+
+  const options = getFilteredPlatformOptions(channelId, channelIndex, platformIndex)
+  return options.find(option => option._id === selectedId) || null
+}
+
+// 處理平台選擇變更
+const handlePlatformChange = (selectedItem, channelIndex, platformIndex) => {
+  const platform = budgetData.value[channelIndex].platforms[platformIndex]
+
+  // 如果 selectedItem 是 null 或 undefined，清空選擇
+  if (!selectedItem) {
+    platform.selectedId = ''
+    platform.platformId = ''
+    return
+  }
+
+  // 從選項物件中提取實際的 ID
+  const actualId = selectedItem._id
+
+  // 判斷選擇的是平台還是平台細項
+  const isPlatformDetail = platformDetailOptions.value.some(
+    detail => {
+      const detailId = detail._id?.$oid || detail._id
+      return detailId === actualId
+    }
+  )
+
+  if (isPlatformDetail) {
+    // 如果是平台細項，找到對應的平台 ID
+    const detail = platformDetailOptions.value.find(d => {
+      const detailId = d._id?.$oid || d._id
+      return detailId === actualId
+    })
+    const parentPlatformId = detail?.parentId?._id || detail?.parentId
+    platform.platformId = parentPlatformId || actualId
+  } else {
+    // 如果是平台，直接使用
+    platform.platformId = actualId
+  }
+
+  platform.selectedId = actualId
 }
 </script>
 
@@ -1700,7 +1949,7 @@ tbody {
 
 .platform-col {
   padding-right: 4px !important;
-  min-width: 160px;
+  min-width: 230px;
 }
 
 .month-col {
@@ -1779,5 +2028,26 @@ tbody {
     margin: 0;
     padding: 0;
   }
+}
+
+/* 新增/編輯預算表對話框：標題與 actions 固定，內容區可捲動 */
+.budget-form-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.budget-form-dialog .budget-form-dialog-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.budget-form-dialog .budget-form-dialog-content {
+  flex: 1 1 auto;
+  min-height: 0;
 }
 </style>

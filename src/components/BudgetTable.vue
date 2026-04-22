@@ -50,11 +50,11 @@
               >
                 {{ item.channel.name }}
               </td>
-              <td 
+              <td
                 class="text-center"
                 :class="{ 'changed-field': isFieldChanged(item, 'platform') }"
               >
-                {{ item.platform.name }}
+                {{ getPlatformDisplayName(item.platform) }}
               </td>
               <td
                 v-for="(month, key) in monthList"
@@ -73,7 +73,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { useApi } from '@/composables/axios'
 
 const props = defineProps({
   data: {
@@ -83,6 +84,10 @@ const props = defineProps({
   changedFields: {
     type: Array,
     default: () => []
+  },
+  changeMap: {
+    type: Object,
+    default: () => ({})
   },
   orderNumbers: {
     type: Boolean,
@@ -96,6 +101,63 @@ const props = defineProps({
     type: Boolean,
     default: false
   }
+})
+
+const { apiAuth } = useApi()
+const platformOptions = ref([])
+const platformDetailOptions = ref([])
+
+// 載入平台和平台細項選項
+const loadPlatformOptions = async () => {
+  try {
+    const [platformData, platformDetailData] = await Promise.all([
+      apiAuth.get('/marketing/categories/options', { params: { type: 2 } }),
+      apiAuth.get('/marketing/categories/options', { params: { type: 4 } })
+    ])
+
+    if (platformData.data.success) {
+      platformOptions.value = platformData.data.result
+    }
+    if (platformDetailData.data.success) {
+      platformDetailOptions.value = platformDetailData.data.result
+    }
+  } catch (error) {
+    console.error('載入平台選項失敗:', error)
+  }
+}
+
+// 獲取平台顯示名稱（支援平台細項）
+const getPlatformDisplayName = (platform) => {
+  if (!platform || !platform._id) return '未知平台'
+
+  const platformId = platform._id?.$oid || platform._id
+
+  // 先檢查是否為平台細項
+  const platformDetail = platformDetailOptions.value.find(d => {
+    const detailId = d._id?.$oid || d._id
+    return detailId === platformId
+  })
+
+  if (platformDetail) {
+    // 如果是平台細項，找到對應的平台
+    const parentPlatformId = platformDetail.parentId?._id || platformDetail.parentId
+    const parentPlatform = platformOptions.value.find(p => {
+      const pId = p._id?.$oid || p._id
+      return pId === parentPlatformId
+    })
+
+    if (parentPlatform) {
+      return `${parentPlatform.name} - ${platformDetail.name}`
+    }
+    return platformDetail.name
+  }
+
+  // 如果不是平台細項，直接返回平台名稱
+  return platform.name || '未知平台'
+}
+
+onMounted(() => {
+  loadPlatformOptions()
 })
 
 const monthList = {
@@ -116,7 +178,7 @@ const monthList = {
 const groupedItems = computed(() => {
   // 檢查是否為異動紀錄資料
   const isAuditLog = props.data?.changes !== undefined
-  
+
   // 根據不同情況選擇資料來源
   let sourceData = null
   if (isAuditLog) {
@@ -140,16 +202,16 @@ const groupedItems = computed(() => {
     // 確保 channel 和 platform 物件存在
     const channel = item?.channel || {}
     const platform = item?.platform || {}
-    
+
     // 使用 name 作為主要識別符，如果沒有則使用 _id
-    const channelId = channel.name || 
-                     (channel._id?.$oid ? channel._id.$oid : channel._id) || 
+    const channelId = channel.name ||
+                     (channel._id?.$oid ? channel._id.$oid : channel._id) ||
                      '未知渠道'
-    
+
     if (!acc[channelId]) {
       acc[channelId] = []
     }
-    
+
     // 保持原始資料結構，但確保所有必要的屬性都存在
     acc[channelId].push({
       channel: {
@@ -162,7 +224,7 @@ const groupedItems = computed(() => {
       },
       monthlyBudget: item?.monthlyBudget || {}
     })
-    
+
     return acc
   }, {})
 })
@@ -173,8 +235,24 @@ const formatNumber = (value) => {
 }
 
 const isFieldChanged = (item, monthKey) => {
+  // 如果提供了 changeMap，優先使用它
+  if (props.changeMap && Object.keys(props.changeMap).length > 0) {
+    const itemKey = getItemKey(item)
+    const changedMonths = props.changeMap[itemKey]
+
+    if (changedMonths && Array.isArray(changedMonths)) {
+      // 如果是月份欄位，檢查是否在變更列表中
+      if (monthKey !== 'channel' && monthKey !== 'platform') {
+        return changedMonths.includes(monthKey)
+      }
+    }
+
+    return false
+  }
+
+  // 如果沒有 changeMap，使用原本的邏輯
   if (!props.changedFields?.length) return false
-  
+
   // 檢查是否為異動紀錄資料
   const isAuditLog = props.data?.changes !== undefined
   if (!isAuditLog) return false
@@ -192,34 +270,47 @@ const isFieldChanged = (item, monthKey) => {
     // 檢查特定月份的預算是否有變更
     const beforeValue = beforeItem?.monthlyBudget?.[monthKey]
     const afterValue = afterItem?.monthlyBudget?.[monthKey]
-    return beforeValue !== afterValue
+
+    // 處理 null、undefined、空字串的情況
+    const beforeVal = beforeValue === null || beforeValue === undefined || beforeValue === '' ? null : beforeValue
+    const afterVal = afterValue === null || afterValue === undefined || afterValue === '' ? null : afterValue
+
+    return beforeVal !== afterVal
   }
 
   return false
 }
 
+// 輔助函數：取得項目的唯一鍵值
+const getItemKey = (item) => {
+  if (!item) return ''
+  const channelId = item?.channel?._id?.$oid || item?.channel?._id || item?.channel?.name || ''
+  const platformId = item?.platform?._id?.$oid || item?.platform?._id || item?.platform?.name || ''
+  return `${channelId}-${platformId}`
+}
+
 // 新增一個輔助函數來在 changes 中找到對應的項目
 const findItemInChanges = (items = [], targetItem) => {
   if (!items?.length) return null
-  
+
   return items.find(item => {
     const sourceChannel = item?.channel || {}
     const targetChannel = targetItem?.channel || {}
     const sourcePlatform = item?.platform || {}
     const targetPlatform = targetItem?.platform || {}
-    
+
     const sourceChannelId = sourceChannel._id?.$oid || sourceChannel._id
     const targetChannelId = targetChannel._id?.$oid || targetChannel._id
     const sourcePlatformId = sourcePlatform._id?.$oid || sourcePlatform._id
     const targetPlatformId = targetPlatform._id?.$oid || targetPlatform._id
-    
+
     return sourceChannelId === targetChannelId && sourcePlatformId === targetPlatformId
   })
 }
 
 const hasOrderChanged = (item) => {
   if (!props.orderChanges) return false
-  
+
   // 檢查是否為異動紀錄資料
   const isAuditLog = props.data?.changes !== undefined
   if (!isAuditLog) return false
@@ -228,13 +319,13 @@ const hasOrderChanged = (item) => {
   const channelName = item?.channel?.name || '未知渠道'
   const platformName = item?.platform?.name || '未知平台'
   const key = `${channelName}-${platformName}`
-  
+
   return props.orderChanges[key] !== undefined
 }
 
 const getOrderChangeText = (item) => {
   if (!hasOrderChanged(item)) return ''
-  
+
   // 檢查是否為異動紀錄資料
   const isAuditLog = props.data?.changes !== undefined
   if (!isAuditLog) return ''
@@ -243,10 +334,10 @@ const getOrderChangeText = (item) => {
   const channelName = item?.channel?.name || '未知渠道'
   const platformName = item?.platform?.name || '未知平台'
   const key = `${channelName}-${platformName}`
-  
+
   const change = props.orderChanges[key]
   if (!change) return ''
-  
+
   return `← ${change.oldIndex}`
 }
 </script>
@@ -277,7 +368,7 @@ const getOrderChangeText = (item) => {
       border-right: 1px solid rgba(255, 255, 255, 0.1);
     }
   }
-  
+
   tbody {
     tr {
       font-size: 11px !important;
@@ -298,7 +389,7 @@ const getOrderChangeText = (item) => {
     td {
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
       border-right: 1px solid rgba(0, 0, 0, 0.12);
-      
+
       &[rowspan] {
         background: #eceff1;
         border-right: 1px solid rgba(0, 0, 0, 0.2);
@@ -311,7 +402,7 @@ const getOrderChangeText = (item) => {
 .order-number {
   position: relative;
   font-weight: 500;
-  
+
   &.order-changed {
     color: #d32f2f;
     background-color: #ffebee;
@@ -333,4 +424,4 @@ const getOrderChangeText = (item) => {
   font-weight: 600;
   background-color: #ffebee;
 }
-</style> 
+</style>
